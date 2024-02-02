@@ -36,8 +36,8 @@ fun CatalogWebViewScreen(
                 refreshSessionCookie = refreshSessionCookie,
             ) {
                 override fun onPageFinished(view: WebView?, url: String?) {
-                    super.onPageFinished(view, url)
                     url?.let { onWebPageUpdated(it) }
+                    super.onPageFinished(view, url)
                 }
 
                 override fun onPageCommitVisible(view: WebView?, url: String?) {

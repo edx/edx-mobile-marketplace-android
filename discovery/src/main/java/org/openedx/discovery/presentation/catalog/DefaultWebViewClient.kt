@@ -19,6 +19,7 @@ open class DefaultWebViewClient(
 ) : WebViewClient() {
 
     private var hostForThisPage: String? = null
+    private var isPossibleRedirection = true
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
@@ -31,7 +32,7 @@ open class DefaultWebViewClient(
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val clickUrl = request?.url?.toString() ?: ""
 
-        if (clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl))) {
+        if (clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl)) && !isPossibleRedirection) {
             onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
             return true
         }
@@ -47,6 +48,11 @@ open class DefaultWebViewClient(
         } else {
             false
         }
+    }
+
+    override fun onPageFinished(view: WebView?, url: String?) {
+        super.onPageFinished(view, url)
+        isPossibleRedirection = false
     }
 
     override fun onReceivedHttpError(

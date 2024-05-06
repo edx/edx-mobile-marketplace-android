@@ -53,7 +53,8 @@ data class EnrolledCourseEntity(
             certificate?.mapToDomain(),
             progress.mapToDomain(),
             courseStatus?.mapToDomain(),
-            courseAssignments?.mapToDomain()
+            courseAssignments?.mapToDomain(),
+            null
         )
     }
 }

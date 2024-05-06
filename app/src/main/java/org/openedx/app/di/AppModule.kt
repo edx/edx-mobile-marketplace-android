@@ -12,10 +12,10 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.openedx.app.AnalyticsManager
 import org.openedx.app.AppAnalytics
-import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.AppRouter
 import org.openedx.app.BuildConfig
 import org.openedx.app.data.storage.PreferencesManager
+import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.room.AppDatabase
 import org.openedx.app.room.DATABASE_NAME
 import org.openedx.auth.presentation.AgreementProvider
@@ -32,8 +32,10 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.TranscriptManager
+import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.download.FileDownloader
 import org.openedx.core.presentation.CoreAnalytics
+import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.dialog.appreview.AppReviewAnalytics
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.global.AppData
@@ -165,6 +167,8 @@ val appModule = module {
     single { WhatsNewManager(get(), get(), get(), get()) }
     single<WhatsNewGlobalManager> { get<WhatsNewManager>() }
 
+    single<BillingProcessor> { BillingProcessor(get(), get(named("IODispatcher"))) }
+
     single { AnalyticsManager(get(), get()) }
     single<AppAnalytics> { get<AnalyticsManager>() }
     single<AuthAnalytics> { get<AnalyticsManager>() }
@@ -176,6 +180,7 @@ val appModule = module {
     single<DiscussionAnalytics> { get<AnalyticsManager>() }
     single<ProfileAnalytics> { get<AnalyticsManager>() }
     single<WhatsNewAnalytics> { get<AnalyticsManager>() }
+    single<IAPAnalytics> { get<AnalyticsManager>() }
 
     factory { AgreementProvider(get(), get()) }
     factory { FacebookAuthHelper() }

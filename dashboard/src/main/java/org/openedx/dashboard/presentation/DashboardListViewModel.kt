@@ -10,6 +10,7 @@ import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
@@ -28,6 +29,7 @@ class DashboardListViewModel(
     private val discoveryNotifier: DiscoveryNotifier,
     private val analytics: DashboardAnalytics,
     private val appUpgradeNotifier: AppUpgradeNotifier,
+    private val preferencesManager: CorePreferences,
 ) : BaseViewModel() {
 
     private val coursesList = mutableListOf<EnrolledCourse>()
@@ -100,7 +102,10 @@ class DashboardListViewModel(
                 if (coursesList.isEmpty()) {
                     _uiState.value = DashboardUIState.Empty
                 } else {
-                    _uiState.value = DashboardUIState.Courses(ArrayList(coursesList))
+                    _uiState.value = DashboardUIState.Courses(
+                        courses = ArrayList(coursesList),
+                        isValuePropEnabled = preferencesManager.appConfig.isValuePropEnabled
+                    )
                 }
             } catch (e: Exception) {
                 if (e.isInternetError()) {
@@ -143,7 +148,10 @@ class DashboardListViewModel(
                 if (coursesList.isEmpty()) {
                     _uiState.value = DashboardUIState.Empty
                 } else {
-                    _uiState.value = DashboardUIState.Courses(ArrayList(coursesList))
+                    _uiState.value = DashboardUIState.Courses(
+                        courses = ArrayList(coursesList),
+                        isValuePropEnabled = preferencesManager.appConfig.isValuePropEnabled
+                    )
                 }
             } catch (e: Exception) {
                 if (e.isInternetError()) {

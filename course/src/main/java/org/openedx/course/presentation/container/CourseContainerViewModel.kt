@@ -33,11 +33,13 @@ import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CalendarSyncEvent.CheckCalendarSyncEvent
 import org.openedx.core.system.notifier.CalendarSyncEvent.CreateCalendarSyncEvent
 import org.openedx.core.system.notifier.CourseCompletionSet
+import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.CourseDatesShifted
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseOpenBlock
 import org.openedx.core.system.notifier.CourseStructureUpdated
+import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.RefreshDates
 import org.openedx.core.system.notifier.RefreshDiscussions
 import org.openedx.core.utils.TimeUtils
@@ -64,6 +66,7 @@ class CourseContainerViewModel(
     private val calendarManager: CalendarManager,
     private val resourceManager: ResourceManager,
     private val courseNotifier: CourseNotifier,
+    private val discoveryNotifier: DiscoveryNotifier,
     private val networkConnection: NetworkConnection,
     private val corePreferences: CorePreferences,
     private val coursePreferences: CoursePreferences,
@@ -262,6 +265,12 @@ class CourseContainerViewModel(
             }
             _refreshing.value = false
             courseNotifier.send(CourseStructureUpdated(courseId))
+        }
+    }
+
+    fun updateEnrolledCourses() {
+        viewModelScope.launch {
+            discoveryNotifier.send(CourseDashboardUpdate())
         }
     }
 

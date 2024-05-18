@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
@@ -54,6 +55,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.extension.takeIfNotEmpty
+import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.global.viewBinding
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialog
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
@@ -162,7 +164,8 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
                 bundle = requireArguments(),
                 onRefresh = { page ->
                     onRefresh(page)
-                }
+                },
+                requireActivity = { requireActivity() }
             )
         }
     }
@@ -291,7 +294,8 @@ fun CourseDashboard(
     isNavigationEnabled: Boolean,
     isResumed: Boolean,
     fragmentManager: FragmentManager,
-    bundle: Bundle
+    bundle: Bundle,
+    requireActivity: () -> FragmentActivity
 ) {
     OpenEdXTheme {
         val windowSize = rememberWindowSize()
@@ -307,7 +311,8 @@ fun CourseDashboard(
             val refreshing by viewModel.refreshing.collectAsState(true)
             val courseImage by viewModel.courseImage.collectAsState()
             val uiMessage by viewModel.uiMessage.collectAsState(null)
-            val openTab = bundle.getString(CourseContainerFragment.ARG_OPEN_TAB, CourseContainerTab.HOME.name)
+            val openTab =
+                bundle.getString(CourseContainerFragment.ARG_OPEN_TAB, CourseContainerTab.HOME.name)
             val requiredTab = when (openTab.uppercase()) {
                 CourseContainerTab.HOME.name -> CourseContainerTab.HOME
                 CourseContainerTab.VIDEOS.name -> CourseContainerTab.VIDEOS
@@ -366,7 +371,10 @@ fun CourseDashboard(
                         if (isNavigationEnabled) {
                             RoundTabsBar(
                                 items = CourseContainerTab.entries,
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 16.dp),
+                                contentPadding = PaddingValues(
+                                    horizontal = 12.dp,
+                                    vertical = 16.dp
+                                ),
                                 rowState = tabState,
                                 pagerState = pagerState,
                                 withPager = true,
@@ -380,6 +388,7 @@ fun CourseDashboard(
                         fragmentManager.popBackStack()
                     },
                     bodyContent = {
+
                         if (dataReady.value == true) {
                             DashboardPager(
                                 windowSize = windowSize,
@@ -388,7 +397,8 @@ fun CourseDashboard(
                                 isNavigationEnabled = isNavigationEnabled,
                                 isResumed = isResumed,
                                 fragmentManager = fragmentManager,
-                                bundle = bundle
+                                bundle = bundle,
+                                requireActivity = requireActivity,
                             )
                         }
                     }
@@ -446,6 +456,7 @@ fun DashboardPager(
     isResumed: Boolean,
     fragmentManager: FragmentManager,
     bundle: Bundle,
+    requireActivity: () -> FragmentActivity,
 ) {
     HorizontalPager(
         state = pagerState,
@@ -464,9 +475,19 @@ fun DashboardPager(
                             )
                         }
                     ),
+                    iapViewModel = koinViewModel(
+                        parameters = {
+                            parametersOf(IAPAnalyticsScreen.COURSE_DASHBOARD.screenName)
+                        }
+                    ),
                     fragmentManager = fragmentManager,
                     onResetDatesClick = {
                         viewModel.onRefresh(CourseContainerTab.DATES)
+                    },
+                    requireActivity = requireActivity,
+                    updateCourseDataPostIAP = {
+                        viewModel.onRefresh(CourseContainerTab.HOME)
+                        viewModel.updateEnrolledCourses()
                     }
                 )
             }

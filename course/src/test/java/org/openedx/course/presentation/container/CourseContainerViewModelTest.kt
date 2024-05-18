@@ -30,14 +30,17 @@ import org.openedx.core.data.model.CourseStructureModel
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.AppConfig
+import org.openedx.core.domain.model.CourseAccessDetails
 import org.openedx.core.domain.model.CourseDatesCalendarSync
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
+import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.system.CalendarManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseStructureUpdated
+import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
@@ -60,6 +63,7 @@ class CourseContainerViewModelTest {
     private val calendarManager = mockk<CalendarManager>()
     private val networkConnection = mockk<NetworkConnection>()
     private val notifier = spyk<CourseNotifier>()
+    private val discoveryNotifier = spyk<DiscoveryNotifier>()
     private val analytics = mockk<CourseAnalytics>()
     private val corePreferences = mockk<CorePreferences>()
     private val coursePreferences = mockk<CoursePreferences>()
@@ -107,9 +111,17 @@ class CourseContainerViewModelTest {
             ""
         ),
         media = null,
+        courseAccessDetails = CourseAccessDetails(Date()),
         certificate = null,
         isSelfPaced = false,
-        progress = null
+        progress = null,
+        enrollmentDetails = EnrollmentDetails(
+            created = Date(),
+            mode = "audit",
+            isActive = false,
+            upgradeDeadline = Date()
+        ),
+        productInfo = null
     )
 
     private val courseStructureModel = CourseStructureModel(
@@ -124,10 +136,13 @@ class CourseContainerViewModelTest {
         startType = "",
         end = null,
         coursewareAccess = null,
+        courseAccessDetails = org.openedx.core.data.model.CourseAccessDetails(""),
         media = null,
         certificate = null,
         isSelfPaced = false,
-        progress = null
+        progress = null,
+        enrollmentDetails = org.openedx.core.data.model.EnrollmentDetails("", "", false, ""),
+        courseModes = arrayListOf()
     )
 
     @Before
@@ -162,6 +177,7 @@ class CourseContainerViewModelTest {
             calendarManager,
             resourceManager,
             notifier,
+            discoveryNotifier,
             networkConnection,
             corePreferences,
             coursePreferences,
@@ -196,6 +212,7 @@ class CourseContainerViewModelTest {
             calendarManager,
             resourceManager,
             notifier,
+            discoveryNotifier,
             networkConnection,
             corePreferences,
             coursePreferences,
@@ -230,6 +247,7 @@ class CourseContainerViewModelTest {
             calendarManager,
             resourceManager,
             notifier,
+            discoveryNotifier,
             networkConnection,
             corePreferences,
             coursePreferences,
@@ -263,6 +281,7 @@ class CourseContainerViewModelTest {
             calendarManager,
             resourceManager,
             notifier,
+            discoveryNotifier,
             networkConnection,
             corePreferences,
             coursePreferences,
@@ -299,6 +318,7 @@ class CourseContainerViewModelTest {
             calendarManager,
             resourceManager,
             notifier,
+            discoveryNotifier,
             networkConnection,
             corePreferences,
             coursePreferences,
@@ -330,6 +350,7 @@ class CourseContainerViewModelTest {
             calendarManager,
             resourceManager,
             notifier,
+            discoveryNotifier,
             networkConnection,
             corePreferences,
             coursePreferences,
@@ -361,6 +382,7 @@ class CourseContainerViewModelTest {
             calendarManager,
             resourceManager,
             notifier,
+            discoveryNotifier,
             networkConnection,
             corePreferences,
             coursePreferences,

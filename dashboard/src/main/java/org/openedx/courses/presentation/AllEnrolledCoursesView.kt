@@ -626,7 +626,7 @@ private val mockCourseEnrolled = EnrolledCourse(
         startDisplay = "",
         startType = "",
         end = Date(),
-        dynamicUpgradeDeadline = "",
+        upgradeDeadline = "",
         subscriptionId = "",
         coursewareAccess = CoursewareAccess(
             false,

@@ -30,8 +30,10 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.AssignmentProgress
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
+import org.openedx.core.domain.model.CourseAccessDetails
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
+import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.db.DownloadModel
@@ -153,9 +155,17 @@ class CourseSectionViewModelTest {
             ""
         ),
         media = null,
+        courseAccessDetails = CourseAccessDetails(Date()),
         certificate = null,
         isSelfPaced = false,
-        progress = null
+        progress = null,
+        enrollmentDetails = EnrollmentDetails(
+            created = Date(),
+            mode = "audit",
+            isActive = false,
+            upgradeDeadline = Date()
+        ),
+        productInfo = null
     )
 
     private val downloadModel = DownloadModel(

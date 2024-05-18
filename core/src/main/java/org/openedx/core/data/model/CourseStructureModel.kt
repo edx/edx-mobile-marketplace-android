@@ -1,12 +1,21 @@
 package org.openedx.core.data.model
 
+import android.text.TextUtils
+import com.google.gson.Gson
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.data.model.room.BlockDb
 import org.openedx.core.data.model.room.CourseStructureEntity
 import org.openedx.core.data.model.room.MediaDb
 import org.openedx.core.data.model.room.discovery.ProgressDb
+import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.ProductInfo
 import org.openedx.core.domain.model.CourseStructure
+import org.openedx.core.domain.model.EnrollmentMode
 import org.openedx.core.utils.TimeUtils
+import java.lang.reflect.Type
 
 data class CourseStructureModel(
     @SerializedName("root")
@@ -33,12 +42,18 @@ data class CourseStructureModel(
     var coursewareAccess: CoursewareAccess?,
     @SerializedName("media")
     var media: Media?,
+    @SerializedName("course_access_details")
+    val courseAccessDetails: CourseAccessDetails,
     @SerializedName("certificate")
     val certificate: Certificate?,
+    @SerializedName("enrollment_details")
+    val enrollmentDetails: EnrollmentDetails,
     @SerializedName("is_self_paced")
     var isSelfPaced: Boolean?,
     @SerializedName("course_progress")
     val progress: Progress?,
+    @SerializedName("course_modes")
+    val courseModes: List<CourseMode>?,
 ) {
     fun mapToDomain(): CourseStructure {
         return CourseStructure(
@@ -56,9 +71,18 @@ data class CourseStructureModel(
             end = TimeUtils.iso8601ToDate(end ?: ""),
             coursewareAccess = coursewareAccess?.mapToDomain(),
             media = media?.mapToDomain(),
+            courseAccessDetails = courseAccessDetails.mapToDomain(),
             certificate = certificate?.mapToDomain(),
             isSelfPaced = isSelfPaced ?: false,
-            progress = progress?.mapToDomain()
+            progress = progress?.mapToDomain(),
+            enrollmentDetails = enrollmentDetails.mapToDomain(),
+            productInfo = courseModes?.find {
+                EnrollmentMode.VERIFIED.toString().equals(it.slug, ignoreCase = true)
+            }?.takeIf {
+                TextUtils.isEmpty(it.androidSku).not() && TextUtils.isEmpty(it.storeSku).not()
+            }?.run {
+                ProductInfo(courseSku = androidSku!!, storeSku = storeSku!!)
+            }
         )
     }
 
@@ -76,9 +100,28 @@ data class CourseStructureModel(
             end = end ?: "",
             coursewareAccess = coursewareAccess?.mapToRoomEntity(),
             media = MediaDb.createFrom(media),
+            courseAccessDetails = courseAccessDetails.mapToRoomEntity(),
             certificate = certificate?.mapToRoomEntity(),
             isSelfPaced = isSelfPaced ?: false,
-            progress = progress?.mapToRoomEntity() ?: ProgressDb.DEFAULT_PROGRESS
+            progress = progress?.mapToRoomEntity() ?: ProgressDb.DEFAULT_PROGRESS,
+            enrollmentDetails = enrollmentDetails.mapToRoomEntity()
         )
+    }
+
+    class Deserializer(val corePreferences: CorePreferences) :
+        JsonDeserializer<CourseStructureModel> {
+        override fun deserialize(
+            json: JsonElement?,
+            typeOfT: Type?,
+            context: JsonDeserializationContext?
+        ): CourseStructureModel {
+            val courseStructure = Gson().fromJson(json, CourseStructureModel::class.java)
+            if (corePreferences.appConfig.iapConfig.productPrefix.isNullOrEmpty().not()) {
+                courseStructure.courseModes?.forEach { courseModes ->
+                    courseModes.setStoreProductSku(corePreferences.appConfig.iapConfig.productPrefix!!)
+                }
+            }
+            return courseStructure
+        }
     }
 }

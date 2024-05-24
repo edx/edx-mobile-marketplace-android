@@ -155,25 +155,21 @@ class CourseVideoViewModelTest {
         startDisplay = "",
         startType = "",
         end = Date(),
-        coursewareAccess = CoursewareAccess(
-            true,
-            "",
-            "",
-            "",
-            "",
-            ""
-        ),
         media = null,
-        courseAccessDetails = CourseAccessDetails(Date()),
+        courseAccessDetails = CourseAccessDetails(
+            Date(), CoursewareAccess(
+                true,
+                "",
+                "",
+                "",
+                "",
+                ""
+            )
+        ),
+        enrollmentDetails = EnrollmentDetails(Date(), "audit", false, Date()),
         certificate = null,
         isSelfPaced = false,
         progress = null,
-        enrollmentDetails = EnrollmentDetails(
-            created = Date(),
-            mode = "audit",
-            isActive = false,
-            upgradeDeadline = Date()
-        ),
         productInfo = null
     )
 

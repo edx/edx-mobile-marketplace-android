@@ -4,6 +4,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
@@ -16,7 +19,10 @@ import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
+import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.DiscoveryNotifier
+import org.openedx.core.system.notifier.IAPNotifier
+import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
@@ -27,6 +33,7 @@ class DashboardListViewModel(
     private val interactor: DashboardInteractor,
     private val resourceManager: ResourceManager,
     private val discoveryNotifier: DiscoveryNotifier,
+    private val iapNotifier: IAPNotifier,
     private val analytics: DashboardAnalytics,
     private val appNotifier: AppNotifier,
     private val preferencesManager: CorePreferences,
@@ -70,6 +77,14 @@ class DashboardListViewModel(
                 }
             }
         }
+
+        iapNotifier.notifier.onEach { event ->
+            when (event) {
+                is UpdateCourseData -> {
+                    updateCourses()
+                }
+            }
+        }.distinctUntilChanged().launchIn(viewModelScope)
     }
 
     init {
@@ -110,6 +125,7 @@ class DashboardListViewModel(
                         isValuePropEnabled = preferencesManager.appConfig.isValuePropEnabled
                     )
                 }
+                iapNotifier.send(CourseDataUpdated())
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =

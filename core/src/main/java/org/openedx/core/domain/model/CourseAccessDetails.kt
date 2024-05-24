@@ -7,7 +7,5 @@ import java.util.Date
 @Parcelize
 data class CourseAccessDetails(
     val auditAccessExpires: Date?,
-) : Parcelable {
-    val isAuditAccessExpired: Boolean
-        get() = auditAccessExpires == null || Date().after(auditAccessExpires)
-}
+    val coursewareAccess: CoursewareAccess?,
+) : Parcelable

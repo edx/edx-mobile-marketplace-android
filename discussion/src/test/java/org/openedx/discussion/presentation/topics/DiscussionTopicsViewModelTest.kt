@@ -132,16 +132,17 @@ class DiscussionTopicsViewModelTest {
         startDisplay = "",
         startType = "",
         end = Date(),
-        coursewareAccess = CoursewareAccess(
-            true,
-            "",
-            "",
-            "",
-            "",
-            ""
-        ),
         media = null,
-        courseAccessDetails = CourseAccessDetails(Date()),
+        courseAccessDetails = CourseAccessDetails(
+            Date(), coursewareAccess = CoursewareAccess(
+                true,
+                "",
+                "",
+                "",
+                "",
+                ""
+            )
+        ),
         certificate = null,
         isSelfPaced = false,
         progress = null,

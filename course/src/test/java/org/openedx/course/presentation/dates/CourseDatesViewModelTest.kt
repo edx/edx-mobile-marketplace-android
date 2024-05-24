@@ -127,16 +127,15 @@ class CourseDatesViewModelTest {
         startDisplay = "",
         startType = "",
         end = null,
-        coursewareAccess = CoursewareAccess(
+        media = null,
+        courseAccessDetails = CourseAccessDetails(Date(), CoursewareAccess(
             true,
             "",
             "",
             "",
             "",
             ""
-        ),
-        media = null,
-        courseAccessDetails = CourseAccessDetails(Date()),
+        )),
         certificate = null,
         isSelfPaced = true,
         progress = null,

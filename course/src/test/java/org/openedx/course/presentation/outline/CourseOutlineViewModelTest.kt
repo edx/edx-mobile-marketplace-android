@@ -161,16 +161,17 @@ class CourseOutlineViewModelTest {
         startDisplay = "",
         startType = "",
         end = Date(),
-        coursewareAccess = CoursewareAccess(
-            true,
-            "",
-            "",
-            "",
-            "",
-            ""
-        ),
         media = null,
-        courseAccessDetails = CourseAccessDetails(Date()),
+        courseAccessDetails = CourseAccessDetails(
+            Date(), CoursewareAccess(
+                true,
+                "",
+                "",
+                "",
+                "",
+                ""
+            )
+        ),
         enrollmentDetails = EnrollmentDetails(Date(), "audit", false, Date()),
         certificate = null,
         isSelfPaced = false,
@@ -312,7 +313,6 @@ class CourseOutlineViewModelTest {
     fun `getCourseDataInternal success with internet connection`() = runTest(UnconfinedTestDispatcher()) {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         every { networkConnection.isOnline() } returns true
-        every { preferencesManager.appConfig.isValuePropEnabled } returns false
         coEvery { downloadDao.readAllData() } returns flow {
             emit(
                 listOf(
@@ -361,7 +361,6 @@ class CourseOutlineViewModelTest {
     fun `getCourseDataInternal success without internet connection`() = runTest(UnconfinedTestDispatcher()) {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         every { networkConnection.isOnline() } returns false
-        every { preferencesManager.appConfig.isValuePropEnabled } returns false
         coEvery { downloadDao.readAllData() } returns flow {
             emit(
                 listOf(
@@ -409,7 +408,6 @@ class CourseOutlineViewModelTest {
     fun `updateCourseData success with internet connection`() = runTest(UnconfinedTestDispatcher()) {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         every { networkConnection.isOnline() } returns true
-        every { preferencesManager.appConfig.isValuePropEnabled } returns false
         coEvery { downloadDao.readAllData() } returns flow {
             emit(
                 listOf(

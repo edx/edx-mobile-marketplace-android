@@ -40,7 +40,6 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -68,11 +67,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.core.parameter.parametersOf
 import org.openedx.core.AppUpdateState
 import org.openedx.core.UIMessage
 import org.openedx.core.domain.ProductInfo
@@ -85,13 +84,11 @@ import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
 import org.openedx.core.domain.model.Progress
 import org.openedx.core.presentation.IAPAnalyticsScreen
+import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRecommendedBox
-import org.openedx.core.presentation.iap.IAPAction
-import org.openedx.core.presentation.iap.IAPUIState
-import org.openedx.core.presentation.iap.IAPViewModel
+import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.IAPDialog
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.UpgradeToAccessView
 import org.openedx.core.ui.WindowSize
@@ -112,9 +109,6 @@ import org.openedx.core.R as CoreR
 class DashboardListFragment : Fragment() {
 
     private val viewModel by viewModel<DashboardListViewModel>()
-    private val iapViewModel by viewModel<IAPViewModel> {
-        parametersOf(IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName)
-    }
     private val router by inject<DashboardRouter>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -136,16 +130,15 @@ class DashboardListFragment : Fragment() {
                 val refreshing by viewModel.updating.observeAsState(false)
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
                 val appUpgradeEvent by viewModel.appUpgradeEvent.observeAsState()
-                val iapState by iapViewModel.uiState.collectAsState()
 
                 DashboardListView(
                     windowSize = windowSize,
                     viewModel.apiHostUrl,
                     state = uiState!!,
                     uiMessage = uiMessage,
-                    iapState = iapState,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
+                    fragmentManager = requireActivity().supportFragmentManager,
                     hasInternetConnection = viewModel.hasInternetConnection,
                     onReloadClick = {
                         viewModel.getCourses()
@@ -164,42 +157,6 @@ class DashboardListFragment : Fragment() {
                     },
                     paginationCallback = {
                         viewModel.fetchMore()
-                    },
-                    iapCallback = { action, course ->
-                        when (action) {
-                            IAPAction.LOAD_PRICE -> {
-                                course?.takeIf { it.productInfo != null }?.let {
-                                    iapViewModel.loadPrice(
-                                        courseId = course.course.id,
-                                        courseName = course.course.name,
-                                        isSelfPaced = course.course.isSelfPaced,
-                                        productInfo = course.productInfo!!
-                                    )
-                                }
-                            }
-
-                            IAPAction.START_PURCHASE_FLOW -> {
-                                iapViewModel.startPurchaseFlow()
-                            }
-
-                            IAPAction.PURCHASE_PRODUCT -> {
-                                iapViewModel.purchaseItem(requireActivity())
-                            }
-
-                            IAPAction.FLOW_COMPLETE -> {
-                                if (iapViewModel.isInProgress()) {
-                                    iapViewModel.upgradeSuccessEvent()
-                                    iapViewModel.clearIAPFLow()
-                                }
-                            }
-
-                            IAPAction.CLEAR -> {
-                                iapViewModel.clearIAPFLow()
-                            }
-                        }
-                    },
-                    onGetHelp = { message ->
-                        iapViewModel.showFeedbackScreen(requireContext(), message)
                     },
                     appUpgradeParameters = AppUpdateState.AppUpgradeParameters(
                         appUpgradeEvent = appUpgradeEvent,
@@ -220,16 +177,14 @@ internal fun DashboardListView(
     apiHostUrl: String,
     state: DashboardUIState,
     uiMessage: UIMessage?,
-    iapState: IAPUIState,
     canLoadMore: Boolean,
     refreshing: Boolean,
+    fragmentManager: FragmentManager,
     hasInternetConnection: Boolean,
     onReloadClick: () -> Unit,
     onSwipeRefresh: () -> Unit,
     paginationCallback: () -> Unit,
     onItemClick: (EnrolledCourse) -> Unit,
-    iapCallback: (IAPAction, EnrolledCourse?) -> Unit,
-    onGetHelp: (String) -> Unit,
     appUpgradeParameters: AppUpdateState.AppUpgradeParameters,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -339,9 +294,16 @@ internal fun DashboardListView(
                                                         bottom = 16.dp
                                                     )
                                                 ) {
-                                                    iapCallback(
-                                                        IAPAction.LOAD_PRICE,
-                                                        course
+                                                    IAPDialogFragment.newInstance(
+                                                        iapFlow = IAPFlow.USER_INITIATED,
+                                                        screenName = IAPAnalyticsScreen.COURSE_DASHBOARD.screenName,
+                                                        courseId = course.course.id,
+                                                        courseName = course.course.name,
+                                                        isSelfPaced = course.course.isSelfPaced,
+                                                        productInfo = course.productInfo!!
+                                                    ).show(
+                                                        fragmentManager,
+                                                        IAPDialogFragment::class.simpleName
                                                     )
                                                 }
                                             }
@@ -415,52 +377,6 @@ internal fun DashboardListView(
                                     onReloadClick()
                                 }
                             )
-                        }
-                    }
-                    when (iapState) {
-                        is IAPUIState.Loading -> {
-                            IAPDialog(
-                                courseTitle = iapState.courseName,
-                                isLoading = true,
-                                onDismiss = {
-                                    iapCallback(IAPAction.CLEAR, null)
-                                })
-                        }
-
-                        is IAPUIState.ProductData -> {
-                            IAPDialog(
-                                courseTitle = iapState.courseName,
-                                formattedPrice = iapState.formattedPrice,
-                                onUpgradeNow = {
-                                    iapCallback(IAPAction.START_PURCHASE_FLOW, null)
-                                }, onDismiss = {
-                                    iapCallback(IAPAction.CLEAR, null)
-                                })
-                        }
-
-                        is IAPUIState.Error -> {
-                            IAPDialog(
-                                courseTitle = iapState.courseName,
-                                isError = true,
-                                onDismiss = {
-                                    iapCallback(IAPAction.CLEAR, null)
-                                }, onGetHelp = {
-                                    onGetHelp(iapState.feedbackErrorMessage)
-                                    iapCallback(IAPAction.CLEAR, null)
-                                })
-                        }
-
-                        is IAPUIState.PurchaseProduct -> {
-                            iapCallback(IAPAction.PURCHASE_PRODUCT, null)
-                        }
-
-                        is IAPUIState.FlowComplete -> {
-                            onSwipeRefresh()
-                            iapCallback(IAPAction.FLOW_COMPLETE, null)
-                        }
-
-                        else -> {
-                            iapCallback(IAPAction.CLEAR, null)
                         }
                     }
                 }
@@ -626,6 +542,8 @@ private fun CourseItemPreview() {
     }
 }
 
+object MockFragmentManager : FragmentManager()
+
 @Preview(uiMode = UI_MODE_NIGHT_NO)
 @Preview(uiMode = UI_MODE_NIGHT_YES)
 @Composable
@@ -645,7 +563,6 @@ private fun DashboardListViewPreview() {
                 ), isValuePropEnabled = false
             ),
             uiMessage = null,
-            iapState = IAPUIState.Clear,
             canLoadMore = false,
             refreshing = false,
             hasInternetConnection = true,
@@ -653,9 +570,8 @@ private fun DashboardListViewPreview() {
             onSwipeRefresh = {},
             paginationCallback = {},
             onItemClick = {},
-            iapCallback = { _, _ -> },
-            onGetHelp = {},
-            appUpgradeParameters = AppUpdateState.AppUpgradeParameters()
+            appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
+            fragmentManager = MockFragmentManager
         )
     }
 }
@@ -679,7 +595,6 @@ private fun DashboardListViewTabletPreview() {
                 ), isValuePropEnabled = false
             ),
             uiMessage = null,
-            iapState = IAPUIState.Clear,
             canLoadMore = false,
             refreshing = false,
             hasInternetConnection = true,
@@ -687,9 +602,8 @@ private fun DashboardListViewTabletPreview() {
             onSwipeRefresh = {},
             paginationCallback = {},
             onItemClick = {},
-            iapCallback = { _, _ -> },
-            onGetHelp = {},
-            appUpgradeParameters = AppUpdateState.AppUpgradeParameters()
+            appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
+            fragmentManager = MockFragmentManager
         )
     }
 }

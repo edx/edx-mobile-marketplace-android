@@ -43,11 +43,9 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import org.openedx.core.BlockType
 import org.openedx.core.UIMessage
-import org.openedx.core.domain.ProductInfo
 import org.openedx.core.domain.model.AssignmentProgress
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
@@ -59,15 +57,9 @@ import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.domain.model.Progress
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.course.CourseViewMode
-import org.openedx.core.presentation.iap.IAPAction
-import org.openedx.core.presentation.iap.IAPUIState
-import org.openedx.core.presentation.iap.IAPViewModel
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.IAPDialog
 import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.TextIcon
-import org.openedx.core.ui.UpgradeToAccessView
-import org.openedx.core.ui.UpgradeToAccessViewType
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -87,16 +79,12 @@ import org.openedx.core.R as CoreR
 fun CourseOutlineScreen(
     windowSize: WindowSize,
     viewModel: CourseOutlineViewModel,
-    iapViewModel: IAPViewModel,
     fragmentManager: FragmentManager,
-    onResetDatesClick: () -> Unit,
-    requireActivity: () -> FragmentActivity,
-    updateCourseDataPostIAP: () -> Unit
+    onResetDatesClick: () -> Unit
 ) {
     val resumeBlockId by viewModel.resumeBlockId.collectAsState("")
     val uiState by viewModel.uiState.collectAsState()
     val uiMessage by viewModel.uiMessage.collectAsState(null)
-    val iapState by iapViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(resumeBlockId) {
@@ -109,7 +97,6 @@ fun CourseOutlineScreen(
         windowSize = windowSize,
         uiState = uiState,
         uiMessage = uiMessage,
-        iapState = iapState,
         onExpandClick = { block ->
             if (viewModel.switchCourseSections(block.id)) {
                 viewModel.sequentialClickedEvent(
@@ -169,44 +156,7 @@ fun CourseOutlineScreen(
             viewModel.viewCertificateTappedEvent()
             it.takeIfNotEmpty()
                 ?.let { url -> AndroidUriHandler(context).openUri(url) }
-        },
-        iapCallback = { action, courseId, courseName, isSelfPaced, productInfo ->
-            when (action) {
-                IAPAction.LOAD_PRICE -> {
-                    if (courseId != null && productInfo != null) {
-                        iapViewModel.loadPrice(
-                            courseId = courseId,
-                            courseName = courseName!!,
-                            isSelfPaced = isSelfPaced!!,
-                            productInfo = productInfo
-                        )
-                    }
-                }
-
-                IAPAction.START_PURCHASE_FLOW -> {
-                    iapViewModel.startPurchaseFlow()
-                }
-
-                IAPAction.PURCHASE_PRODUCT -> {
-                    iapViewModel.purchaseItem(requireActivity())
-                }
-
-                IAPAction.FLOW_COMPLETE -> {
-                    if (iapViewModel.isInProgress()) {
-                        iapViewModel.upgradeSuccessEvent()
-                        iapViewModel.clearIAPFLow()
-                    }
-                }
-
-                IAPAction.CLEAR -> {
-                    iapViewModel.clearIAPFLow()
-                }
-            }
-        },
-        onGetHelp = { message ->
-            iapViewModel.showFeedbackScreen(context, message)
-        },
-        updateCourseDataPostIAP = updateCourseDataPostIAP
+        }
     )
 }
 
@@ -215,16 +165,12 @@ private fun CourseOutlineUI(
     windowSize: WindowSize,
     uiState: CourseOutlineUIState,
     uiMessage: UIMessage?,
-    iapState: IAPUIState,
     onExpandClick: (Block) -> Unit,
     onSubSectionClick: (Block) -> Unit,
     onResumeClick: (String) -> Unit,
     onDownloadClick: (blockIds: List<String>) -> Unit,
     onResetDatesClick: () -> Unit,
-    onCertificateClick: (String) -> Unit,
-    iapCallback: (IAPAction, String?, String?, Boolean?, ProductInfo?) -> Unit,
-    onGetHelp: (String) -> Unit,
-    updateCourseDataPostIAP: () -> Unit,
+    onCertificateClick: (String) -> Unit
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -356,22 +302,6 @@ private fun CourseOutlineUI(
                                         }
                                     }
                                 }
-                                if (uiState.courseStructure.isUpgradeable && uiState.isValuePropEnabled) {
-                                    item {
-                                        UpgradeToAccessView(
-                                            modifier = Modifier.padding(all = 16.dp),
-                                            type = UpgradeToAccessViewType.COURSE,
-                                        ) {
-                                            iapCallback(
-                                                IAPAction.LOAD_PRICE,
-                                                uiState.courseStructure.id,
-                                                uiState.courseStructure.name,
-                                                uiState.courseStructure.isSelfPaced,
-                                                uiState.courseStructure.productInfo
-                                            )
-                                        }
-                                    }
-                                }
 
                                 item {
                                     Spacer(modifier = Modifier.height(12.dp))
@@ -399,58 +329,6 @@ private fun CourseOutlineUI(
                         }
 
                         CourseOutlineUIState.Loading -> {}
-                    }
-                    when (iapState) {
-                        is IAPUIState.Loading -> {
-                            IAPDialog(
-                                courseTitle = iapState.courseName,
-                                isLoading = true,
-                                onDismiss = {
-                                    iapCallback(IAPAction.CLEAR, null, null, null, null)
-                                })
-                        }
-
-                        is IAPUIState.ProductData -> {
-                            IAPDialog(
-                                courseTitle = iapState.courseName,
-                                formattedPrice = iapState.formattedPrice,
-                                onUpgradeNow = {
-                                    iapCallback(
-                                        IAPAction.START_PURCHASE_FLOW,
-                                        null,
-                                        null,
-                                        null,
-                                        null
-                                    )
-                                }, onDismiss = {
-                                    iapCallback(IAPAction.CLEAR, null, null, null, null)
-                                })
-                        }
-
-                        is IAPUIState.Error -> {
-                            IAPDialog(
-                                courseTitle = iapState.courseName,
-                                isError = true,
-                                onDismiss = {
-                                    iapCallback(IAPAction.CLEAR, null, null, null, null)
-                                }, onGetHelp = {
-                                    onGetHelp(iapState.feedbackErrorMessage)
-                                    iapCallback(IAPAction.CLEAR, null, null, null, null)
-                                })
-                        }
-
-                        is IAPUIState.PurchaseProduct -> {
-                            iapCallback(IAPAction.PURCHASE_PRODUCT, null, null, null, null)
-                        }
-
-                        is IAPUIState.FlowComplete -> {
-                            updateCourseDataPostIAP()
-                            iapCallback(IAPAction.FLOW_COMPLETE, null, null, null, null)
-                        }
-
-                        else -> {
-                            iapCallback(IAPAction.CLEAR, null, null, null, null)
-                        }
                     }
                 }
             }
@@ -628,20 +506,15 @@ private fun CourseOutlineScreenPreview() {
                     verifiedUpgradeLink = "",
                     contentTypeGatingEnabled = false,
                     hasEnded = false
-                ),
-                isValuePropEnabled = false
+                )
             ),
             uiMessage = null,
-            iapState = IAPUIState.Clear,
             onExpandClick = {},
             onSubSectionClick = {},
             onResumeClick = {},
             onDownloadClick = {},
             onResetDatesClick = {},
-            onCertificateClick = {},
-            iapCallback = { _, _, _, _, _ -> },
-            onGetHelp = { _ -> },
-            updateCourseDataPostIAP = {}
+            onCertificateClick = {}
         )
     }
 }
@@ -666,20 +539,15 @@ private fun CourseOutlineScreenTabletPreview() {
                     verifiedUpgradeLink = "",
                     contentTypeGatingEnabled = false,
                     hasEnded = false
-                ),
-                isValuePropEnabled = false
+                )
             ),
             uiMessage = null,
-            iapState = IAPUIState.Clear,
             onExpandClick = {},
             onSubSectionClick = {},
             onResumeClick = {},
             onDownloadClick = {},
             onResetDatesClick = {},
-            onCertificateClick = {},
-            iapCallback = { _, _, _, _, _ -> },
-            onGetHelp = { _ -> },
-            updateCourseDataPostIAP = {}
+            onCertificateClick = {}
         )
     }
 }
@@ -740,7 +608,17 @@ private val mockSequentialBlock = Block(
 private val mockEnrollmentDetails =
     EnrollmentDetails(created = Date(), mode = "audit", isActive = false, upgradeDeadline = Date())
 
-private val mockCourseAccessDetails = CourseAccessDetails(Date())
+private val mockCourseAccessDetails = CourseAccessDetails(
+    Date(),
+    coursewareAccess = CoursewareAccess(
+        true,
+        "",
+        "",
+        "",
+        "",
+        ""
+    )
+)
 
 private val mockCourseStructure = CourseStructure(
     root = "",
@@ -753,14 +631,6 @@ private val mockCourseStructure = CourseStructure(
     startDisplay = "",
     startType = "",
     end = Date(),
-    coursewareAccess = CoursewareAccess(
-        true,
-        "",
-        "",
-        "",
-        "",
-        ""
-    ),
     media = null,
     certificate = null,
     isSelfPaced = false,

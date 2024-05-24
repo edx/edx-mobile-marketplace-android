@@ -14,7 +14,10 @@ import org.openedx.auth.presentation.signin.SignInViewModel
 import org.openedx.auth.presentation.signup.SignUpViewModel
 import org.openedx.core.Validator
 import org.openedx.core.data.repository.iap.IAPRepository
+import org.openedx.core.domain.interactor.IAPInteractor
+import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.presentation.dialog.selectorbottomsheet.SelectDialogViewModel
+import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPViewModel
 import org.openedx.core.presentation.settings.video.VideoQualityViewModel
 import org.openedx.core.ui.WindowSize
@@ -136,7 +139,19 @@ val screenModule = module {
 
     factory { DashboardRepository(get(), get(), get(), get()) }
     factory { DashboardInteractor(get()) }
-    viewModel { DashboardListViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel {
+        DashboardListViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
     viewModel { (windowSize: WindowSize) ->
         DashboardGalleryViewModel(
             get(),
@@ -233,6 +248,7 @@ val screenModule = module {
             courseTitle,
             resumeBlockId,
             enrollmentMode,
+            versionName = BuildConfig.VERSION_NAME,
             get(),
             get(),
             get(),
@@ -419,12 +435,14 @@ val screenModule = module {
         )
     }
 
-    factory { IAPRepository(get()) }
-
-    viewModel { (screenName: String) ->
+    single { IAPRepository(get()) }
+    factory { IAPInteractor(get(), get()) }
+    viewModel { (iapFlow: IAPFlow, purchaseFlowData: PurchaseFlowData) ->
         IAPViewModel(
-            screenName = screenName,
+            iapFlow = iapFlow,
+            purchaseFlowData = purchaseFlowData,
             versionName = BuildConfig.VERSION_NAME,
+            get(),
             get(),
             get(),
             get(),

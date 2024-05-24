@@ -33,7 +33,9 @@ import org.openedx.core.domain.model.Pagination
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
+import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.DiscoveryNotifier
+import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 import java.net.UnknownHostException
@@ -51,6 +53,7 @@ class DashboardViewModelTest {
     private val interactor = mockk<DashboardInteractor>()
     private val networkConnection = mockk<NetworkConnection>()
     private val discoveryNotifier = mockk<DiscoveryNotifier>()
+    private val iapNotifier = mockk<IAPNotifier>()
     private val analytics = mockk<DashboardAnalytics>()
     private val appNotifier = mockk<AppNotifier>()
     private val corePreferences = mockk<CorePreferences>()
@@ -85,6 +88,7 @@ class DashboardViewModelTest {
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -110,6 +114,7 @@ class DashboardViewModelTest {
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -135,6 +140,7 @@ class DashboardViewModelTest {
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -161,6 +167,7 @@ class DashboardViewModelTest {
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -198,6 +205,7 @@ class DashboardViewModelTest {
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -223,6 +231,7 @@ class DashboardViewModelTest {
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -252,6 +261,7 @@ class DashboardViewModelTest {
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -276,12 +286,16 @@ class DashboardViewModelTest {
         every { networkConnection.isOnline() } returns true
         every { corePreferences.appConfig.isValuePropEnabled } returns false
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
+        coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
+        coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
+
         val viewModel = DashboardListViewModel(
             config,
             networkConnection,
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -293,6 +307,7 @@ class DashboardViewModelTest {
         coVerify(exactly = 2) { interactor.getEnrolledCourses(any()) }
         coVerify(exactly = 0) { interactor.getEnrolledCoursesFromCache() }
         verify(exactly = 1) { appNotifier.notifier }
+        verify(exactly = 0) { iapNotifier.notifier }
 
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.updating.value == false)
@@ -311,12 +326,16 @@ class DashboardViewModelTest {
                 ""
             )
         )
+        coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
+        coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
+
         val viewModel = DashboardListViewModel(
             config,
             networkConnection,
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -328,6 +347,7 @@ class DashboardViewModelTest {
         coVerify(exactly = 2) { interactor.getEnrolledCourses(any()) }
         coVerify(exactly = 0) { interactor.getEnrolledCoursesFromCache() }
         verify(exactly = 1) { appNotifier.notifier }
+        verify(exactly = 0) { iapNotifier.notifier }
 
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.updating.value == false)
@@ -337,12 +357,15 @@ class DashboardViewModelTest {
     @Test
     fun `CourseDashboardUpdate notifier test`() = runTest {
         coEvery { discoveryNotifier.notifier } returns flow { emit(CourseDashboardUpdate()) }
+        coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
+
         val viewModel = DashboardListViewModel(
             config,
             networkConnection,
             interactor,
             resourceManager,
             discoveryNotifier,
+            iapNotifier,
             analytics,
             appNotifier,
             corePreferences
@@ -357,6 +380,6 @@ class DashboardViewModelTest {
 
         coVerify(exactly = 1) { interactor.getEnrolledCourses(any()) }
         verify(exactly = 1) { appNotifier.notifier }
+        verify(exactly = 1) { iapNotifier.notifier }
     }
-
 }

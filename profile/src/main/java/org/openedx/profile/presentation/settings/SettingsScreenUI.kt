@@ -288,11 +288,11 @@ private fun SettingsSection(
                     text = stringResource(id = profileR.string.profile_video),
                     onClick = onVideoSettingsClick
                 )
-                SettingsDivider()
-                SettingsItem(
-                    text = stringResource(id = profileR.string.profile_dates_and_calendar),
-                    onClick = onCalendarSettingsClick
-                )
+//                SettingsDivider()
+//                SettingsItem(
+//                    text = stringResource(id = profileR.string.profile_dates_and_calendar),
+//                    onClick = onCalendarSettingsClick
+//                )
             }
         }
     }

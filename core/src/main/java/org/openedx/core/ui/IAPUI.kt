@@ -104,6 +104,40 @@ fun UpgradeErrorDialog(onDismiss: () -> Unit, onGetHelp: () -> Unit) {
     )
 }
 
+@Composable
+fun PurchasesFulfillmentCompletedDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        title = {
+            Text(
+                text = stringResource(id = R.string.iap_silent_course_upgrade_success_title),
+                style = MaterialTheme.appTypography.titleMedium
+            )
+        },
+        text = {
+            Text(text = stringResource(id = R.string.iap_silent_course_upgrade_success_message))
+        },
+        confirmButton = {
+            OpenEdXButton(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(4.dp),
+                text = stringResource(id = R.string.iap_label_refresh_now),
+                onClick = onConfirm
+            )
+        },
+        dismissButton = {
+            OpenEdXButton(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(4.dp),
+                text = stringResource(id = R.string.iap_label_continue_without_update),
+                onClick = onDismiss
+            )
+        },
+        onDismissRequest = onDismiss
+    )
+}
+
 @Preview
 @Composable
 private fun PreviewValuePropUpgradeFeatures() {
@@ -114,4 +148,10 @@ private fun PreviewValuePropUpgradeFeatures() {
 @Composable
 private fun PreviewUpgradeErrorDialog() {
     UpgradeErrorDialog(onDismiss = {}, onGetHelp = {})
+}
+
+@Preview
+@Composable
+private fun PreviewPurchasesFulfillmentCompletedDialog() {
+    PurchasesFulfillmentCompletedDialog(onConfirm = {}, onDismiss = {})
 }

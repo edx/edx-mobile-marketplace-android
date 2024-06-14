@@ -27,3 +27,12 @@ data class EnrolledCourse(
                 course.isUpgradeDeadlinePassed.not() &&
                 productInfo != null
 }
+
+/**
+ * Method to filter the audit courses from the given enrolled course list.
+ *
+ * @return the list of all audit courses with non-null Skus.
+ */
+fun List<EnrolledCourse>.getAuditCourses(): List<EnrolledCourse> {
+    return this.filter { it.isUpgradeable }.toList()
+}

@@ -136,7 +136,7 @@ class IAPDialogFragment : DialogFragment() {
                         scaffoldState = scaffoldState,
                         onDisplayed = {
                             if (iapState is IAPUIState.CourseDataUpdated) {
-                                dismiss()
+                                onDismiss()
                             }
                         })
 
@@ -194,12 +194,12 @@ class IAPDialogFragment : DialogFragment() {
 
         fun newInstance(
             iapFlow: IAPFlow,
-            screenName: String,
-            courseId: String,
-            courseName: String,
-            isSelfPaced: Boolean,
+            screenName: String = "",
+            courseId: String = "",
+            courseName: String = "",
+            isSelfPaced: Boolean = false,
             componentId: String? = null,
-            productInfo: ProductInfo
+            productInfo: ProductInfo? = null
         ): IAPDialogFragment {
             val fragment = IAPDialogFragment()
             fragment.arguments = bundleOf(

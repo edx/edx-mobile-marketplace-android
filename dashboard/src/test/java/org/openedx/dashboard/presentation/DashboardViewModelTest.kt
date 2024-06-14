@@ -28,7 +28,11 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.interactor.IAPInteractor
+import org.openedx.core.domain.model.AppConfig
+import org.openedx.core.domain.model.CourseDatesCalendarSync
 import org.openedx.core.domain.model.DashboardCourseList
+import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
@@ -51,6 +55,7 @@ class DashboardViewModelTest {
     private val config = mockk<Config>()
     private val resourceManager = mockk<ResourceManager>()
     private val interactor = mockk<DashboardInteractor>()
+    private val iapInteractor = mockk<IAPInteractor>()
     private val networkConnection = mockk<NetworkConnection>()
     private val discoveryNotifier = mockk<DiscoveryNotifier>()
     private val iapNotifier = mockk<IAPNotifier>()
@@ -64,6 +69,16 @@ class DashboardViewModelTest {
     private val dashboardCourseList = DashboardCourseList(
         Pagination(10, "", 3, ""),
         listOf(mockk())
+    )
+
+    private val appConfig = AppConfig(
+        courseDatesCalendarSync = CourseDatesCalendarSync(
+            isEnabled = true,
+            isSelfPacedEnabled = true,
+            isInstructorPacedEnabled = true,
+            isDeepLinkEnabled = false,
+        ),
+        iapConfig = IAPConfig(false, "prefix", listOf())
     )
 
     @Before
@@ -82,7 +97,11 @@ class DashboardViewModelTest {
 
     @Test
     fun `getCourses no internet connection`() = runTest {
+        every { networkConnection.isOnline() } returns true
+        every { corePreferences.appConfig } returns appConfig
+
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -91,9 +110,9 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
-        every { networkConnection.isOnline() } returns true
         coEvery { interactor.getEnrolledCourses(any()) } throws UnknownHostException()
         advanceUntilIdle()
 
@@ -108,7 +127,11 @@ class DashboardViewModelTest {
 
     @Test
     fun `getCourses unknown error`() = runTest {
+        every { networkConnection.isOnline() } returns true
+        every { corePreferences.appConfig } returns appConfig
+
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -117,9 +140,10 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
-        every { networkConnection.isOnline() } returns true
+
         coEvery { interactor.getEnrolledCourses(any()) } throws Exception()
         advanceUntilIdle()
 
@@ -134,7 +158,11 @@ class DashboardViewModelTest {
 
     @Test
     fun `getCourses from network`() = runTest {
+        every { networkConnection.isOnline() } returns true
+        every { corePreferences.appConfig } returns appConfig
+
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -143,10 +171,10 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
-        every { networkConnection.isOnline() } returns true
-        every { corePreferences.appConfig.isValuePropEnabled } returns false
+
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
         coEvery { interactor.getEnrolledCoursesFromCache() } returns listOf(mockk())
         advanceUntilIdle()
@@ -161,7 +189,11 @@ class DashboardViewModelTest {
 
     @Test
     fun `getCourses from network with next page`() = runTest {
+        every { networkConnection.isOnline() } returns true
+        every { corePreferences.appConfig } returns appConfig
+
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -170,10 +202,10 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
-        every { networkConnection.isOnline() } returns true
-        every { corePreferences.appConfig.isValuePropEnabled } returns false
+
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList.copy(
             Pagination(
                 10,
@@ -199,7 +231,10 @@ class DashboardViewModelTest {
         every { networkConnection.isOnline() } returns false
         every { corePreferences.appConfig.isValuePropEnabled } returns false
         coEvery { interactor.getEnrolledCoursesFromCache() } returns listOf(mockk())
+        every { corePreferences.appConfig.iapConfig } returns appConfig.iapConfig
+
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -208,7 +243,8 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
 
         advanceUntilIdle()
@@ -224,8 +260,10 @@ class DashboardViewModelTest {
     @Test
     fun `updateCourses no internet error`() = runTest {
         every { networkConnection.isOnline() } returns true
+        every { corePreferences.appConfig } returns appConfig
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -234,7 +272,8 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
 
         coEvery { interactor.getEnrolledCourses(any()) } throws UnknownHostException()
@@ -254,8 +293,10 @@ class DashboardViewModelTest {
     @Test
     fun `updateCourses unknown exception`() = runTest {
         every { networkConnection.isOnline() } returns true
+        every { corePreferences.appConfig } returns appConfig
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -264,7 +305,8 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
 
         coEvery { interactor.getEnrolledCourses(any()) } throws Exception()
@@ -285,11 +327,13 @@ class DashboardViewModelTest {
     fun `updateCourses success`() = runTest {
         every { networkConnection.isOnline() } returns true
         every { corePreferences.appConfig.isValuePropEnabled } returns false
+        every { corePreferences.appConfig.iapConfig } returns appConfig.iapConfig
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
         coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
 
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -298,7 +342,8 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
 
         viewModel.updateCourses()
@@ -317,6 +362,7 @@ class DashboardViewModelTest {
     @Test
     fun `updateCourses success with next page`() = runTest {
         every { networkConnection.isOnline() } returns true
+        every { corePreferences.appConfig.iapConfig } returns appConfig.iapConfig
         every { corePreferences.appConfig.isValuePropEnabled } returns false
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList.copy(
             Pagination(
@@ -330,6 +376,7 @@ class DashboardViewModelTest {
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
 
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -338,7 +385,8 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
 
         viewModel.updateCourses()
@@ -358,8 +406,9 @@ class DashboardViewModelTest {
     fun `CourseDashboardUpdate notifier test`() = runTest {
         coEvery { discoveryNotifier.notifier } returns flow { emit(CourseDashboardUpdate()) }
         coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
-
+        every { corePreferences.appConfig } returns appConfig
         val viewModel = DashboardListViewModel(
+            "",
             config,
             networkConnection,
             interactor,
@@ -368,7 +417,8 @@ class DashboardViewModelTest {
             iapNotifier,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            iapInteractor
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()

@@ -3,7 +3,7 @@ package org.openedx.core.presentation.iap
 sealed class IAPUIState {
     data class ProductData(val courseName: String, val formattedPrice: String) : IAPUIState()
     data object PurchaseProduct : IAPUIState()
-    data object FlowComplete : IAPUIState()
+    data object PurchasesFulfillmentCompleted : IAPUIState()
     data object CourseDataUpdated : IAPUIState()
     data class Loading(val courseName: String, val loaderType: IAPLoaderType) : IAPUIState()
     data class Error(
@@ -13,10 +13,6 @@ sealed class IAPUIState {
     ) : IAPUIState()
 
     data object Clear : IAPUIState()
-}
-
-enum class IAPAction {
-    LOAD_PRICE, START_PURCHASE_FLOW, PURCHASE_PRODUCT, FLOW_COMPLETE, CLEAR
 }
 
 enum class IAPLoaderType {

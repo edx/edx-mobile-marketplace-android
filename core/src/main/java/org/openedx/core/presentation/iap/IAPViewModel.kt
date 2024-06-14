@@ -93,6 +93,11 @@ class IAPViewModel(
                 loadPrice()
             }
 
+            IAPFlow.SILENT -> {
+                _uiState.value = IAPUIState.Loading("", IAPLoaderType.FULL_SCREEN)
+                updateCourseData()
+            }
+
             else -> {}
         }
     }
@@ -330,10 +335,6 @@ class IAPViewModel(
     fun clearIAPFLow() {
         _uiState.value = IAPUIState.Clear
         purchaseFlowData = PurchaseFlowData()
-    }
-
-    fun isInProgress(): Boolean {
-        return purchaseFlowData.courseId != null && purchaseFlowData.purchaseToken != null && purchaseFlowData.basketId != -1L
     }
 
     companion object {

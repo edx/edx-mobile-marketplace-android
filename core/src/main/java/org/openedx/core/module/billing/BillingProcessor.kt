@@ -13,9 +13,11 @@ import com.android.billingclient.api.ProductDetailsResult
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.acknowledgePurchase
 import com.android.billingclient.api.consumePurchase
 import com.android.billingclient.api.queryProductDetails
+import com.android.billingclient.api.queryPurchasesAsync
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -173,6 +175,21 @@ class BillingProcessor(
         if (billingClient.isReady) {
             billingClient.endConnection()
         }
+    }
+
+    /**
+     * Method to query the Purchases async and returns purchases for currently owned items
+     * bought within the app.
+     *
+     * @return List of purchases
+     **/
+    suspend fun queryPurchases(): List<Purchase> {
+        isReadyOrConnect()
+        return billingClient.queryPurchasesAsync(
+            QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build()
+        ).purchasesList.filter { it.purchaseState == Purchase.PurchaseState.PURCHASED }
     }
 
     companion object {

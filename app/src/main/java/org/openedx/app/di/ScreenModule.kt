@@ -141,6 +141,8 @@ val screenModule = module {
     factory { DashboardInteractor(get()) }
     viewModel {
         DashboardListViewModel(
+            versionName = BuildConfig.VERSION_NAME,
+            get(),
             get(),
             get(),
             get(),
@@ -152,6 +154,7 @@ val screenModule = module {
             get()
         )
     }
+
     viewModel { (windowSize: WindowSize) ->
         DashboardGalleryViewModel(
             get(),

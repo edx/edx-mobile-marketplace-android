@@ -40,6 +40,8 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -87,9 +89,11 @@ import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRecommendedBox
 import org.openedx.core.presentation.iap.IAPFlow
+import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
+import org.openedx.core.ui.PurchasesFulfillmentCompletedDialog
 import org.openedx.core.ui.UpgradeToAccessView
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -130,12 +134,14 @@ class DashboardListFragment : Fragment() {
                 val refreshing by viewModel.updating.observeAsState(false)
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
                 val appUpgradeEvent by viewModel.appUpgradeEvent.observeAsState()
+                val iapUiState by viewModel.iapUiState.collectAsState(null)
 
                 DashboardListView(
                     windowSize = windowSize,
                     viewModel.apiHostUrl,
                     state = uiState!!,
                     uiMessage = uiMessage,
+                    iapUiState = iapUiState,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
                     fragmentManager = requireActivity().supportFragmentManager,
@@ -164,6 +170,12 @@ class DashboardListFragment : Fragment() {
                             AppUpdateState.openPlayMarket(requireContext())
                         },
                     ),
+                    onDetectUnfulfilledPurchase = { courses ->
+                        viewModel.detectUnfulfilledPurchase(courses)
+                    },
+                    clearIAPState = {
+                        viewModel.clearIAPState()
+                    }
                 )
             }
         }
@@ -177,6 +189,7 @@ internal fun DashboardListView(
     apiHostUrl: String,
     state: DashboardUIState,
     uiMessage: UIMessage?,
+    iapUiState: IAPUIState?,
     canLoadMore: Boolean,
     refreshing: Boolean,
     fragmentManager: FragmentManager,
@@ -185,6 +198,8 @@ internal fun DashboardListView(
     onSwipeRefresh: () -> Unit,
     paginationCallback: () -> Unit,
     onItemClick: (EnrolledCourse) -> Unit,
+    onDetectUnfulfilledPurchase: (List<EnrolledCourse>) -> Unit,
+    clearIAPState: () -> Unit,
     appUpgradeParameters: AppUpdateState.AppUpgradeParameters,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -326,6 +341,10 @@ internal fun DashboardListView(
                                     paginationCallback()
                                 }
                             }
+
+                            LaunchedEffect(state.courses) {
+                                onDetectUnfulfilledPurchase(state.courses)
+                            }
                         }
 
                         is DashboardUIState.Empty -> {
@@ -378,6 +397,25 @@ internal fun DashboardListView(
                                 }
                             )
                         }
+                    }
+
+                    when (iapUiState) {
+                        is IAPUIState.PurchasesFulfillmentCompleted -> {
+                            PurchasesFulfillmentCompletedDialog(onConfirm = {
+                                clearIAPState()
+                                IAPDialogFragment.newInstance(
+                                    IAPFlow.SILENT,
+                                    IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName
+                                ).show(
+                                    fragmentManager,
+                                    IAPDialogFragment::class.simpleName
+                                )
+                            }, onDismiss = {
+                                clearIAPState()
+                            })
+                        }
+
+                        else -> {}
                     }
                 }
             }
@@ -563,15 +601,18 @@ private fun DashboardListViewPreview() {
                 ), isValuePropEnabled = false
             ),
             uiMessage = null,
+            iapUiState = null,
             canLoadMore = false,
             refreshing = false,
+            fragmentManager = MockFragmentManager,
             hasInternetConnection = true,
             onReloadClick = {},
             onSwipeRefresh = {},
             paginationCallback = {},
             onItemClick = {},
+            onDetectUnfulfilledPurchase = {},
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
-            fragmentManager = MockFragmentManager
+            clearIAPState = {}
         )
     }
 }
@@ -595,15 +636,18 @@ private fun DashboardListViewTabletPreview() {
                 ), isValuePropEnabled = false
             ),
             uiMessage = null,
+            iapUiState = null,
             canLoadMore = false,
             refreshing = false,
+            fragmentManager = MockFragmentManager,
             hasInternetConnection = true,
             onReloadClick = {},
             onSwipeRefresh = {},
             paginationCallback = {},
             onItemClick = {},
+            onDetectUnfulfilledPurchase = {},
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
-            fragmentManager = MockFragmentManager
+            clearIAPState = {}
         )
     }
 }

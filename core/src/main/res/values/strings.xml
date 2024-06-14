@@ -197,4 +197,8 @@
     <string name="iap_email_subject_upgrade_error">Error upgrading course in app</string>
     <string name="iap_success_message">Thank you for your purchase. Enjoy full access to your course!</string>
     <string name="label_refresh_to_retry">Refresh to retry</string>
+    <string name="iap_silent_course_upgrade_success_title">New experience available</string>
+    <string name="iap_silent_course_upgrade_success_message">An update is available to unlock a purchased course. To update, we need to quickly refresh your app. If you choose not to update now, we’ll try again later.</string>
+    <string name="iap_label_refresh_now">Refresh now</string>
+    <string name="iap_label_continue_without_update">Continue without update</string>
 </resources>

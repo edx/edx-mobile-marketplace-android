@@ -170,8 +170,8 @@ class DashboardListFragment : Fragment() {
                             AppUpdateState.openPlayMarket(requireContext())
                         },
                     ),
-                    onDetectUnfulfilledPurchase = { courses ->
-                        viewModel.detectUnfulfilledPurchase(courses)
+                    onDetectUnfulfilledPurchase = {
+                        viewModel.detectUnfulfilledPurchase()
                     },
                     clearIAPState = {
                         viewModel.clearIAPState()
@@ -198,7 +198,7 @@ internal fun DashboardListView(
     onSwipeRefresh: () -> Unit,
     paginationCallback: () -> Unit,
     onItemClick: (EnrolledCourse) -> Unit,
-    onDetectUnfulfilledPurchase: (List<EnrolledCourse>) -> Unit,
+    onDetectUnfulfilledPurchase: () -> Unit,
     clearIAPState: () -> Unit,
     appUpgradeParameters: AppUpdateState.AppUpgradeParameters,
 ) {
@@ -343,7 +343,9 @@ internal fun DashboardListView(
                             }
 
                             LaunchedEffect(state.courses) {
-                                onDetectUnfulfilledPurchase(state.courses)
+                                if (state.courses.isNotEmpty()) {
+                                    onDetectUnfulfilledPurchase()
+                                }
                             }
                         }
 

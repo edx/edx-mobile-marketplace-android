@@ -202,6 +202,9 @@ val screenModule = module {
     viewModel { (username: String) -> AnothersProfileViewModel(get(), get(), username) }
     viewModel {
         SettingsViewModel(
+            versionName = BuildConfig.VERSION_NAME,
+            get(),
+            get(),
             get(),
             get(),
             get(),

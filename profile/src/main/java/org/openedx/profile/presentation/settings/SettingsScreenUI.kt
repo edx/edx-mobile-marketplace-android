@@ -50,10 +50,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.fragment.app.FragmentManager
 import org.openedx.core.R
 import org.openedx.core.domain.model.AgreementUrls
+import org.openedx.core.presentation.IAPAnalyticsScreen
+import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.AppData
+import org.openedx.core.presentation.iap.IAPFlow
+import org.openedx.core.presentation.iap.IAPLoaderType
+import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
+import org.openedx.core.ui.CheckingPurchasesDialog
+import org.openedx.core.ui.FakePurchasesFulfillmentCompleted
 import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
@@ -75,6 +83,8 @@ import org.openedx.profile.R as profileR
 internal fun SettingsScreen(
     windowSize: WindowSize,
     uiState: SettingsUIState,
+    iapUiState: IAPUIState?,
+    fragmentManager: FragmentManager,
     appUpgradeEvent: AppUpgradeEvent?,
     onBackClick: () -> Unit,
     onAction: (SettingsScreenAction) -> Unit,
@@ -186,6 +196,12 @@ internal fun SettingsScreen(
 
                                     Spacer(modifier = Modifier.height(24.dp))
 
+                                    PurchaseSection(onRestorePurchaseClick = {
+                                        onAction(SettingsScreenAction.RestorePurchaseClick)
+                                    })
+
+                                    Spacer(modifier = Modifier.height(24.dp))
+
                                     SupportInfoSection(
                                         uiState = uiState,
                                         onAction = onAction,
@@ -205,6 +221,32 @@ internal fun SettingsScreen(
                     }
                 }
             }
+        }
+
+        when {
+            iapUiState is IAPUIState.FakePurchasesFulfillmentCompleted -> {
+                FakePurchasesFulfillmentCompleted(onCancel = {
+                    onAction(SettingsScreenAction.RestorePurchaseCancel)
+                }, onGetHelp = {
+                    onAction(SettingsScreenAction.GetHelpClick)
+                })
+            }
+
+            (iapUiState is IAPUIState.Loading && iapUiState.loaderType == IAPLoaderType.RESTORE_PURCHASES) -> {
+                CheckingPurchasesDialog()
+            }
+
+            iapUiState is IAPUIState.PurchasesFulfillmentCompleted -> {
+                IAPDialogFragment.newInstance(
+                    IAPFlow.RESTORE,
+                    IAPAnalyticsScreen.SETTINGS.screenName
+                ).show(
+                    fragmentManager,
+                    IAPDialogFragment::class.simpleName
+                )
+            }
+
+            else -> {}
         }
     }
 }
@@ -237,6 +279,32 @@ private fun SettingsSection(
                 SettingsItem(
                     text = stringResource(id = profileR.string.profile_dates_and_calendar),
                     onClick = onCalendarSettingsClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PurchaseSection(onRestorePurchaseClick: () -> Unit) {
+    Column {
+        Text(
+            modifier = Modifier.testTag("txt_purchases"),
+            text = stringResource(id = profileR.string.profile_purchases),
+            style = MaterialTheme.appTypography.labelLarge,
+            color = MaterialTheme.appColors.textSecondary
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        Card(
+            modifier = Modifier,
+            shape = MaterialTheme.appShapes.cardShape,
+            elevation = 0.dp,
+            backgroundColor = MaterialTheme.appColors.cardViewBackground
+        ) {
+            Column(Modifier.fillMaxWidth()) {
+                SettingsItem(
+                    text = stringResource(id = profileR.string.profile_restore_purchaes),
+                    onClick = onRestorePurchaseClick
                 )
             }
         }
@@ -682,16 +750,20 @@ private fun LogoutDialogPreview() {
     LogoutDialog({}, {})
 }
 
+object MockFragmentManager : FragmentManager()
+
 @Preview
 @Composable
 private fun SettingsScreenPreview() {
     OpenEdXTheme {
         SettingsScreen(
-            onBackClick = {},
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             uiState = mockUiState,
-            onAction = {},
+            iapUiState = null,
             appUpgradeEvent = null,
+            onBackClick = {},
+            onAction = {},
+            fragmentManager = MockFragmentManager,
         )
     }
 }

@@ -201,4 +201,7 @@
     <string name="iap_silent_course_upgrade_success_message">An update is available to unlock a purchased course. To update, we need to quickly refresh your app. If you choose not to update now, we’ll try again later.</string>
     <string name="iap_label_refresh_now">Refresh now</string>
     <string name="iap_label_continue_without_update">Continue without update</string>
+    <string name="iap_checking_purchases">Checking purchases\.\.\.</string>
+    <string name="iap_title_purchases_restored">Purchases have been successfully restored</string>
+    <string name="iap_message_purchases_restored">All purchases are up to date. If you’re not seeing your purchases restored, please try restarting your app to refresh the experience.</string>
 </resources>

@@ -84,7 +84,8 @@ class DashboardListViewModel(
     val appUpgradeEvent: LiveData<AppUpgradeEvent>
         get() = _appUpgradeEvent
 
-    val iapConfig = preferencesManager.appConfig.iapConfig
+    private val iapConfig
+        get() = preferencesManager.appConfig.iapConfig
     private val isIAPEnabled
         get() = iapConfig.isEnabled &&
                 iapConfig.disableVersions.contains(versionName).not()
@@ -102,7 +103,7 @@ class DashboardListViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    updateCourses()
+                    updateCourses(true)
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)
@@ -119,7 +120,7 @@ class DashboardListViewModel(
         internalLoadingCourses()
     }
 
-    fun updateCourses() {
+    fun updateCourses(isIAPFlow: Boolean = false) {
         if (isLoading) {
             return
         }
@@ -146,7 +147,9 @@ class DashboardListViewModel(
                         isValuePropEnabled = preferencesManager.appConfig.isValuePropEnabled
                     )
                 }
-                iapNotifier.send(CourseDataUpdated())
+                if (isIAPFlow) {
+                    iapNotifier.send(CourseDataUpdated())
+                }
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -227,12 +230,12 @@ class DashboardListViewModel(
         analytics.dashboardCourseClickedEvent(courseId, courseName)
     }
 
-    fun detectUnfulfilledPurchase(courses: List<EnrolledCourse>) {
+    fun detectUnfulfilledPurchase() {
         if (isIAPEnabled) {
             viewModelScope.launch {
-                preferencesManager.user?.id?.takeIf { courses.isNotEmpty() }?.let { userId ->
+                preferencesManager.user?.id?.let { userId ->
                     runCatching {
-                        iapInteractor.processUnfulfilledPurchase(courses, userId)
+                        iapInteractor.processUnfulfilledPurchase(userId)
                     }.onSuccess {
                         if (it) {
                             _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)

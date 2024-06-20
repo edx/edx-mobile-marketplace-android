@@ -5,6 +5,7 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -18,9 +19,13 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
+import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.presentation.global.AppData
+import org.openedx.core.presentation.iap.IAPLoaderType
+import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -37,10 +42,13 @@ import org.openedx.profile.system.notifier.AccountDeactivated
 import org.openedx.profile.system.notifier.ProfileNotifier
 
 class SettingsViewModel(
+    private val versionName: String,
     private val appData: AppData,
     private val config: Config,
     private val resourceManager: ResourceManager,
+    private val corePreferences: CorePreferences,
     private val interactor: ProfileInteractor,
+    private val iapInteractor: IAPInteractor,
     private val cookieManager: AppCookieManager,
     private val workerController: DownloadWorkerController,
     private val analytics: ProfileAnalytics,
@@ -49,8 +57,13 @@ class SettingsViewModel(
     private val profileNotifier: ProfileNotifier,
 ) : BaseViewModel() {
 
-    private val _uiState: MutableStateFlow<SettingsUIState> = MutableStateFlow(SettingsUIState.Data(configuration))
+    private val _uiState: MutableStateFlow<SettingsUIState> =
+        MutableStateFlow(SettingsUIState.Data(configuration))
     internal val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
+
+    private val _iapUiState: MutableStateFlow<IAPUIState?> = MutableStateFlow(null)
+    val iapUiState: StateFlow<IAPUIState?>
+        get() = _iapUiState.asStateFlow()
 
     private val _successLogout = MutableSharedFlow<Boolean>()
     val successLogout: SharedFlow<Boolean>
@@ -212,5 +225,41 @@ class SettingsViewModel(
                 putAll(params)
             }
         )
+    }
+
+    fun restorePurchase() {
+        viewModelScope.launch {
+            _iapUiState.emit(IAPUIState.Loading("", IAPLoaderType.RESTORE_PURCHASES))
+            // delay to show loading state
+            delay(2000)
+            corePreferences.user?.id?.let { userId ->
+                runCatching {
+                    iapInteractor.processUnfulfilledPurchase(userId)
+                }.onSuccess {
+                    if (it) {
+                        _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
+                    } else {
+                        _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
+                    }
+                }.onFailure {
+                    _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
+                }
+            }
+        }
+    }
+
+    fun showFeedbackScreen(context: Context, message: String) {
+        EmailUtil.showFeedbackScreen(
+            context = context,
+            feedbackEmailAddress = config.getFeedbackEmailAddress(),
+            feedback = message,
+            appVersion = versionName
+        )
+    }
+
+    fun clearIAPState() {
+        viewModelScope.launch {
+            _iapUiState.emit(null)
+        }
     }
 }

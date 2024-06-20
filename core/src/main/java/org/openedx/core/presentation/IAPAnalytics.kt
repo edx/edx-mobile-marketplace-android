@@ -77,5 +77,6 @@ enum class IAPAnalyticsKeys(val key: String) {
 enum class IAPAnalyticsScreen(val screenName: String) {
     COURSE_ENROLLMENT("course_enrollment"),
     COURSE_DASHBOARD("course_dashboard"),
+    SETTINGS("settings"),
     COURSE_COMPONENT("course_component")
 }

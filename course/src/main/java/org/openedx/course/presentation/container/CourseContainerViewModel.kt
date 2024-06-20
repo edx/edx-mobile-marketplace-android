@@ -185,7 +185,7 @@ class CourseContainerViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    updateData()
+                    updateData(true)
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)
@@ -212,7 +212,6 @@ class CourseContainerViewModel(
                     }
                     _canShowUpgradeButton.value = isIAPEnabled &&
                             isValuePropEnabled &&
-                            courseStructure?.productInfo != null &&
                             courseStructure?.isUpgradeable == true
                 }
                 if (_dataReady.value == true && resumeBlockId.isNotEmpty()) {
@@ -277,7 +276,7 @@ class CourseContainerViewModel(
         }
     }
 
-    fun updateData() {
+    fun updateData(isIAPFlow: Boolean = false) {
         viewModelScope.launch {
             try {
                 _courseStructure = interactor.getCourseStructure(courseId, isNeedRefresh = true)
@@ -296,7 +295,9 @@ class CourseContainerViewModel(
             }
             _refreshing.value = false
             courseNotifier.send(CourseStructureUpdated(courseId))
-            iapNotifier.send(CourseDataUpdated())
+            if(isIAPFlow) {
+                iapNotifier.send(CourseDataUpdated())
+            }
         }
     }
 

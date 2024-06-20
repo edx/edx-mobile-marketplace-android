@@ -29,6 +29,5 @@ data class CourseStructure(
         get() = enrollmentDetails.isAuditMode &&
                 isStarted &&
                 enrollmentDetails.isUpgradeDeadlinePassed.not() &&
-                courseAccessDetails.coursewareAccess?.hasAccess == true &&
                 productInfo != null
 }

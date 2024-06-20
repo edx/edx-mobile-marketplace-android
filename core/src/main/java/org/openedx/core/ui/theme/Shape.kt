@@ -21,4 +21,4 @@ data class AppShapes(
 val MaterialTheme.appShapes: AppShapes
     @Composable
     @ReadOnlyComposable
-    get() = LocalShapes.current
+    get() =LocalShapes.current

@@ -27,12 +27,15 @@ class SettingsFragment : Fragment() {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
                 val uiState by viewModel.uiState.collectAsState()
+                val iapUiState by viewModel.iapUiState.collectAsState()
                 val logoutSuccess by viewModel.successLogout.collectAsState(false)
                 val appUpgradeEvent by viewModel.appUpgradeEvent.collectAsState(null)
 
                 SettingsScreen(
                     windowSize = windowSize,
                     uiState = uiState,
+                    iapUiState = iapUiState,
+                    fragmentManager = requireActivity().supportFragmentManager,
                     appUpgradeEvent = appUpgradeEvent,
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
@@ -94,6 +97,22 @@ class SettingsFragment : Fragment() {
                                     requireActivity().supportFragmentManager
                                 )
                             }
+
+                            SettingsScreenAction.RestorePurchaseClick -> {
+                                viewModel.restorePurchase()
+                            }
+
+                            SettingsScreenAction.RestorePurchaseCancel -> {
+                                viewModel.clearIAPState()
+                            }
+
+                            SettingsScreenAction.GetHelpClick -> {
+                                viewModel.clearIAPState()
+                                viewModel.showFeedbackScreen(
+                                    requireActivity(),
+                                    "test message"
+                                )
+                            }
                         }
                     }
                 )
@@ -120,5 +139,8 @@ internal interface SettingsScreenAction {
     object VideoSettingsClick : SettingsScreenAction
     object ManageAccountClick : SettingsScreenAction
     object CalendarSettingsClick : SettingsScreenAction
+    object RestorePurchaseClick : SettingsScreenAction
+    object RestorePurchaseCancel : SettingsScreenAction
+    object GetHelpClick : SettingsScreenAction
 }
 

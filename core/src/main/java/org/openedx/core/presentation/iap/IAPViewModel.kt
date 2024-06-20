@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
@@ -78,14 +81,14 @@ class IAPViewModel(
 
     init {
         viewModelScope.launch {
-            iapNotifier.notifier.collect { event ->
+            iapNotifier.notifier.onEach { event ->
                 when (event) {
                     is CourseDataUpdated -> {
                         _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                         _uiState.value = IAPUIState.CourseDataUpdated
                     }
                 }
-            }
+            }.distinctUntilChanged().launchIn(viewModelScope)
         }
 
         when (iapFlow) {
@@ -93,12 +96,10 @@ class IAPViewModel(
                 loadPrice()
             }
 
-            IAPFlow.SILENT -> {
+            IAPFlow.SILENT, IAPFlow.RESTORE -> {
                 _uiState.value = IAPUIState.Loading("", IAPLoaderType.FULL_SCREEN)
                 updateCourseData()
             }
-
-            else -> {}
         }
     }
 

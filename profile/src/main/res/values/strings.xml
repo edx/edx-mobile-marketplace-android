@@ -60,5 +60,7 @@
     <string name="calendar_color_accent">Accent</string>
     <string name="profile_course_dates">Course Dates</string>
     <string name="profile_color">Color</string>
+    <string name="profile_purchases">Purchases</string>
+    <string name="profile_restore_purchaes">Restore Purchases</string>
 
 </resources>

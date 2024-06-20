@@ -8,8 +8,6 @@ import com.android.billingclient.api.Purchase
 import org.openedx.core.ApiConstants
 import org.openedx.core.data.repository.iap.IAPRepository
 import org.openedx.core.domain.ProductInfo
-import org.openedx.core.domain.model.EnrolledCourse
-import org.openedx.core.domain.model.getAuditCourses
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.decodeToLong
 import org.openedx.core.module.billing.BillingProcessor
@@ -74,14 +72,10 @@ class IAPInteractor(
         )
     }
 
-    suspend fun processUnfulfilledPurchase(courses: List<EnrolledCourse>, userId: Long): Boolean {
-        val auditCourses = courses.getAuditCourses()
+    suspend fun processUnfulfilledPurchase(userId: Long): Boolean {
         val purchases = billingProcessor.queryPurchases()
         val userPurchases =
             purchases.filter { it.accountIdentifiers?.obfuscatedAccountId?.decodeToLong() == userId }
-                .filter {
-                    auditCourses.any { courseItem -> courseItem.productInfo?.courseSku == it.getCourseSku() }
-                }
         if (userPurchases.isNotEmpty()) {
             startUnfulfilledVerification(userPurchases)
             return true

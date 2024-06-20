@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -20,8 +21,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import org.openedx.core.R
 import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 
 @Composable
@@ -72,6 +75,7 @@ fun CheckmarkView(text: String) {
 
 @Composable
 fun UpgradeErrorDialog(onDismiss: () -> Unit, onGetHelp: () -> Unit) {
+
     AlertDialog(
         title = {
             Text(
@@ -101,6 +105,67 @@ fun UpgradeErrorDialog(onDismiss: () -> Unit, onGetHelp: () -> Unit) {
             )
         },
         onDismissRequest = onDismiss
+    )
+}
+
+@Composable
+fun CheckingPurchasesDialog() {
+    Dialog(onDismissRequest = { }) {
+        Column(
+            Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+                .background(
+                    MaterialTheme.appColors.cardViewBackground,
+                    MaterialTheme.appShapes.cardShape
+                )
+        ) {
+            Text(
+                modifier = Modifier.padding(16.dp),
+                text = stringResource(id = R.string.iap_checking_purchases),
+                style = MaterialTheme.appTypography.titleMedium
+            )
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 16.dp),
+                color = MaterialTheme.appColors.primary
+            )
+        }
+    }
+}
+
+@Composable
+fun FakePurchasesFulfillmentCompleted(onCancel: () -> Unit, onGetHelp: () -> Unit) {
+    AlertDialog(
+        title = {
+            Text(
+                text = stringResource(id = R.string.iap_title_purchases_restored),
+                style = MaterialTheme.appTypography.titleMedium
+            )
+        },
+        text = {
+            Text(text = stringResource(id = R.string.iap_message_purchases_restored))
+        },
+        confirmButton = {
+            OpenEdXButton(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(4.dp),
+                text = stringResource(id = R.string.core_cancel),
+                onClick = onCancel
+            )
+        },
+        dismissButton = {
+            OpenEdXButton(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(4.dp),
+                text = stringResource(id = R.string.iap_get_help),
+                onClick = onGetHelp
+            )
+        },
+        onDismissRequest = onCancel
     )
 }
 
@@ -154,4 +219,16 @@ private fun PreviewUpgradeErrorDialog() {
 @Composable
 private fun PreviewPurchasesFulfillmentCompletedDialog() {
     PurchasesFulfillmentCompletedDialog(onConfirm = {}, onDismiss = {})
+}
+
+@Preview
+@Composable
+private fun PreviewCheckingPurchasesDialog() {
+    CheckingPurchasesDialog()
+}
+
+@Preview
+@Composable
+private fun PreviewFakePurchasesFulfillmentCompleted() {
+    FakePurchasesFulfillmentCompleted(onCancel = {}, onGetHelp = {})
 }

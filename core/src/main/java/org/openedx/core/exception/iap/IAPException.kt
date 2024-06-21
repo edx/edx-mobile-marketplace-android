@@ -1,5 +1,8 @@
 package org.openedx.core.exception.iap
 
+import org.json.JSONObject
+import retrofit2.Response
+
 /**
  *
  * Signals that the user unable to complete the in-app purchases follow it being not parsable or
@@ -12,3 +15,18 @@ package org.openedx.core.exception.iap
  * */
 class IAPException(val httpErrorCode: Int = -1, val errorMessage: String) :
     Exception(errorMessage)
+
+/**
+ * Attempts to extract error message from api responses and fails gracefully if unable to do so.
+ *
+ * @return extracted text message; null if no message was received or was unable to parse it.
+ */
+fun <T> Response<T>.getMessage(): String {
+    if (isSuccessful) return message()
+    return try {
+        val errors = JSONObject(errorBody()?.string() ?: "{}")
+        errors.optString("error")
+    } catch (ex: Exception) {
+        ""
+    }
+}

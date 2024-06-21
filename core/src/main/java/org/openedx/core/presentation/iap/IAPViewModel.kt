@@ -5,6 +5,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.Purchase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -49,7 +50,8 @@ class IAPViewModel(
     private val iapNotifier: IAPNotifier
 ) : BaseViewModel() {
 
-    private val _uiState = MutableStateFlow<IAPUIState>(IAPUIState.Clear)
+    private val _uiState =
+        MutableStateFlow<IAPUIState>(IAPUIState.Loading(IAPLoaderType.PRICE))
     val uiState: StateFlow<IAPUIState>
         get() = _uiState.asStateFlow()
 
@@ -61,10 +63,7 @@ class IAPViewModel(
         override fun onPurchaseComplete(purchase: Purchase) {
             if (purchase.getCourseSku() == purchaseFlowData.productInfo?.courseSku) {
                 _uiState.value =
-                    IAPUIState.Loading(
-                        courseName = purchaseFlowData.courseName!!,
-                        loaderType = IAPLoaderType.FULL_SCREEN
-                    )
+                    IAPUIState.Loading(loaderType = IAPLoaderType.FULL_SCREEN)
                 purchaseFlowData.purchaseToken = purchase.purchaseToken
                 executeOrder(purchaseFlowData)
             }
@@ -80,7 +79,7 @@ class IAPViewModel(
     }
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             iapNotifier.notifier.onEach { event ->
                 when (event) {
                     is CourseDataUpdated -> {
@@ -97,7 +96,7 @@ class IAPViewModel(
             }
 
             IAPFlow.SILENT, IAPFlow.RESTORE -> {
-                _uiState.value = IAPUIState.Loading("", IAPLoaderType.FULL_SCREEN)
+                _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
                 updateCourseData()
             }
         }
@@ -107,11 +106,6 @@ class IAPViewModel(
         val feedbackErrorMessage: String =
             IAPErrorMessage.getFormattedErrorMessage(requestType, responseCode, errorMessage)
                 .toString()
-        _uiState.value = IAPUIState.Error(
-            courseName = purchaseFlowData.courseName!!,
-            requestType = requestType,
-            feedbackErrorMessage = feedbackErrorMessage
-        )
         when (requestType) {
             IAPErrorMessage.PAYMENT_SDK_CODE -> {
                 if (BillingClient.BillingResponseCode.USER_CANCELED == responseCode) {
@@ -130,26 +124,29 @@ class IAPViewModel(
                 courseUpgradeErrorEvent(feedbackErrorMessage)
             }
         }
+        if (BillingClient.BillingResponseCode.USER_CANCELED != responseCode) {
+            _uiState.value = IAPUIState.Error(
+                requestType = requestType,
+                feedbackErrorMessage = feedbackErrorMessage
+            )
+        } else {
+            _uiState.value = IAPUIState.Clear
+        }
     }
 
     private fun loadPrice() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             purchaseFlowData.takeIf { it.courseId != null && it.productInfo != null }
                 ?.apply {
-                    _uiState.value = IAPUIState.Loading(
-                        courseName = this.courseName!!,
-                        loaderType = IAPLoaderType.PRICE
-                    )
+                    _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PRICE)
                     runCatching {
                         iapInteractor.loadPrice(purchaseFlowData.productInfo?.storeSku!!)
                     }.onSuccess {
                         this.formattedPrice = it.formattedPrice
                         this.price = it.getPriceAmount()
                         this.currencyCode = it.priceCurrencyCode
-                        _uiState.value = IAPUIState.ProductData(
-                            courseName = this.courseName,
-                            formattedPrice = this.formattedPrice!!
-                        )
+                        _uiState.value =
+                            IAPUIState.ProductData(formattedPrice = this.formattedPrice!!)
                     }.onFailure {
                         if (it is IAPException) {
                             updateErrorState(
@@ -171,23 +168,11 @@ class IAPViewModel(
 
     fun startPurchaseFlow() {
         upgradeNowClickedEvent()
+        _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
         purchaseFlowData.flowStartTime = getCurrentTime()
         purchaseFlowData.takeIf { purchaseFlowData.courseName != null && it.productInfo != null }
             ?.apply {
-                _uiState.value = IAPUIState.Loading(
-                    courseName = purchaseFlowData.courseName!!,
-                    loaderType = IAPLoaderType.PURCHASE_FLOW,
-                )
-                viewModelScope.launch {
-                    runCatching {
-                        iapInteractor.addToBasketAndCheckout(productInfo?.courseSku!!)
-                    }.onSuccess { basketId ->
-                        purchaseFlowData.basketId = basketId
-                        _uiState.value = IAPUIState.PurchaseProduct
-                    }.onFailure {
-                        it.printStackTrace()
-                    }
-                }
+                addToBasket(productInfo?.courseSku!!)
             } ?: run {
             updateErrorState(
                 requestType = IAPErrorMessage.NO_SKU_CODE,
@@ -197,8 +182,45 @@ class IAPViewModel(
         }
     }
 
+    private fun addToBasket(courseSku: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                iapInteractor.addToBasket(courseSku)
+            }.onSuccess { basketId ->
+                purchaseFlowData.basketId = basketId
+                processCheckout(basketId)
+            }.onFailure {
+                if (it is IAPException) {
+                    updateErrorState(
+                        requestType = IAPErrorMessage.ADD_TO_BASKET_CODE,
+                        responseCode = it.httpErrorCode,
+                        errorMessage = it.errorMessage,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun processCheckout(basketId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                iapInteractor.processCheckout(basketId)
+            }.onSuccess {
+                _uiState.value = IAPUIState.PurchaseProduct
+            }.onFailure {
+                if (it is IAPException) {
+                    updateErrorState(
+                        requestType = IAPErrorMessage.CHECKOUT_CODE,
+                        responseCode = it.httpErrorCode,
+                        errorMessage = it.errorMessage,
+                    )
+                }
+            }
+        }
+    }
+
     fun purchaseItem(activity: FragmentActivity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             takeIf {
                 corePreferences.user?.id != null && purchaseFlowData.productInfo != null
             }?.apply {
@@ -213,7 +235,7 @@ class IAPViewModel(
     }
 
     private fun executeOrder(purchaseFlowData: PurchaseFlowData) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             runCatching {
                 iapInteractor.executeOrder(
                     basketId = purchaseFlowData.basketId,
@@ -236,7 +258,7 @@ class IAPViewModel(
     }
 
     private fun consumeOrderForFurtherPurchases(purchaseFlowData: PurchaseFlowData) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             purchaseFlowData.purchaseToken?.let {
                 runCatching {
                     iapInteractor.consumePurchase(it)
@@ -256,7 +278,7 @@ class IAPViewModel(
     }
 
     private fun updateCourseData() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             purchaseFlowData.courseId?.let { courseId ->
                 iapNotifier.send(UpdateCourseData(courseId))
             }

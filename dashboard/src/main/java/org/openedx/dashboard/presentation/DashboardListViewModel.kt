@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -227,7 +228,7 @@ class DashboardListViewModel(
 
     fun detectUnfulfilledPurchase() {
         if (isIAPEnabled) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 preferencesManager.user?.id?.let { userId ->
                     runCatching {
                         iapInteractor.processUnfulfilledPurchase(userId)

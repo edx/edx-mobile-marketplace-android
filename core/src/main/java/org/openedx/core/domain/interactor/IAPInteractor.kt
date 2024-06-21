@@ -18,7 +18,6 @@ class IAPInteractor(
     private val billingProcessor: BillingProcessor,
     private val repository: IAPRepository,
 ) {
-
     suspend fun loadPrice(productId: String): ProductDetails.OneTimePurchaseOfferDetails {
         val response =
             billingProcessor.querySyncDetails(productId)
@@ -34,10 +33,13 @@ class IAPInteractor(
         }
     }
 
-    suspend fun addToBasketAndCheckout(courseSku: String): Long {
+    suspend fun addToBasket(courseSku: String): Long {
         val basketResponse = repository.addToBasket(courseSku)
-        repository.proceedCheckout(basketResponse.basketId)
         return basketResponse.basketId
+    }
+
+    suspend fun processCheckout(basketId: Long) {
+        repository.proceedCheckout(basketId)
     }
 
     suspend fun purchaseItem(
@@ -48,13 +50,6 @@ class IAPInteractor(
     ) {
         billingProcessor.setPurchaseListener(purchaseListeners)
         billingProcessor.purchaseItem(activity, id, productInfo)
-    }
-
-    suspend fun consumePurchase(purchaseToken: String) {
-        val result = billingProcessor.consumePurchase(purchaseToken)
-        if (result.responseCode != BillingClient.BillingResponseCode.OK) {
-            throw IAPException(result.responseCode, result.debugMessage)
-        }
     }
 
     suspend fun executeOrder(
@@ -70,6 +65,13 @@ class IAPInteractor(
             price = price,
             currencyCode = currencyCode,
         )
+    }
+
+    suspend fun consumePurchase(purchaseToken: String) {
+        val result = billingProcessor.consumePurchase(purchaseToken)
+        if (result.responseCode != BillingClient.BillingResponseCode.OK) {
+            throw IAPException(result.responseCode, result.debugMessage)
+        }
     }
 
     suspend fun processUnfulfilledPurchase(userId: Long): Boolean {
@@ -94,7 +96,8 @@ class IAPInteractor(
             productDetail?.oneTimePurchaseOfferDetails?.takeIf {
                 TextUtils.isEmpty(purchase.getCourseSku()).not()
             }?.let { oneTimeProductDetails ->
-                val basketId = addToBasketAndCheckout(purchase.getCourseSku()!!)
+                val basketId = addToBasket(purchase.getCourseSku()!!)
+                processCheckout(basketId)
                 executeOrder(
                     basketId = basketId,
                     purchaseToken = purchase.purchaseToken,

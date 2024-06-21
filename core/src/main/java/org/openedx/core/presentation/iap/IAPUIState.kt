@@ -1,14 +1,13 @@
 package org.openedx.core.presentation.iap
 
 sealed class IAPUIState {
-    data class ProductData(val courseName: String, val formattedPrice: String) : IAPUIState()
+    data class ProductData(val formattedPrice: String) : IAPUIState()
     data object PurchaseProduct : IAPUIState()
     data object PurchasesFulfillmentCompleted : IAPUIState()
     data object FakePurchasesFulfillmentCompleted : IAPUIState()
     data object CourseDataUpdated : IAPUIState()
-    data class Loading(val courseName: String, val loaderType: IAPLoaderType) : IAPUIState()
+    data class Loading(val loaderType: IAPLoaderType) : IAPUIState()
     data class Error(
-        val courseName: String,
         val requestType: Int = -1,
         val feedbackErrorMessage: String = ""
     ) : IAPUIState()

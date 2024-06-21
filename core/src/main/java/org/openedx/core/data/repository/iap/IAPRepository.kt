@@ -5,17 +5,32 @@ import org.openedx.core.data.api.iap.InAppPurchasesApi
 import org.openedx.core.domain.model.iap.AddToBasketResponse
 import org.openedx.core.domain.model.iap.CheckoutResponse
 import org.openedx.core.domain.model.iap.ExecuteOrderResponse
+import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.exception.iap.getMessage
 
 class IAPRepository(private val api: InAppPurchasesApi) {
+
     suspend fun addToBasket(courseSku: String): AddToBasketResponse {
-        return api.addToBasket(courseSku).mapToDomain()
+        val response = api.addToBasket(courseSku)
+        if (response.isSuccessful) {
+            response.body()?.run {
+                return mapToDomain()
+            }
+        }
+        throw IAPException(response.code(), response.getMessage())
     }
 
     suspend fun proceedCheckout(basketId: Long): CheckoutResponse {
-        return api.proceedCheckout(
+        val response = api.proceedCheckout(
             basketId = basketId,
             paymentProcessor = ApiConstants.IAPFields.PAYMENT_PROCESSOR
-        ).mapToDomain()
+        )
+        if (response.isSuccessful) {
+            response.body()?.run {
+                return mapToDomain()
+            }
+        }
+        throw IAPException(response.code(), response.getMessage())
     }
 
     suspend fun executeOrder(
@@ -25,12 +40,18 @@ class IAPRepository(private val api: InAppPurchasesApi) {
         price: Double,
         currencyCode: String,
     ): ExecuteOrderResponse {
-        return api.executeOrder(
+        val response = api.executeOrder(
             basketId = basketId,
             paymentProcessor = paymentProcessor,
             purchaseToken = purchaseToken,
             price = price,
             currencyCode = currencyCode
-        ).mapToDomain()
+        )
+        if (response.isSuccessful) {
+            response.body()?.run {
+                return mapToDomain()
+            }
+        }
+        throw IAPException(response.code(), response.getMessage())
     }
 }

@@ -157,6 +157,10 @@ class IAPDialogFragment : DialogFragment() {
                             })
                         }
 
+                        is IAPUIState.Clear ->{
+                            onDismiss()
+                        }
+
                         else -> {}
                     }
 

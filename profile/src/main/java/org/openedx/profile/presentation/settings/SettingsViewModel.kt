@@ -228,8 +228,8 @@ class SettingsViewModel(
     }
 
     fun restorePurchase() {
-        viewModelScope.launch {
-            _iapUiState.emit(IAPUIState.Loading("", IAPLoaderType.RESTORE_PURCHASES))
+        viewModelScope.launch(Dispatchers.IO) {
+            _iapUiState.emit(IAPUIState.Loading(IAPLoaderType.RESTORE_PURCHASES))
             // delay to show loading state
             delay(2000)
             corePreferences.user?.id?.let { userId ->

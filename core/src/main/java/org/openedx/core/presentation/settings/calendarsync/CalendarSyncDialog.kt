@@ -120,11 +120,11 @@ fun CalendarSyncDialog(
 private fun CalendarAlertDialog(dialogProperties: DialogProperties, onDismiss: () -> Unit) {
     AlertDialog(
         modifier = Modifier.background(
-            color = MaterialTheme.appColors.background,
+            color = MaterialTheme.appColors.surface,
             shape = MaterialTheme.appShapes.cardShape
         ),
         shape = MaterialTheme.appShapes.cardShape,
-        backgroundColor = MaterialTheme.appColors.background,
+        backgroundColor = MaterialTheme.appColors.surface,
 
         properties = AlertDialogProperties(
             dismissOnBackPress = false,
@@ -183,7 +183,7 @@ private fun SyncDialog() {
                     .fillMaxWidth()
                     .clip(MaterialTheme.appShapes.cardShape),
                 shape = MaterialTheme.appShapes.cardShape,
-                color = MaterialTheme.appColors.background,
+                color = MaterialTheme.appColors.surface,
             ) {
                 Column(
                     modifier = Modifier

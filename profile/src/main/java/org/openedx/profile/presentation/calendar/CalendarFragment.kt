@@ -170,7 +170,7 @@ private fun CalendarScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(MaterialTheme.appShapes.screenBackgroundShape)
-                        .background(MaterialTheme.appColors.background)
+                        .background(MaterialTheme.appColors.surface)
                         .displayCutoutForLandscape(),
                     contentAlignment = Alignment.TopCenter
                 ) {
@@ -187,7 +187,7 @@ private fun CalendarScreen(
                         Card(
                             shape = MaterialTheme.appShapes.cardShape,
                             elevation = 0.dp,
-                            backgroundColor = MaterialTheme.appColors.cardViewBackground
+                            backgroundColor = MaterialTheme.appColors.background
                         ) {
                             Column(
                                 modifier = Modifier

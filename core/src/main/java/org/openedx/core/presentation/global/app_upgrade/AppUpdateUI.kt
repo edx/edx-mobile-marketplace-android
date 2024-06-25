@@ -70,7 +70,7 @@ fun AppUpgradeRequiredScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(color = MaterialTheme.appColors.background)
+            .background(color = MaterialTheme.appColors.surface)
             .statusBarsInset()
             .semantics { testTagsAsResourceId = true },
         contentAlignment = Alignment.TopCenter

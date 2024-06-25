@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -100,7 +101,7 @@ import java.util.Date
 
 @Composable
 fun AllEnrolledCoursesView(
-    fragmentManager: FragmentManager
+    fragmentManager: FragmentManager,
 ) {
     val viewModel: AllEnrolledCoursesViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -152,14 +153,18 @@ fun AllEnrolledCoursesView(
     )
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterialApi::class,
+    ExperimentalComposeUiApi::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 private fun AllEnrolledCoursesView(
     apiHostUrl: String,
     state: AllEnrolledCoursesUIState,
     uiMessage: UIMessage?,
     hasInternetConnection: Boolean,
-    onAction: (AllEnrolledCoursesAction) -> Unit
+    onAction: (AllEnrolledCoursesAction) -> Unit,
 ) {
     val windowSize = rememberWindowSize()
     val layoutDirection = LocalLayoutDirection.current
@@ -187,7 +192,7 @@ private fun AllEnrolledCoursesView(
             .semantics {
                 testTagsAsResourceId = true
             },
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) { paddingValues ->
         val contentPaddings by remember(key1 = windowSize) {
             mutableStateOf(
@@ -254,7 +259,7 @@ private fun AllEnrolledCoursesView(
                 }
 
                 Surface(
-                    color = MaterialTheme.appColors.background,
+                    color = MaterialTheme.appColors.surface,
                     shape = MaterialTheme.appShapes.screenBackgroundShape
                 ) {
                     Box(
@@ -271,7 +276,9 @@ private fun AllEnrolledCoursesView(
                             Header(
                                 modifier = Modifier
                                     .padding(
-                                        start = contentPaddings.calculateStartPadding(layoutDirection),
+                                        start = contentPaddings.calculateStartPadding(
+                                            layoutDirection
+                                        ),
                                         end = contentPaddings.calculateEndPadding(layoutDirection)
                                     ),
                                 onSearchClick = {
@@ -324,7 +331,11 @@ private fun AllEnrolledCoursesView(
                                                             course = course,
                                                             apiHostUrl = apiHostUrl,
                                                             onClick = {
-                                                                onAction(AllEnrolledCoursesAction.OpenCourse(it))
+                                                                onAction(
+                                                                    AllEnrolledCoursesAction.OpenCourse(
+                                                                        it
+                                                                    )
+                                                                )
                                                             }
                                                         )
                                                     }
@@ -409,10 +420,12 @@ fun CourseItem(
             .height(180.dp)
             .clickable {
                 onClick(course)
-            },
+            }
+            .shadow(
+                elevation = 4.dp,
+                shape = MaterialTheme.appShapes.courseImageShape
+            ),
         backgroundColor = MaterialTheme.appColors.background,
-        shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp
     ) {
         Box {
             Column {
@@ -438,8 +451,8 @@ fun CourseItem(
                         .fillMaxWidth()
                         .height(8.dp),
                     progress = progress,
-                    color = MaterialTheme.appColors.primary,
-                    backgroundColor = MaterialTheme.appColors.divider
+                    color = MaterialTheme.appColors.progressBarColor,
+                    backgroundColor = MaterialTheme.appColors.progressBarBackgroundColor
                 )
 
                 Text(
@@ -486,7 +499,7 @@ fun CourseItem(
 @Composable
 fun Header(
     modifier: Modifier = Modifier,
-    onSearchClick: () -> Unit
+    onSearchClick: () -> Unit,
 ) {
     Box(
         modifier = modifier.fillMaxWidth()
@@ -516,7 +529,7 @@ fun Header(
 
 @Composable
 fun EmptyState(
-    currentCourseStatus: CourseStatusFilter
+    currentCourseStatus: CourseStatusFilter,
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),

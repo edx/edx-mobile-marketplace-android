@@ -181,7 +181,7 @@ private fun VideoSettingsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(MaterialTheme.appShapes.screenBackgroundShape)
-                        .background(MaterialTheme.appColors.background)
+                        .background(MaterialTheme.appColors.surface)
                         .displayCutoutForLandscape(),
                     contentAlignment = Alignment.TopCenter
                 ) {

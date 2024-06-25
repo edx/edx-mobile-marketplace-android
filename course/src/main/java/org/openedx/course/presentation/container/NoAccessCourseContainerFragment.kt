@@ -83,7 +83,7 @@ private fun NoAccessCourseContainerScreen(
         modifier = Modifier
             .fillMaxSize(),
         scaffoldState = scaffoldState,
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
         val screenWidth by remember(key1 = windowSize) {
             mutableStateOf(
@@ -127,7 +127,7 @@ private fun NoAccessCourseContainerScreen(
                 }
                 Spacer(Modifier.height(6.dp))
                 Surface(
-                    color = MaterialTheme.appColors.background
+                    color = MaterialTheme.appColors.surface
                 ) {
                     Column(
                         Modifier.fillMaxSize(),

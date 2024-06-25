@@ -210,7 +210,7 @@ private fun CourseSearchScreen(
             .fillMaxSize()
             .navigationBarsPadding()
             .semantics { testTagsAsResourceId = true },
-        backgroundColor = MaterialTheme.appColors.background,
+        backgroundColor = MaterialTheme.appColors.surface,
         bottomBar = {
             if (!isUserLoggedIn) {
                 Box(
@@ -320,7 +320,7 @@ private fun CourseSearchScreen(
                     Spacer(modifier = Modifier.height(20.dp))
                 }
                 Surface(
-                    color = MaterialTheme.appColors.background
+                    color = MaterialTheme.appColors.surface
                 ) {
                     Box(
                         modifier = Modifier

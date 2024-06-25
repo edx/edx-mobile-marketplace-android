@@ -1,6 +1,7 @@
 package org.openedx.profile.presentation.profile.compose
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,7 +76,8 @@ internal fun ProfileView(
             .semantics {
                 testTagsAsResourceId = true
             },
-        scaffoldState = scaffoldState
+        scaffoldState = scaffoldState,
+        backgroundColor = MaterialTheme.appColors.surface
     ) { paddingValues ->
 
         val contentWidth by remember(key1 = windowSize) {
@@ -95,7 +97,8 @@ internal fun ProfileView(
             modifier = Modifier
                 .padding(paddingValues)
                 .statusBarsInset()
-                .displayCutoutForLandscape(),
+                .displayCutoutForLandscape()
+                .background(color = MaterialTheme.appColors.surface),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Toolbar(
@@ -105,7 +108,7 @@ internal fun ProfileView(
             )
 
             Surface(
-                color = MaterialTheme.appColors.background
+                color = MaterialTheme.appColors.surface
             ) {
                 Box(
                     modifier = Modifier.pullRefresh(pullRefreshState),
@@ -149,8 +152,8 @@ internal fun ProfileView(
                                         onClick = {
                                             onAction(ProfileViewAction.EditAccountClick)
                                         },
-                                        borderColor = MaterialTheme.appColors.primaryButtonBackground,
-                                        textColor = MaterialTheme.appColors.textAccent
+                                        borderColor = MaterialTheme.appColors.textPrimary,
+                                        textColor = MaterialTheme.appColors.textPrimary
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                 }

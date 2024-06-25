@@ -143,7 +143,7 @@ private fun ActionDialog(
             .fillMaxWidth()
             .clip(MaterialTheme.appShapes.cardShape)
             .background(
-                color = MaterialTheme.appColors.background,
+                color = MaterialTheme.appColors.surface,
                 shape = MaterialTheme.appShapes.cardShape
             )
     ) {

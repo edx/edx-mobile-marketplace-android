@@ -97,7 +97,7 @@ fun RequiredFields(
                     modifier = Modifier.testTag("txt_${field.name.tagId()}"),
                     fullText = linkedText.text,
                     hyperLinks = linkedText.links,
-                    linkTextColor = MaterialTheme.appColors.primary
+                    linkTextColor = MaterialTheme.appColors.info
                 )
             }
 
@@ -177,7 +177,7 @@ fun OptionalFields(
                     HyperlinkText(
                         fullText = linkedText.text,
                         hyperLinks = linkedText.links,
-                        linkTextColor = MaterialTheme.appColors.textHyperLink,
+                        linkTextColor = MaterialTheme.appColors.info,
                         linkTextDecoration = TextDecoration.Underline,
                         action = {
                             hyperLinkAction?.invoke(linkedText.links, it)

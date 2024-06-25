@@ -157,7 +157,7 @@ internal fun LoginScreen(
         ) {
             SignInLogoView()
             Surface(
-                color = MaterialTheme.appColors.background,
+                color = MaterialTheme.appColors.surface,
                 shape = MaterialTheme.appShapes.screenBackgroundShape,
                 modifier = Modifier
                     .fillMaxSize()
@@ -165,7 +165,7 @@ internal fun LoginScreen(
                 Box(contentAlignment = Alignment.TopCenter) {
                     Column(
                         modifier = Modifier
-                            .background(MaterialTheme.appColors.background)
+                            .background(MaterialTheme.appColors.surface)
                             .verticalScroll(scrollState)
                             .displayCutoutForLandscape()
                             .then(contentPaddings),
@@ -198,7 +198,7 @@ internal fun LoginScreen(
                                 modifier = Modifier.testTag("txt_${state.agreement.name}"),
                                 fullText = linkedText.text,
                                 hyperLinks = linkedText.links,
-                                linkTextColor = MaterialTheme.appColors.textHyperLink,
+                                linkTextColor = MaterialTheme.appColors.info,
                                 linkTextDecoration = TextDecoration.Underline,
                                 action = { link ->
                                     onEvent(AuthEvent.OpenLink(linkedText.links, link))
@@ -259,8 +259,8 @@ private fun AuthForm(
                     color = MaterialTheme.appColors.primary,
                     style = MaterialTheme.appTypography.labelLarge
                 )
+                Spacer(modifier = Modifier.weight(1f))
             }
-            Spacer(modifier = Modifier.weight(1f))
             Text(
                 modifier = Modifier
                     .testTag("txt_forgot_password")
@@ -268,7 +268,7 @@ private fun AuthForm(
                         onEvent(AuthEvent.ForgotPasswordClick)
                     },
                 text = stringResource(id = R.string.auth_forgot_password),
-                color = MaterialTheme.appColors.info_variant,
+                color = MaterialTheme.appColors.info,
                 style = MaterialTheme.appTypography.labelLarge
             )
         }
@@ -280,7 +280,7 @@ private fun AuthForm(
                 modifier = buttonWidth.testTag("btn_sign_in"),
                 text = stringResource(id = coreR.string.core_sign_in),
                 textColor = MaterialTheme.appColors.primaryButtonText,
-                backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
+                backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
                 onClick = {
                     onEvent(AuthEvent.SignIn(login = login, password = password))
                 }

@@ -1,5 +1,6 @@
 package org.openedx.whatsnew.presentation.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -174,7 +175,7 @@ fun PrevButton(
             .height(42.dp)
             .alpha(prevButtonAnimationFactor),
         colors = ButtonDefaults.outlinedButtonColors(
-            backgroundColor = MaterialTheme.appColors.background
+            backgroundColor = MaterialTheme.appColors.surface
         ),
         border = BorderStroke(1.dp, MaterialTheme.appColors.primary),
         elevation = null,
@@ -264,7 +265,8 @@ fun NextFinishButton(
     }
 }
 
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun NavigationUnitsButtonsPrevInTheMiddle() {
     OpenEdXTheme {
@@ -277,7 +279,8 @@ private fun NavigationUnitsButtonsPrevInTheMiddle() {
     }
 }
 
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun NavigationUnitsButtonsPrevInTheStart() {
     OpenEdXTheme {
@@ -290,7 +293,8 @@ private fun NavigationUnitsButtonsPrevInTheStart() {
     }
 }
 
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun NavigationUnitsButtonsPrevInTheEnd() {
     OpenEdXTheme {

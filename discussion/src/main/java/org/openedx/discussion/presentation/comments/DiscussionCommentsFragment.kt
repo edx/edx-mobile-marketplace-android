@@ -197,9 +197,9 @@ private fun DiscussionCommentsScreen(
     }
 
     val iconButtonColor = if (responseValue.isEmpty()) {
-        MaterialTheme.appColors.textFieldBackgroundVariant
+        MaterialTheme.appColors.primary
     } else {
-        Color.White
+        MaterialTheme.appColors.textFieldBackgroundVariant
     }
 
     Scaffold(
@@ -207,7 +207,7 @@ private fun DiscussionCommentsScreen(
         modifier = Modifier
             .fillMaxSize()
             .navigationBarsPadding(),
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
         val keyboardController = LocalSoftwareKeyboardController.current
         val focusManager = LocalFocusManager.current
@@ -270,7 +270,7 @@ private fun DiscussionCommentsScreen(
             Spacer(Modifier.height(6.dp))
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.appColors.background
+                color = MaterialTheme.appColors.surface
             ) {
                 Box(Modifier.pullRefresh(pullRefreshState)) {
                     when (uiState) {
@@ -284,7 +284,7 @@ private fun DiscussionCommentsScreen(
                                         .then(screenWidth)
                                         .weight(1f)
                                         .displayCutoutForLandscape()
-                                        .background(MaterialTheme.appColors.background),
+                                        .background(MaterialTheme.appColors.surface),
                                     verticalArrangement = Arrangement.spacedBy(16.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     contentPadding = PaddingValues(bottom = 24.dp),
@@ -294,7 +294,7 @@ private fun DiscussionCommentsScreen(
                                         ThreadMainItem(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .background(MaterialTheme.appColors.background)
+                                                .background(MaterialTheme.appColors.surface)
                                                 .padding(horizontal = paddingContent)
                                                 .padding(top = 32.dp),
                                             thread = uiState.thread,

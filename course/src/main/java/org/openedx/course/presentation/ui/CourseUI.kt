@@ -346,7 +346,7 @@ fun NavigationUnitsButtons(
                 modifier = Modifier
                     .height(42.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    backgroundColor = MaterialTheme.appColors.background
+                    backgroundColor = MaterialTheme.appColors.surface
                 ),
                 border = BorderStroke(1.dp, MaterialTheme.appColors.primaryButtonBorder),
                 elevation = null,
@@ -528,7 +528,7 @@ fun VideoSubtitles(
             Column(
                 modifier = Modifier
                     .padding(it)
-                    .background(color = MaterialTheme.appColors.background)
+                    .background(color = MaterialTheme.appColors.surface)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -631,6 +631,7 @@ fun CourseSection(
                     block = subSectionBlock,
                     onClick = onSubSectionClick
                 )
+                Divider()
             }
         }
     }

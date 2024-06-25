@@ -49,6 +49,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
@@ -166,7 +167,7 @@ private fun DashboardGalleryView(
     updating: Boolean,
     apiHostUrl: String,
     onAction: (DashboardGalleryScreenAction) -> Unit,
-    hasInternetConnection: Boolean
+    hasInternetConnection: Boolean,
 ) {
     val scaffoldState = rememberScaffoldState()
     val pullRefreshState = rememberPullRefreshState(
@@ -180,7 +181,7 @@ private fun DashboardGalleryView(
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = Modifier.fillMaxSize(),
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) { paddingValues ->
 
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
@@ -189,7 +190,7 @@ private fun DashboardGalleryView(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            color = MaterialTheme.appColors.background
+            color = MaterialTheme.appColors.surface
         ) {
             Box(
                 Modifier.fillMaxSize()
@@ -223,7 +224,12 @@ private fun DashboardGalleryView(
                                     onAction(DashboardGalleryScreenAction.NavigateToDates(it))
                                 },
                                 resumeBlockId = { course, blockId ->
-                                    onAction(DashboardGalleryScreenAction.OpenBlock(course, blockId))
+                                    onAction(
+                                        DashboardGalleryScreenAction.OpenBlock(
+                                            course,
+                                            blockId
+                                        )
+                                    )
                                 }
                             )
                         }
@@ -310,7 +316,7 @@ private fun SecondaryCourses(
     hasNextPage: Boolean,
     apiHostUrl: String,
     onCourseClick: (EnrolledCourse) -> Unit,
-    onViewAllClick: () -> Unit
+    onViewAllClick: () -> Unit,
 ) {
     val windowSize = rememberWindowSize()
     val itemsCount = if (windowSize.isTablet) 7 else 5
@@ -360,7 +366,7 @@ private fun SecondaryCourses(
 
 @Composable
 private fun ViewAllItem(
-    onViewAllClick: () -> Unit
+    onViewAllClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -372,6 +378,10 @@ private fun ViewAllItem(
                 onClick = {
                     onViewAllClick()
                 }
+            )
+            .shadow(
+                4.dp,
+                shape = MaterialTheme.appShapes.courseImageShape,
             ),
         backgroundColor = MaterialTheme.appColors.cardViewBackground,
         shape = MaterialTheme.appShapes.courseImageShape,
@@ -411,10 +421,13 @@ private fun CourseListItem(
             .padding(4.dp)
             .clickable {
                 onCourseClick(course)
-            },
+            }
+            .shadow(
+                4.dp,
+                shape = MaterialTheme.appShapes.courseImageShape,
+            ),
         backgroundColor = MaterialTheme.appColors.background,
         shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp
     ) {
         Box {
             Column {
@@ -454,7 +467,7 @@ private fun AssignmentItem(
     modifier: Modifier = Modifier,
     painter: Painter,
     title: String?,
-    info: String
+    info: String,
 ) {
     Row(
         modifier = modifier
@@ -513,10 +526,13 @@ private fun PrimaryCourseCard(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
-            .padding(2.dp),
+            .padding(2.dp)
+            .shadow(
+                4.dp,
+                shape = MaterialTheme.appShapes.courseImageShape,
+            ),
         backgroundColor = MaterialTheme.appColors.background,
         shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp
     ) {
         Column(
             modifier = Modifier
@@ -546,8 +562,8 @@ private fun PrimaryCourseCard(
                     .fillMaxWidth()
                     .height(8.dp),
                 progress = progress,
-                color = MaterialTheme.appColors.primary,
-                backgroundColor = MaterialTheme.appColors.divider
+                color = MaterialTheme.appColors.progressBarColor,
+                backgroundColor = MaterialTheme.appColors.progressBarBackgroundColor
             )
             PrimaryCourseTitle(
                 modifier = Modifier
@@ -606,7 +622,10 @@ private fun PrimaryCourseCard(
                     if (primaryCourse.courseStatus == null) {
                         openCourse(primaryCourse)
                     } else {
-                        resumeBlockId(primaryCourse, primaryCourse.courseStatus?.lastVisitedBlockId ?: "")
+                        resumeBlockId(
+                            primaryCourse,
+                            primaryCourse.courseStatus?.lastVisitedBlockId ?: ""
+                        )
                     }
                 }
             )
@@ -618,14 +637,14 @@ private fun PrimaryCourseCard(
 private fun ResumeButton(
     modifier: Modifier = Modifier,
     primaryCourse: EnrolledCourse,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .heightIn(min = 60.dp)
-            .background(MaterialTheme.appColors.primary)
+            .background(MaterialTheme.appColors.primaryButtonBackground)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -676,7 +695,7 @@ private fun ResumeButton(
 @Composable
 private fun PrimaryCourseTitle(
     modifier: Modifier = Modifier,
-    primaryCourse: EnrolledCourse
+    primaryCourse: EnrolledCourse,
 ) {
     Column(
         modifier = modifier,
@@ -719,26 +738,22 @@ private fun PrimaryCourseTitle(
 @Composable
 private fun FindACourseButton(
     modifier: Modifier = Modifier,
-    findACourseClick: () -> Unit
+    findACourseClick: () -> Unit,
 ) {
     OpenEdXButton(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 20.dp),
+        text = stringResource(id = R.string.dashboard_find_a_course),
         onClick = {
             findACourseClick()
         }
-    ) {
-        Text(
-            color = MaterialTheme.appColors.primaryButtonText,
-            text = stringResource(id = R.string.dashboard_find_a_course)
-        )
-    }
+    )
 }
 
 @Composable
 private fun NoCoursesInfo(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier.fillMaxSize(),

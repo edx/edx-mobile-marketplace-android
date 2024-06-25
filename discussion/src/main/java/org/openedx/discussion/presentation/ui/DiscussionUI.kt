@@ -515,7 +515,7 @@ fun ThreadItem(
     Column(
         Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.appColors.background)
+            .background(MaterialTheme.appColors.surface)
             .clickable { onClick(thread) }
             .padding(vertical = 24.dp)
     ) {
@@ -612,7 +612,7 @@ fun ThreadItemCategory(
                 .clip(MaterialTheme.appShapes.cardShape)
                 .clickable { onClick() }),
         shape = MaterialTheme.appShapes.cardShape,
-        backgroundColor = MaterialTheme.appColors.surface
+        backgroundColor = MaterialTheme.appColors.textFieldBackground
     ) {
         Column(
             modifier = Modifier

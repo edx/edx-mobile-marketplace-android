@@ -462,11 +462,12 @@ private fun EditProfileScreen(
                             bottomSheetScaffoldState.hide()
                         }
                     }
-                },
+                }
+                .background(color = MaterialTheme.appColors.surface),
             sheetShape = MaterialTheme.appShapes.screenBackgroundShape,
             sheetState = bottomSheetScaffoldState,
             scrimColor = Color.Black.copy(alpha = 0.4f),
-            sheetBackgroundColor = MaterialTheme.appColors.background,
+            sheetBackgroundColor = MaterialTheme.appColors.surface,
             sheetContent = {
                 SheetContent(
                     title = bottomDialogTitle,
@@ -583,7 +584,7 @@ private fun EditProfileScreen(
 
                 Surface(
                     modifier = Modifier,
-                    color = MaterialTheme.appColors.background,
+                    color = MaterialTheme.appColors.surface,
                     shape = MaterialTheme.appShapes.screenBackgroundShape
                 ) {
                     Box(
@@ -813,7 +814,7 @@ private fun ChangeImageDialog(
                 Modifier
                     .fillMaxWidth()
                     .background(
-                        MaterialTheme.appColors.cardViewBackground,
+                        MaterialTheme.appColors.surface,
                         MaterialTheme.appShapes.cardShape
                     )
                     .padding(horizontal = 20.dp),
@@ -853,8 +854,9 @@ private fun ChangeImageDialog(
                 )
                 Spacer(Modifier.height(16.dp))
                 OpenEdXOutlinedButton(
-                    borderColor = MaterialTheme.appColors.error,
-                    textColor = MaterialTheme.appColors.textPrimary,
+                    borderColor = MaterialTheme.appColors.secondaryButtonBorder,
+                    textColor = MaterialTheme.appColors.secondaryButtonText,
+                    backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
                     text = stringResource(id = R.string.profile_remove_photo),
                     onClick = onRemoveImageClick,
                     content = {
@@ -869,7 +871,7 @@ private fun ChangeImageDialog(
                 )
                 Spacer(Modifier.height(40.dp))
                 OpenEdXOutlinedButton(
-                    borderColor = MaterialTheme.appColors.textPrimaryVariant,
+                    borderColor = MaterialTheme.appColors.textPrimary,
                     textColor = MaterialTheme.appColors.textPrimary,
                     text = stringResource(id = coreR.string.core_cancel),
                     onClick = onCancelClick
@@ -1075,7 +1077,7 @@ private fun LeaveProfile(
                     .verticalScroll(scrollState)
                     .fillMaxWidth()
                     .background(
-                        MaterialTheme.appColors.background,
+                        MaterialTheme.appColors.surface,
                         MaterialTheme.appShapes.cardShape
                     )
                     .clip(MaterialTheme.appShapes.cardShape)
@@ -1120,7 +1122,7 @@ private fun LeaveProfile(
                 OpenEdXButton(
                     text = stringResource(id = R.string.profile_leave),
                     onClick = onLeaveClick,
-                    backgroundColor = MaterialTheme.appColors.primary,
+                    backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
                     content = {
                         Text(
                             modifier = Modifier
@@ -1135,7 +1137,7 @@ private fun LeaveProfile(
                 )
                 Spacer(Modifier.height(24.dp))
                 OpenEdXOutlinedButton(
-                    borderColor = MaterialTheme.appColors.textFieldBorder,
+                    borderColor = MaterialTheme.appColors.textPrimary,
                     textColor = MaterialTheme.appColors.textPrimary,
                     text = stringResource(id = R.string.profile_keep_editing),
                     onClick = onDismissRequest
@@ -1164,7 +1166,7 @@ private fun LeaveProfileLandscape(
                     .width(screenWidth * 0.7f)
                     .clip(MaterialTheme.appShapes.courseImageShape)
                     .semantics { testTagsAsResourceId = true },
-                backgroundColor = MaterialTheme.appColors.background,
+                backgroundColor = MaterialTheme.appColors.surface,
                 shape = MaterialTheme.appShapes.courseImageShape
             ) {
                 Row(
@@ -1182,7 +1184,7 @@ private fun LeaveProfileLandscape(
                             modifier = Modifier.size(100.dp),
                             painter = painterResource(id = R.drawable.profile_ic_save),
                             contentDescription = null,
-                            tint = MaterialTheme.appColors.onBackground
+                            tint = MaterialTheme.appColors.textPrimary
                         )
                         Spacer(Modifier.height(20.dp))
                         Text(
@@ -1212,7 +1214,7 @@ private fun LeaveProfileLandscape(
                     ) {
                         OpenEdXButton(
                             text = stringResource(id = R.string.profile_leave),
-                            backgroundColor = MaterialTheme.appColors.primary,
+                            backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
                             content = {
                                 AutoSizeText(
                                     modifier = Modifier.testTag("txt_leave_profile_dialog_leave"),
@@ -1225,7 +1227,7 @@ private fun LeaveProfileLandscape(
                         )
                         Spacer(Modifier.height(16.dp))
                         OpenEdXOutlinedButton(
-                            borderColor = MaterialTheme.appColors.textFieldBorder,
+                            borderColor = MaterialTheme.appColors.textPrimary,
                             textColor = MaterialTheme.appColors.textPrimary,
                             text = stringResource(id = R.string.profile_keep_editing),
                             onClick = onDismissRequest,

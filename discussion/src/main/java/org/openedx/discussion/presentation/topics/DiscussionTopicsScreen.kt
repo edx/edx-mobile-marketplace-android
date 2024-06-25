@@ -107,7 +107,7 @@ private fun DiscussionTopicsUI(
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = Modifier.fillMaxSize(),
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
 
         val screenWidth by remember(key1 = windowSize) {
@@ -168,14 +168,14 @@ private fun DiscussionTopicsUI(
                 )
                 Surface(
                     modifier = Modifier.padding(top = 10.dp),
-                    color = MaterialTheme.appColors.background,
+                    color = MaterialTheme.appColors.surface,
                     shape = MaterialTheme.appShapes.screenBackgroundShape
                 ) {
                     Box {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(MaterialTheme.appColors.background)
+                                .background(MaterialTheme.appColors.surface)
                                 .padding(horizontal = contentPaddings),
                         ) {
                             when (uiState) {

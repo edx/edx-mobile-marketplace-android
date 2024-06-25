@@ -157,7 +157,7 @@ private fun ChapterEndDialogScreen(
         modifier = Modifier
             .fillMaxWidth(0.95f)
             .clip(MaterialTheme.appShapes.courseImageShape),
-        backgroundColor = MaterialTheme.appColors.background,
+        backgroundColor = MaterialTheme.appColors.surface,
         shape = MaterialTheme.appShapes.courseImageShape
     ) {
         Column(
@@ -219,15 +219,15 @@ private fun ChapterEndDialogScreen(
                 Spacer(Modifier.height(16.dp))
             }
             OpenEdXOutlinedButton(
-                borderColor = MaterialTheme.appColors.primaryButtonBackground,
-                textColor = MaterialTheme.appColors.primaryButtonBackground,
+                borderColor = MaterialTheme.appColors.primaryButtonBorder,
+                textColor = MaterialTheme.appColors.primaryButtonText,
                 text = stringResource(id = R.string.course_back_to_outline),
                 onClick = onBackButtonClick,
                 content = {
                     AutoSizeText(
                         text = stringResource(id = R.string.course_back_to_outline),
                         style = MaterialTheme.appTypography.bodyMedium,
-                        color = MaterialTheme.appColors.primaryButtonBorderedText
+                        color = MaterialTheme.appColors.primary
                     )
                 }
             )
@@ -258,7 +258,7 @@ private fun ChapterEndDialogScreenLandscape(
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.appShapes.courseImageShape),
-        backgroundColor = MaterialTheme.appColors.background,
+        backgroundColor = MaterialTheme.appColors.surface,
         shape = MaterialTheme.appShapes.courseImageShape
     ) {
         Column(
@@ -335,15 +335,15 @@ private fun ChapterEndDialogScreenLandscape(
                         Spacer(Modifier.height(16.dp))
                     }
                     OpenEdXOutlinedButton(
-                        borderColor = MaterialTheme.appColors.primaryButtonBackground,
-                        textColor = MaterialTheme.appColors.primaryButtonBackground,
+                        borderColor = MaterialTheme.appColors.primaryButtonBorder,
+                        textColor = MaterialTheme.appColors.textPrimary,
                         text = stringResource(id = R.string.course_back_to_outline),
                         onClick = onBackButtonClick,
                         content = {
                             AutoSizeText(
                                 text = stringResource(id = R.string.course_back_to_outline),
                                 style = MaterialTheme.appTypography.bodyMedium,
-                                color = MaterialTheme.appColors.primaryButtonBorderedText
+                                color = MaterialTheme.appColors.textPrimary
                             )
                         }
                     )

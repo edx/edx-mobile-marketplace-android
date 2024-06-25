@@ -168,7 +168,8 @@ fun WhatsNewScreen(
                                 onDoneClick = onDoneClick
                             )
                     }
-                }
+                },
+                backgroundColor = MaterialTheme.appColors.surface
             )
         }
     }
@@ -244,7 +245,7 @@ private fun WhatsNewScreenPortrait(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(MaterialTheme.appColors.background),
+                .background(MaterialTheme.appColors.surface),
             contentAlignment = Alignment.TopCenter
         ) {
             HorizontalPager(
@@ -353,7 +354,7 @@ private fun WhatsNewScreenLandscape(
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .background(MaterialTheme.appColors.background),
+                .background(MaterialTheme.appColors.surface),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(

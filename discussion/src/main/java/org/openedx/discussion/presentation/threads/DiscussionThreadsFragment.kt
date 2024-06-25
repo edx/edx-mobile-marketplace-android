@@ -251,7 +251,7 @@ private fun DiscussionThreadsScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = scaffoldModifier,
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
 
         val contentWidth by remember(key1 = windowSize) {
@@ -368,7 +368,7 @@ private fun DiscussionThreadsScreen(
                     }
                     Surface(
                         modifier = Modifier.padding(top = if (viewType == FragmentViewType.FULL_CONTENT) 6.dp else 0.dp),
-                        color = MaterialTheme.appColors.background
+                        color = MaterialTheme.appColors.surface
                     ) {
                         Box(Modifier.pullRefresh(pullRefreshState)) {
                             when (uiState) {
@@ -381,7 +381,7 @@ private fun DiscussionThreadsScreen(
                                             Row(
                                                 Modifier
                                                     .fillMaxWidth()
-                                                    .background(MaterialTheme.appColors.background)
+                                                    .background(MaterialTheme.appColors.surface)
                                                     .padding(
                                                         horizontal = sortButtonsPadding,
                                                         vertical = 16.dp
@@ -475,7 +475,7 @@ private fun DiscussionThreadsScreen(
                                                                 Modifier
                                                                     .size(40.dp)
                                                                     .clip(CircleShape)
-                                                                    .background(MaterialTheme.appColors.secondaryButtonBackground)
+                                                                    .background(MaterialTheme.appColors.primaryButtonBackground)
                                                                     .clickable {
                                                                         onCreatePostClick()
                                                                     },

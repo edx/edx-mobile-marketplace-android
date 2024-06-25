@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="background">#FFFFFF</color>
-    <color name="primary">#3C68FF</color>
+    <color name="primary">#00262B</color>
     <color name="splash">#517BFE</color>
-    <color name="checked_tab_item">#3C68FF</color>
-    <color name="unchecked_tab_item">#97A5BB</color>
+    <color name="checked_tab_item">#00262B</color>
+    <color name="unchecked_tab_item">#454545</color>
 </resources>

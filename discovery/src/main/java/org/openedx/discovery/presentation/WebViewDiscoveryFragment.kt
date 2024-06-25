@@ -193,7 +193,7 @@ private fun WebViewDiscoveryScreen(
             .semantics {
                 testTagsAsResourceId = true
             },
-        backgroundColor = MaterialTheme.appColors.background,
+        backgroundColor = MaterialTheme.appColors.surface,
         bottomBar = {
             if (isPreLogin) {
                 Box(

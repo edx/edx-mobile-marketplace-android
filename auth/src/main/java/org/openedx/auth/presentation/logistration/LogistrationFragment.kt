@@ -113,7 +113,7 @@ private fun LogistrationScreen(
             }
             .fillMaxSize()
             .navigationBarsPadding(),
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
         Surface(
             modifier = Modifier
@@ -121,7 +121,7 @@ private fun LogistrationScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .displayCutoutForLandscape(),
-            color = MaterialTheme.appColors.background
+            color = MaterialTheme.appColors.surface
         ) {
             Column(
                 modifier = Modifier.padding(
@@ -133,6 +133,7 @@ private fun LogistrationScreen(
                 Text(
                     text = stringResource(id = R.string.pre_auth_title),
                     style = MaterialTheme.appTypography.headlineSmall,
+                    color = MaterialTheme.appColors.textPrimary,
                     modifier = Modifier
                         .testTag("txt_screen_title")
                         .padding(bottom = 40.dp)
@@ -144,6 +145,7 @@ private fun LogistrationScreen(
                             .testTag("txt_search_label")
                             .padding(bottom = 10.dp),
                         style = MaterialTheme.appTypography.titleMedium,
+                        color = MaterialTheme.appColors.textPrimary,
                         text = stringResource(id = R.string.pre_auth_search_title),
                     )
                     SearchBar(
@@ -176,7 +178,7 @@ private fun LogistrationScreen(
                             onSearchClick("")
                         },
                     text = stringResource(id = R.string.pre_auth_explore_all_courses),
-                    color = MaterialTheme.appColors.primary,
+                    color = MaterialTheme.appColors.info,
                     style = MaterialTheme.appTypography.labelLarge,
                     textDecoration = TextDecoration.Underline
                 )

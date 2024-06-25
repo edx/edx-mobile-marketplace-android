@@ -54,7 +54,7 @@ class HandoutsWebViewFragment : Fragment() {
                 val windowSize = rememberWindowSize()
 
                 val htmlBody by viewModel.htmlContent.observeAsState("")
-                val colorBackgroundValue = MaterialTheme.appColors.background.value
+                val colorBackgroundValue = MaterialTheme.appColors.surface.value
                 val colorTextValue = MaterialTheme.appColors.textPrimary.value
 
                 WebContentScreen(

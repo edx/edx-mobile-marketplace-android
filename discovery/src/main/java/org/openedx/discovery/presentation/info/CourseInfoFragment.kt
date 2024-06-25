@@ -238,7 +238,7 @@ private fun CourseInfoScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = Modifier.fillMaxSize(),
-        backgroundColor = MaterialTheme.appColors.background,
+        backgroundColor = MaterialTheme.appColors.surface,
         bottomBar = {
             if (uiState.isPreLogin) {
                 Box(
@@ -303,7 +303,7 @@ private fun CourseInfoScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .fillMaxHeight()
-                                .background(MaterialTheme.appColors.background)
+                                .background(MaterialTheme.appColors.surface)
                         ) {
                             checkInternetConnection()
                         }

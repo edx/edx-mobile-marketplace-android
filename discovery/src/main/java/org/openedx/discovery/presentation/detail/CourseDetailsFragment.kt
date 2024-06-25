@@ -232,7 +232,7 @@ internal fun CourseDetailsScreen(
                 testTagsAsResourceId = true
             },
         scaffoldState = scaffoldState,
-        backgroundColor = MaterialTheme.appColors.background,
+        backgroundColor = MaterialTheme.appColors.surface,
         bottomBar = {
             if (!isUserLoggedIn) {
                 Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 32.dp)) {
@@ -292,7 +292,7 @@ internal fun CourseDetailsScreen(
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.appColors.background),
+                        .background(MaterialTheme.appColors.surface),
                     contentAlignment = Alignment.TopCenter
                 ) {
                     when (uiState) {
@@ -356,7 +356,7 @@ internal fun CourseDetailsScreen(
                                             .padding(top = 16.dp)
                                             .fillMaxWidth()
                                             .alpha(webViewAlpha),
-                                        color = MaterialTheme.appColors.background
+                                        color = MaterialTheme.appColors.surface
                                     ) {
                                         CourseDescription(
                                             modifier = webViewPadding,

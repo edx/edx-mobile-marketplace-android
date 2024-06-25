@@ -207,7 +207,7 @@ private fun CourseSectionScreen(
             .fillMaxSize()
             .navigationBarsPadding(),
         scaffoldState = scaffoldState,
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) { paddingValues ->
 
         val contentWidth by remember(key1 = windowSize) {
@@ -262,7 +262,7 @@ private fun CourseSectionScreen(
                 }
                 Spacer(Modifier.height(6.dp))
                 Surface(
-                    color = MaterialTheme.appColors.background,
+                    color = MaterialTheme.appColors.surface,
                     shape = MaterialTheme.appShapes.screenBackgroundShape
                 ) {
                     when (uiState) {

@@ -176,7 +176,7 @@ private fun CourseOutlineUI(
         modifier = Modifier
             .fillMaxSize(),
         scaffoldState = scaffoldState,
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
 
         val screenWidth by remember(key1 = windowSize) {
@@ -217,7 +217,7 @@ private fun CourseOutlineUI(
         ) {
             Surface(
                 modifier = screenWidth,
-                color = MaterialTheme.appColors.background
+                color = MaterialTheme.appColors.surface
             ) {
                 Box {
                     when (uiState) {

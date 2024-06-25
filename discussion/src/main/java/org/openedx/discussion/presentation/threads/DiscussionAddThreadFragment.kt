@@ -217,7 +217,7 @@ private fun DiscussionAddThreadScreen(
         modifier = Modifier
             .fillMaxSize()
             .navigationBarsPadding(),
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
 
         val screenWidth by remember(key1 = windowSize) {
@@ -260,7 +260,7 @@ private fun DiscussionAddThreadScreen(
             sheetState = bottomSheetScaffoldState,
             sheetShape = MaterialTheme.appShapes.screenBackgroundShape,
             scrimColor = Color.Black.copy(alpha = 0.4f),
-            sheetBackgroundColor = MaterialTheme.appColors.background,
+            sheetBackgroundColor = MaterialTheme.appColors.surface,
             sheetContent = {
                 SheetContent(
                     title = stringResource(id = discussionR.string.discussion_topic),
@@ -325,13 +325,13 @@ private fun DiscussionAddThreadScreen(
                     }
                     Surface(
                         modifier = Modifier.padding(top = 6.dp),
-                        color = MaterialTheme.appColors.background,
+                        color = MaterialTheme.appColors.surface,
                         shape = MaterialTheme.appShapes.screenBackgroundShape
                     ) {
                         Column(
                             Modifier
                                 .fillMaxSize()
-                                .background(MaterialTheme.appColors.background)
+                                .background(MaterialTheme.appColors.surface)
                                 .verticalScroll(rememberScrollState())
                         ) {
                             Column(
@@ -487,9 +487,9 @@ private fun Tabs(
         tabs.forEachIndexed { index, text ->
             val selected = currentPage == index
             val textColor = if (selected) {
-                Color.White
+                MaterialTheme.appColors.tabSelectedBtnContent
             } else {
-                MaterialTheme.appColors.textPrimaryVariant
+                MaterialTheme.appColors.tabUnselectedBtnContent
             }
             Tab(
                 modifier = if (selected) Modifier
@@ -533,7 +533,7 @@ private fun SelectableField(
             value = text,
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 disabledBorderColor = MaterialTheme.appColors.textFieldBorder,
-                backgroundColor = MaterialTheme.appColors.surface,
+                backgroundColor = MaterialTheme.appColors.background,
                 textColor = MaterialTheme.appColors.textFieldText,
                 unfocusedLabelColor = MaterialTheme.appColors.textFieldText,
                 disabledTextColor = MaterialTheme.appColors.textFieldText

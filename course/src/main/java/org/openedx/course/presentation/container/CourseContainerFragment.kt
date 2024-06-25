@@ -302,7 +302,7 @@ fun CourseDashboard(
                 .fillMaxSize()
                 .navigationBarsPadding(),
             scaffoldState = scaffoldState,
-            backgroundColor = MaterialTheme.appColors.background
+            backgroundColor = MaterialTheme.appColors.surface
         ) { paddingValues ->
             val refreshing by viewModel.refreshing.collectAsState(true)
             val courseImage by viewModel.courseImage.collectAsState()

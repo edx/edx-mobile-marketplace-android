@@ -172,7 +172,7 @@ internal fun SignUpView(
             }
             .fillMaxSize()
             .navigationBarsPadding(),
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
 
         val topBarPadding by remember {
@@ -224,7 +224,7 @@ internal fun SignUpView(
             sheetState = bottomSheetScaffoldState,
             sheetShape = MaterialTheme.appShapes.screenBackgroundShape,
             scrimColor = Color.Black.copy(alpha = 0.4f),
-            sheetBackgroundColor = MaterialTheme.appColors.background,
+            sheetBackgroundColor = MaterialTheme.appColors.surface,
             sheetContent = {
                 SheetContent(
                     title = bottomDialogTitle,
@@ -285,14 +285,14 @@ internal fun SignUpView(
                     }
                 }
                 Surface(
-                    color = MaterialTheme.appColors.background,
+                    color = MaterialTheme.appColors.surface,
                     shape = MaterialTheme.appShapes.screenBackgroundShape,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxHeight()
-                            .background(MaterialTheme.appColors.background),
+                            .background(MaterialTheme.appColors.surface),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         if (uiState.isLoading) {
@@ -440,7 +440,7 @@ internal fun SignUpView(
                                         modifier = buttonWidth.testTag("btn_create_account"),
                                         text = stringResource(id = R.string.auth_create_account),
                                         textColor = MaterialTheme.appColors.primaryButtonText,
-                                        backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
+                                        backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
                                         onClick = {
                                             showErrorMap.clear()
                                             onRegisterClick(AuthType.PASSWORD)

@@ -239,7 +239,7 @@ internal fun DiscoveryScreen(
             .semantics {
                 testTagsAsResourceId = true
             },
-        backgroundColor = MaterialTheme.appColors.background,
+        backgroundColor = MaterialTheme.appColors.surface,
         bottomBar = {
             if (!isUserLoggedIn) {
                 Box(
@@ -341,7 +341,7 @@ internal fun DiscoveryScreen(
                 Spacer(modifier = Modifier.height(12.dp))
             }
             Surface(
-                color = MaterialTheme.appColors.background
+                color = MaterialTheme.appColors.surface
             ) {
                 Box(
                     modifier = Modifier

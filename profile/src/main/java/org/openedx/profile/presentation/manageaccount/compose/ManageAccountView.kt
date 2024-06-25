@@ -128,7 +128,7 @@ internal fun ManageAccountView(
                 )
             }
             Surface(
-                color = MaterialTheme.appColors.background,
+                color = MaterialTheme.appColors.surface,
                 shape = MaterialTheme.appShapes.screenBackgroundShape,
             ) {
                 Box(
@@ -174,8 +174,8 @@ internal fun ManageAccountView(
                                         onClick = {
                                             onAction(ManageAccountViewAction.EditAccountClick)
                                         },
-                                        borderColor = MaterialTheme.appColors.primaryButtonBackground,
-                                        textColor = MaterialTheme.appColors.textAccent
+                                        borderColor = MaterialTheme.appColors.textPrimary,
+                                        textColor = MaterialTheme.appColors.textPrimary
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                     IconText(

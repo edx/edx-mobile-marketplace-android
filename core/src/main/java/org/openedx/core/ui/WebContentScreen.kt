@@ -63,7 +63,7 @@ fun WebContentScreen(
                 testTagsAsResourceId = true
             },
         scaffoldState = scaffoldState,
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
 
         val screenWidth by remember(key1 = windowSize) {
@@ -98,7 +98,7 @@ fun WebContentScreen(
                 }
                 Surface(
                     Modifier.fillMaxSize(),
-                    color = MaterialTheme.appColors.background
+                    color = MaterialTheme.appColors.surface
                 ) {
                     if (htmlBody.isNullOrEmpty() && contentUrl.isNullOrEmpty()) {
                         Box(
@@ -114,7 +114,7 @@ fun WebContentScreen(
                         var webViewAlpha by rememberSaveable { mutableFloatStateOf(0f) }
                         Surface(
                             Modifier.alpha(webViewAlpha),
-                            color = MaterialTheme.appColors.background
+                            color = MaterialTheme.appColors.surface
                         ) {
                             WebViewContent(
                                 apiHostUrl = apiHostUrl,

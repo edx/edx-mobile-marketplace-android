@@ -198,7 +198,7 @@ internal fun DashboardListView(
             .semantics {
                 testTagsAsResourceId = true
             },
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) { paddingValues ->
 
         val contentPaddings by remember(key1 = windowSize) {
@@ -244,7 +244,7 @@ internal fun DashboardListView(
         ) {
 
             Surface(
-                color = MaterialTheme.appColors.background,
+                color = MaterialTheme.appColors.surface,
                 shape = MaterialTheme.appShapes.screenBackgroundShape
             ) {
                 Box(
@@ -381,12 +381,11 @@ private fun CourseItem(
             .height(142.dp)
             .fillMaxWidth()
             .clickable { onClick(enrolledCourse) }
-            .background(MaterialTheme.appColors.background),
+            .background(MaterialTheme.appColors.surface),
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.appColors.background),
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -407,7 +406,6 @@ private fun CourseItem(
                 Modifier
                     .fillMaxWidth()
                     .height(105.dp)
-                    .background(MaterialTheme.appColors.background)
             ) {
                 Text(
                     modifier = Modifier.testTag("txt_course_org"),
@@ -418,8 +416,7 @@ private fun CourseItem(
                 Spacer(modifier = Modifier.height(4.dp))
                 Column(
                     Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.appColors.background),
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
@@ -432,8 +429,7 @@ private fun CourseItem(
                     )
                     Row(
                         Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.appColors.background),
+                            .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {

@@ -185,7 +185,7 @@ private fun RestorePasswordScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp),
-            painter = painterResource(id = org.openedx.core.R.drawable.core_top_header),
+            painter = painterResource(id = R.drawable.core_top_header),
             contentScale = ContentScale.FillBounds,
             contentDescription = null
         )
@@ -226,14 +226,14 @@ private fun RestorePasswordScreen(
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.appColors.background,
+                color = MaterialTheme.appColors.surface,
                 shape = MaterialTheme.appShapes.screenBackgroundShape
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxHeight()
                         .verticalScroll(scrollState)
-                        .background(MaterialTheme.appColors.background),
+                        .background(MaterialTheme.appColors.surface),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     when (uiState) {

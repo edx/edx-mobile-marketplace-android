@@ -115,12 +115,12 @@ fun DiscoveryCourseItem(
             .fillMaxWidth()
             .height(140.dp)
             .clickable { onClick(course.courseId) }
-            .background(MaterialTheme.appColors.background),
+            .background(MaterialTheme.appColors.surface),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.appColors.background),
+                .background(MaterialTheme.appColors.surface),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

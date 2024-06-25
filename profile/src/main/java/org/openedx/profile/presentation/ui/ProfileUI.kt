@@ -88,7 +88,7 @@ fun ProfileInfoSection(account: Account) {
                 modifier = Modifier,
                 shape = MaterialTheme.appShapes.cardShape,
                 elevation = 0.dp,
-                backgroundColor = MaterialTheme.appColors.cardViewBackground
+                backgroundColor = MaterialTheme.appColors.background
             ) {
                 Column(
                     Modifier

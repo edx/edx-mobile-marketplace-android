@@ -128,7 +128,7 @@ private fun Header(
 
     Column(
         modifier = Modifier
-            .background(MaterialTheme.appColors.background)
+            .background(MaterialTheme.appColors.surface)
             .statusBarsInset()
             .displayCutoutForLandscape()
             .then(contentWidth),
@@ -179,7 +179,7 @@ private fun Title(
         ) {
             Icon(
                 imageVector = Icons.Default.ManageAccounts,
-                tint = MaterialTheme.appColors.textAccent,
+                tint = MaterialTheme.appColors.primary,
                 contentDescription = stringResource(id = CoreR.string.core_accessibility_settings)
             )
         }
@@ -232,7 +232,7 @@ private fun LearnDropdownMenu(
         }
 
         MaterialTheme(
-            colors = MaterialTheme.colors.copy(surface = MaterialTheme.appColors.background),
+            colors = MaterialTheme.colors.copy(surface = MaterialTheme.appColors.surface),
             shapes = MaterialTheme.shapes.copy(
                 medium = RoundedCornerShape(
                     bottomStart = 8.dp,
@@ -243,19 +243,17 @@ private fun LearnDropdownMenu(
             DropdownMenu(
                 modifier = Modifier
                     .crop(vertical = 8.dp)
-                    .widthIn(min = 182.dp),
+                    .widthIn(min = 182.dp)
+                    .background(MaterialTheme.appColors.background),
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
             ) {
                 for (learnType in LearnType.entries) {
                     val background: Color
-                    val textColor: Color
                     if (currentValue == learnType) {
-                        background = MaterialTheme.appColors.primary
-                        textColor = MaterialTheme.appColors.primaryButtonText
+                        background = MaterialTheme.appColors.background
                     } else {
-                        background = Color.Transparent
-                        textColor = MaterialTheme.appColors.textDark
+                        background = MaterialTheme.appColors.surface
                     }
                     DropdownMenuItem(
                         modifier = Modifier
@@ -268,7 +266,7 @@ private fun LearnDropdownMenu(
                         Text(
                             text = stringResource(id = learnType.title),
                             style = MaterialTheme.appTypography.titleSmall,
-                            color = textColor
+                            color = MaterialTheme.appColors.primary
                         )
                     }
                 }

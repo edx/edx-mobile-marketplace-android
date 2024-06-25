@@ -138,7 +138,7 @@ internal fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxSize(),
                 shape = MaterialTheme.appShapes.screenBackgroundShape,
-                color = MaterialTheme.appColors.background
+                color = MaterialTheme.appColors.surface
             ) {
                 Box(
                     contentAlignment = Alignment.TopCenter
@@ -381,7 +381,7 @@ private fun LogoutDialog(
                     .verticalScroll(rememberScrollState())
                     .fillMaxWidth()
                     .background(
-                        MaterialTheme.appColors.background,
+                        MaterialTheme.appColors.surface,
                         MaterialTheme.appShapes.cardShape
                     )
                     .clip(MaterialTheme.appShapes.cardShape)
@@ -417,7 +417,7 @@ private fun LogoutDialog(
                         .height(85.dp),
                     painter = painterResource(profileR.drawable.profile_ic_exit),
                     contentDescription = null,
-                    tint = MaterialTheme.appColors.onBackground
+                    tint = MaterialTheme.appColors.primary
                 )
                 Spacer(Modifier.size(36.dp))
                 Text(

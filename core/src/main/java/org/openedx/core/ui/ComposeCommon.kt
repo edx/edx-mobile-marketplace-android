@@ -202,7 +202,7 @@ fun Toolbar(
             ) {
                 Icon(
                     imageVector = Icons.Default.ManageAccounts,
-                    tint = MaterialTheme.appColors.textAccent,
+                    tint = MaterialTheme.appColors.textPrimary,
                     contentDescription = stringResource(id = R.string.core_accessibility_settings)
                 )
             }
@@ -257,8 +257,8 @@ fun SearchBar(
         },
         colors = TextFieldDefaults.outlinedTextFieldColors(
             textColor = MaterialTheme.appColors.textPrimary,
-            backgroundColor = if (isFocused) MaterialTheme.appColors.background else MaterialTheme.appColors.textFieldBackground,
-            focusedBorderColor = MaterialTheme.appColors.primary,
+            backgroundColor = MaterialTheme.appColors.textFieldBackground,
+            focusedBorderColor = MaterialTheme.appColors.textFieldBorder,
             unfocusedBorderColor = MaterialTheme.appColors.textFieldBorder,
             cursorColor = MaterialTheme.appColors.primary,
             leadingIconColor = MaterialTheme.appColors.textPrimary
@@ -269,7 +269,7 @@ fun SearchBar(
                     .testTag("txt_search_placeholder")
                     .fillMaxWidth(),
                 text = label,
-                color = MaterialTheme.appColors.textSecondary,
+                color = MaterialTheme.appColors.textFieldHint,
                 style = MaterialTheme.appTypography.bodyMedium
             )
         },
@@ -278,7 +278,7 @@ fun SearchBar(
                 modifier = Modifier.padding(start = 16.dp),
                 imageVector = Icons.Filled.Search,
                 contentDescription = null,
-                tint = if (isFocused) MaterialTheme.appColors.primary else MaterialTheme.appColors.onSurface
+                tint = if (isFocused) MaterialTheme.appColors.textPrimary else MaterialTheme.appColors.textFieldHint
             )
         },
         trailingIcon = {
@@ -1057,19 +1057,24 @@ fun OpenEdXButton(
     enabled: Boolean = true,
     textColor: Color = MaterialTheme.appColors.primaryButtonText,
     backgroundColor: Color = MaterialTheme.appColors.primaryButtonBackground,
-    content: (@Composable RowScope.() -> Unit)? = null
+    content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Button(
         modifier = Modifier
             .testTag("btn_${text.tagId()}")
             .then(modifier)
-            .height(42.dp),
-        shape = MaterialTheme.appShapes.buttonShape,
+            .height(42.dp)
+            .clip(MaterialTheme.appShapes.buttonShape),
+        shape = MaterialTheme.appShapes.material.medium,
         colors = ButtonDefaults.buttonColors(
             backgroundColor = backgroundColor
         ),
         enabled = enabled,
-        onClick = onClick
+        elevation = ButtonDefaults.elevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 2.dp
+        ),
+        onClick = onClick,
     ) {
         if (content == null) {
             Text(
@@ -1192,7 +1197,7 @@ fun AuthButtonsPanel(
                 .weight(1f),
             text = stringResource(id = R.string.core_register),
             textColor = MaterialTheme.appColors.primaryButtonText,
-            backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
+            backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
             onClick = { onRegisterClick() }
         )
 
@@ -1203,8 +1208,8 @@ fun AuthButtonsPanel(
                 .padding(start = 16.dp),
             text = stringResource(id = R.string.core_sign_in),
             onClick = { onSignInClick() },
-            textColor = MaterialTheme.appColors.secondaryButtonBorderedText,
-            backgroundColor = MaterialTheme.appColors.secondaryButtonBorderedBackground,
+            textColor = MaterialTheme.appColors.secondaryButtonText,
+            backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
             borderColor = MaterialTheme.appColors.secondaryButtonBorder,
         )
     }
@@ -1219,7 +1224,7 @@ fun RoundTabsBar(
     contentPadding: PaddingValues = PaddingValues(),
     withPager: Boolean = false,
     rowState: LazyListState = rememberLazyListState(),
-    onTabClicked: (Int) -> Unit = { }
+    onTabClicked: (Int) -> Unit = { },
 ) {
     // The pager state does not work without the pager and the tabs do not change.
     if (!withPager) {
@@ -1247,7 +1252,7 @@ fun RoundTabsBar(
 
             RoundTab(
                 modifier = Modifier
-                    .height(40.dp)
+                    .height(32.dp)
                     .clip(CircleShape)
                     .background(backgroundColor)
                     .then(border)
@@ -1270,7 +1275,7 @@ fun RoundTabsBar(
 private fun RoundTab(
     modifier: Modifier = Modifier,
     item: TabItem,
-    contentColor: Color
+    contentColor: Color,
 ) {
     Row(
         modifier = modifier,

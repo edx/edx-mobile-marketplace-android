@@ -190,7 +190,7 @@ private fun CourseDatesUI(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         scaffoldState = scaffoldState,
-        backgroundColor = MaterialTheme.appColors.background
+        backgroundColor = MaterialTheme.appColors.surface
     ) {
         val modifierScreenWidth by remember(key1 = windowSize) {
             mutableStateOf(
@@ -220,7 +220,7 @@ private fun CourseDatesUI(
         ) {
             Surface(
                 modifier = modifierScreenWidth,
-                color = MaterialTheme.appColors.background,
+                color = MaterialTheme.appColors.surface,
             ) {
                 Box(
                     Modifier
@@ -720,16 +720,7 @@ private val mockedResponse: LinkedHashMap<DatesSection, List<CourseDateBlock>> =
                     description = "After this date, course content will be archived",
                     date = TimeUtils.iso8601ToDate("2023-10-22T15:08:07Z")!!,
                     dateType = DateType.ASSIGNMENT_DUE_DATE,
-                ), CourseDateBlock(
-                    title = "Assignment Due",
-                    description = "After this date, course content will be archived",
-                    date = TimeUtils.iso8601ToDate("2023-10-23T15:08:07Z")!!,
-                    dateType = DateType.ASSIGNMENT_DUE_DATE,
-                ), CourseDateBlock(
-                    title = "Surprise Assignment",
-                    description = "After this date, course content will be archived",
-                    date = TimeUtils.iso8601ToDate("2023-10-24T15:08:07Z")!!,
-                )
+                ),
             )
         ), Pair(
             DatesSection.NEXT_WEEK, listOf(

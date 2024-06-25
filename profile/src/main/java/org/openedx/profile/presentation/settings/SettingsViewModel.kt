@@ -21,10 +21,17 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
+import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.module.DownloadWorkerController
+import org.openedx.core.presentation.IAPAnalyticsEvent
+import org.openedx.core.presentation.IAPAnalyticsKeys
+import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.global.AppData
+import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPLoaderType
+import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.ResourceManager
@@ -228,6 +235,7 @@ class SettingsViewModel(
     }
 
     fun restorePurchase() {
+        logIAPEvent(IAPAnalyticsEvent.IAP_RESTORE_PURCHASE_CLICKED)
         viewModelScope.launch(Dispatchers.IO) {
             _iapUiState.emit(IAPUIState.Loading(IAPLoaderType.RESTORE_PURCHASES))
             // delay to show loading state
@@ -237,15 +245,39 @@ class SettingsViewModel(
                     iapInteractor.processUnfulfilledPurchase(userId)
                 }.onSuccess {
                     if (it) {
+                        logIAPEvent(IAPAnalyticsEvent.IAP_UNFULFILLED_PURCHASE_INITIATED, buildMap {
+                            put(
+                                IAPAnalyticsKeys.SCREEN_NAME.key,
+                                IAPAnalyticsScreen.PROFILE.screenName
+                            )
+                            put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.RESTORE.value)
+                        }.toMutableMap())
                         _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
                     } else {
                         _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
                     }
                 }.onFailure {
-                    _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
+                    if (it is IAPException) {
+                        _iapUiState.emit(
+                            IAPUIState.Error(
+                                IAPException(
+                                    IAPRequestType.RESTORE_CODE,
+                                    it.httpErrorCode,
+                                    it.errorMessage
+                                )
+                            )
+                        )
+                    }
                 }
             }
         }
+    }
+
+    fun loadIAPCancelEvent() {
+        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
+            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_RESTORE)
+            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE)
+        }.toMutableMap())
     }
 
     fun showFeedbackScreen(context: Context, message: String) {
@@ -255,6 +287,22 @@ class SettingsViewModel(
             feedback = message,
             appVersion = versionName
         )
+        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
+            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED)
+            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP)
+        }.toMutableMap())
+    }
+
+    private fun logIAPEvent(
+        event: IAPAnalyticsEvent,
+        params: MutableMap<String, Any?> = mutableMapOf()
+    ) {
+        analytics.logEvent(event.eventName, params.apply {
+            put(IAPAnalyticsKeys.NAME.key, event.biValue)
+            put(IAPAnalyticsKeys.SCREEN_NAME.key, IAPAnalyticsScreen.PROFILE)
+            put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.RESTORE.value)
+            put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
+        })
     }
 
     fun clearIAPState() {

@@ -7,6 +7,7 @@ import org.openedx.core.domain.model.iap.CheckoutResponse
 import org.openedx.core.domain.model.iap.ExecuteOrderResponse
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.exception.iap.getMessage
+import org.openedx.core.presentation.iap.IAPRequestType
 
 class IAPRepository(private val api: InAppPurchasesApi) {
 
@@ -17,7 +18,7 @@ class IAPRepository(private val api: InAppPurchasesApi) {
                 return mapToDomain()
             }
         }
-        throw IAPException(response.code(), response.getMessage())
+        throw IAPException(IAPRequestType.ADD_TO_BASKET_CODE, response.code(), response.getMessage())
     }
 
     suspend fun proceedCheckout(basketId: Long): CheckoutResponse {
@@ -30,7 +31,7 @@ class IAPRepository(private val api: InAppPurchasesApi) {
                 return mapToDomain()
             }
         }
-        throw IAPException(response.code(), response.getMessage())
+        throw IAPException(IAPRequestType.CHECKOUT_CODE, response.code(), response.getMessage())
     }
 
     suspend fun executeOrder(
@@ -52,6 +53,6 @@ class IAPRepository(private val api: InAppPurchasesApi) {
                 return mapToDomain()
             }
         }
-        throw IAPException(response.code(), response.getMessage())
+        throw IAPException(IAPRequestType.EXECUTE_ORDER_CODE, response.code(), response.getMessage())
     }
 }

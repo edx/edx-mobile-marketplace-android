@@ -1,6 +1,7 @@
 package org.openedx.core.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -74,8 +75,23 @@ fun CheckmarkView(text: String) {
 }
 
 @Composable
-fun UpgradeErrorDialog(onDismiss: () -> Unit, onGetHelp: () -> Unit) {
+fun PriceLoadErrorDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    UpgradeErrorDialog(
+        title = stringResource(id = R.string.iap_error_title),
+        description = stringResource(id = R.string.iap_error_price_not_fetched),
+        confirmText = stringResource(id = R.string.iap_label_refresh_now),
+        onConfirm = onConfirm,
+        dismissText = stringResource(id = R.string.core_cancel),
+        onDismiss = onDismiss
+    )
+}
 
+@Composable
+fun CourseAlreadyPurchasedErrorDialog(
+    onRefresh: () -> Unit,
+    onGetHelp: () -> Unit,
+    onDismiss: () -> Unit
+) {
     AlertDialog(
         title = {
             Text(
@@ -83,16 +99,80 @@ fun UpgradeErrorDialog(onDismiss: () -> Unit, onGetHelp: () -> Unit) {
                 style = MaterialTheme.appTypography.titleMedium
             )
         },
-        text = {
-            Text(text = stringResource(id = R.string.iap_general_upgrade_error_message))
+        text = { Text(text = stringResource(id = R.string.iap_course_already_paid_for_message)) },
+        buttons = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                OpenEdXButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    text = stringResource(id = R.string.iap_label_refresh_now),
+                    onClick = onRefresh
+                )
+
+                OpenEdXButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    text = stringResource(id = R.string.core_contact_support),
+                    onClick = onGetHelp
+                )
+
+                OpenEdXButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    text = stringResource(id = R.string.core_cancel),
+                    onClick = onDismiss
+                )
+            }
         },
+        onDismissRequest = {}
+    )
+}
+
+@Composable
+fun GeneralUpgradeErrorDialog(
+    description: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (description.isBlank()) {
+        stringResource(id = R.string.iap_general_upgrade_error_message)
+    }
+    UpgradeErrorDialog(
+        title = stringResource(id = R.string.iap_error_title),
+        description = description,
+        confirmText = stringResource(id = R.string.core_cancel),
+        onConfirm = onConfirm,
+        dismissText = stringResource(id = R.string.iap_get_help),
+        onDismiss = onDismiss
+    )
+}
+
+@Composable
+fun UpgradeErrorDialog(
+    title: String,
+    description: String,
+    confirmText: String,
+    onConfirm: () -> Unit,
+    dismissText: String,
+    onDismiss: () -> Unit
+) {
+
+    AlertDialog(
+        title = { Text(text = title, style = MaterialTheme.appTypography.titleMedium) },
+        text = { Text(text = description) },
         confirmButton = {
             OpenEdXButton(
                 modifier = Modifier
                     .wrapContentSize()
                     .padding(8.dp),
-                text = stringResource(id = R.string.core_cancel),
-                onClick = onDismiss
+                text = confirmText,
+                onClick = onConfirm
             )
         },
         dismissButton = {
@@ -100,11 +180,11 @@ fun UpgradeErrorDialog(onDismiss: () -> Unit, onGetHelp: () -> Unit) {
                 modifier = Modifier
                     .wrapContentSize()
                     .padding(8.dp),
-                text = stringResource(id = R.string.iap_get_help),
-                onClick = onGetHelp
+                text = dismissText,
+                onClick = onDismiss
             )
         },
-        onDismissRequest = onDismiss
+        onDismissRequest = onConfirm
     )
 }
 
@@ -212,7 +292,13 @@ private fun PreviewValuePropUpgradeFeatures() {
 @Preview
 @Composable
 private fun PreviewUpgradeErrorDialog() {
-    UpgradeErrorDialog(onDismiss = {}, onGetHelp = {})
+    UpgradeErrorDialog(
+        title = "Error while Upgrading",
+        description = "Description of the error",
+        confirmText = "Confirm",
+        onConfirm = {},
+        dismissText = "Dismiss",
+        onDismiss = {})
 }
 
 @Preview
@@ -231,4 +317,10 @@ private fun PreviewCheckingPurchasesDialog() {
 @Composable
 private fun PreviewFakePurchasesFulfillmentCompleted() {
     FakePurchasesFulfillmentCompleted(onCancel = {}, onGetHelp = {})
+}
+
+@Preview
+@Composable
+private fun PreviewCourseAlreadyPurchasedErrorDialog() {
+    CourseAlreadyPurchasedErrorDialog(onRefresh = {}, onGetHelp = {}, onDismiss = {})
 }

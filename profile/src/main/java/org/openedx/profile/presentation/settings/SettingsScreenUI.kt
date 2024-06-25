@@ -53,9 +53,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.fragment.app.FragmentManager
 import org.openedx.core.R
 import org.openedx.core.domain.model.AgreementUrls
+import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.AppData
+import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPUIState
@@ -64,6 +66,7 @@ import org.openedx.core.ui.CheckingPurchasesDialog
 import org.openedx.core.ui.FakePurchasesFulfillmentCompleted
 import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.Toolbar
+import org.openedx.core.ui.UpgradeErrorDialog
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -88,6 +91,7 @@ internal fun SettingsScreen(
     appUpgradeEvent: AppUpgradeEvent?,
     onBackClick: () -> Unit,
     onAction: (SettingsScreenAction) -> Unit,
+    onIAPAction: (IAPAction, IAPException?) -> Unit,
 ) {
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -239,10 +243,26 @@ internal fun SettingsScreen(
             iapUiState is IAPUIState.PurchasesFulfillmentCompleted -> {
                 IAPDialogFragment.newInstance(
                     IAPFlow.RESTORE,
-                    IAPAnalyticsScreen.SETTINGS.screenName
+                    IAPAnalyticsScreen.PROFILE.screenName
                 ).show(
                     fragmentManager,
                     IAPDialogFragment::class.simpleName
+                )
+            }
+
+            iapUiState is IAPUIState.Error -> {
+                UpgradeErrorDialog(
+                    title = stringResource(id = R.string.iap_error_title),
+                    description = stringResource(id = R.string.iap_course_not_fullfilled),
+                    confirmText = stringResource(id = R.string.core_cancel),
+                    onConfirm = { onIAPAction(IAPAction.ACTION_ERROR_CLOSE, null) },
+                    dismissText = stringResource(id = R.string.iap_get_help),
+                    onDismiss = {
+                        onIAPAction(
+                            IAPAction.ACTION_GET_HELP,
+                            iapUiState.iapException
+                        )
+                    }
                 )
             }
 
@@ -351,7 +371,7 @@ private fun SupportInfoSection(
         ) {
             Column(Modifier.fillMaxWidth()) {
                 if (uiState.configuration.supportEmail.isNotBlank()) {
-                    SettingsItem(text = stringResource(id = profileR.string.profile_contact_support)) {
+                    SettingsItem(text = stringResource(id = R.string.core_contact_support)) {
                         onAction(SettingsScreenAction.SupportClick)
                     }
                     SettingsDivider()
@@ -763,6 +783,7 @@ private fun SettingsScreenPreview() {
             appUpgradeEvent = null,
             onBackClick = {},
             onAction = {},
+            onIAPAction = { _, _ -> },
             fragmentManager = MockFragmentManager,
         )
     }

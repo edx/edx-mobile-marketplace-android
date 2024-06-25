@@ -1,5 +1,6 @@
 package org.openedx.dashboard.presentation
 
+import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -21,7 +22,15 @@ import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.EnrolledCourse
+import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.presentation.IAPAnalytics
+import org.openedx.core.presentation.IAPAnalyticsEvent
+import org.openedx.core.presentation.IAPAnalyticsKeys
+import org.openedx.core.presentation.IAPAnalyticsScreen
+import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPFlow
+import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
@@ -32,6 +41,7 @@ import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
+import org.openedx.core.utils.EmailUtil
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 
 class DashboardListViewModel(
@@ -45,6 +55,7 @@ class DashboardListViewModel(
     private val analytics: DashboardAnalytics,
     private val appNotifier: AppNotifier,
     private val preferencesManager: CorePreferences,
+    private val iapAnalytics: IAPAnalytics,
     private val iapInteractor: IAPInteractor
 ) : BaseViewModel() {
 
@@ -239,12 +250,61 @@ class DashboardListViewModel(
                         iapInteractor.processUnfulfilledPurchase(userId)
                     }.onSuccess {
                         if (it) {
+                            unfulfilledPurchaseInitiatedEvent()
                             _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
+                        }
+                    }.onFailure {
+                        if (it is IAPException) {
+                            _iapUiState.emit(
+                                IAPUIState.Error(
+                                    IAPException(
+                                        IAPRequestType.UNFULFILLED_CODE,
+                                        it.httpErrorCode,
+                                        it.errorMessage
+                                    )
+                                )
+                            )
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun unfulfilledPurchaseInitiatedEvent() {
+        logIAPEvent(IAPAnalyticsEvent.IAP_UNFULFILLED_PURCHASE_INITIATED)
+    }
+
+    fun showFeedbackScreen(context: Context, message: String) {
+        EmailUtil.showFeedbackScreen(
+            context = context,
+            feedbackEmailAddress = config.getFeedbackEmailAddress(),
+            feedback = message,
+            appVersion = versionName
+        )
+        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
+            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED)
+            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP)
+        }.toMutableMap())
+    }
+
+    fun loadIAPCancelEvent() {
+        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
+            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED)
+            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE)
+        }.toMutableMap())
+    }
+
+    private fun logIAPEvent(
+        event: IAPAnalyticsEvent,
+        params: MutableMap<String, Any?> = mutableMapOf()
+    ) {
+        iapAnalytics.logEvent(event.eventName, params.apply {
+            put(IAPAnalyticsKeys.NAME.key, event.biValue)
+            put(IAPAnalyticsKeys.SCREEN_NAME.key, IAPAnalyticsScreen.COURSE_ENROLLMENT)
+            put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.SILENT.value)
+            put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
+        })
     }
 
     fun clearIAPState() {

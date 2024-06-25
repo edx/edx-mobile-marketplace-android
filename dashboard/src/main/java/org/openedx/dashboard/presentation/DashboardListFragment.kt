@@ -85,15 +85,18 @@ import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
 import org.openedx.core.domain.model.Progress
+import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRecommendedBox
+import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.PurchasesFulfillmentCompletedDialog
+import org.openedx.core.ui.UpgradeErrorDialog
 import org.openedx.core.ui.UpgradeToAccessView
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -170,11 +173,29 @@ class DashboardListFragment : Fragment() {
                             AppUpdateState.openPlayMarket(requireContext())
                         },
                     ),
-                    onDetectUnfulfilledPurchase = {
-                        viewModel.detectUnfulfilledPurchase()
-                    },
-                    clearIAPState = {
-                        viewModel.clearIAPState()
+                    onIAPAction = { action, iapException ->
+                        when (action) {
+                            IAPAction.ACTION_UNFULFILLED -> {
+                                viewModel.detectUnfulfilledPurchase()
+                            }
+
+                            IAPAction.ACTION_CLOSE -> {
+                                viewModel.clearIAPState()
+                            }
+
+                            IAPAction.ACTION_ERROR_CLOSE -> {
+                                viewModel.loadIAPCancelEvent()
+                            }
+
+                            IAPAction.ACTION_GET_HELP -> {
+                                iapException?.getFormattedErrorMessage()
+                                    ?.let { viewModel.showFeedbackScreen(requireActivity(), it) }
+                            }
+
+                            else -> {
+
+                            }
+                        }
                     }
                 )
             }
@@ -198,8 +219,7 @@ internal fun DashboardListView(
     onSwipeRefresh: () -> Unit,
     paginationCallback: () -> Unit,
     onItemClick: (EnrolledCourse) -> Unit,
-    onDetectUnfulfilledPurchase: () -> Unit,
-    clearIAPState: () -> Unit,
+    onIAPAction: (IAPAction, IAPException?) -> Unit,
     appUpgradeParameters: AppUpdateState.AppUpgradeParameters,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -311,7 +331,7 @@ internal fun DashboardListView(
                                                 ) {
                                                     IAPDialogFragment.newInstance(
                                                         iapFlow = IAPFlow.USER_INITIATED,
-                                                        screenName = IAPAnalyticsScreen.COURSE_DASHBOARD.screenName,
+                                                        screenName = IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName,
                                                         courseId = course.course.id,
                                                         courseName = course.course.name,
                                                         isSelfPaced = course.course.isSelfPaced,
@@ -344,7 +364,7 @@ internal fun DashboardListView(
 
                             LaunchedEffect(state.courses) {
                                 if (state.courses.isNotEmpty()) {
-                                    onDetectUnfulfilledPurchase()
+                                    onIAPAction(IAPAction.ACTION_UNFULFILLED, null)
                                 }
                             }
                         }
@@ -404,7 +424,7 @@ internal fun DashboardListView(
                     when (iapUiState) {
                         is IAPUIState.PurchasesFulfillmentCompleted -> {
                             PurchasesFulfillmentCompletedDialog(onConfirm = {
-                                clearIAPState()
+                                onIAPAction(IAPAction.ACTION_CLOSE, null)
                                 IAPDialogFragment.newInstance(
                                     IAPFlow.SILENT,
                                     IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName
@@ -413,8 +433,24 @@ internal fun DashboardListView(
                                     IAPDialogFragment::class.simpleName
                                 )
                             }, onDismiss = {
-                                clearIAPState()
+                                onIAPAction(IAPAction.ACTION_CLOSE, null)
                             })
+                        }
+
+                        is IAPUIState.Error -> {
+                            UpgradeErrorDialog(
+                                title = stringResource(id = CoreR.string.iap_error_title),
+                                description = stringResource(id = CoreR.string.iap_course_not_fullfilled),
+                                confirmText = stringResource(id = CoreR.string.core_cancel),
+                                onConfirm = { onIAPAction(IAPAction.ACTION_ERROR_CLOSE, null) },
+                                dismissText = stringResource(id = CoreR.string.iap_get_help),
+                                onDismiss = {
+                                    onIAPAction(
+                                        IAPAction.ACTION_GET_HELP,
+                                        iapUiState.iapException
+                                    )
+                                }
+                            )
                         }
 
                         else -> {}
@@ -612,9 +648,8 @@ private fun DashboardListViewPreview() {
             onSwipeRefresh = {},
             paginationCallback = {},
             onItemClick = {},
-            onDetectUnfulfilledPurchase = {},
-            appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
-            clearIAPState = {}
+            onIAPAction = { _, _ -> },
+            appUpgradeParameters = AppUpdateState.AppUpgradeParameters()
         )
     }
 }
@@ -647,9 +682,8 @@ private fun DashboardListViewTabletPreview() {
             onSwipeRefresh = {},
             paginationCallback = {},
             onItemClick = {},
-            onDetectUnfulfilledPurchase = {},
-            appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
-            clearIAPState = {}
+            onIAPAction = { _, _ -> },
+            appUpgradeParameters = AppUpdateState.AppUpgradeParameters()
         )
     }
 }

@@ -32,26 +32,6 @@ enum class IAPAnalyticsEvent(val eventName: String, val biValue: String) {
     IAP_RESTORE_PURCHASE_CLICKED(
         "Payments: Restore Purchases Clicked",
         "edx.bi.app.payments.restore_purchases.clicked"
-    ),
-
-    // Value Prop Events
-    VALUE_PROP_LEARN_MORE_CLICKED(
-        "Value Prop Learn More Clicked",
-        "edx.bi.app.value.prop.learn.more.clicked"
-    ),
-    VALUE_PROP_MODAL_VIEW("Value Prop Modal View", ""),
-    VALUE_PROP_MESSAGE_VIEWED("Value Prop Message Viewed", "edx.bi.app.value_prop_message.viewed"),
-    COURSE_UNIT_LOCKED_CONTENT(
-        "Value Prop Locked Content Clicked",
-        "edx.bi.app.course.unit.locked.content.clicked"
-    ),
-    VALUE_PROP_SHOW_MORE_CLICKED(
-        "Value Prop Show More Clicked",
-        "edx.bi.app.value_prop.show_more.clicked"
-    ),
-    VALUE_PROP_SHOW_LESS_CLICKED(
-        "Value Prop Show Less Clicked",
-        "edx.bi.app.value_prop.show_less.clicked"
     )
 }
 
@@ -71,12 +51,11 @@ enum class IAPAnalyticsKeys(val key: String) {
     ERROR_ACTION("error_action"),
     ACTION("action"),
     SCREEN_NAME("screen_name"),
-    GET_HELP("get_help"),
+    ERROR_ALERT_TYPE("error_alert_type"),
 }
 
 enum class IAPAnalyticsScreen(val screenName: String) {
     COURSE_ENROLLMENT("course_enrollment"),
     COURSE_DASHBOARD("course_dashboard"),
-    SETTINGS("settings"),
-    COURSE_COMPONENT("course_component")
+    PROFILE("profile"),
 }

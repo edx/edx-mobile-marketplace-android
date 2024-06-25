@@ -34,6 +34,7 @@ import org.openedx.core.domain.model.CourseDatesCalendarSync
 import org.openedx.core.domain.model.DashboardCourseList
 import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.domain.model.Pagination
+import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.AppUpgradeNotifier
@@ -60,6 +61,7 @@ class DashboardViewModelTest {
     private val discoveryNotifier = mockk<DiscoveryNotifier>()
     private val iapNotifier = mockk<IAPNotifier>()
     private val analytics = mockk<DashboardAnalytics>()
+    private val iapAnalytics = mockk<IAPAnalytics>()
     private val appUpgradeNotifier = mockk<AppUpgradeNotifier>()
     private val corePreferences = mockk<CorePreferences>()
 
@@ -111,6 +113,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
         coEvery { interactor.getEnrolledCourses(any()) } throws UnknownHostException()
@@ -141,6 +144,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
 
@@ -172,6 +176,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
 
@@ -203,6 +208,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
 
@@ -244,6 +250,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
 
@@ -273,6 +280,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
 
@@ -306,6 +314,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
 
@@ -343,6 +352,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
 
@@ -386,6 +396,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
 
@@ -418,6 +429,7 @@ class DashboardViewModelTest {
             analytics,
             appUpgradeNotifier,
             corePreferences,
+            iapAnalytics,
             iapInteractor
         )
 

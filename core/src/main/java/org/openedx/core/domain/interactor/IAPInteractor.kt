@@ -13,6 +13,7 @@ import org.openedx.core.extension.decodeToLong
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseSku
 import org.openedx.core.module.billing.getPriceAmount
+import org.openedx.core.presentation.iap.IAPRequestType
 
 class IAPInteractor(
     private val billingProcessor: BillingProcessor,
@@ -27,6 +28,7 @@ class IAPInteractor(
             return productDetail.oneTimePurchaseOfferDetails!!
         } else {
             throw IAPException(
+                requestType = IAPRequestType.PRICE_CODE,
                 httpErrorCode = billingResult.responseCode,
                 errorMessage = billingResult.debugMessage
             )
@@ -70,7 +72,7 @@ class IAPInteractor(
     suspend fun consumePurchase(purchaseToken: String) {
         val result = billingProcessor.consumePurchase(purchaseToken)
         if (result.responseCode != BillingClient.BillingResponseCode.OK) {
-            throw IAPException(result.responseCode, result.debugMessage)
+            throw IAPException(IAPRequestType.CONSUME_CODE, result.responseCode, result.debugMessage)
         }
     }
 

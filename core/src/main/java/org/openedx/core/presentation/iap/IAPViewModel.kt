@@ -23,7 +23,6 @@ import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.PurchaseFlowData
-import org.openedx.core.exception.iap.IAPErrorMessage
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseSku
@@ -71,9 +70,11 @@ class IAPViewModel(
 
         override fun onPurchaseCancel(responseCode: Int, message: String) {
             updateErrorState(
-                requestType = IAPErrorMessage.PAYMENT_SDK_CODE,
-                responseCode = responseCode,
-                errorMessage = message
+                IAPException(
+                    IAPRequestType.PAYMENT_SDK_CODE,
+                    httpErrorCode = responseCode,
+                    errorMessage = message
+                )
             )
         }
     }
@@ -83,6 +84,7 @@ class IAPViewModel(
             iapNotifier.notifier.onEach { event ->
                 when (event) {
                     is CourseDataUpdated -> {
+                        upgradeSuccessEvent()
                         _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                         _uiState.value = IAPUIState.CourseDataUpdated
                     }
@@ -97,26 +99,25 @@ class IAPViewModel(
 
             IAPFlow.SILENT, IAPFlow.RESTORE -> {
                 _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
+                purchaseFlowData.flowStartTime = getCurrentTime()
                 updateCourseData()
             }
         }
     }
 
-    private fun updateErrorState(requestType: Int, responseCode: Int, errorMessage: String) {
-        val feedbackErrorMessage: String =
-            IAPErrorMessage.getFormattedErrorMessage(requestType, responseCode, errorMessage)
-                .toString()
-        when (requestType) {
-            IAPErrorMessage.PAYMENT_SDK_CODE -> {
-                if (BillingClient.BillingResponseCode.USER_CANCELED == responseCode) {
+    private fun updateErrorState(iapException: IAPException) {
+        val feedbackErrorMessage: String = iapException.getFormattedErrorMessage()
+        when (iapException.requestType) {
+            IAPRequestType.PAYMENT_SDK_CODE -> {
+                if (BillingClient.BillingResponseCode.USER_CANCELED == iapException.httpErrorCode) {
                     canceledByUserEvent()
                 } else {
                     purchaseErrorEvent(feedbackErrorMessage)
                 }
             }
 
-            IAPErrorMessage.PRICE_CODE,
-            IAPErrorMessage.NO_SKU_CODE -> {
+            IAPRequestType.PRICE_CODE,
+            IAPRequestType.NO_SKU_CODE -> {
                 priceLoadErrorEvent(feedbackErrorMessage)
             }
 
@@ -124,17 +125,14 @@ class IAPViewModel(
                 courseUpgradeErrorEvent(feedbackErrorMessage)
             }
         }
-        if (BillingClient.BillingResponseCode.USER_CANCELED != responseCode) {
-            _uiState.value = IAPUIState.Error(
-                requestType = requestType,
-                feedbackErrorMessage = feedbackErrorMessage
-            )
+        if (BillingClient.BillingResponseCode.USER_CANCELED != iapException.httpErrorCode) {
+            _uiState.value = IAPUIState.Error(iapException)
         } else {
             _uiState.value = IAPUIState.Clear
         }
     }
 
-    private fun loadPrice() {
+    fun loadPrice() {
         viewModelScope.launch(Dispatchers.IO) {
             purchaseFlowData.takeIf { it.courseId != null && it.productInfo != null }
                 ?.apply {
@@ -149,18 +147,16 @@ class IAPViewModel(
                             IAPUIState.ProductData(formattedPrice = this.formattedPrice!!)
                     }.onFailure {
                         if (it is IAPException) {
-                            updateErrorState(
-                                requestType = IAPErrorMessage.PRICE_CODE,
-                                responseCode = it.httpErrorCode,
-                                errorMessage = it.errorMessage,
-                            )
+                            updateErrorState(it)
                         }
                     }
                 } ?: run {
                 updateErrorState(
-                    requestType = IAPErrorMessage.PRICE_CODE,
-                    responseCode = IAPErrorMessage.PRICE_CODE,
-                    errorMessage = "Product SKU is not provided in the request."
+                    IAPException(
+                        requestType = IAPRequestType.PRICE_CODE,
+                        httpErrorCode = IAPRequestType.PRICE_CODE.hashCode(),
+                        errorMessage = "Product SKU is not provided in the request."
+                    )
                 )
             }
         }
@@ -175,9 +171,11 @@ class IAPViewModel(
                 addToBasket(productInfo?.courseSku!!)
             } ?: run {
             updateErrorState(
-                requestType = IAPErrorMessage.NO_SKU_CODE,
-                responseCode = IAPErrorMessage.NO_SKU_CODE,
-                errorMessage = ""
+                IAPException(
+                    requestType = IAPRequestType.NO_SKU_CODE,
+                    httpErrorCode = IAPRequestType.NO_SKU_CODE.hashCode(),
+                    errorMessage = ""
+                )
             )
         }
     }
@@ -191,11 +189,7 @@ class IAPViewModel(
                 processCheckout(basketId)
             }.onFailure {
                 if (it is IAPException) {
-                    updateErrorState(
-                        requestType = IAPErrorMessage.ADD_TO_BASKET_CODE,
-                        responseCode = it.httpErrorCode,
-                        errorMessage = it.errorMessage,
-                    )
+                    updateErrorState(it)
                 }
             }
         }
@@ -209,11 +203,7 @@ class IAPViewModel(
                 _uiState.value = IAPUIState.PurchaseProduct
             }.onFailure {
                 if (it is IAPException) {
-                    updateErrorState(
-                        requestType = IAPErrorMessage.CHECKOUT_CODE,
-                        responseCode = it.httpErrorCode,
-                        errorMessage = it.errorMessage,
-                    )
+                    updateErrorState(it)
                 }
             }
         }
@@ -247,11 +237,7 @@ class IAPViewModel(
                 consumeOrderForFurtherPurchases(purchaseFlowData)
             }.onFailure {
                 if (it is IAPException) {
-                    updateErrorState(
-                        requestType = IAPErrorMessage.EXECUTE_ORDER_CODE,
-                        responseCode = it.httpErrorCode,
-                        errorMessage = it.errorMessage,
-                    )
+                    updateErrorState(it)
                 }
             }
         }
@@ -266,15 +252,21 @@ class IAPViewModel(
                     updateCourseData()
                 }.onFailure {
                     if (it is IAPException) {
-                        updateErrorState(
-                            requestType = IAPErrorMessage.CONSUME_CODE,
-                            responseCode = it.httpErrorCode,
-                            errorMessage = it.errorMessage,
-                        )
+                        updateErrorState(it)
                     }
                 }
             }
         }
+    }
+
+    fun refreshCourse() {
+        _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
+        purchaseFlowData.flowStartTime = getCurrentTime()
+        updateCourseData()
+    }
+
+    fun retryExecuteOrder() {
+        executeOrder(purchaseFlowData)
     }
 
     private fun updateCourseData() {
@@ -285,31 +277,28 @@ class IAPViewModel(
         }
     }
 
-    fun showFeedbackScreen(context: Context, message: String) {
+    fun showFeedbackScreen(context: Context, flowType: String, message: String) {
         EmailUtil.showFeedbackScreen(
             context = context,
             feedbackEmailAddress = config.getFeedbackEmailAddress(),
             feedback = message,
             appVersion = versionName
         )
-        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
-            put(IAPAnalyticsKeys.ERROR.key, message)
-            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAnalyticsKeys.GET_HELP.key)
-        }.toMutableMap())
+        logIAPErrorActionEvent(flowType, IAPAction.ACTION_GET_HELP.action)
     }
 
     private fun upgradeNowClickedEvent() {
         logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED)
     }
 
-    fun upgradeSuccessEvent() {
+    private fun upgradeSuccessEvent() {
         val elapsedTime = getCurrentTime() - purchaseFlowData.flowStartTime
         logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_SUCCESS, buildMap {
             put(IAPAnalyticsKeys.ELAPSED_TIME.key, elapsedTime)
         }.toMutableMap())
     }
 
-    fun purchaseErrorEvent(error: String) {
+    private fun purchaseErrorEvent(error: String) {
         logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_ERROR, buildMap {
             put(IAPAnalyticsKeys.ERROR.key, error)
         }.toMutableMap())
@@ -331,6 +320,13 @@ class IAPViewModel(
         }.toMutableMap())
     }
 
+    fun logIAPErrorActionEvent(alertType: String, action: String) {
+        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
+            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, alertType)
+            put(IAPAnalyticsKeys.ERROR_ACTION.key, action)
+        }.toMutableMap())
+    }
+
     private fun logIAPEvent(
         event: IAPAnalyticsEvent,
         params: MutableMap<String, Any?> = mutableMapOf()
@@ -344,10 +340,10 @@ class IAPViewModel(
                     if (purchaseFlowData.isSelfPaced == true) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
                 )
             }
-            purchaseFlowData.formattedPrice?.let { formattedPrice ->
+            purchaseFlowData.formattedPrice?.takeIf { it.isNotBlank() }?.let { formattedPrice ->
                 put(IAPAnalyticsKeys.PRICE.key, formattedPrice)
             }
-            purchaseFlowData.componentId?.let { componentId ->
+            purchaseFlowData.componentId?.takeIf { it.isNotBlank() }?.let { componentId ->
                 put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
             }
             put(IAPAnalyticsKeys.SCREEN_NAME.key, purchaseFlowData.screenName)

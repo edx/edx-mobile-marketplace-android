@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 
@@ -113,6 +114,20 @@ class SettingsFragment : Fragment() {
                                     "test message"
                                 )
                             }
+                        }
+                    },
+                    onIAPAction = { action, iapException ->
+                        when (action) {
+                            IAPAction.ACTION_ERROR_CLOSE -> {
+                                viewModel.loadIAPCancelEvent()
+                            }
+
+                            IAPAction.ACTION_GET_HELP -> {
+                                iapException?.getFormattedErrorMessage()
+                                    ?.let { viewModel.showFeedbackScreen(requireActivity(), it) }
+                            }
+
+                            else -> {}
                         }
                     }
                 )

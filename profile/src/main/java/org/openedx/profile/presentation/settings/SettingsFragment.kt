@@ -10,6 +10,10 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.core.presentation.IAPAnalyticsScreen
+import org.openedx.core.presentation.dialog.IAPDialogFragment
+import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 
@@ -27,12 +31,14 @@ class SettingsFragment : Fragment() {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
                 val uiState by viewModel.uiState.collectAsState()
+                val iapUiState by viewModel.iapUiState.collectAsState()
                 val logoutSuccess by viewModel.successLogout.collectAsState(false)
                 val appUpgradeEvent by viewModel.appUpgradeEvent.collectAsState(null)
 
                 SettingsScreen(
                     windowSize = windowSize,
                     uiState = uiState,
+                    iapUiState = iapUiState,
                     appUpgradeEvent = appUpgradeEvent,
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
@@ -94,6 +100,46 @@ class SettingsFragment : Fragment() {
                                     requireActivity().supportFragmentManager
                                 )
                             }
+
+                            SettingsScreenAction.RestorePurchaseClick -> {
+                                viewModel.restorePurchase()
+                            }
+
+                            SettingsScreenAction.RestorePurchaseCancel -> {
+                                viewModel.clearIAPState()
+                            }
+
+                            SettingsScreenAction.GetHelpClick -> {
+                                viewModel.clearIAPState()
+                                viewModel.showFeedbackScreen(
+                                    requireActivity(),
+                                    "test message"
+                                )
+                            }
+                        }
+                    },
+                    onIAPAction = { action, iapException ->
+                        when (action) {
+                            IAPAction.ACTION_ERROR_CLOSE -> {
+                                viewModel.loadIAPCancelEvent()
+                            }
+
+                            IAPAction.ACTION_GET_HELP -> {
+                                iapException?.getFormattedErrorMessage()
+                                    ?.let { viewModel.showFeedbackScreen(requireActivity(), it) }
+                            }
+
+                            IAPAction.ACTION_RESTORE -> {
+                                IAPDialogFragment.newInstance(
+                                    IAPFlow.RESTORE,
+                                    IAPAnalyticsScreen.PROFILE.screenName
+                                ).show(
+                                    requireActivity().supportFragmentManager,
+                                    IAPDialogFragment.TAG
+                                )
+                            }
+
+                            else -> {}
                         }
                     }
                 )
@@ -120,5 +166,8 @@ internal interface SettingsScreenAction {
     object VideoSettingsClick : SettingsScreenAction
     object ManageAccountClick : SettingsScreenAction
     object CalendarSettingsClick : SettingsScreenAction
+    object RestorePurchaseClick : SettingsScreenAction
+    object RestorePurchaseCancel : SettingsScreenAction
+    object GetHelpClick : SettingsScreenAction
 }
 

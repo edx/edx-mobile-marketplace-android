@@ -4,6 +4,7 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.openedx.app.AppViewModel
+import org.openedx.app.BuildConfig
 import org.openedx.app.MainViewModel
 import org.openedx.auth.data.repository.AuthRepository
 import org.openedx.auth.domain.interactor.AuthInteractor
@@ -12,7 +13,12 @@ import org.openedx.auth.presentation.restore.RestorePasswordViewModel
 import org.openedx.auth.presentation.signin.SignInViewModel
 import org.openedx.auth.presentation.signup.SignUpViewModel
 import org.openedx.core.Validator
+import org.openedx.core.data.repository.iap.IAPRepository
+import org.openedx.core.domain.interactor.IAPInteractor
+import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.presentation.dialog.selectorbottomsheet.SelectDialogViewModel
+import org.openedx.core.presentation.iap.IAPFlow
+import org.openedx.core.presentation.iap.IAPViewModel
 import org.openedx.core.presentation.settings.video.VideoQualityViewModel
 import org.openedx.core.ui.WindowSize
 import org.openedx.course.data.repository.CourseRepository
@@ -132,7 +138,23 @@ val screenModule = module {
 
     factory { DashboardRepository(get(), get(), get(), get()) }
     factory { DashboardInteractor(get()) }
-    viewModel { DashboardListViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel {
+        DashboardListViewModel(
+            versionName = BuildConfig.VERSION_NAME,
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
+
     viewModel { (windowSize: WindowSize) ->
         DashboardGalleryViewModel(
             get(),
@@ -180,6 +202,9 @@ val screenModule = module {
     viewModel { (username: String) -> AnothersProfileViewModel(get(), get(), username) }
     viewModel {
         SettingsViewModel(
+            versionName = BuildConfig.VERSION_NAME,
+            get(),
+            get(),
             get(),
             get(),
             get(),
@@ -229,6 +254,8 @@ val screenModule = module {
             courseTitle,
             resumeBlockId,
             enrollmentMode,
+            versionName = BuildConfig.VERSION_NAME,
+            get(),
             get(),
             get(),
             get(),
@@ -411,6 +438,22 @@ val screenModule = module {
             get(),
             get(),
             get(),
+        )
+    }
+
+    single { IAPRepository(get()) }
+    factory { IAPInteractor(get(), get()) }
+    viewModel { (iapFlow: IAPFlow, purchaseFlowData: PurchaseFlowData) ->
+        IAPViewModel(
+            iapFlow = iapFlow,
+            purchaseFlowData = purchaseFlowData,
+            versionName = BuildConfig.VERSION_NAME,
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
         )
     }
 

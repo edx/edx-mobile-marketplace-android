@@ -284,6 +284,8 @@ class IAPDialogFragment : DialogFragment() {
     }
 
     companion object {
+        const val TAG = "IAPDialogFragment"
+
         private const val ARG_IAP_FLOW = "iap_flow"
         private const val ARG_SCREEN_NAME = "SCREEN_NAME"
         private const val ARG_COURSE_ID = "course_id"

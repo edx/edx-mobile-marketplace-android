@@ -1,7 +1,6 @@
 package org.openedx.core.domain.model.iap
 
 import org.openedx.core.domain.ProductInfo
-import org.openedx.core.presentation.iap.IAPFlow
 
 data class PurchaseFlowData(
     val screenName: String? = null,
@@ -10,7 +9,6 @@ data class PurchaseFlowData(
     val isSelfPaced: Boolean? = null,
     val componentId: String? = null,
     val productInfo: ProductInfo? = null,
-    val flow: String = IAPFlow.USER_INITIATED.value()
 ) {
     var currencyCode: String = ""
     var price: Double = 0.0

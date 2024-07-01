@@ -29,6 +29,7 @@ enum class IAPFlow(val value: String) {
 }
 
 enum class IAPAction(val action: String) {
+    ACTION_USER_INITIATED("user_initiated"),
     ACTION_GET_HELP("get_help"),
     ACTION_CLOSE("close"),
     ACTION_RELOAD_PRICE("reload_price"),
@@ -37,6 +38,7 @@ enum class IAPAction(val action: String) {
     ACTION_UNFULFILLED("Unfulfilled"),
     ACTION_RESTORE("restore"),
     ACTION_ERROR_CLOSE("error_close"),
+    ACTION_COMPLETION("completion")
 }
 
 enum class IAPRequestType(val request: String) {

@@ -28,6 +28,7 @@ data class CourseStructure(
     val isUpgradeable: Boolean
         get() = enrollmentDetails.isAuditMode &&
                 isStarted &&
+                courseAccessDetails.coursewareAccess?.hasAccess == true &&
                 enrollmentDetails.isUpgradeDeadlinePassed.not() &&
                 productInfo != null
 }

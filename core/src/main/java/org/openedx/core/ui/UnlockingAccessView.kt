@@ -14,9 +14,14 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openedx.core.R
@@ -32,20 +37,42 @@ fun UnlockingAccessView() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+        Image(
+            colorFilter = ColorFilter.tint(MaterialTheme.appColors.progressBarBackgroundColor),
+            painter = painterResource(id = R.drawable.core_ic_rocket_launch),
+            contentDescription = null,
+        )
+        
+        val annotatedString = buildAnnotatedString {
+            append(stringResource(id = R.string.iap_unloacking_text))
+            append("\n")
+            withStyle(
+                style = SpanStyle(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.appColors.primary
+                )
+            ) {
+                append(stringResource(id = R.string.iap_full_access_text))
+            }
+            append("\n")
+            append(stringResource(id = R.string.iap_your_course_text))
         }
+
         Text(
-            modifier = Modifier.padding(vertical = 32.dp),
-            text = stringResource(id = R.string.iap_upgrading),
+            modifier = Modifier.padding(vertical = 24.dp),
+            text = annotatedString,
             textAlign = TextAlign.Center,
             color = MaterialTheme.appColors.textPrimary,
             style = MaterialTheme.appTypography.titleLarge,
         )
-        Image(
-            painter = painterResource(id = R.drawable.core_ic_campaign_launch),
-            contentDescription = null,
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 64.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+        }
     }
 }
 

@@ -69,7 +69,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.koin.android.ext.android.inject
@@ -147,7 +146,6 @@ class DashboardListFragment : Fragment() {
                     iapUiState = iapUiState,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
-                    fragmentManager = requireActivity().supportFragmentManager,
                     hasInternetConnection = viewModel.hasInternetConnection,
                     onReloadClick = {
                         viewModel.getCourses()
@@ -173,8 +171,35 @@ class DashboardListFragment : Fragment() {
                             AppUpdateState.openPlayMarket(requireContext())
                         },
                     ),
-                    onIAPAction = { action, iapException ->
+                    onIAPAction = { action, course, iapException ->
                         when (action) {
+                            IAPAction.ACTION_USER_INITIATED -> {
+                                if (course != null) {
+                                    IAPDialogFragment.newInstance(
+                                        iapFlow = IAPFlow.USER_INITIATED,
+                                        screenName = IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName,
+                                        courseId = course.course.id,
+                                        courseName = course.course.name,
+                                        isSelfPaced = course.course.isSelfPaced,
+                                        productInfo = course.productInfo!!
+                                    ).show(
+                                        requireActivity().supportFragmentManager,
+                                        IAPDialogFragment.TAG
+                                    )
+                                }
+                            }
+
+                            IAPAction.ACTION_COMPLETION -> {
+                                IAPDialogFragment.newInstance(
+                                    IAPFlow.SILENT,
+                                    IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName
+                                ).show(
+                                    requireActivity().supportFragmentManager,
+                                    IAPDialogFragment.TAG
+                                )
+                                viewModel.clearIAPState()
+                            }
+
                             IAPAction.ACTION_UNFULFILLED -> {
                                 viewModel.detectUnfulfilledPurchase()
                             }
@@ -213,13 +238,12 @@ internal fun DashboardListView(
     iapUiState: IAPUIState?,
     canLoadMore: Boolean,
     refreshing: Boolean,
-    fragmentManager: FragmentManager,
     hasInternetConnection: Boolean,
     onReloadClick: () -> Unit,
     onSwipeRefresh: () -> Unit,
     paginationCallback: () -> Unit,
     onItemClick: (EnrolledCourse) -> Unit,
-    onIAPAction: (IAPAction, IAPException?) -> Unit,
+    onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit,
     appUpgradeParameters: AppUpdateState.AppUpgradeParameters,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -329,16 +353,10 @@ internal fun DashboardListView(
                                                         bottom = 16.dp
                                                     )
                                                 ) {
-                                                    IAPDialogFragment.newInstance(
-                                                        iapFlow = IAPFlow.USER_INITIATED,
-                                                        screenName = IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName,
-                                                        courseId = course.course.id,
-                                                        courseName = course.course.name,
-                                                        isSelfPaced = course.course.isSelfPaced,
-                                                        productInfo = course.productInfo!!
-                                                    ).show(
-                                                        fragmentManager,
-                                                        IAPDialogFragment::class.simpleName
+                                                    onIAPAction(
+                                                        IAPAction.ACTION_USER_INITIATED,
+                                                        course,
+                                                        null
                                                     )
                                                 }
                                             }
@@ -364,7 +382,7 @@ internal fun DashboardListView(
 
                             LaunchedEffect(state.courses) {
                                 if (state.courses.isNotEmpty()) {
-                                    onIAPAction(IAPAction.ACTION_UNFULFILLED, null)
+                                    onIAPAction(IAPAction.ACTION_UNFULFILLED, null, null)
                                 }
                             }
                         }
@@ -424,16 +442,9 @@ internal fun DashboardListView(
                     when (iapUiState) {
                         is IAPUIState.PurchasesFulfillmentCompleted -> {
                             PurchasesFulfillmentCompletedDialog(onConfirm = {
-                                onIAPAction(IAPAction.ACTION_CLOSE, null)
-                                IAPDialogFragment.newInstance(
-                                    IAPFlow.SILENT,
-                                    IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName
-                                ).show(
-                                    fragmentManager,
-                                    IAPDialogFragment::class.simpleName
-                                )
+                                onIAPAction(IAPAction.ACTION_COMPLETION, null, null)
                             }, onDismiss = {
-                                onIAPAction(IAPAction.ACTION_CLOSE, null)
+                                onIAPAction(IAPAction.ACTION_CLOSE, null, null)
                             })
                         }
 
@@ -442,11 +453,18 @@ internal fun DashboardListView(
                                 title = stringResource(id = CoreR.string.iap_error_title),
                                 description = stringResource(id = CoreR.string.iap_course_not_fullfilled),
                                 confirmText = stringResource(id = CoreR.string.core_cancel),
-                                onConfirm = { onIAPAction(IAPAction.ACTION_ERROR_CLOSE, null) },
+                                onConfirm = {
+                                    onIAPAction(
+                                        IAPAction.ACTION_ERROR_CLOSE,
+                                        null,
+                                        null
+                                    )
+                                },
                                 dismissText = stringResource(id = CoreR.string.iap_get_help),
                                 onDismiss = {
                                     onIAPAction(
                                         IAPAction.ACTION_GET_HELP,
+                                        null,
                                         iapUiState.iapException
                                     )
                                 }
@@ -618,8 +636,6 @@ private fun CourseItemPreview() {
     }
 }
 
-object MockFragmentManager : FragmentManager()
-
 @Preview(uiMode = UI_MODE_NIGHT_NO)
 @Preview(uiMode = UI_MODE_NIGHT_YES)
 @Composable
@@ -642,13 +658,12 @@ private fun DashboardListViewPreview() {
             iapUiState = null,
             canLoadMore = false,
             refreshing = false,
-            fragmentManager = MockFragmentManager,
             hasInternetConnection = true,
             onReloadClick = {},
             onSwipeRefresh = {},
             paginationCallback = {},
             onItemClick = {},
-            onIAPAction = { _, _ -> },
+            onIAPAction = { _, _, _ -> },
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters()
         )
     }
@@ -676,13 +691,12 @@ private fun DashboardListViewTabletPreview() {
             iapUiState = null,
             canLoadMore = false,
             refreshing = false,
-            fragmentManager = MockFragmentManager,
             hasInternetConnection = true,
             onReloadClick = {},
             onSwipeRefresh = {},
             paginationCallback = {},
             onItemClick = {},
-            onIAPAction = { _, _ -> },
+            onIAPAction = { _, _, _ -> },
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters()
         )
     }

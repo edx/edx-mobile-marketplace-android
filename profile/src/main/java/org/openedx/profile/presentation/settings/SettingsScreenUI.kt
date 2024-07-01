@@ -50,15 +50,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.fragment.app.FragmentManager
 import org.openedx.core.R
 import org.openedx.core.domain.model.AgreementUrls
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.presentation.IAPAnalyticsScreen
-import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPAction
-import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
@@ -87,7 +83,6 @@ internal fun SettingsScreen(
     windowSize: WindowSize,
     uiState: SettingsUIState,
     iapUiState: IAPUIState?,
-    fragmentManager: FragmentManager,
     appUpgradeEvent: AppUpgradeEvent?,
     onBackClick: () -> Unit,
     onAction: (SettingsScreenAction) -> Unit,
@@ -241,13 +236,7 @@ internal fun SettingsScreen(
             }
 
             iapUiState is IAPUIState.PurchasesFulfillmentCompleted -> {
-                IAPDialogFragment.newInstance(
-                    IAPFlow.RESTORE,
-                    IAPAnalyticsScreen.PROFILE.screenName
-                ).show(
-                    fragmentManager,
-                    IAPDialogFragment::class.simpleName
-                )
+                onIAPAction(IAPAction.ACTION_RESTORE, null)
             }
 
             iapUiState is IAPUIState.Error -> {
@@ -770,8 +759,6 @@ private fun LogoutDialogPreview() {
     LogoutDialog({}, {})
 }
 
-object MockFragmentManager : FragmentManager()
-
 @Preview
 @Composable
 private fun SettingsScreenPreview() {
@@ -784,7 +771,6 @@ private fun SettingsScreenPreview() {
             onBackClick = {},
             onAction = {},
             onIAPAction = { _, _ -> },
-            fragmentManager = MockFragmentManager,
         )
     }
 }

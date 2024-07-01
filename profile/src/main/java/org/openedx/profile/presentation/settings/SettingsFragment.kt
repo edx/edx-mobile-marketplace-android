@@ -10,7 +10,10 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.core.presentation.IAPAnalyticsScreen
+import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 
@@ -36,7 +39,6 @@ class SettingsFragment : Fragment() {
                     windowSize = windowSize,
                     uiState = uiState,
                     iapUiState = iapUiState,
-                    fragmentManager = requireActivity().supportFragmentManager,
                     appUpgradeEvent = appUpgradeEvent,
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
@@ -125,6 +127,16 @@ class SettingsFragment : Fragment() {
                             IAPAction.ACTION_GET_HELP -> {
                                 iapException?.getFormattedErrorMessage()
                                     ?.let { viewModel.showFeedbackScreen(requireActivity(), it) }
+                            }
+
+                            IAPAction.ACTION_RESTORE -> {
+                                IAPDialogFragment.newInstance(
+                                    IAPFlow.RESTORE,
+                                    IAPAnalyticsScreen.PROFILE.screenName
+                                ).show(
+                                    requireActivity().supportFragmentManager,
+                                    IAPDialogFragment.TAG
+                                )
                             }
 
                             else -> {}

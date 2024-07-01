@@ -405,7 +405,7 @@ fun CourseDashboard(
                                     productInfo = viewModel.courseStructure?.productInfo!!
                                 ).show(
                                     fragmentManager,
-                                    IAPDialogFragment::class.simpleName
+                                    IAPDialogFragment.TAG
                                 )
                             }
                         }

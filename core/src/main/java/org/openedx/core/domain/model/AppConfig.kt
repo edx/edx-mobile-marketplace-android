@@ -15,7 +15,7 @@ data class CourseDatesCalendarSync(
     val isDeepLinkEnabled: Boolean,
 ) : Serializable
 
-class IAPConfig(
+data class IAPConfig(
     val isEnabled: Boolean = false,
     val productPrefix: String? = null,
     val disableVersions: List<String> = listOf()

@@ -171,12 +171,6 @@ class BillingProcessor(
         return result.billingResult
     }
 
-    fun release() {
-        if (billingClient.isReady) {
-            billingClient.endConnection()
-        }
-    }
-
     /**
      * Method to query the Purchases async and returns purchases for currently owned items
      * bought within the app.

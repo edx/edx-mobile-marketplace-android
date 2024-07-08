@@ -28,6 +28,7 @@ import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.IAPAnalyticsEvent
 import org.openedx.core.presentation.IAPAnalyticsKeys
 import org.openedx.core.presentation.IAPAnalyticsScreen
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPRequestType
@@ -45,7 +46,7 @@ import org.openedx.core.utils.EmailUtil
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 
 class DashboardListViewModel(
-    private val versionName: String,
+    private val appData: AppData,
     private val config: Config,
     private val networkConnection: NetworkConnection,
     private val interactor: DashboardInteractor,
@@ -100,7 +101,7 @@ class DashboardListViewModel(
         get() = preferencesManager.appConfig.iapConfig
     private val isIAPEnabled
         get() = iapConfig.isEnabled &&
-                iapConfig.disableVersions.contains(versionName).not()
+                iapConfig.disableVersions.contains(appData.versionName).not()
 
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
@@ -280,7 +281,7 @@ class DashboardListViewModel(
             context = context,
             feedbackEmailAddress = config.getFeedbackEmailAddress(),
             feedback = message,
-            appVersion = versionName
+            appVersion = appData.versionName
         )
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
             put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED)
@@ -288,7 +289,7 @@ class DashboardListViewModel(
         }.toMutableMap())
     }
 
-    fun loadIAPCancelEvent() {
+    fun logIAPCancelEvent() {
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
             put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED)
             put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE)

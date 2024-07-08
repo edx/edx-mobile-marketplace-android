@@ -19,7 +19,7 @@ import java.util.Locale
  * */
 class IAPException(
     val requestType: IAPRequestType = IAPRequestType.UNKNOWN,
-    val httpErrorCode: Int = -1,
+    val httpErrorCode: Int = DEFAULT_HTTP_ERROR_CODE,
     val errorMessage: String
 ) : Exception(errorMessage) {
 
@@ -36,12 +36,16 @@ class IAPException(
         }
         body.append(String.format("%s", requestType.request))
         // change the default value to -1 cuz in case of BillingClient return errorCode 0 for price load.
-        if (httpErrorCode == -1) {
+        if (httpErrorCode == DEFAULT_HTTP_ERROR_CODE) {
             return body.toString()
         }
         body.append(String.format(Locale.ENGLISH, "-%d", httpErrorCode))
         if (!TextUtils.isEmpty(errorMessage)) body.append(String.format("-%s", errorMessage))
         return body.toString()
+    }
+
+    companion object {
+        private const val DEFAULT_HTTP_ERROR_CODE = -1
     }
 }
 

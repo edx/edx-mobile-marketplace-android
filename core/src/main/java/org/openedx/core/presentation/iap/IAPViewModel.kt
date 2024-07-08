@@ -30,17 +30,18 @@ import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.IAPAnalyticsEvent
 import org.openedx.core.presentation.IAPAnalyticsKeys
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.utils.EmailUtil
-import java.util.Calendar
+import org.openedx.core.utils.TimeUtils
 
 class IAPViewModel(
     iapFlow: IAPFlow,
-    var purchaseFlowData: PurchaseFlowData,
-    private val versionName: String,
+    private val purchaseFlowData: PurchaseFlowData,
+    private val appData: AppData,
     private val iapInteractor: IAPInteractor,
     private val corePreferences: CorePreferences,
     private val analytics: IAPAnalytics,
@@ -49,14 +50,16 @@ class IAPViewModel(
     private val iapNotifier: IAPNotifier
 ) : BaseViewModel() {
 
-    private val _uiState =
-        MutableStateFlow<IAPUIState>(IAPUIState.Loading(IAPLoaderType.PRICE))
+    private val _uiState = MutableStateFlow<IAPUIState>(IAPUIState.Loading(IAPLoaderType.PRICE))
     val uiState: StateFlow<IAPUIState>
         get() = _uiState.asStateFlow()
 
     private val _uiMessage = MutableSharedFlow<UIMessage>()
     val uiMessage: SharedFlow<UIMessage>
         get() = _uiMessage.asSharedFlow()
+
+    val purchaseData: PurchaseFlowData
+        get() = purchaseFlowData
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
@@ -99,36 +102,9 @@ class IAPViewModel(
 
             IAPFlow.SILENT, IAPFlow.RESTORE -> {
                 _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
-                purchaseFlowData.flowStartTime = getCurrentTime()
+                purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
                 updateCourseData()
             }
-        }
-    }
-
-    private fun updateErrorState(iapException: IAPException) {
-        val feedbackErrorMessage: String = iapException.getFormattedErrorMessage()
-        when (iapException.requestType) {
-            IAPRequestType.PAYMENT_SDK_CODE -> {
-                if (BillingClient.BillingResponseCode.USER_CANCELED == iapException.httpErrorCode) {
-                    canceledByUserEvent()
-                } else {
-                    purchaseErrorEvent(feedbackErrorMessage)
-                }
-            }
-
-            IAPRequestType.PRICE_CODE,
-            IAPRequestType.NO_SKU_CODE -> {
-                priceLoadErrorEvent(feedbackErrorMessage)
-            }
-
-            else -> {
-                courseUpgradeErrorEvent(feedbackErrorMessage)
-            }
-        }
-        if (BillingClient.BillingResponseCode.USER_CANCELED != iapException.httpErrorCode) {
-            _uiState.value = IAPUIState.Error(iapException)
-        } else {
-            _uiState.value = IAPUIState.Clear
         }
     }
 
@@ -165,7 +141,7 @@ class IAPViewModel(
     fun startPurchaseFlow() {
         upgradeNowClickedEvent()
         _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
-        purchaseFlowData.flowStartTime = getCurrentTime()
+        purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
         purchaseFlowData.takeIf { purchaseFlowData.courseName != null && it.productInfo != null }
             ?.apply {
                 addToBasket(productInfo?.courseSku!!)
@@ -261,12 +237,16 @@ class IAPViewModel(
 
     fun refreshCourse() {
         _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
-        purchaseFlowData.flowStartTime = getCurrentTime()
+        purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
         updateCourseData()
     }
 
     fun retryExecuteOrder() {
         executeOrder(purchaseFlowData)
+    }
+
+    fun retryToConsumeOrder() {
+        consumeOrderForFurtherPurchases(purchaseFlowData)
     }
 
     private fun updateCourseData() {
@@ -282,9 +262,36 @@ class IAPViewModel(
             context = context,
             feedbackEmailAddress = config.getFeedbackEmailAddress(),
             feedback = message,
-            appVersion = versionName
+            appVersion = appData.versionName
         )
         logIAPErrorActionEvent(flowType, IAPAction.ACTION_GET_HELP.action)
+    }
+
+    private fun updateErrorState(iapException: IAPException) {
+        val feedbackErrorMessage: String = iapException.getFormattedErrorMessage()
+        when (iapException.requestType) {
+            IAPRequestType.PAYMENT_SDK_CODE -> {
+                if (BillingClient.BillingResponseCode.USER_CANCELED == iapException.httpErrorCode) {
+                    canceledByUserEvent()
+                } else {
+                    purchaseErrorEvent(feedbackErrorMessage)
+                }
+            }
+
+            IAPRequestType.PRICE_CODE,
+            IAPRequestType.NO_SKU_CODE -> {
+                priceLoadErrorEvent(feedbackErrorMessage)
+            }
+
+            else -> {
+                courseUpgradeErrorEvent(feedbackErrorMessage)
+            }
+        }
+        if (BillingClient.BillingResponseCode.USER_CANCELED != iapException.httpErrorCode) {
+            _uiState.value = IAPUIState.Error(iapException)
+        } else {
+            _uiState.value = IAPUIState.Clear
+        }
     }
 
     private fun upgradeNowClickedEvent() {
@@ -292,7 +299,7 @@ class IAPViewModel(
     }
 
     private fun upgradeSuccessEvent() {
-        val elapsedTime = getCurrentTime() - purchaseFlowData.flowStartTime
+        val elapsedTime = TimeUtils.getCurrentTime() - purchaseFlowData.flowStartTime
         logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_SUCCESS, buildMap {
             put(IAPAnalyticsKeys.ELAPSED_TIME.key, elapsedTime)
         }.toMutableMap())
@@ -353,10 +360,6 @@ class IAPViewModel(
 
     fun clearIAPFLow() {
         _uiState.value = IAPUIState.Clear
-        purchaseFlowData = PurchaseFlowData()
-    }
-
-    companion object {
-        fun getCurrentTime() = Calendar.getInstance().timeInMillis
+        purchaseFlowData.reset()
     }
 }

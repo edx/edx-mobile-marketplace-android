@@ -120,9 +120,6 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initCourseView()
-        if (viewModel.calendarSyncUIState.value.isCalendarSyncEnabled) {
-            setUpCourseCalendar()
-        }
         observe()
     }
 
@@ -143,6 +140,8 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
                     requireActivity().supportFragmentManager,
                     viewModel.courseName
                 )
+            } else if (viewModel.calendarSyncUIState.value.isCalendarSyncEnabled) {
+                setUpCourseCalendar()
             } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     pushNotificationPermissionLauncher.launch(

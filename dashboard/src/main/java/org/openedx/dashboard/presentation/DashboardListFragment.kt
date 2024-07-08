@@ -209,7 +209,7 @@ class DashboardListFragment : Fragment() {
                             }
 
                             IAPAction.ACTION_ERROR_CLOSE -> {
-                                viewModel.loadIAPCancelEvent()
+                                viewModel.logIAPCancelEvent()
                             }
 
                             IAPAction.ACTION_GET_HELP -> {

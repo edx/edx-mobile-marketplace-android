@@ -49,7 +49,6 @@ import org.openedx.profile.system.notifier.AccountDeactivated
 import org.openedx.profile.system.notifier.ProfileNotifier
 
 class SettingsViewModel(
-    private val versionName: String,
     private val appData: AppData,
     private val config: Config,
     private val resourceManager: ResourceManager,
@@ -237,43 +236,44 @@ class SettingsViewModel(
     fun restorePurchase() {
         logIAPEvent(IAPAnalyticsEvent.IAP_RESTORE_PURCHASE_CLICKED)
         viewModelScope.launch(Dispatchers.IO) {
+            val userId = corePreferences.user?.id ?: return@launch
+
             _iapUiState.emit(IAPUIState.Loading(IAPLoaderType.RESTORE_PURCHASES))
             // delay to show loading state
             delay(2000)
-            corePreferences.user?.id?.let { userId ->
-                runCatching {
-                    iapInteractor.processUnfulfilledPurchase(userId)
-                }.onSuccess {
-                    if (it) {
-                        logIAPEvent(IAPAnalyticsEvent.IAP_UNFULFILLED_PURCHASE_INITIATED, buildMap {
-                            put(
-                                IAPAnalyticsKeys.SCREEN_NAME.key,
-                                IAPAnalyticsScreen.PROFILE.screenName
-                            )
-                            put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.RESTORE.value)
-                        }.toMutableMap())
-                        _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
-                    } else {
-                        _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
-                    }
-                }.onFailure {
-                    if (it is IAPException) {
-                        _iapUiState.emit(
-                            IAPUIState.Error(
-                                IAPException(
-                                    IAPRequestType.RESTORE_CODE,
-                                    it.httpErrorCode,
-                                    it.errorMessage
-                                )
+
+            runCatching {
+                iapInteractor.processUnfulfilledPurchase(userId)
+            }.onSuccess {
+                if (it) {
+                    logIAPEvent(IAPAnalyticsEvent.IAP_UNFULFILLED_PURCHASE_INITIATED, buildMap {
+                        put(
+                            IAPAnalyticsKeys.SCREEN_NAME.key,
+                            IAPAnalyticsScreen.PROFILE.screenName
+                        )
+                        put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.RESTORE.value)
+                    }.toMutableMap())
+                    _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
+                } else {
+                    _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
+                }
+            }.onFailure {
+                if (it is IAPException) {
+                    _iapUiState.emit(
+                        IAPUIState.Error(
+                            IAPException(
+                                IAPRequestType.RESTORE_CODE,
+                                it.httpErrorCode,
+                                it.errorMessage
                             )
                         )
-                    }
+                    )
                 }
             }
         }
     }
 
-    fun loadIAPCancelEvent() {
+    fun logIAPCancelEvent() {
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
             put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_RESTORE)
             put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE)
@@ -285,7 +285,7 @@ class SettingsViewModel(
             context = context,
             feedbackEmailAddress = config.getFeedbackEmailAddress(),
             feedback = message,
-            appVersion = versionName
+            appVersion = appData.versionName
         )
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
             put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED)
@@ -293,7 +293,7 @@ class SettingsViewModel(
         }.toMutableMap())
     }
 
-    private fun logIAPEvent(
+    fun logIAPEvent(
         event: IAPAnalyticsEvent,
         params: MutableMap<String, Any?> = mutableMapOf()
     ) {

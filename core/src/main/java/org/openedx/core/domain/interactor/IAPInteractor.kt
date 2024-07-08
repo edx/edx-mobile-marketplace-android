@@ -2,7 +2,7 @@ package org.openedx.core.domain.interactor
 
 import android.text.TextUtils
 import androidx.fragment.app.FragmentActivity
-import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClient.BillingResponseCode
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import org.openedx.core.ApiConstants
@@ -20,12 +20,20 @@ class IAPInteractor(
     private val repository: IAPRepository,
 ) {
     suspend fun loadPrice(productId: String): ProductDetails.OneTimePurchaseOfferDetails {
-        val response =
-            billingProcessor.querySyncDetails(productId)
-        val productDetail = response.productDetailsList?.firstOrNull()
+        val response = billingProcessor.querySyncDetails(productId)
+        val productDetails = response.productDetailsList?.firstOrNull()?.oneTimePurchaseOfferDetails
         val billingResult = response.billingResult
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetail?.oneTimePurchaseOfferDetails != null) {
-            return productDetail.oneTimePurchaseOfferDetails!!
+
+        if (billingResult.responseCode == BillingResponseCode.OK) {
+            if (productDetails != null) {
+                return productDetails
+            } else {
+                throw IAPException(
+                    requestType = IAPRequestType.NO_SKU_CODE,
+                    httpErrorCode = billingResult.responseCode,
+                    errorMessage = billingResult.debugMessage
+                )
+            }
         } else {
             throw IAPException(
                 requestType = IAPRequestType.PRICE_CODE,
@@ -71,8 +79,12 @@ class IAPInteractor(
 
     suspend fun consumePurchase(purchaseToken: String) {
         val result = billingProcessor.consumePurchase(purchaseToken)
-        if (result.responseCode != BillingClient.BillingResponseCode.OK) {
-            throw IAPException(IAPRequestType.CONSUME_CODE, result.responseCode, result.debugMessage)
+        if (result.responseCode != BillingResponseCode.OK) {
+            throw IAPException(
+                requestType = IAPRequestType.CONSUME_CODE,
+                httpErrorCode = result.responseCode,
+                errorMessage = result.debugMessage
+            )
         }
     }
 
@@ -98,7 +110,8 @@ class IAPInteractor(
             productDetail?.oneTimePurchaseOfferDetails?.takeIf {
                 TextUtils.isEmpty(purchase.getCourseSku()).not()
             }?.let { oneTimeProductDetails ->
-                val basketId = addToBasket(purchase.getCourseSku()!!)
+                val courseSku = purchase.getCourseSku() ?: return@let
+                val basketId = addToBasket(courseSku)
                 processCheckout(basketId)
                 executeOrder(
                     basketId = basketId,

@@ -196,6 +196,7 @@
     <string name="iap_unlock_access">Unlock access to all course activities, including graded assignments</string>
     <string name="iap_full_access_course">Full access to course content and course material even after the course ends</string>
     <string name="iap_error_title">An Error occurred</string>
+    <string name="iap_refresh_to_retry">Refresh to retry</string>
     <string name="iap_general_upgrade_error_message">It looks like something went wrong when upgrading your course. If this error continues, please contact Support.</string>
     <string name="iap_email_subject_upgrade_error">Error upgrading course in app</string>
     <string name="iap_success_message">Thank you for your purchase. Enjoy full access to your course!</string>
@@ -211,5 +212,6 @@
     <string name="iap_course_not_available_message">The course you are looking to upgrade could not be found. Please try your upgrade again. If this error continues, contact Support.</string>
     <string name="iap_course_already_paid_for_message">The course you are looking to upgrade has already been paid for. For additional help, reach out to Support.</string>
     <string name="iap_course_not_fullfilled">Something happened when we tried to update your course experience. If this error continues, reach out to Support for help.</string>
+    <string name="iap_payment_could_not_be_processed">Your payment could not be processed at this time. Please try again. For additional help, reach out to Support.</string>
 
 </resources>

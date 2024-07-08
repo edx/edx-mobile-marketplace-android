@@ -4,7 +4,6 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.openedx.app.AppViewModel
-import org.openedx.app.BuildConfig
 import org.openedx.app.MainViewModel
 import org.openedx.auth.data.repository.AuthRepository
 import org.openedx.auth.domain.interactor.AuthInteractor
@@ -141,7 +140,7 @@ val screenModule = module {
     factory { DashboardInteractor(get()) }
     viewModel {
         DashboardListViewModel(
-            versionName = BuildConfig.VERSION_NAME,
+            get(),
             get(),
             get(),
             get(),
@@ -203,7 +202,6 @@ val screenModule = module {
     viewModel { (username: String) -> AnothersProfileViewModel(get(), get(), username) }
     viewModel {
         SettingsViewModel(
-            versionName = BuildConfig.VERSION_NAME,
             get(),
             get(),
             get(),
@@ -255,7 +253,7 @@ val screenModule = module {
             courseTitle,
             resumeBlockId,
             enrollmentMode,
-            versionName = BuildConfig.VERSION_NAME,
+            get(),
             get(),
             get(),
             get(),
@@ -448,7 +446,7 @@ val screenModule = module {
         IAPViewModel(
             iapFlow = iapFlow,
             purchaseFlowData = purchaseFlowData,
-            versionName = BuildConfig.VERSION_NAME,
+            get(),
             get(),
             get(),
             get(),

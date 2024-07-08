@@ -1,15 +1,19 @@
 package org.openedx.core.domain.model.iap
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import org.openedx.core.domain.ProductInfo
 
+@Parcelize
 data class PurchaseFlowData(
-    val screenName: String? = null,
-    val courseId: String? = null,
-    val courseName: String? = null,
-    val isSelfPaced: Boolean? = null,
-    val componentId: String? = null,
-    val productInfo: ProductInfo? = null,
-) {
+    var screenName: String? = null,
+    var courseId: String? = null,
+    var courseName: String? = null,
+    var isSelfPaced: Boolean? = null,
+    var componentId: String? = null,
+    var productInfo: ProductInfo? = null,
+) : Parcelable {
+
     var currencyCode: String = ""
     var price: Double = 0.0
     var formattedPrice: String? = null
@@ -17,4 +21,19 @@ data class PurchaseFlowData(
     var basketId: Long = -1
 
     var flowStartTime: Long = 0
+
+    fun reset() {
+        screenName = null
+        courseId = null
+        courseName = null
+        isSelfPaced = null
+        componentId = null
+        productInfo = null
+        currencyCode = ""
+        price = 0.0
+        formattedPrice = null
+        purchaseToken = null
+        basketId = -1
+        flowStartTime = 0
+    }
 }

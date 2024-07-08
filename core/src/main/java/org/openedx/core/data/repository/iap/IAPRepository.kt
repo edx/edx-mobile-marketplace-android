@@ -18,7 +18,11 @@ class IAPRepository(private val api: InAppPurchasesApi) {
                 return mapToDomain()
             }
         }
-        throw IAPException(IAPRequestType.ADD_TO_BASKET_CODE, response.code(), response.getMessage())
+        throw IAPException(
+            requestType = IAPRequestType.ADD_TO_BASKET_CODE,
+            httpErrorCode = response.code(),
+            errorMessage = response.getMessage()
+        )
     }
 
     suspend fun proceedCheckout(basketId: Long): CheckoutResponse {
@@ -31,7 +35,11 @@ class IAPRepository(private val api: InAppPurchasesApi) {
                 return mapToDomain()
             }
         }
-        throw IAPException(IAPRequestType.CHECKOUT_CODE, response.code(), response.getMessage())
+        throw IAPException(
+            requestType = IAPRequestType.CHECKOUT_CODE,
+            httpErrorCode = response.code(),
+            errorMessage = response.getMessage()
+        )
     }
 
     suspend fun executeOrder(
@@ -53,6 +61,10 @@ class IAPRepository(private val api: InAppPurchasesApi) {
                 return mapToDomain()
             }
         }
-        throw IAPException(IAPRequestType.EXECUTE_ORDER_CODE, response.code(), response.getMessage())
+        throw IAPException(
+            requestType = IAPRequestType.EXECUTE_ORDER_CODE,
+            httpErrorCode = response.code(),
+            errorMessage = response.getMessage()
+        )
     }
 }

@@ -222,24 +222,26 @@ internal fun SettingsScreen(
             }
         }
 
-        when {
-            iapUiState is IAPUIState.FakePurchasesFulfillmentCompleted -> {
+        when (iapUiState) {
+            is IAPUIState.FakePurchasesFulfillmentCompleted -> {
                 FakePurchasesFulfillmentCompleted(onCancel = {
-                    onAction(SettingsScreenAction.RestorePurchaseCancel)
+                    onIAPAction(IAPAction.ACTION_RESTORE_PURCHASE_CANCEL, null)
                 }, onGetHelp = {
-                    onAction(SettingsScreenAction.GetHelpClick)
+                    onIAPAction(IAPAction.ACTION_GET_HELP, null)
                 })
             }
 
-            (iapUiState is IAPUIState.Loading && iapUiState.loaderType == IAPLoaderType.RESTORE_PURCHASES) -> {
-                CheckingPurchasesDialog()
+            is IAPUIState.Loading -> {
+                if (iapUiState.loaderType == IAPLoaderType.RESTORE_PURCHASES) {
+                    CheckingPurchasesDialog()
+                }
             }
 
-            iapUiState is IAPUIState.PurchasesFulfillmentCompleted -> {
+            is IAPUIState.PurchasesFulfillmentCompleted -> {
                 onIAPAction(IAPAction.ACTION_RESTORE, null)
             }
 
-            iapUiState is IAPUIState.Error -> {
+            is IAPUIState.Error -> {
                 UpgradeErrorDialog(
                     title = stringResource(id = R.string.iap_error_title),
                     description = stringResource(id = R.string.iap_course_not_fullfilled),

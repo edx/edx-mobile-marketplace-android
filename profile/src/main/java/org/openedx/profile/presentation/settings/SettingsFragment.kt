@@ -10,6 +10,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.core.presentation.IAPAnalyticsEvent
+import org.openedx.core.presentation.IAPAnalyticsKeys
 import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
@@ -104,29 +106,18 @@ class SettingsFragment : Fragment() {
                             SettingsScreenAction.RestorePurchaseClick -> {
                                 viewModel.restorePurchase()
                             }
-
-                            SettingsScreenAction.RestorePurchaseCancel -> {
-                                viewModel.clearIAPState()
-                            }
-
-                            SettingsScreenAction.GetHelpClick -> {
-                                viewModel.clearIAPState()
-                                viewModel.showFeedbackScreen(
-                                    requireActivity(),
-                                    "test message"
-                                )
-                            }
                         }
                     },
                     onIAPAction = { action, iapException ->
                         when (action) {
                             IAPAction.ACTION_ERROR_CLOSE -> {
-                                viewModel.loadIAPCancelEvent()
+                                viewModel.logIAPCancelEvent()
                             }
 
                             IAPAction.ACTION_GET_HELP -> {
-                                iapException?.getFormattedErrorMessage()
-                                    ?.let { viewModel.showFeedbackScreen(requireActivity(), it) }
+                                viewModel.clearIAPState()
+                                val errorMessage = iapException?.getFormattedErrorMessage() ?: ""
+                                viewModel.showFeedbackScreen(requireActivity(), errorMessage)
                             }
 
                             IAPAction.ACTION_RESTORE -> {
@@ -137,6 +128,19 @@ class SettingsFragment : Fragment() {
                                     requireActivity().supportFragmentManager,
                                     IAPDialogFragment.TAG
                                 )
+                            }
+
+                            IAPAction.ACTION_RESTORE_PURCHASE_CANCEL -> {
+                                viewModel.logIAPEvent(
+                                    IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
+                                    buildMap {
+                                        put(
+                                            IAPAnalyticsKeys.ACTION.key,
+                                            IAPAction.ACTION_CLOSE
+                                        )
+                                    }.toMutableMap()
+                                )
+                                viewModel.clearIAPState()
                             }
 
                             else -> {}
@@ -167,7 +171,5 @@ internal interface SettingsScreenAction {
     object ManageAccountClick : SettingsScreenAction
     object CalendarSettingsClick : SettingsScreenAction
     object RestorePurchaseClick : SettingsScreenAction
-    object RestorePurchaseCancel : SettingsScreenAction
-    object GetHelpClick : SettingsScreenAction
 }
 

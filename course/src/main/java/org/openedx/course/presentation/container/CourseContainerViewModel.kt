@@ -29,6 +29,7 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncUIState
 import org.openedx.core.system.CalendarManager
@@ -66,7 +67,7 @@ class CourseContainerViewModel(
     var courseName: String,
     private var resumeBlockId: String,
     private val enrollmentMode: String,
-    private val versionName: String,
+    private val appData: AppData,
     private val config: Config,
     private val interactor: CourseInteractor,
     private val calendarManager: CalendarManager,
@@ -113,7 +114,7 @@ class CourseContainerViewModel(
 
     private val isIAPEnabled
         get() = iapConfig.isEnabled &&
-                iapConfig.disableVersions.contains(versionName).not()
+                iapConfig.disableVersions.contains(appData.versionName).not()
 
     private var _canShowUpgradeButton = MutableStateFlow(false)
     val canShowUpgradeButton: StateFlow<Boolean>
@@ -128,7 +129,7 @@ class CourseContainerViewModel(
 
     private val _calendarSyncUIState = MutableStateFlow(
         CalendarSyncUIState(
-            isCalendarSyncEnabled = isCalendarSyncEnabled(),
+            isCalendarSyncEnabled = false,
             calendarTitle = calendarManager.getCourseCalendarTitle(courseName),
             courseDates = emptyList(),
             dialogType = CalendarSyncDialogType.NONE,
@@ -203,6 +204,9 @@ class CourseContainerViewModel(
                 _courseStructure?.let {
                     courseName = it.name
                     loadCourseImage(courseStructure?.media?.image?.large)
+                    _calendarSyncUIState.update { state ->
+                        state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
+                    }
                     _dataReady.value = courseStructure?.start?.let { start ->
                         val isReady = start < Date()
                         if (isReady) {
@@ -295,7 +299,7 @@ class CourseContainerViewModel(
             }
             _refreshing.value = false
             courseNotifier.send(CourseStructureUpdated(courseId))
-            if(isIAPFlow) {
+            if (isIAPFlow) {
                 iapNotifier.send(CourseDataUpdated())
             }
         }

@@ -14,13 +14,22 @@ enum class IAPAnalyticsEvent(val eventName: String, val biValue: String) {
         "Payments: Course Upgrade Success",
         "edx.bi.app.payments.course_upgrade_success"
     ),
-    IAP_PAYMENT_ERROR("Payments: Payment Error", "edx.bi.app.payments.payment_error"),
-    IAP_PAYMENT_CANCELED("Payments: Canceled by User", "edx.bi.app.payments.canceled_by_user"),
+    IAP_PAYMENT_ERROR(
+        "Payments: Payment Error",
+        "edx.bi.app.payments.payment_error"
+    ),
+    IAP_PAYMENT_CANCELED(
+        "Payments: Canceled by User",
+        "edx.bi.app.payments.canceled_by_user"
+    ),
     IAP_COURSE_UPGRADE_ERROR(
         "Payments: Course Upgrade Error",
         "edx.bi.app.payments.course_upgrade_error"
     ),
-    IAP_PRICE_LOAD_ERROR("Payments: Price Load Error", "edx.bi.app.payments.price_load_error"),
+    IAP_PRICE_LOAD_ERROR(
+        "Payments: Price Load Error",
+        "edx.bi.app.payments.price_load_error"
+    ),
     IAP_ERROR_ALERT_ACTION(
         "Payments: Error Alert Action",
         "edx.bi.app.payments.error_alert_action"

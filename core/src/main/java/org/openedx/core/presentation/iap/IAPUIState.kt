@@ -10,7 +10,6 @@ sealed class IAPUIState {
     data object CourseDataUpdated : IAPUIState()
     data class Loading(val loaderType: IAPLoaderType) : IAPUIState()
     data class Error(val iapException: IAPException) : IAPUIState()
-
     data object Clear : IAPUIState()
 }
 
@@ -35,10 +34,12 @@ enum class IAPAction(val action: String) {
     ACTION_RELOAD_PRICE("reload_price"),
     ACTION_REFRESH("refresh"),
     ACTION_RETRY("retry"),
-    ACTION_UNFULFILLED("Unfulfilled"),
+    ACTION_UNFULFILLED("unfulfilled"),
     ACTION_RESTORE("restore"),
     ACTION_ERROR_CLOSE("error_close"),
-    ACTION_COMPLETION("completion")
+    ACTION_COMPLETION("completion"),
+    ACTION_OK("ok"),
+    ACTION_RESTORE_PURCHASE_CANCEL("restore_purchase_cancel")
 }
 
 enum class IAPRequestType(val request: String) {

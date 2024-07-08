@@ -25,6 +25,7 @@ data class CourseStructure(
 ) {
     private val isStarted: Boolean
         get() = TimeUtils.isDatePassed(Date(), start)
+
     val isUpgradeable: Boolean
         get() = enrollmentDetails.isAuditMode &&
                 isStarted &&

@@ -35,6 +35,7 @@ import org.openedx.core.domain.model.CourseDatesCalendarSync
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.CalendarManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
@@ -71,6 +72,7 @@ class CourseContainerViewModelTest {
     private val imageProcessor = mockk<ImageProcessor>()
     private val courseRouter = mockk<CourseRouter>()
     private val courseApi = mockk<CourseApi>()
+    private val appData = mockk<AppData>()
 
     private val openEdx = "OpenEdx"
     private val calendarTitle = "OpenEdx - Abc"
@@ -175,7 +177,7 @@ class CourseContainerViewModelTest {
             "",
             "",
             "",
-            versionName = "",
+            appData,
             config,
             interactor,
             calendarManager,
@@ -211,7 +213,7 @@ class CourseContainerViewModelTest {
             "",
             "",
             "",
-            versionName = "",
+            appData,
             config,
             interactor,
             calendarManager,
@@ -247,7 +249,7 @@ class CourseContainerViewModelTest {
             "",
             "",
             "",
-            versionName = "",
+            appData,
             config,
             interactor,
             calendarManager,
@@ -282,7 +284,7 @@ class CourseContainerViewModelTest {
             "",
             "",
             "",
-            versionName = "",
+            appData,
             config,
             interactor,
             calendarManager,
@@ -320,7 +322,7 @@ class CourseContainerViewModelTest {
             "",
             "",
             "",
-            versionName = "",
+            appData,
             config,
             interactor,
             calendarManager,
@@ -353,7 +355,7 @@ class CourseContainerViewModelTest {
             "",
             "",
             "",
-            versionName = "",
+            appData,
             config,
             interactor,
             calendarManager,
@@ -386,7 +388,7 @@ class CourseContainerViewModelTest {
             "",
             "",
             "",
-            versionName = "",
+            appData,
             config,
             interactor,
             calendarManager,

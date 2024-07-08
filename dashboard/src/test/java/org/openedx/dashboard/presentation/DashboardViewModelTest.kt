@@ -35,6 +35,7 @@ import org.openedx.core.domain.model.DashboardCourseList
 import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.presentation.IAPAnalytics
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
@@ -64,6 +65,7 @@ class DashboardViewModelTest {
     private val appNotifier = mockk<AppNotifier>()
     private val iapAnalytics = mockk<IAPAnalytics>()
     private val corePreferences = mockk<CorePreferences>()
+    private val appData = mockk<AppData>()
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
@@ -103,7 +105,7 @@ class DashboardViewModelTest {
         every { corePreferences.appConfig } returns appConfig
 
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,
@@ -134,7 +136,7 @@ class DashboardViewModelTest {
         every { corePreferences.appConfig } returns appConfig
 
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,
@@ -166,7 +168,7 @@ class DashboardViewModelTest {
         every { corePreferences.appConfig } returns appConfig
 
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,
@@ -198,7 +200,7 @@ class DashboardViewModelTest {
         every { corePreferences.appConfig } returns appConfig
 
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,
@@ -240,7 +242,7 @@ class DashboardViewModelTest {
         every { corePreferences.appConfig.iapConfig } returns appConfig.iapConfig
 
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,
@@ -270,7 +272,7 @@ class DashboardViewModelTest {
         every { corePreferences.appConfig } returns appConfig
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,
@@ -304,7 +306,7 @@ class DashboardViewModelTest {
         every { corePreferences.appConfig } returns appConfig
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,
@@ -342,7 +344,7 @@ class DashboardViewModelTest {
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
 
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,
@@ -386,7 +388,7 @@ class DashboardViewModelTest {
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
 
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,
@@ -419,7 +421,7 @@ class DashboardViewModelTest {
         coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
         every { corePreferences.appConfig } returns appConfig
         val viewModel = DashboardListViewModel(
-            "",
+            appData,
             config,
             networkConnection,
             interactor,

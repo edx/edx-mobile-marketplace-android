@@ -280,19 +280,20 @@ class DashboardListViewModel(
         EmailUtil.showFeedbackScreen(
             context = context,
             feedbackEmailAddress = config.getFeedbackEmailAddress(),
+            subject = context.getString(R.string.core_error_upgrading_course_in_app),
             feedback = message,
             appVersion = appData.versionName
         )
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
-            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED)
-            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP)
+            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
+            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP.action)
         }.toMutableMap())
     }
 
     fun logIAPCancelEvent() {
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
-            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED)
-            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE)
+            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
+            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE.action)
         }.toMutableMap())
     }
 
@@ -302,7 +303,7 @@ class DashboardListViewModel(
     ) {
         iapAnalytics.logEvent(event.eventName, params.apply {
             put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            put(IAPAnalyticsKeys.SCREEN_NAME.key, IAPAnalyticsScreen.COURSE_ENROLLMENT)
+            put(IAPAnalyticsKeys.SCREEN_NAME.key, IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName)
             put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.SILENT.value)
             put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
         })

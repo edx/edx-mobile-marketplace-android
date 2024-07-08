@@ -49,7 +49,7 @@ enum class IAPRequestType(val request: String) {
     CHECKOUT_CODE("checkout"),
     PAYMENT_SDK_CODE("payment"),
     EXECUTE_ORDER_CODE("execute"),
-    NO_SKU_CODE("no_sku"),
+    NO_SKU_CODE("sku"),
     CONSUME_CODE("consume"),
     UNFULFILLED_CODE("unfulfilled"),
     RESTORE_CODE("restore"),

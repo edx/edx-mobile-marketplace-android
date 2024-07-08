@@ -195,6 +195,7 @@ class SettingsViewModel(
         EmailUtil.showFeedbackScreen(
             context = context,
             feedbackEmailAddress = config.getFeedbackEmailAddress(),
+            subject = context.getString(R.string.core_error_upgrading_course_in_app),
             appVersion = appData.versionName
         )
         logProfileEvent(ProfileAnalyticsEvent.CONTACT_SUPPORT_CLICKED)
@@ -275,8 +276,8 @@ class SettingsViewModel(
 
     fun logIAPCancelEvent() {
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
-            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_RESTORE)
-            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE)
+            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_RESTORE.action)
+            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE.action)
         }.toMutableMap())
     }
 
@@ -284,12 +285,13 @@ class SettingsViewModel(
         EmailUtil.showFeedbackScreen(
             context = context,
             feedbackEmailAddress = config.getFeedbackEmailAddress(),
+            subject = context.getString(R.string.core_error_upgrading_course_in_app),
             feedback = message,
             appVersion = appData.versionName
         )
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
-            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED)
-            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP)
+            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
+            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP.action)
         }.toMutableMap())
     }
 
@@ -299,7 +301,7 @@ class SettingsViewModel(
     ) {
         analytics.logEvent(event.eventName, params.apply {
             put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            put(IAPAnalyticsKeys.SCREEN_NAME.key, IAPAnalyticsScreen.PROFILE)
+            put(IAPAnalyticsKeys.SCREEN_NAME.key, IAPAnalyticsScreen.PROFILE.screenName)
             put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.RESTORE.value)
             put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
         })

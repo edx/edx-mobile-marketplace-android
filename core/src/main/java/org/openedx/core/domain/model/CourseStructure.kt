@@ -1,6 +1,6 @@
 package org.openedx.core.domain.model
 
-import org.openedx.core.domain.ProductInfo
+import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.utils.TimeUtils
 import java.util.Date
 

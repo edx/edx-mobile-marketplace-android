@@ -7,7 +7,7 @@ import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import org.openedx.core.ApiConstants
 import org.openedx.core.data.repository.iap.IAPRepository
-import org.openedx.core.domain.ProductInfo
+import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.decodeToLong
 import org.openedx.core.module.billing.BillingProcessor

@@ -136,7 +136,7 @@ class SettingsFragment : Fragment() {
                                     buildMap {
                                         put(
                                             IAPAnalyticsKeys.ACTION.key,
-                                            IAPAction.ACTION_CLOSE
+                                            IAPAction.ACTION_CLOSE.action
                                         )
                                     }.toMutableMap()
                                 )

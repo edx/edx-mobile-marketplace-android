@@ -1,4 +1,4 @@
-package org.openedx.core.domain
+package org.openedx.core.domain.model.iap
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

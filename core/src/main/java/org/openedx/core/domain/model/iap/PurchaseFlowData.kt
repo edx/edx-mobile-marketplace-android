@@ -2,7 +2,6 @@ package org.openedx.core.domain.model.iap
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import org.openedx.core.domain.ProductInfo
 
 @Parcelize
 data class PurchaseFlowData(

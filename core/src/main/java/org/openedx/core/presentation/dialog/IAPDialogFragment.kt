@@ -35,7 +35,7 @@ import com.android.billingclient.api.BillingClient
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.R
-import org.openedx.core.domain.ProductInfo
+import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.extension.parcelable
 import org.openedx.core.extension.serializable

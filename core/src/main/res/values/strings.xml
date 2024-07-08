@@ -46,6 +46,7 @@
     <string name="core_android_os_version" translatable="false">OS version: </string>
     <string name="core_android_device_model" translatable="false">Device model: </string>
     <string name="core_email_subject" translatable="false">Feedback</string>
+    <string name="core_error_upgrading_course_in_app" translatable="false">Error upgrading course in app</string>
     <string name="core_date_format_MMM_dd_yyyy">MMM dd, yyyy</string>
     <string name="core_full_date_with_time">dd MMM yyyy hh:mm aaa</string>
     <string name="core_app_upgrade_title">App Update</string>

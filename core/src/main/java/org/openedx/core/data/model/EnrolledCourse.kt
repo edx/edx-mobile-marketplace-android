@@ -4,9 +4,9 @@ import android.text.TextUtils
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.data.model.room.discovery.EnrolledCourseEntity
 import org.openedx.core.data.model.room.discovery.ProgressDb
-import org.openedx.core.domain.ProductInfo
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrollmentMode
+import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.domain.model.Progress as ProgressDomain
 

@@ -2,7 +2,7 @@ package org.openedx.core.domain.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import org.openedx.core.domain.ProductInfo
+import org.openedx.core.domain.model.iap.ProductInfo
 import java.util.Date
 
 @Parcelize

@@ -11,9 +11,9 @@ import org.openedx.core.data.model.room.CourseStructureEntity
 import org.openedx.core.data.model.room.MediaDb
 import org.openedx.core.data.model.room.discovery.ProgressDb
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.ProductInfo
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.EnrollmentMode
+import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.utils.TimeUtils
 import java.lang.reflect.Type
 

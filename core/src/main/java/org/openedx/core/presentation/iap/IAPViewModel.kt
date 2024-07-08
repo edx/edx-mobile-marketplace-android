@@ -261,6 +261,7 @@ class IAPViewModel(
         EmailUtil.showFeedbackScreen(
             context = context,
             feedbackEmailAddress = config.getFeedbackEmailAddress(),
+            subject = context.getString(R.string.core_error_upgrading_course_in_app),
             feedback = message,
             appVersion = appData.versionName
         )
@@ -340,7 +341,7 @@ class IAPViewModel(
     ) {
         analytics.logEvent(event.eventName, params.apply {
             put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            purchaseFlowData.let {
+            purchaseFlowData.takeIf { it.courseId.isNullOrBlank().not() }?.let {
                 put(IAPAnalyticsKeys.COURSE_ID.key, purchaseFlowData.courseId)
                 put(
                     IAPAnalyticsKeys.PACING.key,

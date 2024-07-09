@@ -1,6 +1,5 @@
 package org.openedx.core.ui
 
-import android.text.TextUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,6 +24,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import org.openedx.core.R
+import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPErrorDialogType
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
@@ -76,15 +78,74 @@ fun CheckmarkView(text: String) {
 }
 
 @Composable
-fun PriceLoadErrorDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    UpgradeErrorDialog(
-        title = stringResource(id = R.string.iap_error_title),
-        description = stringResource(id = R.string.iap_error_price_not_fetched),
-        confirmText = stringResource(id = R.string.core_error_try_again),
-        onConfirm = onConfirm,
-        dismissText = stringResource(id = R.string.core_cancel),
-        onDismiss = onDismiss
-    )
+fun IAPErrorDialog(iapException: IAPException, onIAPAction: (IAPAction) -> Unit) {
+    when (val dialogType = iapException.getIAPErrorDialogType()) {
+        IAPErrorDialogType.PRICE_ERROR_DIALOG -> {
+            UpgradeErrorDialog(
+                title = stringResource(id = R.string.iap_error_title),
+                description = stringResource(id = dialogType.messageResId),
+                confirmText = stringResource(id = dialogType.positiveButtonResId),
+                onConfirm = { onIAPAction(IAPAction.ACTION_RELOAD_PRICE) },
+                dismissText = stringResource(id = dialogType.negativeButtonResId),
+                onDismiss = { onIAPAction(IAPAction.ACTION_CLOSE) }
+            )
+        }
+
+        IAPErrorDialogType.NO_SKU_ERROR_DIALOG -> {
+            NoSkuErrorDialog(onConfirm = {
+                onIAPAction(IAPAction.ACTION_OK)
+            })
+        }
+
+        IAPErrorDialogType.ADD_TO_BASKET_NOT_ACCEPTABLE_ERROR_DIALOG,
+        IAPErrorDialogType.CHECKOUT_NOT_ACCEPTABLE_ERROR_DIALOG -> {
+            UpgradeErrorDialog(
+                title = stringResource(id = R.string.iap_error_title),
+                description = stringResource(id = dialogType.messageResId),
+                confirmText = stringResource(id = dialogType.positiveButtonResId),
+                onConfirm = { onIAPAction(IAPAction.ACTION_REFRESH) },
+                dismissText = stringResource(id = dialogType.negativeButtonResId),
+                onDismiss = { onIAPAction(IAPAction.ACTION_CLOSE) }
+            )
+        }
+
+        IAPErrorDialogType.EXECUTE_BAD_REQUEST_ERROR_DIALOG,
+        IAPErrorDialogType.EXECUTE_FORBIDDEN_ERROR_DIALOG,
+        IAPErrorDialogType.EXECUTE_NOT_ACCEPTABLE_ERROR_DIALOG,
+        IAPErrorDialogType.EXECUTE_GENERAL_ERROR_DIALOG,
+        IAPErrorDialogType.CONSUME_ERROR_DIALOG -> {
+            CourseAlreadyPurchasedExecuteErrorDialog(
+                description = stringResource(id = dialogType.messageResId),
+                positiveText = stringResource(id = dialogType.positiveButtonResId),
+                negativeText = stringResource(id = dialogType.negativeButtonResId),
+                neutralText = stringResource(id = dialogType.neutralButtonResId),
+                onPositiveClick = {
+                    if (iapException.httpErrorCode == 406) {
+                        onIAPAction(IAPAction.ACTION_REFRESH)
+                    } else {
+                        onIAPAction(IAPAction.ACTION_RETRY)
+                    }
+                },
+                onNegativeClick = {
+                    onIAPAction(IAPAction.ACTION_GET_HELP)
+                },
+                onNeutralClick = {
+                    onIAPAction(IAPAction.ACTION_CLOSE)
+                }
+            )
+        }
+
+        else -> {
+            UpgradeErrorDialog(
+                title = stringResource(id = R.string.iap_error_title),
+                description = stringResource(id = dialogType.messageResId),
+                confirmText = stringResource(id = dialogType.positiveButtonResId),
+                onConfirm = { onIAPAction(IAPAction.ACTION_CLOSE) },
+                dismissText = stringResource(id = dialogType.negativeButtonResId),
+                onDismiss = { onIAPAction(IAPAction.ACTION_GET_HELP) }
+            )
+        }
+    }
 }
 
 @Composable
@@ -126,35 +187,15 @@ fun NoSkuErrorDialog(
 }
 
 @Composable
-fun CourseAlreadyPurchasedErrorDialog(onRefresh: () -> Unit, onDismiss: () -> Unit) {
-    UpgradeErrorDialog(
-        title = stringResource(id = R.string.iap_error_title),
-        description = stringResource(id = R.string.iap_course_already_paid_for_message),
-        confirmText = stringResource(id = R.string.iap_label_refresh_now),
-        onConfirm = onRefresh,
-        dismissText = stringResource(id = R.string.core_cancel),
-        onDismiss = onDismiss
-    )
-}
-
-@Composable
 fun CourseAlreadyPurchasedExecuteErrorDialog(
-    confirmText: String = "",
-    description: String = "",
-    onRefresh: () -> Unit,
-    onGetHelp: () -> Unit,
-    onDismiss: () -> Unit
+    description: String,
+    positiveText: String,
+    negativeText: String,
+    neutralText: String,
+    onPositiveClick: () -> Unit,
+    onNegativeClick: () -> Unit,
+    onNeutralClick: () -> Unit
 ) {
-    var genConfirmText = confirmText
-    if (TextUtils.isEmpty(confirmText)) {
-        genConfirmText = stringResource(id = R.string.iap_refresh_to_retry)
-    }
-
-    var genDescription = description
-    if (TextUtils.isEmpty(genDescription)) {
-        genDescription = stringResource(id = R.string.iap_course_not_fullfilled)
-    }
-
     AlertDialog(
         modifier = Modifier
             .background(
@@ -173,7 +214,7 @@ fun CourseAlreadyPurchasedExecuteErrorDialog(
         },
         text = {
             Text(
-                text = genDescription,
+                text = description,
                 color = MaterialTheme.appColors.textPrimary,
                 style = MaterialTheme.appTypography.bodyMedium
             )
@@ -189,48 +230,28 @@ fun CourseAlreadyPurchasedExecuteErrorDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(2.dp),
-                    text = genConfirmText,
-                    onClick = onRefresh
+                    text = positiveText,
+                    onClick = onPositiveClick
                 )
 
                 OpenEdXButton(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(2.dp),
-                    text = stringResource(id = R.string.core_contact_support),
-                    onClick = onGetHelp
+                    text = negativeText,
+                    onClick = onNegativeClick
                 )
 
                 OpenEdXButton(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(2.dp),
-                    text = stringResource(id = R.string.core_cancel),
-                    onClick = onDismiss
+                    text = neutralText,
+                    onClick = onNeutralClick
                 )
             }
         },
         onDismissRequest = {}
-    )
-}
-
-@Composable
-fun GeneralUpgradeErrorDialog(
-    description: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    var genDescription = description
-    if (description.isBlank()) {
-        genDescription = stringResource(id = R.string.iap_general_upgrade_error_message)
-    }
-    UpgradeErrorDialog(
-        title = stringResource(id = R.string.iap_error_title),
-        description = genDescription,
-        confirmText = stringResource(id = R.string.core_cancel),
-        onConfirm = onConfirm,
-        dismissText = stringResource(id = R.string.iap_get_help),
-        onDismiss = onDismiss
     )
 }
 
@@ -435,14 +456,13 @@ private fun PreviewFakePurchasesFulfillmentCompleted() {
 
 @Preview
 @Composable
-private fun PreviewCourseAlreadyPurchasedErrorDialog() {
-    CourseAlreadyPurchasedErrorDialog(onRefresh = {}, onDismiss = {})
-}
-
-@Preview
-@Composable
 private fun PreviewCourseAlreadyPurchasedExecuteErrorDialog() {
-    CourseAlreadyPurchasedExecuteErrorDialog(onRefresh = {}, onGetHelp = {}, onDismiss = {})
+    CourseAlreadyPurchasedExecuteErrorDialog(
+        description = stringResource(id = R.string.iap_course_not_fullfilled),
+        positiveText = stringResource(id = R.string.iap_label_refresh_now),
+        negativeText = stringResource(id = R.string.core_contact_support),
+        neutralText = stringResource(id = R.string.core_cancel),
+        onPositiveClick = {}, onNegativeClick = {}, onNeutralClick = {})
 }
 
 @Preview

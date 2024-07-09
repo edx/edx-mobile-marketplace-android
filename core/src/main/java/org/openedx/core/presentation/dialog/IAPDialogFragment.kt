@@ -31,7 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
-import com.android.billingclient.api.BillingClient
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.R
@@ -46,15 +45,10 @@ import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.presentation.iap.IAPViewModel
-import org.openedx.core.ui.CourseAlreadyPurchasedErrorDialog
-import org.openedx.core.ui.CourseAlreadyPurchasedExecuteErrorDialog
-import org.openedx.core.ui.GeneralUpgradeErrorDialog
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.NoSkuErrorDialog
+import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.PriceLoadErrorDialog
 import org.openedx.core.ui.UnlockingAccessView
-import org.openedx.core.ui.UpgradeErrorDialog
 import org.openedx.core.ui.ValuePropUpgradeFeatures
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
@@ -152,206 +146,66 @@ class IAPDialogFragment : DialogFragment() {
 
                         is IAPUIState.Error -> {
                             val iapException = (iapState as IAPUIState.Error).iapException
-                            when {
-                                (iapException.requestType == IAPRequestType.PRICE_CODE) -> {
-                                    PriceLoadErrorDialog(onConfirm = {
+                            IAPErrorDialog(iapException = iapException, onIAPAction = { iapAction ->
+                                when (iapAction) {
+                                    IAPAction.ACTION_RELOAD_PRICE -> {
                                         iapViewModel.logIAPErrorActionEvent(
                                             iapException.requestType.request,
                                             IAPAction.ACTION_RELOAD_PRICE.action
                                         )
                                         iapViewModel.loadPrice()
-                                    }, onDismiss = {
+                                    }
+
+                                    IAPAction.ACTION_CLOSE -> {
                                         iapViewModel.logIAPErrorActionEvent(
                                             iapException.requestType.request,
                                             IAPAction.ACTION_CLOSE.action
                                         )
                                         onDismiss()
-                                    })
-                                }
+                                    }
 
-                                (iapException.requestType == IAPRequestType.NO_SKU_CODE) -> {
-                                    NoSkuErrorDialog(onConfirm = {
+                                    IAPAction.ACTION_OK -> {
                                         iapViewModel.logIAPErrorActionEvent(
                                             iapException.requestType.request,
                                             IAPAction.ACTION_OK.action
                                         )
                                         onDismiss()
-                                    })
-                                }
-
-                                (iapException.requestType == IAPRequestType.ADD_TO_BASKET_CODE ||
-                                        iapException.requestType == IAPRequestType.CHECKOUT_CODE) &&
-                                        (iapException.httpErrorCode == 406) -> {
-                                    CourseAlreadyPurchasedErrorDialog(
-                                        onRefresh = {
-                                            iapViewModel.logIAPErrorActionEvent(
-                                                iapException.requestType.request,
-                                                IAPAction.ACTION_REFRESH.action
-                                            )
-                                            iapViewModel.refreshCourse()
-                                        },
-                                        onDismiss = {
-                                            iapViewModel.logIAPErrorActionEvent(
-                                                iapException.requestType.request,
-                                                IAPAction.ACTION_CLOSE.action
-                                            )
-                                            onDismiss()
-                                        })
-                                }
-
-                                (iapException.requestType == IAPRequestType.EXECUTE_ORDER_CODE) -> {
-                                    if (iapException.httpErrorCode == 409) {
-                                        UpgradeErrorDialog(
-                                            title = stringResource(id = R.string.iap_error_title),
-                                            description = stringResource(id = R.string.iap_course_already_paid_for_message),
-                                            confirmText = stringResource(id = R.string.core_cancel),
-                                            onConfirm = {
-                                                iapViewModel.logIAPErrorActionEvent(
-                                                    iapException.requestType.request,
-                                                    IAPAction.ACTION_CLOSE.action
-                                                )
-                                                dismiss()
-                                            },
-                                            dismissText = stringResource(id = R.string.iap_get_help),
-                                            onDismiss = {
-                                                iapViewModel.showFeedbackScreen(
-                                                    requireActivity(),
-                                                    iapException.requestType.request,
-                                                    iapException.getFormattedErrorMessage()
-                                                )
-                                                onDismiss()
-                                            }
-                                        )
-                                    } else {
-                                        val confirmText = when (iapException.httpErrorCode) {
-                                            406 -> {
-                                                stringResource(id = R.string.iap_label_refresh_now)
-                                            }
-
-                                            else -> {
-                                                stringResource(id = R.string.iap_refresh_to_retry)
-                                            }
-                                        }
-
-                                        val description = when (iapException.httpErrorCode) {
-                                            400, 403 -> {
-                                                stringResource(id = R.string.iap_course_not_fullfilled)
-                                            }
-
-                                            406 -> {
-                                                stringResource(id = R.string.iap_course_already_paid_for_message)
-                                            }
-
-                                            else -> {
-                                                stringResource(id = R.string.iap_general_upgrade_error_message)
-                                            }
-                                        }
-                                        CourseAlreadyPurchasedExecuteErrorDialog(
-                                            confirmText = confirmText,
-                                            description = description,
-                                            onRefresh = {
-                                                if (iapException.httpErrorCode == 406) {
-                                                    iapViewModel.logIAPErrorActionEvent(
-                                                        iapException.requestType.request,
-                                                        IAPAction.ACTION_REFRESH.action
-                                                    )
-                                                    iapViewModel.refreshCourse()
-                                                } else {
-                                                    iapViewModel.logIAPErrorActionEvent(
-                                                        iapException.requestType.request,
-                                                        IAPAction.ACTION_RETRY.action
-                                                    )
-                                                    iapViewModel.retryExecuteOrder()
-                                                }
-                                            },
-                                            onGetHelp = {
-                                                iapViewModel.showFeedbackScreen(
-                                                    requireActivity(),
-                                                    iapException.requestType.request,
-                                                    iapException.getFormattedErrorMessage()
-                                                )
-                                                onDismiss()
-                                            },
-                                            onDismiss = {
-                                                iapViewModel.logIAPErrorActionEvent(
-                                                    iapException.requestType.request,
-                                                    IAPAction.ACTION_CLOSE.action
-                                                )
-                                                onDismiss()
-                                            }
-                                        )
                                     }
-                                }
 
-                                iapException.requestType == IAPRequestType.CONSUME_CODE -> {
-                                    CourseAlreadyPurchasedExecuteErrorDialog(
-                                        onRefresh = {
-                                            iapViewModel.logIAPErrorActionEvent(
-                                                iapException.requestType.request,
-                                                IAPAction.ACTION_RETRY.action
-                                            )
+                                    IAPAction.ACTION_REFRESH -> {
+                                        iapViewModel.logIAPErrorActionEvent(
+                                            iapException.requestType.request,
+                                            IAPAction.ACTION_REFRESH.action
+                                        )
+                                        iapViewModel.refreshCourse()
+                                    }
+
+                                    IAPAction.ACTION_GET_HELP -> {
+                                        iapViewModel.showFeedbackScreen(
+                                            requireActivity(),
+                                            iapException.requestType.request,
+                                            iapException.getFormattedErrorMessage()
+                                        )
+                                        onDismiss()
+                                    }
+
+                                    IAPAction.ACTION_RETRY -> {
+                                        iapViewModel.logIAPErrorActionEvent(
+                                            iapException.requestType.request,
+                                            IAPAction.ACTION_RETRY.action
+                                        )
+                                        if (iapException.requestType == IAPRequestType.CONSUME_CODE) {
                                             iapViewModel.retryToConsumeOrder()
-                                        },
-                                        onGetHelp = {
-                                            iapViewModel.showFeedbackScreen(
-                                                requireActivity(),
-                                                iapException.requestType.request,
-                                                iapException.getFormattedErrorMessage()
-                                            )
-                                            onDismiss()
-                                        },
-                                        onDismiss = {
-                                            iapViewModel.logIAPErrorActionEvent(
-                                                iapException.requestType.request,
-                                                IAPAction.ACTION_CLOSE.action
-                                            )
-                                            onDismiss()
-                                        }
-                                    )
-                                }
-
-                                else -> {
-                                    val description: String = when {
-                                        (iapException.httpErrorCode == 403) -> {
-                                            stringResource(id = R.string.iap_unauthenticated_account_message)
-                                        }
-
-                                        (iapException.httpErrorCode == 400) -> {
-                                            if (iapException.requestType == IAPRequestType.CHECKOUT_CODE) {
-                                                stringResource(id = R.string.iap_payment_could_not_be_processed)
-                                            } else {
-                                                stringResource(id = R.string.iap_course_not_available_message)
-                                            }
-                                        }
-
-                                        (iapException.requestType == IAPRequestType.PAYMENT_SDK_CODE &&
-                                                iapException.httpErrorCode == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) -> {
-                                            stringResource(id = R.string.iap_payment_could_not_be_processed)
-                                        }
-
-                                        else -> {
-                                            ""
+                                        } else if (iapException.requestType == IAPRequestType.EXECUTE_ORDER_CODE) {
+                                            iapViewModel.retryExecuteOrder()
                                         }
                                     }
-                                    GeneralUpgradeErrorDialog(
-                                        description = description,
-                                        onConfirm = {
-                                            iapViewModel.logIAPErrorActionEvent(
-                                                iapException.requestType.request,
-                                                IAPAction.ACTION_CLOSE.action
-                                            )
-                                            onDismiss()
-                                        },
-                                        onDismiss = {
-                                            iapViewModel.showFeedbackScreen(
-                                                requireActivity(),
-                                                iapException.requestType.request,
-                                                iapException.getFormattedErrorMessage()
-                                            )
-                                            onDismiss()
-                                        })
+
+                                    else -> {
+                                        // ignore
+                                    }
                                 }
-                            }
+                            })
                         }
 
                         is IAPUIState.Clear -> {

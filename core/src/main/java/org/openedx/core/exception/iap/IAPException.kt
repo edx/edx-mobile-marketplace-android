@@ -1,7 +1,9 @@
 package org.openedx.core.exception.iap
 
 import android.text.TextUtils
+import com.android.billingclient.api.BillingClient
 import org.json.JSONObject
+import org.openedx.core.presentation.iap.IAPErrorDialogType
 import org.openedx.core.presentation.iap.IAPRequestType
 import retrofit2.Response
 import java.util.Locale
@@ -42,6 +44,99 @@ class IAPException(
         body.append(String.format(Locale.ENGLISH, "-%d", httpErrorCode))
         if (!TextUtils.isEmpty(errorMessage)) body.append(String.format("-%s", errorMessage))
         return body.toString()
+    }
+
+    fun getIAPErrorDialogType(): IAPErrorDialogType {
+        return when (requestType) {
+            IAPRequestType.PRICE_CODE -> {
+                IAPErrorDialogType.PRICE_ERROR_DIALOG
+            }
+
+            IAPRequestType.NO_SKU_CODE -> {
+                IAPErrorDialogType.NO_SKU_ERROR_DIALOG
+            }
+
+            IAPRequestType.ADD_TO_BASKET_CODE -> {
+                when (httpErrorCode) {
+                    400 -> {
+                        IAPErrorDialogType.ADD_TO_BASKET_BAD_REQUEST_ERROR_DIALOG
+                    }
+
+                    403 -> {
+                        IAPErrorDialogType.ADD_TO_BASKET_FORBIDDEN_ERROR_DIALOG
+                    }
+
+                    406 -> {
+                        IAPErrorDialogType.ADD_TO_BASKET_NOT_ACCEPTABLE_ERROR_DIALOG
+                    }
+
+                    else -> {
+                        IAPErrorDialogType.ADD_TO_BASKET_GENERAL_ERROR_DIALOG
+                    }
+                }
+            }
+
+            IAPRequestType.CHECKOUT_CODE -> {
+                when (httpErrorCode) {
+                    400 -> {
+                        IAPErrorDialogType.CHECKOUT_BAD_REQUEST_ERROR_DIALOG
+                    }
+
+                    403 -> {
+                        IAPErrorDialogType.CHECKOUT_FORBIDDEN_ERROR_DIALOG
+                    }
+
+                    406 -> {
+                        IAPErrorDialogType.CHECKOUT_NOT_ACCEPTABLE_ERROR_DIALOG
+                    }
+
+                    else -> {
+                        IAPErrorDialogType.CHECKOUT_GENERAL_ERROR_DIALOG
+                    }
+
+                }
+            }
+
+            IAPRequestType.EXECUTE_ORDER_CODE -> {
+                when (httpErrorCode) {
+                    400 -> {
+                        IAPErrorDialogType.EXECUTE_BAD_REQUEST_ERROR_DIALOG
+                    }
+
+                    403 -> {
+                        IAPErrorDialogType.EXECUTE_FORBIDDEN_ERROR_DIALOG
+                    }
+
+                    406 -> {
+                        IAPErrorDialogType.EXECUTE_NOT_ACCEPTABLE_ERROR_DIALOG
+                    }
+
+                    409 -> {
+                        IAPErrorDialogType.EXECUTE_CONFLICT_ERROR_DIALOG
+                    }
+
+                    else -> {
+                        IAPErrorDialogType.EXECUTE_GENERAL_ERROR_DIALOG
+                    }
+                }
+            }
+
+            IAPRequestType.CONSUME_CODE -> {
+                IAPErrorDialogType.CONSUME_ERROR_DIALOG
+            }
+
+            IAPRequestType.PAYMENT_SDK_CODE -> {
+                if (httpErrorCode == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) {
+                    IAPErrorDialogType.PAYMENT_SDK_ERROR_DIALOG
+                } else {
+                    IAPErrorDialogType.GENERAL_DIALOG_ERROR
+                }
+            }
+
+            else -> {
+                IAPErrorDialogType.GENERAL_DIALOG_ERROR
+            }
+        }
     }
 
     companion object {

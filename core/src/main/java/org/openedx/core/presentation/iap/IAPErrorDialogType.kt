@@ -64,19 +64,19 @@ enum class IAPErrorDialogType(
     EXECUTE_BAD_REQUEST_ERROR_DIALOG(
         R.string.iap_course_not_fullfilled,
         R.string.iap_refresh_to_retry,
-        R.string.core_contact_support,
+        R.string.iap_get_help,
         R.string.core_cancel
     ),
     EXECUTE_FORBIDDEN_ERROR_DIALOG(
         R.string.iap_course_not_fullfilled,
         R.string.iap_refresh_to_retry,
-        R.string.core_contact_support,
+        R.string.iap_get_help,
         R.string.core_cancel
     ),
     EXECUTE_NOT_ACCEPTABLE_ERROR_DIALOG(
         R.string.iap_course_already_paid_for_message,
         R.string.iap_label_refresh_now,
-        R.string.core_contact_support,
+        R.string.iap_get_help,
         R.string.core_cancel
     ),
     EXECUTE_CONFLICT_ERROR_DIALOG(
@@ -86,14 +86,14 @@ enum class IAPErrorDialogType(
     ),
     EXECUTE_GENERAL_ERROR_DIALOG(
         R.string.iap_general_upgrade_error_message,
-        R.string.iap_label_refresh_now,
-        R.string.core_contact_support,
+        R.string.iap_refresh_to_retry,
+        R.string.iap_get_help,
         R.string.core_cancel
     ),
     CONSUME_ERROR_DIALOG(
         R.string.iap_course_not_fullfilled,
         R.string.iap_refresh_to_retry,
-        R.string.core_contact_support,
+        R.string.iap_get_help,
         R.string.core_cancel
     ),
     PAYMENT_SDK_ERROR_DIALOG(

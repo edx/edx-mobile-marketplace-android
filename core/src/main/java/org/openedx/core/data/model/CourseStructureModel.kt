@@ -1,6 +1,5 @@
 package org.openedx.core.data.model
 
-import android.text.TextUtils
 import com.google.gson.Gson
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
@@ -76,7 +75,7 @@ data class CourseStructureModel(
             productInfo = courseModes?.find {
                 EnrollmentMode.VERIFIED.toString().equals(it.slug, ignoreCase = true)
             }?.takeIf {
-                TextUtils.isEmpty(it.androidSku).not() && TextUtils.isEmpty(it.storeSku).not()
+                it.androidSku.isNullOrEmpty().not() && it.storeSku.isNullOrEmpty().not()
             }?.run {
                 ProductInfo(courseSku = androidSku!!, storeSku = storeSku!!)
             }

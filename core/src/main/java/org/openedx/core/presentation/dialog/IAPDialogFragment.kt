@@ -111,9 +111,9 @@ class IAPDialogFragment : DialogFragment() {
                                         }
                                     }
 
-                                    iapState is IAPUIState.ProductData && TextUtils.isEmpty(
-                                        iapViewModel.purchaseData.formattedPrice
-                                    ).not() -> {
+                                    iapState is IAPUIState.ProductData &&
+                                            iapViewModel.purchaseData.formattedPrice.isNullOrEmpty()
+                                                .not() -> {
                                         OpenEdXButton(modifier = Modifier.fillMaxWidth(),
                                             text = stringResource(
                                                 id = R.string.iap_upgrade_price,

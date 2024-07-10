@@ -1,6 +1,5 @@
 package org.openedx.core.domain.interactor
 
-import android.text.TextUtils
 import androidx.fragment.app.FragmentActivity
 import com.android.billingclient.api.BillingClient.BillingResponseCode
 import com.android.billingclient.api.ProductDetails
@@ -108,7 +107,7 @@ class IAPInteractor(
             val productDetail =
                 billingProcessor.querySyncDetails(purchase.products.first()).productDetailsList?.firstOrNull()
             productDetail?.oneTimePurchaseOfferDetails?.takeIf {
-                TextUtils.isEmpty(purchase.getCourseSku()).not()
+                purchase.getCourseSku().isNullOrEmpty().not()
             }?.let { oneTimeProductDetails ->
                 val courseSku = purchase.getCourseSku() ?: return@let
                 val basketId = addToBasket(courseSku)

@@ -300,6 +300,7 @@ private fun UserCourses(
         if (userCourses.enrollments.courses.isNotEmpty()) {
             SecondaryCourses(
                 courses = userCourses.enrollments.courses,
+                courseCount = userCourses.enrollments.pagination.count,
                 hasNextPage = userCourses.enrollments.pagination.next.isNotEmpty(),
                 apiHostUrl = apiHostUrl,
                 onCourseClick = openCourse,
@@ -312,6 +313,7 @@ private fun UserCourses(
 @Composable
 private fun SecondaryCourses(
     courses: List<EnrolledCourse>,
+    courseCount: Int,
     hasNextPage: Boolean,
     apiHostUrl: String,
     onCourseClick: (EnrolledCourse) -> Unit,
@@ -330,7 +332,7 @@ private fun SecondaryCourses(
     ) {
         TextIcon(
             modifier = Modifier.padding(horizontal = 18.dp),
-            text = stringResource(R.string.dashboard_view_all_with_count, courses.size + 1),
+            text = stringResource(R.string.dashboard_view_all_with_count, courseCount + 1),
             textStyle = MaterialTheme.appTypography.titleSmall,
             icon = Icons.Default.ChevronRight,
             color = MaterialTheme.appColors.textDark,

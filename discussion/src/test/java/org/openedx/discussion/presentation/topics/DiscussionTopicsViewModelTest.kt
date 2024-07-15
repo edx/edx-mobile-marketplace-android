@@ -37,6 +37,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
+import org.openedx.discussion.domain.model.Topic
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionRouter
 import java.net.UnknownHostException
@@ -155,6 +156,13 @@ class DiscussionTopicsViewModelTest {
         productInfo = null
     )
 
+    private val mockTopic = Topic(
+        id = "",
+        name = "All Topics",
+        threadListUrl = "",
+        children = emptyList()
+    )
+
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
@@ -231,7 +239,7 @@ class DiscussionTopicsViewModelTest {
             router
         )
 
-        coEvery { interactor.getCourseTopics(any()) } returns mockk()
+        coEvery { interactor.getCourseTopics(any()) } returns listOf(mockTopic, mockTopic)
         advanceUntilIdle()
         val message = async {
             withTimeoutOrNull(5000) {
@@ -306,7 +314,7 @@ class DiscussionTopicsViewModelTest {
             router
         )
 
-        coEvery { interactor.getCourseTopics(any()) } returns mockk()
+        coEvery { interactor.getCourseTopics(any()) } returns listOf(mockTopic, mockTopic)
         val message = async {
             withTimeoutOrNull(5000) {
                 viewModel.uiMessage.first() as? UIMessage.SnackBarMessage

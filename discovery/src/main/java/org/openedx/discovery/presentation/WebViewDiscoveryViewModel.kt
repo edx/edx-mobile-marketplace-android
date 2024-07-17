@@ -45,7 +45,7 @@ class WebViewDiscoveryViewModel(
         get() = networkConnection.isOnline()
 
     fun onWebPageLoading() {
-        _uiState.value = WebViewUIState.Loaded
+        _uiState.value = WebViewUIState.Loading
     }
 
     fun onWebPageLoaded() {

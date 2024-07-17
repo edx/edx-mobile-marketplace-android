@@ -1143,11 +1143,12 @@ fun ConnectionErrorView(onReloadClick: () -> Unit) {
 
 @Composable
 fun FullScreenErrorView(
+    modifier: Modifier = Modifier,
     errorType: ErrorType,
     onReloadClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.appColors.background),
         verticalArrangement = Arrangement.Center,

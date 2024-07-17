@@ -42,6 +42,7 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -83,10 +84,17 @@ import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.domain.model.Progress
+import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.OpenEdXButton
+import org.openedx.core.ui.PurchasesFulfillmentCompletedDialog
 import org.openedx.core.ui.TextIcon
+import org.openedx.core.ui.UpgradeErrorDialog
+import org.openedx.core.ui.UpgradeToAccessView
+import org.openedx.core.ui.UpgradeToAccessViewType
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
@@ -106,10 +114,12 @@ fun DashboardGalleryView(
     val updating by viewModel.updating.collectAsState(false)
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val uiState by viewModel.uiState.collectAsState(DashboardGalleryUIState.Loading)
+    val iapUiState by viewModel.iapUiState.collectAsState(IAPUIState.Clear)
 
     DashboardGalleryView(
         uiMessage = uiMessage,
         uiState = uiState,
+        iapUiState = iapUiState,
         updating = updating,
         apiHostUrl = viewModel.apiHostUrl,
         hasInternetConnection = viewModel.hasInternetConnection,
@@ -154,6 +164,11 @@ fun DashboardGalleryView(
                     )
                 }
             }
+        },
+        onIAPAction = { action, course, iapException ->
+            viewModel.processIAPAction(
+                fragmentManager, action, course, iapException
+            )
         }
     )
 }
@@ -163,9 +178,11 @@ fun DashboardGalleryView(
 private fun DashboardGalleryView(
     uiMessage: UIMessage?,
     uiState: DashboardGalleryUIState,
+    iapUiState: IAPUIState?,
     updating: Boolean,
     apiHostUrl: String,
     onAction: (DashboardGalleryScreenAction) -> Unit,
+    onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
     hasInternetConnection: Boolean
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -229,8 +246,14 @@ private fun DashboardGalleryView(
                                             blockId
                                         )
                                     )
-                                }
+                                },
+                                onIAPAction = onIAPAction,
                             )
+                            LaunchedEffect(uiState.userCourses.enrollments.courses) {
+                                if (uiState.userCourses.enrollments.courses.isNotEmpty()) {
+                                    onIAPAction(IAPAction.ACTION_UNFULFILLED, null, null)
+                                }
+                            }
                         }
 
                         is DashboardGalleryUIState.Empty -> {
@@ -268,6 +291,40 @@ private fun DashboardGalleryView(
                         }
                     )
                 }
+                when (iapUiState) {
+                    is IAPUIState.PurchasesFulfillmentCompleted -> {
+                        PurchasesFulfillmentCompletedDialog(onConfirm = {
+                            onIAPAction(IAPAction.ACTION_COMPLETION, null, null)
+                        }, onDismiss = {
+                            onIAPAction(IAPAction.ACTION_CLOSE, null, null)
+                        })
+                    }
+
+                    is IAPUIState.Error -> {
+                        UpgradeErrorDialog(
+                            title = stringResource(id = CoreR.string.iap_error_title),
+                            description = stringResource(id = CoreR.string.iap_course_not_fullfilled),
+                            confirmText = stringResource(id = CoreR.string.core_cancel),
+                            onConfirm = {
+                                onIAPAction(
+                                    IAPAction.ACTION_ERROR_CLOSE,
+                                    null,
+                                    null
+                                )
+                            },
+                            dismissText = stringResource(id = CoreR.string.iap_get_help),
+                            onDismiss = {
+                                onIAPAction(
+                                    IAPAction.ACTION_GET_HELP,
+                                    null,
+                                    iapUiState.iapException
+                                )
+                            }
+                        )
+                    }
+
+                    else -> {}
+                }
             }
         }
     }
@@ -282,6 +339,7 @@ private fun UserCourses(
     navigateToDates: (EnrolledCourse) -> Unit,
     onViewAllClick: () -> Unit,
     resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String) -> Unit,
+    onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
     Column(
         modifier = modifier
@@ -290,11 +348,13 @@ private fun UserCourses(
         val primaryCourse = userCourses.primary
         if (primaryCourse != null) {
             PrimaryCourseCard(
+                isValuePropEnabled = userCourses.configs.isValuePropEnabled,
                 primaryCourse = primaryCourse,
                 apiHostUrl = apiHostUrl,
                 navigateToDates = navigateToDates,
                 resumeBlockId = resumeBlockId,
-                openCourse = openCourse
+                openCourse = openCourse,
+                onIAPAction = onIAPAction,
             )
         }
         if (userCourses.enrollments.courses.isNotEmpty()) {
@@ -507,11 +567,13 @@ private fun AssignmentItem(
 
 @Composable
 private fun PrimaryCourseCard(
+    isValuePropEnabled: Boolean,
     primaryCourse: EnrolledCourse,
     apiHostUrl: String,
     navigateToDates: (EnrolledCourse) -> Unit,
     resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String) -> Unit,
     openCourse: (EnrolledCourse) -> Unit,
+    onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
     val context = LocalContext.current
     Card(
@@ -604,6 +666,19 @@ private fun PrimaryCourseCard(
                         TimeUtils.getAssignmentFormattedDate(context, nearestAssignment.date)
                     )
                 )
+            }
+            if (primaryCourse.isUpgradeable && isValuePropEnabled) {
+                UpgradeToAccessView(
+                    type = UpgradeToAccessViewType.GALLERY,
+                    iconPadding = PaddingValues(end = 12.dp),
+                    padding = PaddingValues(vertical = 16.dp, horizontal = 14.dp)
+                ) {
+                    onIAPAction(
+                        IAPAction.ACTION_USER_INITIATED,
+                        primaryCourse,
+                        null
+                    )
+                }
             }
             ResumeButton(
                 primaryCourse = primaryCourse,
@@ -863,6 +938,7 @@ private fun DashboardGalleryViewPreview() {
     OpenEdXTheme {
         DashboardGalleryView(
             uiState = DashboardGalleryUIState.Courses(mockUserCourses),
+            iapUiState = null,
             apiHostUrl = "",
             uiMessage = null,
             updating = false,

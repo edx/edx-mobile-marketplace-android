@@ -9,7 +9,11 @@ import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.core.config.Config
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.presentation.IAPAnalytics
+import org.openedx.core.presentation.IAPAnalyticsEvent
+import org.openedx.core.presentation.IAPAnalyticsKeys
+import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.dialog.appreview.AppReviewAnalytics
+import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.dashboard.presentation.DashboardAnalytics
 import org.openedx.discovery.presentation.DiscoveryAnalytics
@@ -190,6 +194,25 @@ class AnalyticsManager(
             put(Key.TOPIC_ID.keyName, topicId)
             put(Key.TOPIC_NAME.keyName, topicName)
         })
+    }
+
+    override fun logIAPEvent(event: IAPAnalyticsEvent, params: MutableMap<String, Any?>, screenName: String) {
+        logEvent(
+            event = event.eventName,
+            params = params.apply {
+                put(IAPAnalyticsKeys.NAME.key, event.biValue)
+                put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
+                put(
+                    IAPAnalyticsKeys.IAP_FLOW_TYPE.key,
+                    if (screenName == IAPAnalyticsScreen.PROFILE.screenName) {
+                        IAPFlow.RESTORE.value
+                    } else {
+                        IAPFlow.SILENT.value
+                    }
+                )
+                put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
+            }
+        )
     }
 }
 

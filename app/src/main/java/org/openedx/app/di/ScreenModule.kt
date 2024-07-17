@@ -151,7 +151,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            get()
+            get(),
         )
     }
 
@@ -164,7 +164,11 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            windowSize
+            get(),
+            get(),
+            get(),
+            get(),
+            windowSize,
         )
     }
     viewModel { AllEnrolledCoursesViewModel(get(), get(), get(), get(), get(), get(), get()) }
@@ -202,6 +206,7 @@ val screenModule = module {
     viewModel { (username: String) -> AnothersProfileViewModel(get(), get(), username) }
     viewModel {
         SettingsViewModel(
+            get(),
             get(),
             get(),
             get(),
@@ -441,7 +446,7 @@ val screenModule = module {
     }
 
     single { IAPRepository(get()) }
-    factory { IAPInteractor(get(), get()) }
+    factory { IAPInteractor(get(), get(), get(), get(), get()) }
     viewModel { (iapFlow: IAPFlow, purchaseFlowData: PurchaseFlowData) ->
         IAPViewModel(
             iapFlow = iapFlow,

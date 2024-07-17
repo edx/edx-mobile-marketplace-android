@@ -39,6 +39,7 @@ data class CourseEnrollments(
                 enrollments.results.forEach { courseData ->
                     courseData.setStoreSku(appConfig.iapConfig.productPrefix)
                 }
+                primaryCourse?.setStoreSku(appConfig.iapConfig.productPrefix)
             }
 
             return CourseEnrollments(enrollments, appConfig, primaryCourse)

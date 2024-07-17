@@ -131,15 +131,7 @@ class SettingsFragment : Fragment() {
                             }
 
                             IAPAction.ACTION_RESTORE_PURCHASE_CANCEL -> {
-                                viewModel.logIAPEvent(
-                                    IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
-                                    buildMap {
-                                        put(
-                                            IAPAnalyticsKeys.ACTION.key,
-                                            IAPAction.ACTION_CLOSE.action
-                                        )
-                                    }.toMutableMap()
-                                )
+                                viewModel.onRestorePurchaseCancel()
                                 viewModel.clearIAPState()
                             }
 

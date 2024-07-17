@@ -1,23 +1,47 @@
 package org.openedx.core.domain.interactor
 
+import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import com.android.billingclient.api.BillingClient.BillingResponseCode
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import org.openedx.core.ApiConstants
+import org.openedx.core.R
+import org.openedx.core.config.Config
 import org.openedx.core.data.repository.iap.IAPRepository
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.decodeToLong
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseSku
 import org.openedx.core.module.billing.getPriceAmount
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPRequestType
+import org.openedx.core.utils.EmailUtil
 
 class IAPInteractor(
+    private val appData: AppData,
     private val billingProcessor: BillingProcessor,
+    private val config: Config,
     private val repository: IAPRepository,
+    private val preferencesManager: CorePreferences,
 ) {
+    private val iapConfig
+        get() = preferencesManager.appConfig.iapConfig
+    private val isIAPEnabled
+        get() = iapConfig.isEnabled && iapConfig.disableVersions.contains(appData.versionName).not()
+
+    fun showFeedbackScreen(context: Context, message: String) {
+        EmailUtil.showFeedbackScreen(
+            context = context,
+            feedbackEmailAddress = config.getFeedbackEmailAddress(),
+            subject = context.getString(R.string.core_error_upgrading_course_in_app),
+            feedback = message,
+            appVersion = appData.versionName
+        )
+    }
+
     suspend fun loadPrice(productId: String): ProductDetails.OneTimePurchaseOfferDetails {
         val response = billingProcessor.querySyncDetails(productId)
         val productDetails = response.productDetailsList?.firstOrNull()?.oneTimePurchaseOfferDetails
@@ -119,6 +143,27 @@ class IAPInteractor(
                     currencyCode = oneTimeProductDetails.priceCurrencyCode,
                 )
                 consumePurchase(purchase.purchaseToken)
+            }
+        }
+    }
+
+    suspend fun detectUnfulfilledPurchase(
+        onSuccess: () -> Unit,
+        onFailure: (IAPException) -> Unit,
+    ) {
+        if (isIAPEnabled) {
+            preferencesManager.user?.id?.let { userId ->
+                runCatching {
+                    processUnfulfilledPurchase(userId)
+                }.onSuccess {
+                    if (it) {
+                        onSuccess()
+                    }
+                }.onFailure {
+                    if (it is IAPException) {
+                        onFailure(it)
+                    }
+                }
             }
         }
     }

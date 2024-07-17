@@ -339,24 +339,27 @@ class IAPViewModel(
         event: IAPAnalyticsEvent,
         params: MutableMap<String, Any?> = mutableMapOf()
     ) {
-        analytics.logEvent(event.eventName, params.apply {
-            put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            purchaseFlowData.takeIf { it.courseId.isNullOrBlank().not() }?.let {
-                put(IAPAnalyticsKeys.COURSE_ID.key, purchaseFlowData.courseId)
-                put(
-                    IAPAnalyticsKeys.PACING.key,
-                    if (purchaseFlowData.isSelfPaced == true) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
-                )
-            }
-            purchaseFlowData.formattedPrice?.takeIf { it.isNotBlank() }?.let { formattedPrice ->
-                put(IAPAnalyticsKeys.PRICE.key, formattedPrice)
-            }
-            purchaseFlowData.componentId?.takeIf { it.isNotBlank() }?.let { componentId ->
-                put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
-            }
-            put(IAPAnalyticsKeys.SCREEN_NAME.key, purchaseFlowData.screenName)
-            put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
-        })
+        analytics.logIAPEvent(
+            event = event,
+            params = params.apply {
+                put(IAPAnalyticsKeys.NAME.key, event.biValue)
+                purchaseFlowData.takeIf { it.courseId.isNullOrBlank().not() }?.let {
+                    put(IAPAnalyticsKeys.COURSE_ID.key, purchaseFlowData.courseId)
+                    put(
+                        IAPAnalyticsKeys.PACING.key,
+                        if (purchaseFlowData.isSelfPaced == true) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
+                    )
+                }
+                purchaseFlowData.formattedPrice?.takeIf { it.isNotBlank() }?.let { formattedPrice ->
+                    put(IAPAnalyticsKeys.PRICE.key, formattedPrice)
+                }
+                purchaseFlowData.componentId?.takeIf { it.isNotBlank() }?.let { componentId ->
+                    put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
+                }
+                put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
+            },
+            screenName = purchaseFlowData.screenName.orEmpty()
+        )
     }
 
     fun clearIAPFLow() {

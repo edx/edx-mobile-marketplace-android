@@ -85,11 +85,8 @@ import org.openedx.core.domain.model.EnrolledCourseData
 import org.openedx.core.domain.model.Progress
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.presentation.IAPAnalyticsScreen
-import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRecommendedBox
 import org.openedx.core.presentation.iap.IAPAction
-import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.ui.HandleUIMessage
@@ -172,55 +169,9 @@ class DashboardListFragment : Fragment() {
                         },
                     ),
                     onIAPAction = { action, course, iapException ->
-                        when (action) {
-                            IAPAction.ACTION_USER_INITIATED -> {
-                                if (course != null) {
-                                    IAPDialogFragment.newInstance(
-                                        iapFlow = IAPFlow.USER_INITIATED,
-                                        screenName = IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName,
-                                        courseId = course.course.id,
-                                        courseName = course.course.name,
-                                        isSelfPaced = course.course.isSelfPaced,
-                                        productInfo = course.productInfo!!
-                                    ).show(
-                                        requireActivity().supportFragmentManager,
-                                        IAPDialogFragment.TAG
-                                    )
-                                }
-                            }
-
-                            IAPAction.ACTION_COMPLETION -> {
-                                IAPDialogFragment.newInstance(
-                                    IAPFlow.SILENT,
-                                    IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName
-                                ).show(
-                                    requireActivity().supportFragmentManager,
-                                    IAPDialogFragment.TAG
-                                )
-                                viewModel.clearIAPState()
-                            }
-
-                            IAPAction.ACTION_UNFULFILLED -> {
-                                viewModel.detectUnfulfilledPurchase()
-                            }
-
-                            IAPAction.ACTION_CLOSE -> {
-                                viewModel.clearIAPState()
-                            }
-
-                            IAPAction.ACTION_ERROR_CLOSE -> {
-                                viewModel.logIAPCancelEvent()
-                            }
-
-                            IAPAction.ACTION_GET_HELP -> {
-                                iapException?.getFormattedErrorMessage()
-                                    ?.let { viewModel.showFeedbackScreen(requireActivity(), it) }
-                            }
-
-                            else -> {
-
-                            }
-                        }
+                        viewModel.processIAPAction(
+                            requireActivity().supportFragmentManager, action, course, iapException
+                        )
                     }
                 )
             }

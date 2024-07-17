@@ -24,6 +24,7 @@ import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.module.DownloadWorkerController
+import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.IAPAnalyticsEvent
 import org.openedx.core.presentation.IAPAnalyticsKeys
 import org.openedx.core.presentation.IAPAnalyticsScreen
@@ -54,6 +55,7 @@ class SettingsViewModel(
     private val resourceManager: ResourceManager,
     private val corePreferences: CorePreferences,
     private val interactor: ProfileInteractor,
+    private val iapAnalytics: IAPAnalytics,
     private val iapInteractor: IAPInteractor,
     private val cookieManager: AppCookieManager,
     private val workerController: DownloadWorkerController,
@@ -235,7 +237,10 @@ class SettingsViewModel(
     }
 
     fun restorePurchase() {
-        logIAPEvent(IAPAnalyticsEvent.IAP_RESTORE_PURCHASE_CLICKED)
+        iapAnalytics.logIAPEvent(
+            event = IAPAnalyticsEvent.IAP_RESTORE_PURCHASE_CLICKED,
+            screenName = IAPAnalyticsScreen.PROFILE.screenName,
+        )
         viewModelScope.launch(Dispatchers.IO) {
             val userId = corePreferences.user?.id ?: return@launch
 
@@ -247,13 +252,10 @@ class SettingsViewModel(
                 iapInteractor.processUnfulfilledPurchase(userId)
             }.onSuccess {
                 if (it) {
-                    logIAPEvent(IAPAnalyticsEvent.IAP_UNFULFILLED_PURCHASE_INITIATED, buildMap {
-                        put(
-                            IAPAnalyticsKeys.SCREEN_NAME.key,
-                            IAPAnalyticsScreen.PROFILE.screenName
-                        )
-                        put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.RESTORE.value)
-                    }.toMutableMap())
+                    iapAnalytics.logIAPEvent(
+                        event = IAPAnalyticsEvent.IAP_UNFULFILLED_PURCHASE_INITIATED,
+                        screenName = IAPAnalyticsScreen.PROFILE.screenName,
+                    )
                     _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
                 } else {
                     _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
@@ -275,36 +277,39 @@ class SettingsViewModel(
     }
 
     fun logIAPCancelEvent() {
-        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
-            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_RESTORE.action)
-            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE.action)
-        }.toMutableMap())
+        iapAnalytics.logIAPEvent(
+            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
+            buildMap {
+                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_RESTORE.action)
+                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE.action)
+            }.toMutableMap(),
+            screenName = IAPAnalyticsScreen.PROFILE.screenName,
+        )
     }
 
     fun showFeedbackScreen(context: Context, message: String) {
-        EmailUtil.showFeedbackScreen(
-            context = context,
-            feedbackEmailAddress = config.getFeedbackEmailAddress(),
-            subject = context.getString(R.string.core_error_upgrading_course_in_app),
-            feedback = message,
-            appVersion = appData.versionName
+        iapInteractor.showFeedbackScreen(context, message)
+        iapAnalytics.logIAPEvent(
+            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
+            params = buildMap {
+                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
+                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP.action)
+            }.toMutableMap(),
+            screenName = IAPAnalyticsScreen.PROFILE.screenName,
         )
-        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
-            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
-            put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP.action)
-        }.toMutableMap())
     }
 
-    fun logIAPEvent(
-        event: IAPAnalyticsEvent,
-        params: MutableMap<String, Any?> = mutableMapOf()
-    ) {
-        analytics.logEvent(event.eventName, params.apply {
-            put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            put(IAPAnalyticsKeys.SCREEN_NAME.key, IAPAnalyticsScreen.PROFILE.screenName)
-            put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.RESTORE.value)
-            put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
-        })
+    fun onRestorePurchaseCancel() {
+        iapAnalytics.logIAPEvent(
+            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
+            params = buildMap {
+                put(
+                    IAPAnalyticsKeys.ACTION.key,
+                    IAPAction.ACTION_CLOSE.action
+                )
+            }.toMutableMap(),
+            screenName = IAPAnalyticsScreen.PROFILE.screenName,
+        )
     }
 
     fun clearIAPState() {

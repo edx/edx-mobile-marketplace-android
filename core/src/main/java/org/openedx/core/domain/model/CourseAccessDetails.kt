@@ -6,6 +6,9 @@ import java.util.Date
 
 @Parcelize
 data class CourseAccessDetails(
+    val hasUnmetPrerequisites: Boolean,
+    val isTooEarly: Boolean,
+    val isStaff: Boolean,
     val auditAccessExpires: Date?,
     val coursewareAccess: CoursewareAccess?,
 ) : Parcelable

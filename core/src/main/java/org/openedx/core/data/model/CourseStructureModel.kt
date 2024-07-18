@@ -11,8 +11,8 @@ import org.openedx.core.data.model.room.MediaDb
 import org.openedx.core.data.model.room.discovery.ProgressDb
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.CourseStructure
-import org.openedx.core.domain.model.EnrollmentMode
 import org.openedx.core.domain.model.iap.ProductInfo
+import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.utils.TimeUtils
 import java.lang.reflect.Type
 
@@ -73,14 +73,14 @@ data class CourseStructureModel(
             progress = progress?.mapToDomain(),
             enrollmentDetails = enrollmentDetails.mapToDomain(),
             productInfo = courseModes?.find {
-                EnrollmentMode.VERIFIED.toString().equals(it.slug, ignoreCase = true)
+                it.isVerifiedMode()
             }?.takeIf {
-                it.androidSku.isNullOrEmpty().not() && it.storeSku.isNullOrEmpty().not()
+                it.androidSku.isNotNullOrEmpty() && it.storeSku.isNotNullOrEmpty()
             }?.run {
                 ProductInfo(
                     courseSku = androidSku!!,
                     storeSku = storeSku!!,
-                    lmsUSDPrice = price ?: 0.0
+                    lmsUSDPrice = minPrice ?: 0.0
                 )
             }
         )
@@ -112,7 +112,7 @@ data class CourseStructureModel(
         override fun deserialize(
             json: JsonElement?,
             typeOfT: Type?,
-            context: JsonDeserializationContext?
+            context: JsonDeserializationContext?,
         ): CourseStructureModel {
             val courseStructure = Gson().fromJson(json, CourseStructureModel::class.java)
             if (corePreferences.appConfig.iapConfig.productPrefix.isNullOrEmpty().not()) {

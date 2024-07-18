@@ -94,7 +94,6 @@ class ProgramViewModel(
                 fm = fragmentManager,
                 courseId = courseId,
                 courseTitle = "",
-                enrollmentMode = ""
             )
         }
         viewModelScope.launch {

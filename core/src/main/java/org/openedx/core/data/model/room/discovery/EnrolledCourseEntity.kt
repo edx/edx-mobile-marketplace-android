@@ -267,6 +267,12 @@ data class EnrollmentDetailsDB(
 }
 
 data class CourseAccessDetailsDb(
+    @ColumnInfo("hasUnmetPrerequisites")
+    val hasUnmetPrerequisites: Boolean,
+    @ColumnInfo("isTooEarly")
+    val isTooEarly: Boolean,
+    @ColumnInfo("isStaff")
+    val isStaff: Boolean,
     @ColumnInfo("auditAccessExpires")
     var auditAccessExpires: String?,
     @Embedded
@@ -274,8 +280,11 @@ data class CourseAccessDetailsDb(
 ) {
     fun mapToDomain(): CourseAccessDetails {
         return CourseAccessDetails(
-            TimeUtils.iso8601ToDate(auditAccessExpires ?: ""),
-            coursewareAccess?.mapToDomain()
+            hasUnmetPrerequisites = hasUnmetPrerequisites,
+            isTooEarly = isTooEarly,
+            isStaff = isStaff,
+            auditAccessExpires = TimeUtils.iso8601ToDate(auditAccessExpires ?: ""),
+            coursewareAccess = coursewareAccess?.mapToDomain()
         )
     }
 }

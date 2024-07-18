@@ -32,6 +32,9 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.CourseAccessDetails
 import org.openedx.core.domain.model.CourseDatesCalendarSync
+import org.openedx.core.domain.model.CourseEnrollmentDetails
+import org.openedx.core.domain.model.CourseInfoOverview
+import org.openedx.core.domain.model.CourseSharingUtmParameters
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
@@ -106,7 +109,11 @@ class CourseContainerViewModelTest {
         end = null,
         media = null,
         courseAccessDetails = CourseAccessDetails(
-            Date(), coursewareAccess = CoursewareAccess(
+            hasUnmetPrerequisites = false,
+            isTooEarly = false,
+            isStaff = false,
+            auditAccessExpires = Date(),
+            coursewareAccess = CoursewareAccess(
                 true,
                 "",
                 "",
@@ -139,15 +146,45 @@ class CourseContainerViewModelTest {
         startType = "",
         end = null,
         courseAccessDetails = org.openedx.core.data.model.CourseAccessDetails(
-            "",
+            hasUnmetPrerequisites = false,
+            isTooEarly = false,
+            isStaff = false,
+            auditAccessExpires = "",
             coursewareAccess = null
         ),
         media = null,
         certificate = null,
         isSelfPaced = false,
         progress = null,
-        enrollmentDetails = org.openedx.core.data.model.EnrollmentDetails("", "", false, ""),
+        enrollmentDetails = org.openedx.core.data.model.EnrollmentDetails("", "", "", false, ""),
         courseModes = arrayListOf()
+    )
+
+    private val enrollmentDetails = CourseEnrollmentDetails(
+        id = "",
+        courseUpdates = "",
+        courseHandouts = "",
+        discussionUrl = "",
+        courseAccessDetails = CourseAccessDetails(
+            false,
+            false,
+            false,
+            null,
+            CoursewareAccess(
+                false, "", "", "",
+                "", ""
+            )
+        ),
+        certificate = null,
+        enrollmentDetails = EnrollmentDetails(
+            null, "", false, null
+        ),
+        courseInfoOverview = CourseInfoOverview(
+            "Open edX Demo Course", "", "OpenedX", null,
+            "", "", null, false, null,
+            CourseSharingUtmParameters("", ""),
+            "", listOf()
+        )
     )
 
     @Before
@@ -193,6 +230,7 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCourseStructure(any(), any()) } throws UnknownHostException()
+        coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
         every { analytics.logScreenEvent(CourseAnalyticsEvent.DASHBOARD.eventName, any()) } returns Unit
         viewModel.preloadCourseStructure()
         advanceUntilIdle()
@@ -203,7 +241,7 @@ class CourseContainerViewModelTest {
         val message = viewModel.errorMessage.value
         assertEquals(noInternet, message)
         assert(!viewModel.refreshing.value)
-        assert(viewModel.dataReady.value == null)
+        assert(viewModel.accessStatus.value == null)
     }
 
     @Test
@@ -229,6 +267,7 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCourseStructure(any(), any()) } throws Exception()
+        coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
         every { analytics.logScreenEvent(CourseAnalyticsEvent.DASHBOARD.eventName, any()) } returns Unit
         viewModel.preloadCourseStructure()
         advanceUntilIdle()
@@ -239,7 +278,7 @@ class CourseContainerViewModelTest {
         val message = viewModel.errorMessage.value
         assertEquals(somethingWrong, message)
         assert(!viewModel.refreshing.value)
-        assert(viewModel.dataReady.value == null)
+        assert(viewModel.accessStatus.value == null)
     }
 
     @Test
@@ -265,6 +304,7 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCourseStructure(any(), any()) } returns courseStructure
+        coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
         every { analytics.logScreenEvent(CourseAnalyticsEvent.DASHBOARD.eventName, any()) } returns Unit
         viewModel.preloadCourseStructure()
         advanceUntilIdle()
@@ -274,7 +314,7 @@ class CourseContainerViewModelTest {
 
         assert(viewModel.errorMessage.value == null)
         assert(!viewModel.refreshing.value)
-        assert(viewModel.dataReady.value != null)
+        assert(viewModel.accessStatus.value?.accessError == null)
     }
 
     @Test
@@ -300,6 +340,7 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns false
         coEvery { interactor.getCourseStructure(any(), any()) } returns courseStructure
+        coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
         every { analytics.logScreenEvent(any(), any()) } returns Unit
         coEvery {
             courseApi.getCourseStructure(any(), any(), any(), any())
@@ -312,7 +353,7 @@ class CourseContainerViewModelTest {
 
         assert(viewModel.errorMessage.value == null)
         assert(!viewModel.refreshing.value)
-        assert(viewModel.dataReady.value != null)
+        assert(viewModel.accessStatus.value?.accessError == null)
     }
 
     @Test

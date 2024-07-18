@@ -131,7 +131,6 @@ fun AllEnrolledCoursesView(
                             fragmentManager,
                             course.id,
                             course.name,
-                            mode
                         )
                     }
                 }

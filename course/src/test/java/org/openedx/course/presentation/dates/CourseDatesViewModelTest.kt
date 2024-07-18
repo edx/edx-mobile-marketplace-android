@@ -128,7 +128,12 @@ class CourseDatesViewModelTest {
         startType = "",
         end = null,
         media = null,
-        courseAccessDetails = CourseAccessDetails(Date(), CoursewareAccess(
+        courseAccessDetails = CourseAccessDetails(
+            hasUnmetPrerequisites = false,
+            isTooEarly = false,
+            isStaff = false,
+            auditAccessExpires = Date(),
+            coursewareAccess = CoursewareAccess(
             true,
             "",
             "",

@@ -283,6 +283,14 @@ object TimeUtils {
     }
 
     /**
+     * Returns a formatted date string for the given date using context.
+     */
+    fun getCourseAccessFormattedDate(context: Context, date: Date): String {
+        val resourceManager = ResourceManager(context)
+        return dateToCourseDate(resourceManager, date)
+    }
+
+    /**
      * Returns the number of days difference between the given date and the current date.
      */
     private fun getDayDifference(inputDate: Calendar): Int {

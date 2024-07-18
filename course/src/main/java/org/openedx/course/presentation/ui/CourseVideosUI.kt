@@ -735,7 +735,10 @@ private val mockEnrollmentDetails =
     EnrollmentDetails(created = Date(), mode = "audit", isActive = false, upgradeDeadline = Date())
 
 private val mockCourseAccessDetails = CourseAccessDetails(
-    Date(),
+    hasUnmetPrerequisites = false,
+    isTooEarly = false,
+    isStaff = false,
+    auditAccessExpires = Date(),
     coursewareAccess = CoursewareAccess(
         true,
         "",

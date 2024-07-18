@@ -169,14 +169,12 @@ class AllEnrolledCoursesViewModel(
         fragmentManager: FragmentManager,
         courseId: String,
         courseName: String,
-        mode: String
     ) {
         dashboardCourseClickedEvent(courseId, courseName)
         dashboardRouter.navigateToCourseOutline(
-            fragmentManager,
-            courseId,
-            courseName,
-            mode
+            fm = fragmentManager,
+            courseId = courseId,
+            courseTitle = courseName
         )
     }
 }

@@ -65,7 +65,9 @@ fun UpgradeToAccessView(
             }
         }
 
-        UpgradeToAccessViewType.COURSE -> {
+        UpgradeToAccessViewType.COURSE,
+        UpgradeToAccessViewType.AUDIT_EXPIRED,
+        -> {
             shape = MaterialTheme.appShapes.buttonShape
         }
 
@@ -117,12 +119,13 @@ enum class UpgradeToAccessViewType {
     GALLERY,
     DASHBOARD,
     COURSE,
+    AUDIT_EXPIRED,
 }
 
 @Preview(backgroundColor = 0xFFFFFFFF, showBackground = true)
 @Composable
 private fun UpgradeToAccessViewPreview(
-    @PreviewParameter(UpgradeToAccessViewTypeParameterProvider::class) type: UpgradeToAccessViewType
+    @PreviewParameter(UpgradeToAccessViewTypeParameterProvider::class) type: UpgradeToAccessViewType,
 ) {
     OpenEdXTheme {
         UpgradeToAccessView(type = type) {}
@@ -135,5 +138,6 @@ private class UpgradeToAccessViewTypeParameterProvider :
         UpgradeToAccessViewType.DASHBOARD,
         UpgradeToAccessViewType.COURSE,
         UpgradeToAccessViewType.GALLERY,
+        UpgradeToAccessViewType.AUDIT_EXPIRED,
     )
 }

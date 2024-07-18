@@ -133,7 +133,6 @@ class CourseInfoViewModel(
                 fm = fragmentManager,
                 courseId = courseId,
                 courseTitle = "",
-                enrollmentMode = ""
             )
         }
     }

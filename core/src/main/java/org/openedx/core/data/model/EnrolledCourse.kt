@@ -50,7 +50,7 @@ data class EnrolledCourse(
                 ProductInfo(
                     courseSku = androidSku!!,
                     storeSku = storeSku!!,
-                    lmsUSDPrice = price ?: 0.0
+                    lmsUSDPrice = minPrice ?: 0.0
                 )
             }
         )

@@ -26,6 +26,7 @@ import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.model.CourseEnrollmentDetails
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.extension.isInternetError
@@ -82,9 +83,9 @@ class CourseContainerViewModel(
     val courseRouter: CourseRouter,
 ) : BaseViewModel() {
 
-    private val _dataReady = MutableLiveData<Boolean?>()
-    val dataReady: LiveData<Boolean?>
-        get() = _dataReady
+    private val _accessStatus = MutableLiveData<CourseAccessStatus>()
+    val accessStatus: LiveData<CourseAccessStatus>
+        get() = _accessStatus
 
     private val _errorMessage = SingleEventLiveData<String>()
     val errorMessage: LiveData<String>
@@ -146,6 +147,8 @@ class CourseContainerViewModel(
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
 
+    var organization = ""
+
     init {
         viewModelScope.launch {
             courseNotifier.notifier.collect { event ->
@@ -194,41 +197,102 @@ class CourseContainerViewModel(
 
     fun preloadCourseStructure() {
         courseDashboardViewed()
-        if (_dataReady.value != null) {
+        if (_accessStatus.value != null) {
             return
         }
         _showProgress.value = true
         viewModelScope.launch {
             try {
-                _courseStructure = interactor.getCourseStructure(courseId, true)
-                _courseStructure?.let {
-                    courseName = it.name
-                    loadCourseImage(courseStructure?.media?.image?.large)
-                    _calendarSyncUIState.update { state ->
-                        state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
-                    }
-                    _dataReady.value = courseStructure?.start?.let { start ->
-                        val isReady = start < Date()
-                        if (isReady) {
-                            _isNavigationEnabled.value = true
+                val enrollmentDetails = interactor.getEnrollmentDetails(courseId)
+                val accessStatus = getCourseAccessStatus(enrollmentDetails)
+                val courseInfoOverview = enrollmentDetails.courseInfoOverview
+                courseName = courseInfoOverview.name
+                organization = courseInfoOverview.org
+                loadCourseImage(courseInfoOverview.media?.image?.large)
+                _calendarSyncUIState.update { state ->
+                    state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
+                }
+
+                if (accessStatus.accessError != null) {
+                    _isNavigationEnabled.value = false
+                    _showProgress.value = false
+                    _accessStatus.value = accessStatus
+                    return@launch
+                }
+
+                interactor.getCourseStructure(courseId, true)
+                courseInfoOverview.start?.let { start ->
+                    val isReady = start < Date()
+                    if (isReady) {
+                        _isNavigationEnabled.value = true
+                        _accessStatus.value = accessStatus
+                        _canShowUpgradeButton.value = isIAPEnabled &&
+                                isValuePropEnabled &&
+                                courseStructure?.isUpgradeable == true
+                        if (resumeBlockId.isNotEmpty()) {
+                            delay(500L)
+                            courseNotifier.send(CourseOpenBlock(resumeBlockId))
                         }
-                        isReady
+                    } else {
+                        _accessStatus.value =
+                            CourseAccessStatus(accessError = CourseAccessError.COURSE_NO_ACCESS)
                     }
-                    _canShowUpgradeButton.value = isIAPEnabled &&
-                            isValuePropEnabled &&
-                            courseStructure?.isUpgradeable == true
                 }
-                if (_dataReady.value == true && resumeBlockId.isNotEmpty()) {
-                    delay(500L)
-                    courseNotifier.send(CourseOpenBlock(resumeBlockId))
-                }
+
             } catch (e: Exception) {
+                e.printStackTrace()
                 if (e.isInternetError() || e is NoCachedDataException) {
                     _errorMessage.value =
                         resourceManager.getString(CoreR.string.core_error_no_connection)
                 } else {
                     _errorMessage.value =
                         resourceManager.getString(CoreR.string.core_error_unknown_error)
+                }
+            }
+        }
+    }
+
+    private fun getCourseAccessStatus(enrollmentDetails: CourseEnrollmentDetails): CourseAccessStatus {
+        enrollmentDetails.courseAccessDetails.let { accessDetails ->
+            if (accessDetails.coursewareAccess?.hasAccess != false) {
+                return CourseAccessStatus()
+            }
+
+            if ((enrollmentDetails.courseInfoOverview.end ?: Date()) < Date()) {
+                if (enrollmentDetails.isUpgradable()) {
+                    return CourseAccessStatus(
+                        accessError = CourseAccessError.COURSE_EXPIRED_UPGRADABLE,
+                        date = enrollmentDetails.courseInfoOverview.end,
+                        sku = enrollmentDetails.getCourseMode()?.androidSku
+                    )
+                } else {
+                    return CourseAccessStatus(
+                        accessError = CourseAccessError.COURSE_EXPIRED_NOT_UPGRADABLE,
+                        date = enrollmentDetails.courseInfoOverview.end
+                    )
+                }
+            } else {
+                val errorCode = accessDetails.coursewareAccess?.errorCode
+                    ?: return CourseAccessStatus()
+                return when (errorCode) {
+                    "notStarted" -> {
+                        CourseAccessStatus(
+                            accessError = CourseAccessError.COURSE_NOT_STARTED,
+                            date = enrollmentDetails.courseInfoOverview.start
+                        )
+                    }
+
+                    "auditExpired" -> {
+                        CourseAccessStatus(
+                            accessError = CourseAccessError.COURSE_EXPIRED_UPGRADABLE,
+                            date = enrollmentDetails.courseAccessDetails.auditAccessExpires,
+                            sku = enrollmentDetails.getCourseMode()?.androidSku
+                        )
+                    }
+
+                    else -> {
+                        CourseAccessStatus()
+                    }
                 }
             }
         }

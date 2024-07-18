@@ -142,7 +142,11 @@ class CourseUnitContainerViewModelTest {
         end = Date(),
         media = null,
         courseAccessDetails = CourseAccessDetails(
-            Date(), CoursewareAccess(
+            hasUnmetPrerequisites = false,
+            isTooEarly = false,
+            isStaff = false,
+            auditAccessExpires = Date(),
+            coursewareAccess = CoursewareAccess(
                 true,
                 "",
                 "",

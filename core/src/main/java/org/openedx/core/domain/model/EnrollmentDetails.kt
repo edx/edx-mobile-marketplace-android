@@ -10,7 +10,7 @@ data class EnrollmentDetails(
     var created: Date?,
     var mode: String?,
     var isActive: Boolean,
-    var upgradeDeadline: Date?,
+    var upgradeDeadline: Date?
 ) : Parcelable {
     val isUpgradeDeadlinePassed: Boolean
         get() = TimeUtils.isDatePassed(Date(), upgradeDeadline)

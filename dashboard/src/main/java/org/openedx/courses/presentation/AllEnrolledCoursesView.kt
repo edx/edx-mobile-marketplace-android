@@ -137,7 +137,7 @@ fun AllEnrolledCoursesView(
                 }
 
                 is AllEnrolledCoursesAction.FilterChange -> {
-                    viewModel.getCourses(action.courseStatusFilter)
+                    viewModel.changeFilter(action.courseStatusFilter)
                 }
             }
         }

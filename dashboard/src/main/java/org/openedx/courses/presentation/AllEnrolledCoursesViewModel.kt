@@ -52,7 +52,8 @@ class AllEnrolledCoursesViewModel(
     val uiMessage: SharedFlow<UIMessage>
         get() = _uiMessage.asSharedFlow()
 
-    private val currentFilter: MutableStateFlow<CourseStatusFilter> = MutableStateFlow(CourseStatusFilter.ALL)
+    private val currentFilter: MutableStateFlow<CourseStatusFilter> =
+        MutableStateFlow(CourseStatusFilter.ALL)
 
     private var job: Job? = null
 
@@ -65,6 +66,12 @@ class AllEnrolledCoursesViewModel(
         _uiState.update { it.copy(showProgress = true) }
         coursesList.clear()
         internalLoadingCourses(courseStatusFilter ?: currentFilter.value)
+    }
+
+    fun changeFilter(courseStatusFilter: CourseStatusFilter?) {
+        if (courseStatusFilter != currentFilter.value) {
+            getCourses(courseStatusFilter)
+        }
     }
 
     fun updateCourses() {

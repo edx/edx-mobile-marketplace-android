@@ -278,23 +278,6 @@ private fun CourseOutlineUI(
                                         }
                                     }
 
-
-                                    val progress = uiState.courseStructure.progress
-                                    if (progress != null && progress.totalAssignmentsCount > 0) {
-                                        item {
-                                            CourseProgress(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(
-                                                        top = 16.dp,
-                                                        start = 24.dp,
-                                                        end = 24.dp
-                                                    ),
-                                                progress = progress
-                                            )
-                                        }
-                                    }
-
                                     if (uiState.resumeComponent != null) {
                                         item {
                                             Box(listPadding) {
@@ -312,6 +295,22 @@ private fun CourseOutlineUI(
                                                     )
                                                 }
                                             }
+                                        }
+                                    }
+
+                                    val progress = uiState.courseStructure.progress
+                                    if (progress != null && progress.totalAssignmentsCount > 0) {
+                                        item {
+                                            CourseProgress(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(
+                                                        top = 16.dp,
+                                                        start = 24.dp,
+                                                        end = 24.dp
+                                                    ),
+                                                progress = progress
+                                            )
                                         }
                                     }
 

@@ -563,7 +563,7 @@ fun VideoSubtitles(
                             if (currentIndex == index) {
                                 MaterialTheme.appColors.textPrimary
                             } else {
-                                MaterialTheme.appColors.textFieldBorder
+                                MaterialTheme.appColors.textFieldHint
                             }
                         val fontWeight = if (currentIndex == index) {
                             FontWeight.SemiBold

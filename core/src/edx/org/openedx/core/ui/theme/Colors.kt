@@ -13,6 +13,7 @@ val light_error = Color(0xFFAB0D02) // Danger 500
 val light_warning = Color(0xFFF0CC00) // Warning 300
 val light_info = Color(0xFF00688D)  // Info 500
 val light_info_variant = Color(0xFF1C8DBE)  // Info 300
+val light_light = Color(0xFFE1DDDB) // Light 500
 
 val light_onPrimary = Color.White
 val light_onSecondary = Color.White
@@ -38,7 +39,7 @@ val light_text_accent = Color(0xFF03C7E8) // Accent A Isotope Blue
 
 val light_text_field_background = light_surface
 val light_text_field_background_variant = light_surface
-val light_text_field_border = light_onSurface
+val light_text_field_border = light_light
 val light_text_field_text = light_text_primary
 val light_text_field_hint = light_secondary_variant
 
@@ -54,7 +55,7 @@ val light_secondary_button_bordered_background = light_surface
 val light_secondary_button_bordered_text = light_primary_button_background
 
 val light_card_view_background = light_surface
-val light_card_view_border = light_text_field_border
+val light_card_view_border = light_light
 
 val light_divider = light_primary
 val light_certificate_foreground = light_surface
@@ -98,6 +99,7 @@ val dark_error = Color(0xFFAB0D02)   // Danger 500
 val dark_warning = Color(0xFFF0CC00) // Accent B Oxide Yellow
 val dark_info = Color(0xFF03C7E8)  // Accent A Isotope Blue
 val dark_info_variant = Color(0xFF00688D)  // Info 500
+val dark_dark = Color(0xFFD2DAD8) // Elm Dark 100
 
 val dark_onPrimary = Color(0xFF002121)   // Primary 700 | Dark 700
 val dark_onSecondary = Color.White
@@ -122,9 +124,9 @@ val dark_text_warning = Color(0xFF002121) // primary 700
 val dark_text_accent = Color(0xFF03C7E8) // Accent A Isotope Blue
 val dark_text_field_background = dark_surface
 val dark_text_field_background_variant = dark_surface
-val dark_text_field_border = Color(0xFFD2DAD8) // Gray 500
+val dark_text_field_border = dark_dark
 val dark_text_field_text = dark_text_primary
-val dark_text_field_hint = Color(0xFFD2DAD8) // Gray 700
+val dark_text_field_hint = dark_dark
 
 val dark_primary_button_background = Color(0xFFD74000)   // Primary 500 | Dark 500 | Elm
 val dark_primary_button_text = Color.White
@@ -138,7 +140,7 @@ val dark_secondary_button_bordered_background = Color.White
 val dark_secondary_button_bordered_text = Color(0xFFD23228) // Brand 500
 
 val dark_card_view_background = dark_surface
-val dark_card_view_border = Color(0xFF4E5A70)
+val dark_card_view_border = dark_dark
 val dark_divider = dark_primary
 
 val dark_certificate_foreground = Color(0xD92EB865)

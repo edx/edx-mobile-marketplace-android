@@ -45,21 +45,24 @@ fun UpgradeToAccessView(
     var primaryIcon = Icons.Filled.Lock
     var textColor = MaterialTheme.appColors.primaryButtonText
     var backgroundColor = MaterialTheme.appColors.primaryButtonBackground
-    var secondaryIcon: @Composable () -> Unit = {
-        Icon(
-            modifier = Modifier
-                .padding(start = 16.dp),
-            imageVector = Icons.Filled.Info,
-            contentDescription = null,
-            tint = textColor
-        )
-    }
+    var secondaryIcon: @Composable () -> Unit = { }
+
     when (type) {
         UpgradeToAccessViewType.DASHBOARD -> {
             shape = RoundedCornerShape(
                 bottomStart = 16.dp,
                 bottomEnd = 16.dp
             )
+            secondaryIcon = {
+                Icon(
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .size(16.dp),
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = null,
+                    tint = textColor
+                )
+            }
         }
 
         UpgradeToAccessViewType.COURSE -> {

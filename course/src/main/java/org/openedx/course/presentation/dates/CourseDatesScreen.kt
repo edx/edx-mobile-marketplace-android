@@ -366,7 +366,9 @@ fun CalendarSyncCard(
                 modifier = Modifier.size(48.dp),
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.appColors.primary,
-                    checkedTrackColor = MaterialTheme.appColors.primary
+                    checkedTrackColor = MaterialTheme.appColors.primary,
+                    uncheckedThumbColor = MaterialTheme.appColors.cardViewBorder,
+                    uncheckedTrackColor = MaterialTheme.appColors.cardViewBorder,
                 )
             )
         }

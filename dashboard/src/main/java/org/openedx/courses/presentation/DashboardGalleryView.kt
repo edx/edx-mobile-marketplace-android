@@ -442,7 +442,7 @@ private fun ViewAllItem(
             ),
         backgroundColor = MaterialTheme.appColors.cardViewBackground,
         shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp,
+        elevation = 2.dp,
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -481,7 +481,7 @@ private fun CourseListItem(
             },
         backgroundColor = MaterialTheme.appColors.cardViewBackground,
         shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp
+        elevation = 2.dp
     ) {
         Box {
             Column {
@@ -585,7 +585,7 @@ private fun PrimaryCourseCard(
             .padding(2.dp),
         backgroundColor = MaterialTheme.appColors.cardViewBackground,
         shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp
+        elevation = 2.dp
     ) {
         Column(
             modifier = Modifier

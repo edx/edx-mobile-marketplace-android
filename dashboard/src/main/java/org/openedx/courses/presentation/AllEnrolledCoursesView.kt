@@ -411,7 +411,7 @@ fun CourseItem(
             },
         backgroundColor = MaterialTheme.appColors.cardViewBackground,
         shape = MaterialTheme.appShapes.courseImageShape,
-        elevation = 4.dp
+        elevation = 2.dp
     ) {
         Box {
             Column {

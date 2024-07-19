@@ -1021,6 +1021,8 @@ fun CourseDatesBanner(
             OpenEdXButton(
                 text = stringResource(id = it),
                 onClick = resetDates,
+                textColor = MaterialTheme.appColors.secondaryButtonText,
+                backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
             )
         }
     }
@@ -1076,6 +1078,8 @@ fun CourseDatesBannerTablet(
                 modifier = Modifier.width(210.dp),
                 text = stringResource(id = it),
                 onClick = resetDates,
+                textColor = MaterialTheme.appColors.secondaryButtonText,
+                backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
             )
         }
     }
@@ -1324,7 +1328,7 @@ private fun CourseMessagePreview() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun CourseExpendableCardPreview(){
+private fun CourseExpendableCardPreview() {
     OpenEdXTheme {
         CourseExpandableChapterCard(
             block = mockChapterBlock,
@@ -1338,7 +1342,7 @@ private fun CourseExpendableCardPreview(){
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun CourseSubSectionItemPreview(){
+private fun CourseSubSectionItemPreview() {
     OpenEdXTheme {
         CourseSubSectionItem(
             block = mockChapterBlock,

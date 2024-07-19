@@ -417,7 +417,7 @@ fun HorizontalPageIndicator(
     defaultColor: Color = Color.Gray,
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
         modifier = modifier
     ) {
         blocks.forEachIndexed { index, block ->

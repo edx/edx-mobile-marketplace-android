@@ -128,7 +128,6 @@ class HtmlUnitFragment : Fragment() {
                                     windowSize = windowSize,
                                     url = blockUrl,
                                     cookieManager = viewModel.cookieManager,
-                                    apiHostURL = viewModel.apiHostURL,
                                     userAgent = viewModel.appUserAgent,
                                     isLoading = uiState is HtmlUnitUIState.Loading,
                                     injectJSList = injectJSList,
@@ -199,7 +198,6 @@ private fun HTMLContentView(
     windowSize: WindowSize,
     url: String,
     cookieManager: AppCookieManager,
-    apiHostURL: String,
     userAgent: String,
     isLoading: Boolean,
     injectJSList: List<String>,
@@ -277,7 +275,7 @@ private fun HTMLContentView(
                         request: WebResourceRequest,
                         errorResponse: WebResourceResponse,
                     ) {
-                        if (request.url.toString().startsWith(apiHostURL)) {
+                        if (request.url.toString() == view.url) {
                             when (errorResponse.statusCode) {
                                 403, 401, 404 -> {
                                     coroutineScope.launch {

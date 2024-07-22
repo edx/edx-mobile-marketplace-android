@@ -31,7 +31,6 @@ class HtmlUnitViewModel(
 
     val isOnline get() = networkConnection.isOnline()
     val isCourseUnitProgressEnabled get() = config.getCourseUIConfig().isCourseUnitProgressEnabled
-    val apiHostURL get() = config.getApiHostURL()
     val cookieManager get() = edxCookieManager
     val appUserAgent get() = appData.appUserAgent
 

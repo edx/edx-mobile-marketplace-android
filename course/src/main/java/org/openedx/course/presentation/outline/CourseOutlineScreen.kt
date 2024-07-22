@@ -229,107 +229,113 @@ private fun CourseOutlineUI(
                         is CourseOutlineUIState.CourseData -> {
                             if (uiState.courseStructure.blockData.isEmpty()) {
                                 NoContentScreen(noContentScreenType = NoContentScreenType.COURSE_OUTLINE)
-                                return@Surface
-                            }
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = listBottomPadding
-                            ) {
-                                if (uiState.datesBannerInfo.isBannerAvailableForDashboard()) {
-                                    item {
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(all = 8.dp)
-                                        ) {
-                                            if (windowSize.isTablet) {
-                                                CourseDatesBannerTablet(
-                                                    banner = uiState.datesBannerInfo,
-                                                    resetDates = onResetDatesClick,
-                                                )
-                                            } else {
-                                                CourseDatesBanner(
-                                                    banner = uiState.datesBannerInfo,
-                                                    resetDates = onResetDatesClick,
-                                                )
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = listBottomPadding
+                                ) {
+                                    if (uiState.datesBannerInfo.isBannerAvailableForDashboard()) {
+                                        item {
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(all = 8.dp)
+                                            ) {
+                                                if (windowSize.isTablet) {
+                                                    CourseDatesBannerTablet(
+                                                        banner = uiState.datesBannerInfo,
+                                                        resetDates = onResetDatesClick,
+                                                    )
+                                                } else {
+                                                    CourseDatesBanner(
+                                                        banner = uiState.datesBannerInfo,
+                                                        resetDates = onResetDatesClick,
+                                                    )
+                                                }
                                             }
                                         }
                                     }
-                                }
 
-                                val certificate = uiState.courseStructure.certificate
-                                if (certificate?.isCertificateEarned() == true) {
-                                    item {
-                                        CourseMessage(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 12.dp)
-                                                .then(listPadding),
-                                            icon = painterResource(R.drawable.ic_course_certificate),
-                                            message = stringResource(
-                                                R.string.course_you_earned_certificate,
-                                                uiState.courseStructure.name
-                                            ),
-                                            action = stringResource(R.string.course_view_certificate),
-                                            onActionClick = {
-                                                onCertificateClick(certificate.certificateURL ?: "")
-                                            }
-                                        )
+                                    val certificate = uiState.courseStructure.certificate
+                                    if (certificate?.isCertificateEarned() == true) {
+                                        item {
+                                            CourseMessage(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 12.dp)
+                                                    .then(listPadding),
+                                                icon = painterResource(R.drawable.ic_course_certificate),
+                                                message = stringResource(
+                                                    R.string.course_you_earned_certificate,
+                                                    uiState.courseStructure.name
+                                                ),
+                                                action = stringResource(R.string.course_view_certificate),
+                                                onActionClick = {
+                                                    onCertificateClick(
+                                                        certificate.certificateURL ?: ""
+                                                    )
+                                                }
+                                            )
+                                        }
                                     }
-                                }
 
 
-                                val progress = uiState.courseStructure.progress
-                                if (progress != null && progress.totalAssignmentsCount > 0) {
-                                    item {
-                                        CourseProgress(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(top = 16.dp, start = 24.dp, end = 24.dp),
-                                            progress = progress
-                                        )
+                                    val progress = uiState.courseStructure.progress
+                                    if (progress != null && progress.totalAssignmentsCount > 0) {
+                                        item {
+                                            CourseProgress(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(
+                                                        top = 16.dp,
+                                                        start = 24.dp,
+                                                        end = 24.dp
+                                                    ),
+                                                progress = progress
+                                            )
+                                        }
                                     }
-                                }
 
-                                if (uiState.resumeComponent != null) {
-                                    item {
-                                        Box(listPadding) {
-                                            if (windowSize.isTablet) {
-                                                ResumeCourseTablet(
-                                                    modifier = Modifier.padding(vertical = 16.dp),
-                                                    block = uiState.resumeComponent,
-                                                    onResumeClick = onResumeClick
-                                                )
-                                            } else {
-                                                ResumeCourse(
-                                                    modifier = Modifier.padding(vertical = 16.dp),
-                                                    block = uiState.resumeComponent,
-                                                    onResumeClick = onResumeClick
-                                                )
+                                    if (uiState.resumeComponent != null) {
+                                        item {
+                                            Box(listPadding) {
+                                                if (windowSize.isTablet) {
+                                                    ResumeCourseTablet(
+                                                        modifier = Modifier.padding(vertical = 16.dp),
+                                                        block = uiState.resumeComponent,
+                                                        onResumeClick = onResumeClick
+                                                    )
+                                                } else {
+                                                    ResumeCourse(
+                                                        modifier = Modifier.padding(vertical = 16.dp),
+                                                        block = uiState.resumeComponent,
+                                                        onResumeClick = onResumeClick
+                                                    )
+                                                }
                                             }
                                         }
                                     }
-                                }
-
-                                item {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                }
-                                uiState.courseStructure.blockData.forEach { section ->
-                                    val courseSubSections =
-                                        uiState.courseSubSections[section.id]
-                                    val courseSectionsState =
-                                        uiState.courseSectionsState[section.id]
 
                                     item {
-                                        CourseSection(
-                                            modifier = listPadding.padding(vertical = 4.dp),
-                                            block = section,
-                                            onItemClick = onExpandClick,
-                                            courseSectionsState = courseSectionsState,
-                                            courseSubSections = courseSubSections,
-                                            downloadedStateMap = uiState.downloadedState,
-                                            onSubSectionClick = onSubSectionClick,
-                                            onDownloadClick = onDownloadClick
-                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
+                                    uiState.courseStructure.blockData.forEach { section ->
+                                        val courseSubSections =
+                                            uiState.courseSubSections[section.id]
+                                        val courseSectionsState =
+                                            uiState.courseSectionsState[section.id]
+
+                                        item {
+                                            CourseSection(
+                                                modifier = listPadding.padding(vertical = 4.dp),
+                                                block = section,
+                                                onItemClick = onExpandClick,
+                                                courseSectionsState = courseSectionsState,
+                                                courseSubSections = courseSubSections,
+                                                downloadedStateMap = uiState.downloadedState,
+                                                onSubSectionClick = onSubSectionClick,
+                                                onDownloadClick = onDownloadClick
+                                            )
+                                        }
                                     }
                                 }
                             }

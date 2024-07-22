@@ -217,12 +217,14 @@ class DashboardListViewModel(
 
             IAPAction.ACTION_ERROR_CLOSE -> {
                 logIAPCancelEvent()
+                clearIAPState()
             }
 
             IAPAction.ACTION_GET_HELP -> {
                 iapException?.getFormattedErrorMessage()?.let {
                     showFeedbackScreen(it)
                 }
+                clearIAPState()
             }
 
             else -> {

@@ -10,8 +10,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.presentation.IAPAnalyticsEvent
-import org.openedx.core.presentation.IAPAnalyticsKeys
 import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
@@ -112,6 +110,7 @@ class SettingsFragment : Fragment() {
                         when (action) {
                             IAPAction.ACTION_ERROR_CLOSE -> {
                                 viewModel.logIAPCancelEvent()
+                                viewModel.clearIAPState()
                             }
 
                             IAPAction.ACTION_GET_HELP -> {

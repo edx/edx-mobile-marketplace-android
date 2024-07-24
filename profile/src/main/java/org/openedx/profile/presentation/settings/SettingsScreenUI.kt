@@ -197,11 +197,13 @@ internal fun SettingsScreen(
 
                                     Spacer(modifier = Modifier.height(24.dp))
 
-                                    PurchaseSection(onRestorePurchaseClick = {
-                                        onAction(SettingsScreenAction.RestorePurchaseClick)
-                                    })
+                                    if (uiState.configuration.isIAPEnabled) {
+                                        PurchaseSection(onRestorePurchaseClick = {
+                                            onAction(SettingsScreenAction.RestorePurchaseClick)
+                                        })
 
-                                    Spacer(modifier = Modifier.height(24.dp))
+                                        Spacer(modifier = Modifier.height(24.dp))
+                                    }
 
                                     SupportInfoSection(
                                         uiState = uiState,
@@ -716,6 +718,7 @@ private val mockConfiguration = Configuration(
     faqUrl = "https://example.com/faq",
     supportEmail = "test@example.com",
     versionName = mockAppData.versionName,
+    isIAPEnabled = true,
 )
 
 private val mockUiState = SettingsUIState.Data(

@@ -1,7 +1,5 @@
 package org.openedx.core.presentation.dialog
 
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -29,6 +27,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -38,7 +37,6 @@ import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.extension.parcelable
 import org.openedx.core.extension.serializable
-import org.openedx.core.extension.setFullScreen
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPLoaderType
@@ -67,7 +65,6 @@ class IAPDialogFragment : DialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
-        dialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             OpenEdXTheme {
@@ -228,9 +225,14 @@ class IAPDialogFragment : DialogFragment() {
         }
     }
 
+    override fun getTheme(): Int {
+        return R.style.Theme_OpenEdX_IAPDialog
+    }
+
     override fun onStart() {
         super.onStart()
-        setFullScreen(100)
+        dialog?.window?.statusBarColor =
+            ContextCompat.getColor(requireContext(), R.color.background)
     }
 
     private fun onDismiss() {

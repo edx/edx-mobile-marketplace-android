@@ -68,7 +68,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.Lock
 import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.Certificate
@@ -348,7 +347,7 @@ private fun UserCourses(
         val primaryCourse = userCourses.primary
         if (primaryCourse != null) {
             PrimaryCourseCard(
-                isValuePropEnabled = userCourses.configs.isValuePropEnabled,
+                isIAPEnabled = userCourses.configs.iapConfig.isEnabled,
                 primaryCourse = primaryCourse,
                 apiHostUrl = apiHostUrl,
                 navigateToDates = navigateToDates,
@@ -569,7 +568,7 @@ private fun AssignmentItem(
 
 @Composable
 private fun PrimaryCourseCard(
-    isValuePropEnabled: Boolean,
+    isIAPEnabled: Boolean,
     primaryCourse: EnrolledCourse,
     apiHostUrl: String,
     navigateToDates: (EnrolledCourse) -> Unit,
@@ -664,7 +663,7 @@ private fun PrimaryCourseCard(
                     )
                 )
             }
-            if (primaryCourse.isUpgradeable && isValuePropEnabled) {
+            if (primaryCourse.isUpgradeable && isIAPEnabled) {
                 UpgradeToAccessView(
                     type = UpgradeToAccessViewType.GALLERY,
                     iconPadding = PaddingValues(end = 12.dp),

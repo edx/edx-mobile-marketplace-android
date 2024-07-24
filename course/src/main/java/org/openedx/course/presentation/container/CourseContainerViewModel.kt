@@ -106,9 +106,6 @@ class CourseContainerViewModel(
     val uiMessage: SharedFlow<UIMessage>
         get() = _uiMessage.asSharedFlow()
 
-    private val isValuePropEnabled: Boolean
-        get() = corePreferences.appConfig.isValuePropEnabled
-
     private val iapConfig
         get() = corePreferences.appConfig.iapConfig
 
@@ -214,9 +211,8 @@ class CourseContainerViewModel(
                         }
                         isReady
                     }
-                    _canShowUpgradeButton.value = isIAPEnabled &&
-                            isValuePropEnabled &&
-                            courseStructure?.isUpgradeable == true
+                    _canShowUpgradeButton.value =
+                        isIAPEnabled && courseStructure?.isUpgradeable == true
                 }
                 if (_dataReady.value == true && resumeBlockId.isNotEmpty()) {
                     delay(500L)
@@ -285,7 +281,6 @@ class CourseContainerViewModel(
             try {
                 _courseStructure = interactor.getCourseStructure(courseId, isNeedRefresh = true)
                 _canShowUpgradeButton.value = isIAPEnabled &&
-                        isValuePropEnabled &&
                         courseStructure?.productInfo != null &&
                         courseStructure?.isUpgradeable == true
             } catch (e: Exception) {

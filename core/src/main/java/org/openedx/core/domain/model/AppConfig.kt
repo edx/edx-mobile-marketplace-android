@@ -4,7 +4,6 @@ import java.io.Serializable
 
 data class AppConfig(
     val courseDatesCalendarSync: CourseDatesCalendarSync,
-    val isValuePropEnabled: Boolean = false,
     val iapConfig: IAPConfig = IAPConfig(),
 ) : Serializable
 

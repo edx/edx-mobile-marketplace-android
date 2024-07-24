@@ -153,7 +153,7 @@ class DashboardListViewModel(
                 } else {
                     _uiState.value = DashboardUIState.Courses(
                         courses = ArrayList(coursesList),
-                        isValuePropEnabled = preferencesManager.appConfig.isValuePropEnabled
+                        isIAPEnabled = preferencesManager.appConfig.iapConfig.isEnabled
                     )
                 }
                 if (isIAPFlow) {
@@ -261,7 +261,7 @@ class DashboardListViewModel(
                 } else {
                     _uiState.value = DashboardUIState.Courses(
                         courses = ArrayList(coursesList),
-                        isValuePropEnabled = preferencesManager.appConfig.isValuePropEnabled
+                        isIAPEnabled = preferencesManager.appConfig.iapConfig.isEnabled
                     )
                 }
             } catch (e: Exception) {

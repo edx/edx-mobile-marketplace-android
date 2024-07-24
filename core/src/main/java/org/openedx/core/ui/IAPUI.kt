@@ -183,7 +183,7 @@ fun NoSkuErrorDialog(
                 onClick = onConfirm
             )
         },
-        onDismissRequest = onConfirm
+        onDismissRequest = {}
     )
 }
 
@@ -302,13 +302,13 @@ fun UpgradeErrorDialog(
                 onClick = onDismiss
             )
         },
-        onDismissRequest = onConfirm
+        onDismissRequest = {}
     )
 }
 
 @Composable
 fun CheckingPurchasesDialog() {
-    Dialog(onDismissRequest = { }) {
+    Dialog(onDismissRequest = {}) {
         Column(
             Modifier
                 .padding(16.dp)
@@ -372,7 +372,7 @@ fun FakePurchasesFulfillmentCompleted(onCancel: () -> Unit, onGetHelp: () -> Uni
                 onClick = onGetHelp
             )
         },
-        onDismissRequest = onCancel
+        onDismissRequest = {}
     )
 }
 
@@ -415,7 +415,7 @@ fun PurchasesFulfillmentCompletedDialog(onConfirm: () -> Unit, onDismiss: () -> 
                 onClick = onDismiss
             )
         },
-        onDismissRequest = onDismiss
+        onDismissRequest = {}
     )
 }
 

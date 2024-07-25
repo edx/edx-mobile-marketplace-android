@@ -32,7 +32,6 @@ import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.extension.isFalse
 import org.openedx.core.extension.isInternetError
-import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
@@ -201,16 +200,17 @@ class CourseContainerViewModel(
     }
 
     fun fetchCourseDetails() {
+        courseDashboardViewed()
         _showProgress.value = true
         viewModelScope.launch {
             try {
                 _courseDetails = interactor.getEnrollmentDetails(courseId)
+                _showProgress.value = false
                 _courseDetails?.let { courseDetails ->
                     courseName = courseDetails.courseInfoOverview.name
                     _canShowUpgradeButton.value = isIAPEnabled && courseDetails.isUpgradeable
                     loadCourseImage(courseDetails.courseInfoOverview.media?.image?.large)
                     if (courseDetails.hasAccess.isFalse()) {
-                        _showProgress.value = false
                         _dataReady.value = false
                         if (courseDetails.isAuditAccessExpired) {
                             if (_canShowUpgradeButton.value) {
@@ -241,12 +241,12 @@ class CourseContainerViewModel(
                 } else {
                     _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 }
+                _showProgress.value = false
             }
         }
     }
 
     private fun preloadCourseStructure() {
-        courseDashboardViewed()
         if (_courseAccessStatus.value != CourseAccessError.NONE) {
             _isNavigationEnabled.value = false
             _showProgress.value = false
@@ -329,9 +329,6 @@ class CourseContainerViewModel(
     }
 
     fun updateData(isIAPFlow: Boolean = false) {
-        if (_courseDetails.isNull() || _courseAccessStatus.value != CourseAccessError.NONE) {
-            return
-        }
         viewModelScope.launch {
             try {
                 _courseStructure = interactor.getCourseStructure(courseId, isNeedRefresh = true)

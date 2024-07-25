@@ -17,6 +17,7 @@ import org.openedx.core.domain.model.CourseSharingUtmParameters
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
+import org.openedx.core.domain.model.Progress
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -63,6 +64,9 @@ class MyCoursesScreenTest {
             videoOutline = "",
             isSelfPaced = false
         ),
+        progress = Progress(0, 0),
+        courseStatus = null,
+        courseAssignments = null,
         productInfo = null
     )
     //endregion
@@ -86,10 +90,8 @@ class MyCoursesScreenTest {
                 paginationCallback = {},
                 onItemClick = {},
                 appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
-                onSettingsClick = {},
-                iapCallback = { _, _ -> },
-                onGetHelp = {},
-                iapState = IAPUIState.Clear,
+                iapUiState = IAPUIState.Clear,
+                onIAPAction = { _, _, _ -> },
             )
         }
 
@@ -125,10 +127,8 @@ class MyCoursesScreenTest {
                 paginationCallback = {},
                 onItemClick = {},
                 appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
-                onSettingsClick = {},
-                iapCallback = { _, _ -> },
-                onGetHelp = {},
-                iapState = IAPUIState.Clear,
+                iapUiState = IAPUIState.Clear,
+                onIAPAction = { _, _, _ -> },
             )
         }
 
@@ -157,10 +157,8 @@ class MyCoursesScreenTest {
                 paginationCallback = {},
                 onItemClick = {},
                 appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
-                onSettingsClick = {},
-                iapCallback = { _, _ -> },
-                onGetHelp = {},
-                iapState = IAPUIState.Clear,
+                iapUiState = IAPUIState.Clear,
+                onIAPAction = { _, _, _ -> },
             )
         }
 

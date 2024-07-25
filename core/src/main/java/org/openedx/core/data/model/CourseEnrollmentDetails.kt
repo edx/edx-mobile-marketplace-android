@@ -14,11 +14,11 @@ data class CourseEnrollmentDetails(
     @SerializedName("id")
     val id: String,
     @SerializedName("course_updates")
-    val courseUpdates: String,
+    val courseUpdates: String?,
     @SerializedName("course_handouts")
-    val courseHandouts: String,
+    val courseHandouts: String?,
     @SerializedName("discussion_url")
-    val discussionUrl: String,
+    val discussionUrl: String?,
     @SerializedName("course_access_details")
     val courseAccessDetails: CourseAccessDetails,
     @SerializedName("certificate")
@@ -31,9 +31,9 @@ data class CourseEnrollmentDetails(
     fun mapToDomain(): DomainCourseEnrollmentDetails {
         return DomainCourseEnrollmentDetails(
             id = id,
-            courseUpdates = courseUpdates,
-            courseHandouts = courseHandouts,
-            discussionUrl = discussionUrl,
+            courseUpdates = courseUpdates ?: "",
+            courseHandouts = courseHandouts ?: "",
+            discussionUrl = discussionUrl ?: "",
             courseAccessDetails = courseAccessDetails.mapToDomain(),
             certificate = certificate?.mapToDomain(),
             enrollmentDetails = enrollmentDetails.mapToDomain(),

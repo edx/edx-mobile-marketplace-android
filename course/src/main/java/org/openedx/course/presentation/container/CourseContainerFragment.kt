@@ -147,7 +147,9 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
     override fun onResume() {
         super.onResume()
-        viewModel.updateData()
+        if (viewModel.courseAccessStatus.value == CourseAccessError.NONE) {
+            viewModel.updateData()
+        }
     }
 
     override fun onDestroyView() {
@@ -185,7 +187,9 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
     }
 
     private fun onRefresh(currentPage: Int) {
-        viewModel.onRefresh(CourseContainerTab.entries[currentPage])
+        if (viewModel.courseAccessStatus.value == CourseAccessError.NONE) {
+            viewModel.onRefresh(CourseContainerTab.entries[currentPage])
+        }
     }
 
     private fun initCourseView() {

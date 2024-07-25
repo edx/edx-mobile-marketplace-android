@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -227,12 +226,6 @@ class IAPDialogFragment : DialogFragment() {
 
     override fun getTheme(): Int {
         return R.style.Theme_OpenEdX_IAPDialog
-    }
-
-    override fun onStart() {
-        super.onStart()
-        dialog?.window?.statusBarColor =
-            ContextCompat.getColor(requireContext(), R.color.background)
     }
 
     private fun onDismiss() {

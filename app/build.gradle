@@ -82,13 +82,13 @@ android {
 
     sourceSets {
         prod {
-            res.srcDirs = ["src/$themeDirectory/res"]
+            res.srcDirs += ["src/$themeDirectory/res"]
         }
         develop {
-            res.srcDirs = ["src/$themeDirectory/res"]
+            res.srcDirs += ["src/$themeDirectory/res"]
         }
         stage {
-            res.srcDirs = ["src/$themeDirectory/res"]
+            res.srcDirs += ["src/$themeDirectory/res"]
         }
     }
 

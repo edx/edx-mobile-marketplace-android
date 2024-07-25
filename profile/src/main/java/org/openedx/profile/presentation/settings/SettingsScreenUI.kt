@@ -365,6 +365,17 @@ private fun SupportInfoSection(
             backgroundColor = MaterialTheme.appColors.cardViewBackground
         ) {
             Column(Modifier.fillMaxWidth()) {
+                if (uiState.configuration.feedbackFormUrl.isNotBlank()) {
+                    val uriHandler = LocalUriHandler.current
+                    SettingsItem(
+                        text = stringResource(id = R.string.core_help_us_improve),
+                        external = true,
+                    ) {
+                        uriHandler.openUri(uiState.configuration.feedbackFormUrl)
+                        onAction(SettingsScreenAction.FeedbackFormClick)
+                    }
+                    SettingsDivider()
+                }
                 if (uiState.configuration.supportEmail.isNotBlank()) {
                     SettingsItem(text = stringResource(id = R.string.core_contact_support)) {
                         onAction(SettingsScreenAction.SupportClick)
@@ -717,6 +728,7 @@ private val mockConfiguration = Configuration(
     agreementUrls = AgreementUrls(),
     faqUrl = "https://example.com/faq",
     supportEmail = "test@example.com",
+    feedbackFormUrl = "www.feedback.com",
     versionName = mockAppData.versionName,
     isIAPEnabled = true,
 )

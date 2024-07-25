@@ -5,6 +5,7 @@ import java.io.Serializable
 data class AppConfig(
     val courseDatesCalendarSync: CourseDatesCalendarSync,
     val iapConfig: IAPConfig = IAPConfig(),
+    val feedbackFormUrl: String = "",
 ) : Serializable
 
 data class CourseDatesCalendarSync(

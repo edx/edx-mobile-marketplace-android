@@ -13,6 +13,7 @@ data class Configuration(
     val isIAPEnabled: Boolean,
     val agreementUrls: AgreementUrls,
     val faqUrl: String,
+    val feedbackFormUrl: String,
     val supportEmail: String,
     val versionName: String,
 )

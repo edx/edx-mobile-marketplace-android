@@ -91,6 +91,7 @@ class SettingsViewModel(
             isIAPEnabled = corePreferences.appConfig.iapConfig.isEnabled,
             agreementUrls = config.getAgreement(Locale.current.language),
             faqUrl = config.getFaqUrl(),
+            feedbackFormUrl = corePreferences.appConfig.feedbackFormUrl,
             supportEmail = config.getFeedbackEmailAddress(),
             versionName = appData.versionName,
         )
@@ -182,6 +183,10 @@ class SettingsViewModel(
 
     fun faqClicked() {
         logProfileEvent(ProfileAnalyticsEvent.FAQ_CLICKED)
+    }
+
+    fun feedbackFormClick() {
+        logProfileEvent(ProfileAnalyticsEvent.FEEDBACK_FORM_CLICKED)
     }
 
     fun termsOfUseClicked(fragmentManager: FragmentManager) {

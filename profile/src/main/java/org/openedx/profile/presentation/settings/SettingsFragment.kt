@@ -104,6 +104,10 @@ class SettingsFragment : Fragment() {
                             SettingsScreenAction.RestorePurchaseClick -> {
                                 viewModel.restorePurchase()
                             }
+
+                            SettingsScreenAction.FeedbackFormClick -> {
+                                viewModel.feedbackFormClick()
+                            }
                         }
                     },
                     onIAPAction = { action, iapException ->
@@ -162,5 +166,6 @@ internal interface SettingsScreenAction {
     object ManageAccountClick : SettingsScreenAction
     object CalendarSettingsClick : SettingsScreenAction
     object RestorePurchaseClick : SettingsScreenAction
+    object FeedbackFormClick : SettingsScreenAction
 }
 

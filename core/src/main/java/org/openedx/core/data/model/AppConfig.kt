@@ -9,11 +9,15 @@ data class AppConfig(
 
     @SerializedName("iap_config")
     val iapConfig: IAPConfig = IAPConfig(),
+
+    @SerializedName("feedback_form_url")
+    val feedbackFormUrl: String = "",
 ) {
     fun mapToDomain(): DomainAppConfig {
         return DomainAppConfig(
             courseDatesCalendarSync = calendarSyncConfig.mapToDomain(),
             iapConfig = iapConfig.mapToDomain(),
+            feedbackFormUrl = feedbackFormUrl,
         )
     }
 }

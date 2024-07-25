@@ -34,6 +34,10 @@ enum class ProfileAnalyticsEvent(val eventName: String, val biValue: String) {
         "Profile:FAQ Clicked",
         "edx.bi.app.profile.faq.clicked"
     ),
+    FEEDBACK_FORM_CLICKED(
+        "Profile:Feedback Form Clicked",
+        "edx.bi.app.profile.feedback_form.clicked"
+    ),
     TERMS_OF_USE_CLICKED(
         "Profile:Terms of Use Clicked",
         "edx.bi.app.profile.terms_of_use.clicked"

@@ -74,7 +74,7 @@ class IAPDialogFragment : DialogFragment() {
 
                 val isFullScreenLoader =
                     (iapState as? IAPUIState.Loading)?.loaderType == IAPLoaderType.FULL_SCREEN
-
+                isCancelable = !isFullScreenLoader
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     backgroundColor = MaterialTheme.appColors.background,

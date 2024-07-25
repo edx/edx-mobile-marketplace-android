@@ -48,7 +48,7 @@ enum class IAPAnalyticsEvent(val eventName: String, val biValue: String) {
         "Payments: Restore Purchases Clicked",
         "edx.bi.app.payments.restore_purchases.clicked"
     ),
-    PAYMENTS_VALUE_PROP_VIEWED(
+    IAP_VALUE_PROP_VIEWED(
         "Payments: Value Prop Viewed",
         "edx.bi.app.payments.value_prop.viewed"
     )

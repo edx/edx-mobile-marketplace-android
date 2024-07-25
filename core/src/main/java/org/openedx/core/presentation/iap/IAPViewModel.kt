@@ -338,8 +338,8 @@ class IAPViewModel(
         }.toMutableMap())
     }
 
-    private fun incorporateIAPEventParams(params: MutableMap<String, Any?> = mutableMapOf()): MutableMap<String, Any?> {
-        return params.apply {
+    private fun getIAPEventParams(): MutableMap<String, Any?> {
+        return buildMap {
             purchaseFlowData.takeIf { it.courseId.isNullOrBlank().not() }?.let {
                 put(IAPAnalyticsKeys.COURSE_ID.key, purchaseFlowData.courseId)
                 put(
@@ -360,36 +360,34 @@ class IAPViewModel(
                 put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
             }
             put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
-        }
+        }.toMutableMap()
     }
 
     private fun logIAPEvent(
         event: IAPAnalyticsEvent,
         params: MutableMap<String, Any?> = mutableMapOf(),
     ) {
+        params.apply {
+            put(IAPAnalyticsKeys.NAME.key, event.biValue)
+            putAll(getIAPEventParams())
+        }
         analytics.logIAPEvent(
             event = event,
-            params = incorporateIAPEventParams(params.apply {
-                put(
-                    IAPAnalyticsKeys.NAME.key,
-                    event.biValue
-                )
-            }),
+            params = params,
             screenName = purchaseFlowData.screenName.orEmpty()
         )
     }
 
     private fun loadIAPScreenEvent() {
-        val event = IAPAnalyticsEvent.PAYMENTS_VALUE_PROP_VIEWED
-        analytics.logScreenEvent(
-            screenName = event.eventName,
-            params = incorporateIAPEventParams(buildMap {
-                put(IAPAnalyticsKeys.NAME.key, event.biValue)
-                purchaseFlowData.screenName?.takeIfNotEmpty()?.let { screenName ->
-                    put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
-                }
-            }.toMutableMap())
-        )
+        val event = IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED
+        val params = buildMap {
+            put(IAPAnalyticsKeys.NAME.key, event.biValue)
+            purchaseFlowData.screenName?.takeIfNotEmpty()?.let { screenName ->
+                put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
+            }
+            putAll(getIAPEventParams())
+        }
+        analytics.logScreenEvent(screenName = event.eventName, params = params)
     }
 
     fun clearIAPFLow() {

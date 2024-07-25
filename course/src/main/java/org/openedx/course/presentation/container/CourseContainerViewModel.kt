@@ -120,9 +120,6 @@ class CourseContainerViewModel(
         get() = iapConfig.isEnabled &&
                 iapConfig.disableVersions.contains(appData.versionName).not()
 
-    private val isPaymentEnabled
-        get() = isIAPEnabled && isValuePropEnabled
-
     private var _canShowUpgradeButton = MutableStateFlow(false)
     val canShowUpgradeButton: StateFlow<Boolean>
         get() = _canShowUpgradeButton.asStateFlow()
@@ -210,7 +207,7 @@ class CourseContainerViewModel(
                 _courseDetails = interactor.getEnrollmentDetails(courseId)
                 _courseDetails?.let { courseDetails ->
                     courseName = courseDetails.courseInfoOverview.name
-                    _canShowUpgradeButton.value = isPaymentEnabled && courseDetails.isUpgradeable
+                    _canShowUpgradeButton.value = isIAPEnabled && courseDetails.isUpgradeable
                     loadCourseImage(courseDetails.courseInfoOverview.media?.image?.large)
                     if (courseDetails.hasAccess.isFalse()) {
                         _showProgress.value = false
@@ -339,7 +336,7 @@ class CourseContainerViewModel(
             try {
                 _courseStructure = interactor.getCourseStructure(courseId, isNeedRefresh = true)
                 _canShowUpgradeButton.value =
-                    isPaymentEnabled && courseStructure?.isUpgradeable.isTrue()
+                    isIAPEnabled && courseStructure?.isUpgradeable.isTrue()
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _errorMessage.value =

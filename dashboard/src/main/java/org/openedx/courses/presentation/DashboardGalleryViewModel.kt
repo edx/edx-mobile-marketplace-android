@@ -138,11 +138,11 @@ class DashboardGalleryViewModel(
         }
     }
 
-    fun updateCourses(isIAPFlow: Boolean = false) {
+    fun updateCourses(isUpdating: Boolean = true, isIAPFlow: Boolean = false) {
         if (isLoading) {
             return
         }
-        _updating.value = true
+        _updating.value = isUpdating
         getCourses(isIAPFlow = isIAPFlow)
     }
 
@@ -243,7 +243,7 @@ class DashboardGalleryViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    updateCourses(true)
+                    updateCourses(isIAPFlow = true)
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)

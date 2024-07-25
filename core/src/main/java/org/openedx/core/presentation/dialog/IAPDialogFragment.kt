@@ -1,7 +1,5 @@
 package org.openedx.core.presentation.dialog
 
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -38,7 +36,6 @@ import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.extension.parcelable
 import org.openedx.core.extension.serializable
-import org.openedx.core.extension.setFullScreen
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPLoaderType
@@ -67,7 +64,6 @@ class IAPDialogFragment : DialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
-        dialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             OpenEdXTheme {
@@ -77,7 +73,7 @@ class IAPDialogFragment : DialogFragment() {
 
                 val isFullScreenLoader =
                     (iapState as? IAPUIState.Loading)?.loaderType == IAPLoaderType.FULL_SCREEN
-
+                isCancelable = !isFullScreenLoader
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     backgroundColor = MaterialTheme.appColors.background,
@@ -228,9 +224,8 @@ class IAPDialogFragment : DialogFragment() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        setFullScreen(100)
+    override fun getTheme(): Int {
+        return R.style.Theme_OpenEdX_IAPDialog
     }
 
     private fun onDismiss() {

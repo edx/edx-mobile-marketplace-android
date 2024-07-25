@@ -298,7 +298,7 @@ internal fun DashboardListView(
                                                 course,
                                                 windowSize,
                                                 onClick = { onItemClick(it) })
-                                            if (course.isUpgradeable && state.isValuePropEnabled) {
+                                            if (course.isUpgradeable && state.isIAPEnabled) {
                                                 UpgradeToAccessView(
                                                     modifier = Modifier.padding(
                                                         bottom = 16.dp
@@ -598,7 +598,7 @@ private fun DashboardListViewPreview() {
                     mockCourseEnrolled,
                     mockCourseEnrolled,
                     mockCourseEnrolled
-                ), isValuePropEnabled = false
+                ), isIAPEnabled = false
             ),
             uiMessage = null,
             iapUiState = null,
@@ -631,7 +631,7 @@ private fun DashboardListViewTabletPreview() {
                     mockCourseEnrolled,
                     mockCourseEnrolled,
                     mockCourseEnrolled
-                ), isValuePropEnabled = false
+                ), isIAPEnabled = false
             ),
             uiMessage = null,
             iapUiState = null,

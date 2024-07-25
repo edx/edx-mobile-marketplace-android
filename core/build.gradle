@@ -51,15 +51,15 @@ android {
     sourceSets {
         prod {
             java.srcDirs = ["src/$themeDirectory"]
-            res.srcDirs = ["src/$themeDirectory/res"]
+            res.srcDirs += ["src/$themeDirectory/res"]
         }
         develop {
             java.srcDirs = ["src/$themeDirectory"]
-            res.srcDirs = ["src/$themeDirectory/res"]
+            res.srcDirs += ["src/$themeDirectory/res"]
         }
         stage {
             java.srcDirs = ["src/$themeDirectory"]
-            res.srcDirs = ["src/$themeDirectory/res"]
+            res.srcDirs += ["src/$themeDirectory/res"]
         }
         main {
             assets {

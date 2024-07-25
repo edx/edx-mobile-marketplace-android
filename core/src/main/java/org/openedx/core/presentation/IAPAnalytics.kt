@@ -6,6 +6,8 @@ interface IAPAnalytics {
         params: MutableMap<String, Any?> = mutableMapOf(),
         screenName: String,
     )
+
+    fun logScreenEvent(screenName: String, params: Map<String, Any?>)
 }
 
 enum class IAPAnalyticsEvent(val eventName: String, val biValue: String) {
@@ -45,6 +47,10 @@ enum class IAPAnalyticsEvent(val eventName: String, val biValue: String) {
     IAP_RESTORE_PURCHASE_CLICKED(
         "Payments: Restore Purchases Clicked",
         "edx.bi.app.payments.restore_purchases.clicked"
+    ),
+    IAP_VALUE_PROP_VIEWED(
+        "Payments: Value Prop Viewed",
+        "edx.bi.app.payments.value_prop.viewed"
     )
 }
 

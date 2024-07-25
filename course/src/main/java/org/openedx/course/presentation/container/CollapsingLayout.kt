@@ -377,14 +377,16 @@ private fun CollapsingLayoutTablet(
         )
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .onSizeChanged { size ->
                 expandedTopHeight.value = size.height.toFloat()
             }
             .offset { IntOffset(x = 0, y = backgroundImageHeight.value.roundToInt()) },
-        content = expandedTop,
-    )
+    ) {
+        Box(content = expandedTop)
+        Box(content = upgradeButton)
+    }
 
     Icon(
         modifier = Modifier
@@ -400,19 +402,19 @@ private fun CollapsingLayoutTablet(
         contentDescription = null
     )
 
-    Column(modifier = Modifier
-        .offset {
-            IntOffset(
-                x = 0,
-                y = (backgroundImageHeight.value + expandedTopHeight.value).roundToInt()
-            )
-        }
-        .onSizeChanged { size ->
-            navigationHeight.value = size.height.toFloat()
-        }) {
-        Box(content = upgradeButton)
-        Box(content = navigation)
-    }
+    Box(
+        modifier = Modifier
+            .offset {
+                IntOffset(
+                    x = 0,
+                    y = (backgroundImageHeight.value + expandedTopHeight.value).roundToInt()
+                )
+            }
+            .onSizeChanged { size ->
+                navigationHeight.value = size.height.toFloat()
+            },
+        content = navigation,
+    )
 
     Box(
         modifier = Modifier
@@ -540,15 +542,15 @@ private fun CollapsingLayoutMobile(
         }
 
 
-        Column(modifier = Modifier
-            .displayCutoutForLandscape()
-            .offset { IntOffset(x = 0, y = (collapsedTopHeight.value).roundToInt()) }
-            .onSizeChanged { size ->
-                navigationHeight.value = size.height.toFloat()
-            }) {
-            Box(content = upgradeButton)
-            Box(content = navigation)
-        }
+        Box(
+            modifier = Modifier
+                .displayCutoutForLandscape()
+                .offset { IntOffset(x = 0, y = (collapsedTopHeight.value).roundToInt()) }
+                .onSizeChanged { size ->
+                    navigationHeight.value = size.height.toFloat()
+                },
+            content = navigation,
+        )
 
         Box(
             modifier = Modifier
@@ -659,7 +661,7 @@ private fun CollapsingLayoutMobile(
             )
         }
 
-        Box(
+        Column(
             modifier = Modifier
                 .onSizeChanged { size ->
                     expandedTopHeight.value = size.height.toFloat()
@@ -670,9 +672,11 @@ private fun CollapsingLayoutMobile(
                         y = (offset.value + backgroundImageHeight.value - blurImagePaddingPx).roundToInt()
                     )
                 }
-                .alpha(factor),
-            content = expandedTop,
-        )
+                .alpha(factor)
+        ) {
+            Box(content = expandedTop)
+            Box(content = upgradeButton)
+        }
 
         Row(
             modifier = Modifier
@@ -705,19 +709,19 @@ private fun CollapsingLayoutMobile(
         }
 
         val adaptiveImagePadding = blurImagePaddingPx * factor
-        Column(modifier = Modifier
-            .offset {
-                IntOffset(
-                    x = 0,
-                    y = (offset.value + backgroundImageHeight.value + expandedTopHeight.value - adaptiveImagePadding).roundToInt()
-                )
-            }
-            .onSizeChanged { size ->
-                navigationHeight.value = size.height.toFloat()
-            }) {
-            Box(content = upgradeButton)
-            Box(content = navigation)
-        }
+        Box(
+            modifier = Modifier
+                .offset {
+                    IntOffset(
+                        x = 0,
+                        y = (offset.value + backgroundImageHeight.value + expandedTopHeight.value - adaptiveImagePadding).roundToInt()
+                    )
+                }
+                .onSizeChanged { size ->
+                    navigationHeight.value = size.height.toFloat()
+                },
+            content = navigation,
+        )
 
         Box(
             modifier = Modifier

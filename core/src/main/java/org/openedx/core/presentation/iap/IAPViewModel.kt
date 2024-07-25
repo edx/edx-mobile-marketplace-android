@@ -99,6 +99,7 @@ class IAPViewModel(
 
         when (iapFlow) {
             IAPFlow.USER_INITIATED -> {
+                loadIAPScreenEvent()
                 loadPrice()
             }
 
@@ -337,37 +338,56 @@ class IAPViewModel(
         }.toMutableMap())
     }
 
+    private fun getIAPEventParams(): MutableMap<String, Any?> {
+        return buildMap {
+            purchaseFlowData.takeIf { it.courseId.isNullOrBlank().not() }?.let {
+                put(IAPAnalyticsKeys.COURSE_ID.key, purchaseFlowData.courseId)
+                put(
+                    IAPAnalyticsKeys.PACING.key,
+                    if (purchaseFlowData.isSelfPaced == true) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
+                )
+            }
+            purchaseFlowData.productInfo?.lmsUSDPrice?.nonZero()?.let { lmsUSDPrice ->
+                put(IAPAnalyticsKeys.LMS_USD_PRICE.key, lmsUSDPrice)
+            }
+            purchaseFlowData.price.nonZero()?.let { localizedPrice ->
+                put(IAPAnalyticsKeys.LOCALIZED_PRICE.key, localizedPrice)
+            }
+            purchaseFlowData.currencyCode.takeIfNotEmpty()?.let { currencyCode ->
+                put(IAPAnalyticsKeys.CURRENCY_CODE.key, currencyCode)
+            }
+            purchaseFlowData.componentId?.takeIf { it.isNotBlank() }?.let { componentId ->
+                put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
+            }
+            put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
+        }.toMutableMap()
+    }
+
     private fun logIAPEvent(
         event: IAPAnalyticsEvent,
         params: MutableMap<String, Any?> = mutableMapOf(),
     ) {
+        params.apply {
+            put(IAPAnalyticsKeys.NAME.key, event.biValue)
+            putAll(getIAPEventParams())
+        }
         analytics.logIAPEvent(
             event = event,
-            params = params.apply {
-                put(IAPAnalyticsKeys.NAME.key, event.biValue)
-                purchaseFlowData.takeIf { it.courseId.isNullOrBlank().not() }?.let {
-                    put(IAPAnalyticsKeys.COURSE_ID.key, purchaseFlowData.courseId)
-                    put(
-                        IAPAnalyticsKeys.PACING.key,
-                        if (purchaseFlowData.isSelfPaced == true) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
-                    )
-                }
-                purchaseFlowData.productInfo?.lmsUSDPrice?.nonZero()?.let { lmsUSDPrice ->
-                    put(IAPAnalyticsKeys.LMS_USD_PRICE.key, lmsUSDPrice)
-                }
-                purchaseFlowData.price.nonZero()?.let { localizedPrice ->
-                    put(IAPAnalyticsKeys.LOCALIZED_PRICE.key, localizedPrice)
-                }
-                purchaseFlowData.currencyCode.takeIfNotEmpty()?.let { currencyCode ->
-                    put(IAPAnalyticsKeys.CURRENCY_CODE.key, currencyCode)
-                }
-                purchaseFlowData.componentId?.takeIf { it.isNotBlank() }?.let { componentId ->
-                    put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
-                }
-                put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
-            },
+            params = params,
             screenName = purchaseFlowData.screenName.orEmpty()
         )
+    }
+
+    private fun loadIAPScreenEvent() {
+        val event = IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED
+        val params = buildMap {
+            put(IAPAnalyticsKeys.NAME.key, event.biValue)
+            purchaseFlowData.screenName?.takeIfNotEmpty()?.let { screenName ->
+                put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
+            }
+            putAll(getIAPEventParams())
+        }
+        analytics.logScreenEvent(screenName = event.eventName, params = params)
     }
 
     fun clearIAPFLow() {

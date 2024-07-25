@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import org.openedx.core.R
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.presentation.iap.IAPAction
@@ -183,7 +184,8 @@ fun NoSkuErrorDialog(
                 onClick = onConfirm
             )
         },
-        onDismissRequest = onConfirm
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        onDismissRequest = {}
     )
 }
 
@@ -252,6 +254,7 @@ fun CourseAlreadyPurchasedExecuteErrorDialog(
                 )
             }
         },
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
         onDismissRequest = {}
     )
 }
@@ -302,13 +305,17 @@ fun UpgradeErrorDialog(
                 onClick = onDismiss
             )
         },
-        onDismissRequest = onConfirm
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        onDismissRequest = {}
     )
 }
 
 @Composable
 fun CheckingPurchasesDialog() {
-    Dialog(onDismissRequest = { }) {
+    Dialog(
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        onDismissRequest = {}
+    ) {
         Column(
             Modifier
                 .padding(16.dp)
@@ -372,7 +379,8 @@ fun FakePurchasesFulfillmentCompleted(onCancel: () -> Unit, onGetHelp: () -> Uni
                 onClick = onGetHelp
             )
         },
-        onDismissRequest = onCancel
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        onDismissRequest = {}
     )
 }
 
@@ -415,7 +423,8 @@ fun PurchasesFulfillmentCompletedDialog(onConfirm: () -> Unit, onDismiss: () -> 
                 onClick = onDismiss
             )
         },
-        onDismissRequest = onDismiss
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        onDismissRequest = {}
     )
 }
 

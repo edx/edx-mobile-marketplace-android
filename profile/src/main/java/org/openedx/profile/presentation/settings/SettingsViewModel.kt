@@ -30,7 +30,6 @@ import org.openedx.core.presentation.IAPAnalyticsKeys
 import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPAction
-import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
@@ -89,6 +88,7 @@ class SettingsViewModel(
 
     private val configuration
         get() = Configuration(
+            isIAPEnabled = corePreferences.appConfig.iapConfig.isEnabled,
             agreementUrls = config.getAgreement(Locale.current.language),
             faqUrl = config.getFaqUrl(),
             supportEmail = config.getFeedbackEmailAddress(),

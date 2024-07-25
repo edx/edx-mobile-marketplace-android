@@ -237,7 +237,6 @@ class DashboardViewModelTest {
     @Test
     fun `getCourses from cache`() = runTest {
         every { networkConnection.isOnline() } returns false
-        every { corePreferences.appConfig.isValuePropEnabled } returns false
         coEvery { interactor.getEnrolledCoursesFromCache() } returns listOf(mockk())
         every { corePreferences.appConfig.iapConfig } returns appConfig.iapConfig
 
@@ -337,7 +336,6 @@ class DashboardViewModelTest {
     @Test
     fun `updateCourses success`() = runTest {
         every { networkConnection.isOnline() } returns true
-        every { corePreferences.appConfig.isValuePropEnabled } returns false
         every { corePreferences.appConfig.iapConfig } returns appConfig.iapConfig
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
         coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
@@ -375,7 +373,6 @@ class DashboardViewModelTest {
     fun `updateCourses success with next page`() = runTest {
         every { networkConnection.isOnline() } returns true
         every { corePreferences.appConfig.iapConfig } returns appConfig.iapConfig
-        every { corePreferences.appConfig.isValuePropEnabled } returns false
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList.copy(
             Pagination(
                 10,

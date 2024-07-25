@@ -103,6 +103,7 @@ class WebViewDiscoveryFragment : Fragment() {
                     isPreLogin = viewModel.isPreLogin,
                     contentUrl = viewModel.discoveryUrl,
                     uriScheme = viewModel.uriScheme,
+                    userAgent = viewModel.appUserAgent,
                     hasInternetConnection = hasInternetConnection,
                     onWebViewUIAction = { action ->
                         when (action) {
@@ -199,6 +200,7 @@ private fun WebViewDiscoveryScreen(
     isPreLogin: Boolean,
     contentUrl: String,
     uriScheme: String,
+    userAgent: String,
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
     onWebPageUpdated: (String) -> Unit,
@@ -278,6 +280,7 @@ private fun WebViewDiscoveryScreen(
                             DiscoveryWebView(
                                 contentUrl = contentUrl,
                                 uriScheme = uriScheme,
+                                userAgent = userAgent,
                                 isPreLogin = isPreLogin,
                                 onWebPageLoaded = {
                                     if ((uiState is WebViewUIState.Error).not()) {
@@ -320,6 +323,7 @@ private fun WebViewDiscoveryScreen(
 private fun DiscoveryWebView(
     contentUrl: String,
     uriScheme: String,
+    userAgent: String,
     isPreLogin: Boolean,
     onWebPageLoaded: () -> Unit,
     onWebPageUpdated: (String) -> Unit,
@@ -329,6 +333,7 @@ private fun DiscoveryWebView(
     val webView = CatalogWebViewScreen(
         url = contentUrl,
         uriScheme = uriScheme,
+        userAgent = userAgent,
         onWebPageLoaded = onWebPageLoaded,
         onWebPageUpdated = onWebPageUpdated,
         onUriClick = onUriClick,
@@ -412,6 +417,7 @@ private fun WebViewDiscoveryScreenPreview() {
             isPreLogin = false,
             contentUrl = "https://www.example.com/",
             uriScheme = "",
+            userAgent = "",
             hasInternetConnection = false,
             onWebViewUIAction = {},
             onWebPageUpdated = {},

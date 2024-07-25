@@ -133,6 +133,7 @@ class CourseInfoFragment : Fragment() {
                     webViewUIState = webViewState,
                     uiMessage = uiMessage,
                     uriScheme = viewModel.uriScheme,
+                    userAgent = viewModel.appUserAgent,
                     hasInternetConnection = hasInternetConnection,
                     onWebViewUIAction = { action ->
                         when (action) {
@@ -248,6 +249,7 @@ private fun CourseInfoScreen(
     webViewUIState: WebViewUIState,
     uiMessage: UIMessage?,
     uriScheme: String,
+    userAgent: String,
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
     onRegisterClick: () -> Unit,
@@ -322,6 +324,7 @@ private fun CourseInfoScreen(
                             CourseInfoWebView(
                                 contentUrl = (uiState as CourseInfoUIState.CourseInfo).initialUrl,
                                 uriScheme = uriScheme,
+                                userAgent = userAgent,
                                 isPreLogin = uiState.isPreLogin,
                                 onWebPageLoaded = { onWebViewUIAction(WebViewUIAction.WEB_PAGE_LOADED) },
                                 onUriClick = onUriClick,
@@ -359,6 +362,7 @@ private fun CourseInfoScreen(
 private fun CourseInfoWebView(
     contentUrl: String,
     uriScheme: String,
+    userAgent: String,
     isPreLogin: Boolean,
     onWebPageLoaded: () -> Unit,
     onUriClick: (String, linkAuthority) -> Unit,
@@ -368,6 +372,7 @@ private fun CourseInfoWebView(
     val webView = CatalogWebViewScreen(
         url = contentUrl,
         uriScheme = uriScheme,
+        userAgent = userAgent,
         isAllLinksExternal = true,
         onWebPageLoaded = onWebPageLoaded,
         onUriClick = onUriClick,
@@ -410,6 +415,7 @@ fun CourseInfoScreenPreview() {
             ),
             uiMessage = null,
             uriScheme = "",
+            userAgent = "",
             hasInternetConnection = false,
             onWebViewUIAction = {},
             onRegisterClick = {},

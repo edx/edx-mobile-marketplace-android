@@ -49,7 +49,6 @@ import androidx.fragment.app.Fragment
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.extension.applyDarkModeIfEnabled
-import org.openedx.core.extension.equalsHost
 import org.openedx.core.extension.isEmailValid
 import org.openedx.core.extension.loadUrl
 import org.openedx.core.system.AppCookieManager
@@ -293,7 +292,7 @@ private fun HTMLContentView(
                         request: WebResourceRequest,
                         error: WebResourceError
                     ) {
-                        if (view.url.equalsHost(request.url.host)) {
+                        if (request.url.toString() == view.url) {
                             onWebPageLoadError()
                         }
                         super.onReceivedError(view, request, error)

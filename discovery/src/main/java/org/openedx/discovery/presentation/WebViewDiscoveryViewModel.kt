@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
 import org.openedx.core.system.connection.NetworkConnection
@@ -14,6 +15,7 @@ import org.openedx.core.utils.UrlUtils
 
 class WebViewDiscoveryViewModel(
     private val querySearch: String,
+    private val appData: AppData,
     private val config: Config,
     private val networkConnection: NetworkConnection,
     private val corePreferences: CorePreferences,
@@ -28,6 +30,8 @@ class WebViewDiscoveryViewModel(
     private val webViewConfig get() = config.getDiscoveryConfig().webViewConfig
 
     val isPreLogin get() = config.isPreLoginExperienceEnabled() && corePreferences.user == null
+
+    val appUserAgent get() = appData.appUserAgent
 
     private var _discoveryUrl = webViewConfig.baseUrl
     val discoveryUrl: String

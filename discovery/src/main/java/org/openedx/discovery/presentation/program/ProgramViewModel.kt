@@ -11,6 +11,7 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.ResourceManager
@@ -22,6 +23,7 @@ import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.presentation.DiscoveryRouter
 
 class ProgramViewModel(
+    private val appData: AppData,
     private val config: Config,
     private val networkConnection: NetworkConnection,
     private val router: DiscoveryRouter,
@@ -37,6 +39,8 @@ class ProgramViewModel(
     val cookieManager get() = edxCookieManager
 
     val hasInternetConnection: Boolean get() = networkConnection.isOnline()
+
+    val appUserAgent get() = appData.appUserAgent
 
     private val _uiState = MutableStateFlow<ProgramUIState>(ProgramUIState.Loading)
     val uiState: StateFlow<ProgramUIState> get() = _uiState.asStateFlow()

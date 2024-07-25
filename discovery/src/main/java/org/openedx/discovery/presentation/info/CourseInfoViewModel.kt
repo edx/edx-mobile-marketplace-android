@@ -18,6 +18,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.presentation.CoreAnalyticsKey
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
 import org.openedx.core.system.ResourceManager
@@ -37,6 +38,7 @@ import org.openedx.core.R as CoreR
 class CourseInfoViewModel(
     val pathId: String,
     val infoType: String,
+    private val appData: AppData,
     private val config: Config,
     private val networkConnection: NetworkConnection,
     private val router: DiscoveryRouter,
@@ -72,6 +74,8 @@ class CourseInfoViewModel(
         get() = networkConnection.isOnline()
 
     val uriScheme: String get() = config.getUriScheme()
+
+    val appUserAgent get() = appData.appUserAgent
 
     private val webViewConfig get() = config.getDiscoveryConfig().webViewConfig
 

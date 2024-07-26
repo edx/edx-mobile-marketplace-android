@@ -225,7 +225,7 @@ class IAPDialogFragment : DialogFragment() {
     }
 
     override fun getTheme(): Int {
-        return R.style.Theme_OpenEdX_IAPDialog
+        return R.style.Theme_OpenEdX_Dialog_FullScreen
     }
 
     private fun onDismiss() {

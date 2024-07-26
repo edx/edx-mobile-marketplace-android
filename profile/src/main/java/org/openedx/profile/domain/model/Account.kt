@@ -35,9 +35,9 @@ data class Account(
 
     fun isLimited() = accountPrivacy == Privacy.PRIVATE
 
-    fun isOlderThanMinAge() : Boolean {
+    fun isOlderThanMinAge(): Boolean {
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-        return yearOfBirth != null && currentYear - yearOfBirth > USER_MIN_YEAR
+        return !requiresParentalConsent && yearOfBirth != null && currentYear - yearOfBirth > USER_MIN_YEAR
     }
 
 }

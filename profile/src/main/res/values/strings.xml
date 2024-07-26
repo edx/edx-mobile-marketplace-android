@@ -16,6 +16,8 @@
     <string name="profile_spoken_language">Spoken Language</string>
     <string name="profile_switch_to_full">Switch to full profile</string>
     <string name="profile_switch_to_limited">Switch to limited profile</string>
+    <string name="profile_unrestricted_profile_message">A limited profile only shares your username and profile photo.</string>
+    <string name="profile_restricted_profile_message">Your profile information is only visible to you. Only your username is visible to others.</string>
     <string name="profile_delete_account">Delete account</string>
     <string name="profile_you_want_to">Are you sure you want to</string>
     <string name="profile_delete_your_account">delete your account?</string>

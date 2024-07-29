@@ -11,10 +11,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -140,6 +142,7 @@ fun WhatsNewScreen(
                     .semantics {
                         testTagsAsResourceId = true
                     }
+                    .navigationBarsPadding()
                     .fillMaxSize(),
                 scaffoldState = scaffoldState,
                 topBar = {
@@ -247,26 +250,25 @@ private fun WhatsNewScreenPortrait(
                 .background(MaterialTheme.appColors.background),
             contentAlignment = Alignment.TopCenter
         ) {
-            HorizontalPager(
-                modifier = Modifier.fillMaxSize(),
-                verticalAlignment = Alignment.Top,
-                state = pagerState
-            ) { page ->
-                val image = whatsNewItem.messages[page].image
-                Image(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 36.dp, vertical = 48.dp),
-                    painter = painterResource(id = image),
-                    contentDescription = null
-                )
-            }
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 120.dp),
-                contentAlignment = Alignment.BottomCenter
+                    .padding(horizontal = 24.dp, vertical = 36.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
+                HorizontalPager(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    state = pagerState
+                ) { page ->
+                    val image = whatsNewItem.messages[page].image
+                    Image(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        painter = painterResource(id = image),
+                        contentDescription = null
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1.0f))
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(20.dp),

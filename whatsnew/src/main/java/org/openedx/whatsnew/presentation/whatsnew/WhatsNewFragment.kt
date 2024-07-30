@@ -11,7 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -256,7 +255,9 @@ private fun WhatsNewScreenPortrait(
                 verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
                 HorizontalPager(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1.0f),
                     verticalAlignment = Alignment.Top,
                     state = pagerState
                 ) { page ->
@@ -268,7 +269,6 @@ private fun WhatsNewScreenPortrait(
                         contentDescription = null
                     )
                 }
-                Spacer(modifier = Modifier.weight(1.0f))
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(20.dp),

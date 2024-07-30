@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -163,7 +162,6 @@ private fun AllEnrolledCoursesView(
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyGridState()
     val columns = if (windowSize.isTablet) 3 else 2
-    val span: (LazyGridItemSpanScope) -> GridItemSpan = { GridItemSpan(columns) }
     val pullRefreshState = rememberPullRefreshState(
         refreshing = state.refreshing,
         onRefresh = { onAction(AllEnrolledCoursesAction.SwipeRefresh) }
@@ -329,7 +327,7 @@ private fun AllEnrolledCoursesView(
                                                             }
                                                         )
                                                     }
-                                                    item(span = span) {
+                                                    item(span = { GridItemSpan(columns) }) {
                                                         if (state.canLoadMore) {
                                                             Box(
                                                                 modifier = Modifier

@@ -1,4 +1,5 @@
-@file:OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class,
+@file:OptIn(
+    ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class,
     ExperimentalComposeUiApi::class
 )
 
@@ -42,6 +43,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
+import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
@@ -74,6 +76,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -180,6 +183,7 @@ class EditProfileFragment : Fragment() {
                 val selectedImageUri by viewModel.selectedImageUri.observeAsState()
                 val isImageDeleted by viewModel.deleteImage.observeAsState(false)
                 val leaveDialog by viewModel.showLeaveDialog.observeAsState(false)
+                val focusManager = LocalFocusManager.current
 
                 EditProfileScreen(
                     windowSize = windowSize,
@@ -215,6 +219,7 @@ class EditProfileFragment : Fragment() {
                                     }
                             }
                         }
+                        focusManager.clearFocus()
                     },
                     onDataChanged = {
                         viewModel.profileDataChanged = it
@@ -1084,7 +1089,9 @@ private fun InputEditField(
             shape = MaterialTheme.appShapes.textFieldShape,
             placeholder = {
                 Text(
-                    modifier = Modifier.testTag("txt_placeholder_${name.tagId()}"),
+                    modifier = Modifier
+                        .alpha(if (disabled) ContentAlpha.disabled else ContentAlpha.high)
+                        .testTag("txt_placeholder_${name.tagId()}"),
                     text = name,
                     color = MaterialTheme.appColors.textFieldHint,
                     style = MaterialTheme.appTypography.bodyMedium

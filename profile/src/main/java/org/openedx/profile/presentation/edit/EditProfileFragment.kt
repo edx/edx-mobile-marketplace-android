@@ -407,6 +407,8 @@ private fun EditProfileScreen(
 
     val isImeVisible by isImeVisibleState()
 
+    val requiresParentalConsent = uiState.account.requiresParentalConsent
+
     LaunchedEffect(bottomSheetScaffoldState.isVisible) {
         if (!bottomSheetScaffoldState.isVisible) {
             focusManager.clearFocus()
@@ -635,7 +637,7 @@ private fun EditProfileScreen(
                                         .clip(CircleShape)
 
                                         .noRippleClickable {
-                                            if (!uiState.account.requiresParentalConsent) {
+                                            if (!requiresParentalConsent) {
                                                 isOpenChangeImageDialogState = true
                                                 if (!uiState.account.isOlderThanMinAge()) {
                                                     openWarningMessageDialog = true
@@ -643,7 +645,7 @@ private fun EditProfileScreen(
                                             }
                                         }
                                 )
-                                if (!uiState.account.requiresParentalConsent) {
+                                if (!requiresParentalConsent) {
                                     Icon(
                                         modifier = Modifier
                                             .size(32.dp)
@@ -670,7 +672,7 @@ private fun EditProfileScreen(
                                 color = MaterialTheme.appColors.textPrimary
                             )
                             Spacer(modifier = Modifier.height(16.dp))
-                            if (!uiState.account.requiresParentalConsent) {
+                            if (!requiresParentalConsent) {
                                 Text(
                                     modifier = Modifier
                                         .testTag("txt_edit_profile_limited_profile_label")
@@ -698,7 +700,7 @@ private fun EditProfileScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                if (uiState.account.requiresParentalConsent) {
+                                if (requiresParentalConsent) {
                                     Icon(
                                         imageVector = Icons.Filled.VisibilityOff,
                                         tint = MaterialTheme.appColors.textSecondary,
@@ -711,7 +713,7 @@ private fun EditProfileScreen(
                                         .align(Alignment.CenterVertically)
                                         .testTag("txt_edit_profile_limited_profile_message"),
                                     text = stringResource(
-                                        if (uiState.account.requiresParentalConsent) {
+                                        if (requiresParentalConsent) {
                                             R.string.profile_restricted_profile_message
                                         } else {
                                             R.string.profile_unrestricted_profile_message

@@ -192,7 +192,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             if (!viewModel.isPlayerSetUp) {
                 setPlayerMedia(mediaItem)
                 viewModel.getActivePlayer()?.prepare()
-                viewModel.getActivePlayer()?.playWhenReady = viewModel.isPlaying
+                viewModel.getActivePlayer()?.playWhenReady = viewModel.isPlaying && isResumed
                 viewModel.isPlayerSetUp = true
             }
 

@@ -79,6 +79,13 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (viewModel.isPlaying) {
+            _youTubePlayer?.play()
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -193,7 +200,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 }
 
                 viewModel.videoUrl.split("watch?v=").getOrNull(1)?.let { videoId ->
-                    if (viewModel.isPlaying) {
+                    if (viewModel.isPlaying && isResumed) {
                         youTubePlayer.loadVideo(
                             videoId, viewModel.getCurrentVideoTime().toFloat() / 1000
                         )

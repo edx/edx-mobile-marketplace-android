@@ -234,6 +234,7 @@ class CourseContainerViewModel(
                         }
                         _canShowUpgradeButton.value =
                             isIAPEnabled && courseDetails.isUpgradeable.isTrue()
+                        _dataReady.value = true
                         if (isIAPFlow) {
                             iapNotifier.send(CourseDataUpdated())
                         }

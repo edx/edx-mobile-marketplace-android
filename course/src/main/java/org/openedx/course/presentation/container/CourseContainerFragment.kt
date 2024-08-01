@@ -172,10 +172,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
             }
         }
         viewModel.errorMessage.observe(viewLifecycleOwner) {
-            snackBar = Snackbar.make(binding.root, it, Snackbar.LENGTH_INDEFINITE)
-                .setAction(org.openedx.core.R.string.core_error_try_again) {
-                    viewModel.fetchCourseDetails()
-                }
+            snackBar = Snackbar.make(binding.root, it, Snackbar.LENGTH_SHORT)
             snackBar?.show()
 
         }
@@ -499,7 +496,7 @@ fun CourseDashboard(
                                 isInternetConnectionShown = true
                             },
                             onReloadClick = {
-                                isInternetConnectionShown = true
+                                isInternetConnectionShown = viewModel.hasInternetConnection
                                 onRefresh(pagerState.currentPage)
                             }
                         )
@@ -619,7 +616,7 @@ private fun DashboardPager(
 
 @Composable
 private fun CourseAccessErrorView(
-    viewModel: CourseContainerViewModel?,
+    viewModel: CourseContainerViewModel,
     accessError: CourseAccessError?,
     fragmentManager: FragmentManager,
 ) {
@@ -631,7 +628,7 @@ private fun CourseAccessErrorView(
                 R.string.course_error_expired_not_upgradeable_title,
                 TimeUtils.getCourseAccessFormattedDate(
                     LocalContext.current,
-                    viewModel?.courseDetails?.courseAccessDetails?.auditAccessExpires ?: Date()
+                    viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires ?: Date()
                 )
             )
         }
@@ -641,7 +638,7 @@ private fun CourseAccessErrorView(
                 R.string.course_error_expired_upgradeable_title,
                 TimeUtils.getCourseAccessFormattedDate(
                     LocalContext.current,
-                    viewModel?.courseDetails?.courseAccessDetails?.auditAccessExpires ?: Date()
+                    viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires ?: Date()
                 )
             )
         }
@@ -650,7 +647,7 @@ private fun CourseAccessErrorView(
             icon = painterResource(id = R.drawable.course_ic_calendar)
             message = stringResource(
                 R.string.course_error_not_started_title,
-                viewModel?.courseDetails?.courseInfoOverview?.startDisplay ?: ""
+                viewModel.courseDetails?.courseInfoOverview?.startDisplay ?: ""
             )
         }
 
@@ -715,14 +712,13 @@ private fun CourseAccessErrorView(
 
 @Composable
 private fun SetupCourseAccessErrorButtons(
-    viewModel: CourseContainerViewModel?,
+    viewModel: CourseContainerViewModel,
     accessError: CourseAccessError?,
     fragmentManager: FragmentManager,
 ) {
     when (accessError) {
         CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE,
         CourseAccessError.NOT_YET_STARTED,
-        CourseAccessError.UNKNOWN,
         -> {
             OpenEdXButton(
                 text = stringResource(R.string.course_label_back),
@@ -737,7 +733,7 @@ private fun SetupCourseAccessErrorButtons(
                 textColor = MaterialTheme.appColors.primary,
                 borderColor = MaterialTheme.appColors.primary,
                 onClick = {
-                    viewModel?.courseRouter?.navigateToDiscover(fragmentManager)
+                    viewModel.courseRouter.navigateToDiscover(fragmentManager)
                 }
             )
             UpgradeToAccessView(
@@ -748,13 +744,22 @@ private fun SetupCourseAccessErrorButtons(
                 IAPDialogFragment.newInstance(
                     iapFlow = IAPFlow.USER_INITIATED,
                     screenName = IAPAnalyticsScreen.COURSE_DASHBOARD.screenName,
-                    courseId = viewModel?.courseId ?: "",
-                    courseName = viewModel?.courseName ?: "",
-                    isSelfPaced = viewModel?.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
-                    productInfo = viewModel?.courseDetails?.courseInfoOverview?.productInfo!!
+                    courseId = viewModel.courseId,
+                    courseName = viewModel.courseName,
+                    isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
+                    productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
                 ).show(
                     fragmentManager,
                     IAPDialogFragment.TAG
+                )
+            }
+        }
+
+        CourseAccessError.UNKNOWN -> {
+            if (viewModel.hasInternetConnection) {
+                OpenEdXButton(
+                    text = stringResource(R.string.course_label_back),
+                    onClick = { fragmentManager.popBackStack() },
                 )
             }
         }
@@ -777,7 +782,7 @@ private fun CourseAccessErrorViewPreview() {
     val context = LocalContext.current
     OpenEdXTheme {
         CourseAccessErrorView(
-            viewModel = null,
+            viewModel = koinViewModel(),
             accessError = CourseAccessError.AUDIT_EXPIRED_UPGRADABLE,
             fragmentManager = (context as? FragmentActivity)?.supportFragmentManager!!
         )

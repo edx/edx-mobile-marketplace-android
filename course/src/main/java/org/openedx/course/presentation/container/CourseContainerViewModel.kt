@@ -28,9 +28,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
-import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.extension.isFalse
-import org.openedx.core.extension.isInternetError
 import org.openedx.core.extension.isTrue
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
@@ -244,12 +242,7 @@ class CourseContainerViewModel(
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                if (e.isInternetError() || e is NoCachedDataException) {
-                    _errorMessage.value =
-                        resourceManager.getString(CoreR.string.core_error_no_connection)
-                } else {
-                    _courseAccessStatus.value = CourseAccessError.UNKNOWN
-                }
+                _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 _showProgress.value = false
             }
         }
@@ -306,13 +299,8 @@ class CourseContainerViewModel(
             try {
                 interactor.getCourseStructure(courseId, isNeedRefresh = true)
             } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _errorMessage.value =
-                        resourceManager.getString(CoreR.string.core_error_no_connection)
-                } else {
-                    _errorMessage.value =
-                        resourceManager.getString(CoreR.string.core_error_unknown_error)
-                }
+                _errorMessage.value =
+                    resourceManager.getString(CoreR.string.core_error_unknown_error)
             }
             _refreshing.value = false
             courseNotifier.send(CourseStructureUpdated(courseId))

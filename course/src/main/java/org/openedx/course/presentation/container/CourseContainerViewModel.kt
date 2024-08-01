@@ -28,7 +28,6 @@ import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
-import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.extension.isFalse
 import org.openedx.core.extension.isInternetError
@@ -127,10 +126,6 @@ class CourseContainerViewModel(
     val courseDetails: CourseEnrollmentDetails?
         get() = _courseDetails
 
-    private var _courseStructure: CourseStructure? = null
-    val courseStructure: CourseStructure?
-        get() = _courseStructure
-
     val calendarPermissions: Array<String>
         get() = calendarManager.permissions
 
@@ -193,14 +188,16 @@ class CourseContainerViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    updateData(true)
+                    fetchCourseDetails(true)
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)
     }
 
-    fun fetchCourseDetails() {
-        courseDashboardViewed()
+    fun fetchCourseDetails(isIAPFlow: Boolean = false) {
+        if (isIAPFlow.not()) {
+            courseDashboardViewed()
+        }
         _showProgress.value = true
         viewModelScope.launch {
             try {
@@ -228,7 +225,18 @@ class CourseContainerViewModel(
                     } else {
                         _courseAccessStatus.value = CourseAccessError.NONE
                         _isNavigationEnabled.value = true
-                        preloadCourseStructure()
+                        _calendarSyncUIState.update { state ->
+                            state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
+                        }
+                        if (resumeBlockId.isNotEmpty()) {
+                            delay(500L)
+                            courseNotifier.send(CourseOpenBlock(resumeBlockId))
+                        }
+                        _canShowUpgradeButton.value =
+                            isIAPEnabled && courseDetails.isUpgradeable.isTrue()
+                        if (isIAPFlow) {
+                            iapNotifier.send(CourseDataUpdated())
+                        }
                     }
                 } ?: run {
                     _courseAccessStatus.value = CourseAccessError.UNKNOWN
@@ -242,42 +250,6 @@ class CourseContainerViewModel(
                     _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 }
                 _showProgress.value = false
-            }
-        }
-    }
-
-    private fun preloadCourseStructure() {
-        if (_courseAccessStatus.value != CourseAccessError.NONE) {
-            _isNavigationEnabled.value = false
-            _showProgress.value = false
-            return
-        }
-        _showProgress.value = true
-        viewModelScope.launch {
-            try {
-                _courseStructure = interactor.getCourseStructure(courseId, true)
-                _courseStructure?.let {
-                    _showProgress.value = false
-                    _calendarSyncUIState.update { state ->
-                        state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
-                    }
-                    if (resumeBlockId.isNotEmpty()) {
-                        delay(500L)
-                        courseNotifier.send(CourseOpenBlock(resumeBlockId))
-                    }
-                    _dataReady.value = true
-                } ?: run {
-                    _dataReady.value = false
-                    _courseAccessStatus.value = CourseAccessError.UNKNOWN
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                if (e.isInternetError()) {
-                    _errorMessage.value =
-                        resourceManager.getString(CoreR.string.core_error_no_connection)
-                } else {
-                    _courseAccessStatus.value = CourseAccessError.UNKNOWN
-                }
             }
         }
     }
@@ -328,12 +300,10 @@ class CourseContainerViewModel(
         }
     }
 
-    fun updateData(isIAPFlow: Boolean = false) {
+    fun updateData() {
         viewModelScope.launch {
             try {
-                _courseStructure = interactor.getCourseStructure(courseId, isNeedRefresh = true)
-                _canShowUpgradeButton.value =
-                    isIAPEnabled && courseStructure?.isUpgradeable.isTrue()
+                interactor.getCourseStructure(courseId, isNeedRefresh = true)
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _errorMessage.value =
@@ -345,9 +315,6 @@ class CourseContainerViewModel(
             }
             _refreshing.value = false
             courseNotifier.send(CourseStructureUpdated(courseId))
-            if (isIAPFlow) {
-                iapNotifier.send(CourseDataUpdated())
-            }
         }
     }
 
@@ -477,8 +444,8 @@ class CourseContainerViewModel(
 
     private fun isCalendarSyncEnabled(): Boolean {
         val calendarSync = corePreferences.appConfig.courseDatesCalendarSync
-        return calendarSync.isEnabled && ((calendarSync.isSelfPacedEnabled && _courseStructure?.isSelfPaced == true) ||
-                (calendarSync.isInstructorPacedEnabled && _courseStructure?.isSelfPaced == false))
+        return calendarSync.isEnabled && ((calendarSync.isSelfPacedEnabled && _courseDetails?.courseInfoOverview?.isSelfPaced.isTrue()) ||
+                (calendarSync.isInstructorPacedEnabled && _courseDetails?.courseInfoOverview?.isSelfPaced.isFalse()))
     }
 
     private fun courseDashboardViewed() {
@@ -573,7 +540,7 @@ class CourseContainerViewModel(
                 )
                 put(
                     CourseAnalyticsKey.PACING.key,
-                    if (_courseStructure?.isSelfPaced == true) CourseAnalyticsKey.SELF_PACED.key
+                    if (_courseDetails?.courseInfoOverview?.isSelfPaced.isTrue()) CourseAnalyticsKey.SELF_PACED.key
                     else CourseAnalyticsKey.INSTRUCTOR_PACED.key
                 )
                 putAll(param)

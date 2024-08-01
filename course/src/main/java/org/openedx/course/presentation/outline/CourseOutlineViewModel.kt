@@ -33,7 +33,6 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CalendarSyncEvent.CreateCalendarSyncEvent
 import org.openedx.core.system.notifier.CourseDatesShifted
-import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseOpenBlock
 import org.openedx.core.system.notifier.CourseStructureUpdated
@@ -95,7 +94,7 @@ class CourseOutlineViewModel(
                 when (event) {
                     is CourseStructureUpdated -> {
                         if (event.courseId == courseId) {
-                            updateCourseData()
+                            getCourseData()
                         }
                     }
 
@@ -141,14 +140,7 @@ class CourseOutlineViewModel(
         }
     }
 
-    fun updateCourseData() {
-        getCourseDataInternal()
-    }
-
     fun getCourseData() {
-        viewModelScope.launch {
-            courseNotifier.send(CourseLoading(true))
-        }
         getCourseDataInternal()
     }
 
@@ -225,7 +217,6 @@ class CourseOutlineViewModel(
                     subSectionsDownloadsCount = subSectionsDownloadsCount,
                     datesBannerInfo = datesBannerInfo
                 )
-                courseNotifier.send(CourseLoading(false))
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
@@ -274,7 +265,7 @@ class CourseOutlineViewModel(
         viewModelScope.launch {
             try {
                 interactor.resetCourseDates(courseId = courseId)
-                updateCourseData()
+                getCourseData()
                 courseNotifier.send(CourseDatesShifted)
                 onResetDates(true)
             } catch (e: Exception) {

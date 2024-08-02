@@ -56,12 +56,10 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
@@ -186,6 +184,8 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
     private fun onRefresh(currentPage: Int) {
         if (viewModel.courseAccessStatus.value == CourseAccessError.NONE) {
             viewModel.onRefresh(CourseContainerTab.entries[currentPage])
+        } else {
+            viewModel.fetchCourseDetails()
         }
     }
 
@@ -772,19 +772,5 @@ private fun SetupCourseAccessErrorButtons(
 private fun scrollToDates(scope: CoroutineScope, pagerState: PagerState) {
     scope.launch {
         pagerState.animateScrollToPage(CourseContainerTab.entries.indexOf(CourseContainerTab.DATES))
-    }
-}
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun CourseAccessErrorViewPreview() {
-    val context = LocalContext.current
-    OpenEdXTheme {
-        CourseAccessErrorView(
-            viewModel = koinViewModel(),
-            accessError = CourseAccessError.AUDIT_EXPIRED_UPGRADABLE,
-            fragmentManager = (context as? FragmentActivity)?.supportFragmentManager!!
-        )
     }
 }

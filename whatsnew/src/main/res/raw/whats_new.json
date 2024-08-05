@@ -1,5 +1,40 @@
 [
   {
+    "version": "6.0.0",
+    "messages": [
+      {
+        "image": "screen_1",
+        "title": "A Whole New Design",
+        "message": "Experience the completely redesigned app with an intuitive and modern interface that enhances your learning journey."
+      },
+      {
+        "image": "screen_2",
+        "title": "Focused Learning",
+        "message": "Keep your most active course at the forefront with a dedicated card on the Learn tab for seamless access and engagement."
+      },
+      {
+        "image": "screen_3",
+        "title": "Dates",
+        "message": "Easily track your course dates with a new layout that groups past due, upcoming, and completed course content for better clarity."
+      },
+      {
+        "image": "screen_4",
+        "title": "Discussions",
+        "message": "Enjoy a revamped forum with improved organization for discussion topics and posts, making it easier to follow and engage."
+      },
+      {
+        "image": "screen_5",
+        "title": "Feedback Submission",
+        "message": "We value your input! Use our new feedback button in Settings to share your thoughts and help us enhance your app experience."
+      },
+      {
+        "image": "screen_6",
+        "title": "Dark Mode",
+        "message": "Switch to Dark Mode for a visually comfortable and eye-friendly learning experience, especially in low-light environments."
+      }
+    ]
+  },
+  {
     "version": "1.0",
     "messages": [
       {

@@ -92,11 +92,12 @@ android {
     buildTypes {
         release {
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
             if (firebaseEnabled) {
                 firebaseCrashlytics {
-                    mappingFileUploadEnabled false
+                    mappingFileUploadEnabled true
                 }
             }
         }

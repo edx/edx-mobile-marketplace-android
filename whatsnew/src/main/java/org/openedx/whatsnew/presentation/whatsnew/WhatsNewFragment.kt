@@ -262,12 +262,15 @@ private fun WhatsNewScreenPortrait(
                     state = pagerState
                 ) { page ->
                     val image = whatsNewItem.messages[page].image
-                    Image(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        painter = painterResource(id = image),
-                        contentDescription = null
-                    )
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Image(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center),
+                            painter = painterResource(id = image),
+                            contentDescription = null
+                        )
+                    }
                 }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,

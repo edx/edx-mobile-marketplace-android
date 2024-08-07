@@ -852,7 +852,7 @@ fun SubSectionUnitsTitle(
     onUnitsClick: () -> Unit,
 ) {
     val textStyle = MaterialTheme.appTypography.titleMedium
-    val hasUnits = unitsCount > 0
+    val hasUnits = unitsCount > 1
     var rowModifier = Modifier
         .fillMaxWidth()
         .padding(

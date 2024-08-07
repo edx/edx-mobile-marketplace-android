@@ -262,22 +262,24 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
 
             binding.subSectionUnitsList.setContent {
                 val unitBlocks by viewModel.subSectionUnitBlocks.collectAsState()
-                val selectedUnitIndex = unitBlocks.indexOfFirst { it.id == viewModel.unitId }
-                OpenEdXTheme {
-                    SubSectionUnitsList(
-                        unitBlocks = unitBlocks,
-                        selectedUnitIndex = selectedUnitIndex
-                    ) { index, unit ->
-                        if (index != selectedUnitIndex) {
-                            router.navigateToCourseContainer(
-                                fm = requireActivity().supportFragmentManager,
-                                courseId = viewModel.courseId,
-                                unitId = unit.id,
-                                mode = requireArguments().serializable(ARG_MODE)!!
-                            )
+                if (unitBlocks.size > 1) {
+                    val selectedUnitIndex = unitBlocks.indexOfFirst { it.id == viewModel.unitId }
+                    OpenEdXTheme {
+                        SubSectionUnitsList(
+                            unitBlocks = unitBlocks,
+                            selectedUnitIndex = selectedUnitIndex
+                        ) { index, unit ->
+                            if (index != selectedUnitIndex) {
+                                router.navigateToCourseContainer(
+                                    fm = requireActivity().supportFragmentManager,
+                                    courseId = viewModel.courseId,
+                                    unitId = unit.id,
+                                    mode = requireArguments().serializable(ARG_MODE)!!
+                                )
 
-                        } else {
-                            handleUnitsClick()
+                            } else {
+                                handleUnitsClick()
+                            }
                         }
                     }
                 }

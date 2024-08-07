@@ -3,6 +3,7 @@ package org.openedx.whatsnew
 import android.content.Context
 import com.google.gson.Gson
 import org.openedx.core.config.Config
+import org.openedx.core.domain.model.Version
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.WhatsNewGlobalManager
 import org.openedx.whatsnew.data.model.WhatsNewItem
@@ -23,9 +24,19 @@ class WhatsNewManager(
     }
 
     override fun shouldShowWhatsNew(): Boolean {
-        val dataVersion = getNewestData().version
-        return appData.versionName == dataVersion
-                && whatsNewPreferences.lastWhatsNewVersion != dataVersion
-                && config.isWhatsNewEnabled()
+        return try {
+            val dataVersion = Version(getNewestData().version)
+            val appVersion = Version(appData.versionName)
+            if (whatsNewPreferences.lastWhatsNewVersion.isEmpty()) {
+                appVersion.hasSameMajorMinorVersion(dataVersion)
+            } else {
+                val lastWhatsNewVersion = Version(whatsNewPreferences.lastWhatsNewVersion)
+                lastWhatsNewVersion.isMinorVersionsDiff(appVersion) &&
+                        appVersion.hasSameMajorMinorVersion(dataVersion)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 }

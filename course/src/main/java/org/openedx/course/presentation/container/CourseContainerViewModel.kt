@@ -230,8 +230,6 @@ class CourseContainerViewModel(
                             delay(500L)
                             courseNotifier.send(CourseOpenBlock(resumeBlockId))
                         }
-                        _canShowUpgradeButton.value =
-                            isIAPEnabled && courseDetails.isUpgradeable.isTrue()
                         _dataReady.value = true
                         if (isIAPFlow) {
                             iapNotifier.send(CourseDataUpdated())

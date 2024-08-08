@@ -342,6 +342,10 @@ private fun CourseOutlineUI(
                             }
                         }
 
+                        CourseOutlineUIState.Error -> {
+                            NoContentScreen(noContentScreenType = NoContentScreenType.COURSE_OUTLINE)
+                        }
+                        
                         CourseOutlineUIState.Loading -> {
                             CircularProgress()
                         }

@@ -145,27 +145,31 @@ class CourseVideoViewModel(
 
     fun getVideos() {
         viewModelScope.launch {
-            var courseStructure = interactor.getCourseStructureForVideos(courseId)
-            val blocks = courseStructure.blockData
-            if (blocks.isEmpty()) {
+            try {
+                var courseStructure = interactor.getCourseStructureForVideos(courseId)
+                val blocks = courseStructure.blockData
+                if (blocks.isEmpty()) {
+                    _uiState.value = CourseVideosUIState.Empty
+                } else {
+                    setBlocks(courseStructure.blockData)
+                    courseSubSections.clear()
+                    courseSubSectionUnit.clear()
+                    courseStructure = courseStructure.copy(blockData = sortBlocks(blocks))
+                    initDownloadModelsStatus()
+
+                    val courseSectionsState =
+                        (_uiState.value as? CourseVideosUIState.CourseData)?.courseSectionsState.orEmpty()
+
+                    _uiState.value =
+                        CourseVideosUIState.CourseData(
+                            courseStructure, getDownloadModelsStatus(), courseSubSections,
+                            courseSectionsState, subSectionsDownloadsCount, getDownloadModelsSize()
+                        )
+                }
+                courseNotifier.send(CourseLoading(false))
+            } catch (e: Exception) {
                 _uiState.value = CourseVideosUIState.Empty
-            } else {
-                setBlocks(courseStructure.blockData)
-                courseSubSections.clear()
-                courseSubSectionUnit.clear()
-                courseStructure = courseStructure.copy(blockData = sortBlocks(blocks))
-                initDownloadModelsStatus()
-
-                val courseSectionsState =
-                    (_uiState.value as? CourseVideosUIState.CourseData)?.courseSectionsState.orEmpty()
-
-                _uiState.value =
-                    CourseVideosUIState.CourseData(
-                        courseStructure, getDownloadModelsStatus(), courseSubSections,
-                        courseSectionsState, subSectionsDownloadsCount, getDownloadModelsSize()
-                    )
             }
-            courseNotifier.send(CourseLoading(false))
         }
     }
 

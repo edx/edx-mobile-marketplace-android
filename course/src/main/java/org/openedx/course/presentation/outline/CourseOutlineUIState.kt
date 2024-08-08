@@ -17,5 +17,6 @@ sealed class CourseOutlineUIState {
         val datesBannerInfo: CourseDatesBannerInfo,
     ) : CourseOutlineUIState()
 
+    data object Error : CourseOutlineUIState()
     data object Loading : CourseOutlineUIState()
 }

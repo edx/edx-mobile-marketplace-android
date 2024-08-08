@@ -218,6 +218,7 @@ class CourseOutlineViewModel(
                     datesBannerInfo = datesBannerInfo
                 )
             } catch (e: Exception) {
+                _uiState.value = CourseOutlineUIState.Error
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {

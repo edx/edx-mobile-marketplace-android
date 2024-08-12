@@ -262,6 +262,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
 
             binding.subSectionUnitsList.setContent {
                 val unitBlocks by viewModel.subSectionUnitBlocks.collectAsState()
+                // If there is more than one unit in the section, show the list
                 if (unitBlocks.size > 1) {
                     val selectedUnitIndex = unitBlocks.indexOfFirst { it.id == viewModel.unitId }
                     OpenEdXTheme {

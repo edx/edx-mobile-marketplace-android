@@ -42,7 +42,7 @@ class AnalyticsManager(
         }
 
         if (config.getFullstoryConfig().isEnabled) {
-            addAnalyticsTracker(FullstoryAnalytics())
+            addAnalyticsTracker(FullstoryAnalytics(config.getFirebaseConfig().enabled))
         }
     }
 
@@ -196,7 +196,11 @@ class AnalyticsManager(
         })
     }
 
-    override fun logIAPEvent(event: IAPAnalyticsEvent, params: MutableMap<String, Any?>, screenName: String) {
+    override fun logIAPEvent(
+        event: IAPAnalyticsEvent,
+        params: MutableMap<String, Any?>,
+        screenName: String
+    ) {
         logEvent(
             event = event.eventName,
             params = params.apply {

@@ -665,21 +665,11 @@ private fun PrimaryCourseButtons(
     onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
     val context = LocalContext.current
+    val viewsList = mutableListOf<@Composable () -> Unit>()
+
     val pastAssignments = primaryCourse.courseAssignments?.pastAssignments
-    Column(modifier = modifier) {
-        var titleModifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .padding(top = 8.dp, bottom = 16.dp)
-        if (adjustHeight) {
-            titleModifier = titleModifier.weight(1f)
-        }
-        PrimaryCourseTitle(
-            modifier = titleModifier,
-            primaryCourse = primaryCourse,
-        )
-        Divider()
-        if (!pastAssignments.isNullOrEmpty()) {
+    if (!pastAssignments.isNullOrEmpty()) {
+        viewsList.add {
             val nearestAssignment = pastAssignments.maxBy { it.date }
             val title = if (pastAssignments.size == 1) nearestAssignment.title else null
             AssignmentItem(
@@ -699,11 +689,13 @@ private fun PrimaryCourseButtons(
                 )
             )
         }
-        val futureAssignments = primaryCourse.courseAssignments?.futureAssignments
-        if (!futureAssignments.isNullOrEmpty()) {
+    }
+
+    val futureAssignments = primaryCourse.courseAssignments?.futureAssignments
+    if (!futureAssignments.isNullOrEmpty()) {
+        viewsList.add {
             val nearestAssignment = futureAssignments.minBy { it.date }
             val title = if (futureAssignments.size == 1) nearestAssignment.title else null
-            Divider()
             AssignmentItem(
                 modifier = Modifier.clickable {
                     if (futureAssignments.size == 1) {
@@ -721,7 +713,10 @@ private fun PrimaryCourseButtons(
                 )
             )
         }
-        if (primaryCourse.isUpgradeable && isIAPEnabled) {
+    }
+
+    if (primaryCourse.isUpgradeable && isIAPEnabled) {
+        viewsList.add {
             UpgradeToAccessView(
                 type = UpgradeToAccessViewType.GALLERY,
                 iconPadding = PaddingValues(end = 12.dp),
@@ -734,6 +729,9 @@ private fun PrimaryCourseButtons(
                 )
             }
         }
+    }
+
+    viewsList.add {
         ResumeButton(
             primaryCourse = primaryCourse,
             onClick = {
@@ -747,6 +745,34 @@ private fun PrimaryCourseButtons(
                 }
             }
         )
+    }
+
+    // Remove Future Assignments if all buttons are available to show a maximum of three buttons.
+    if (viewsList.size == 4) {
+        viewsList.removeAt(1)
+    }
+
+    Column(modifier = modifier) {
+        var titleModifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .padding(top = 8.dp, bottom = 16.dp)
+        if (adjustHeight) {
+            titleModifier = titleModifier.weight(1f)
+        }
+
+        PrimaryCourseTitle(
+            modifier = titleModifier,
+            primaryCourse = primaryCourse,
+        )
+        Divider()
+
+        viewsList.forEachIndexed { index, view ->
+            view()
+            if (index < viewsList.size - 1) {
+                Divider()
+            }
+        }
     }
 }
 

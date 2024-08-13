@@ -72,8 +72,8 @@ import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.ui.BackBtn
+import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.SheetContent
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -436,11 +436,9 @@ internal fun SignUpView(
                                         CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                                     }
                                 } else {
-                                    OpenEdXButton(
-                                        modifier = buttonWidth.testTag("btn_create_account"),
+                                    BrandButton(
+                                        modifier = buttonWidth,
                                         text = stringResource(id = R.string.auth_create_account),
-                                        textColor = MaterialTheme.appColors.primaryButtonText,
-                                        backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
                                         onClick = {
                                             keyboardController?.hide()
                                             showErrorMap.clear()
@@ -506,6 +504,10 @@ private fun RegistrationScreenTabletPreview() {
                 requiredFields = listOf(field, field),
                 optionalFields = listOf(field, field),
                 agreementFields = listOf(field),
+                isGoogleAuthEnabled = true,
+                isFacebookAuthEnabled = true,
+                isMicrosoftAuthEnabled = true,
+                isSocialAuthEnabled = true,
             ),
             uiMessage = null,
             onBackClick = {},

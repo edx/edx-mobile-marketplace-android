@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -36,8 +37,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.presentation.CoreAnalyticsEvent
 import org.openedx.core.presentation.CoreAnalyticsKey
-import org.openedx.core.presentation.global.app_upgrade.DefaultTextButton
-import org.openedx.core.presentation.global.app_upgrade.TransparentTextButton
+import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -168,12 +168,13 @@ private fun ActionDialog(
                 style = MaterialTheme.appTypography.bodyMedium
             )
             Row {
-                TransparentTextButton(
+                TertiaryButton(
                     text = stringResource(R.string.core_cancel),
                     onClick = onPositiveClick
                 )
                 Spacer(modifier = Modifier.size(16.dp))
-                DefaultTextButton(
+                TertiaryButton(
+                    modifier = Modifier.wrapContentSize(),
                     text = stringResource(R.string.core_continue),
                     onClick = onNegativeClick
                 )

@@ -12,12 +12,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -29,6 +27,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -39,6 +38,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openedx.core.R
+import org.openedx.core.ui.PrimaryButton
+import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -148,7 +149,8 @@ fun AppUpgradeRecommendDialog(
                     Image(
                         modifier = imageModifier,
                         painter = painterResource(id = R.drawable.core_ic_icon_upgrade),
-                        contentDescription = null
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(MaterialTheme.appColors.primary)
                     )
                     Text(
                         modifier = Modifier.testTag("txt_app_upgrade_title"),
@@ -226,12 +228,13 @@ fun AppUpgradeRequiredButtons(
         horizontalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         if (showAccountSettingsButton) {
-            TransparentTextButton(
+            TertiaryButton(
                 text = stringResource(id = R.string.core_account_settings),
                 onClick = onAccountSettingsClick
             )
         }
-        DefaultTextButton(
+        PrimaryButton(
+            modifier = Modifier.wrapContentSize(),
             text = stringResource(id = R.string.core_update),
             onClick = onUpdateClick
         )
@@ -246,69 +249,15 @@ fun AppUpgradeDialogButtons(
     Row(
         horizontalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        TransparentTextButton(
+        TertiaryButton(
             text = stringResource(id = R.string.core_not_now),
             onClick = onNotNowClick
         )
-        DefaultTextButton(
+        PrimaryButton(
+            modifier = Modifier.wrapContentSize(),
             text = stringResource(id = R.string.core_update),
             onClick = onUpdateClick
         )
-    }
-}
-
-@Composable
-fun TransparentTextButton(
-    text: String,
-    onClick: () -> Unit
-) {
-    Button(
-        modifier = Modifier
-            .testTag("btn_secondary")
-            .height(42.dp),
-        colors = ButtonDefaults.buttonColors(
-            backgroundColor = Color.Transparent
-        ),
-        elevation = null,
-        shape = MaterialTheme.appShapes.navigationButtonShape,
-        onClick = onClick
-    ) {
-        Text(
-            modifier = Modifier.testTag("txt_secondary"),
-            color = MaterialTheme.appColors.textAccent,
-            style = MaterialTheme.appTypography.labelLarge,
-            text = text
-        )
-    }
-}
-
-@Composable
-fun DefaultTextButton(
-    text: String,
-    onClick: () -> Unit
-) {
-    Button(
-        modifier = Modifier
-            .testTag("btn_primary")
-            .height(42.dp),
-        colors = ButtonDefaults.buttonColors(
-            backgroundColor = MaterialTheme.appColors.primaryButtonBackground
-        ),
-        elevation = null,
-        shape = MaterialTheme.appShapes.navigationButtonShape,
-        onClick = onClick
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                modifier = Modifier.testTag("txt_primary"),
-                text = text,
-                color = MaterialTheme.appColors.primaryButtonText,
-                style = MaterialTheme.appTypography.labelLarge
-            )
-        }
     }
 }
 

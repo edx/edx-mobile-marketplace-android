@@ -6,20 +6,50 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,8 +76,24 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.FragmentViewType
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.TextConverter
-import org.openedx.core.ui.*
-import org.openedx.core.ui.theme.*
+import org.openedx.core.ui.BackBtn
+import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.IconText
+import org.openedx.core.ui.OutlinePrimaryButton
+import org.openedx.core.ui.SheetContent
+import org.openedx.core.ui.WindowSize
+import org.openedx.core.ui.WindowType
+import org.openedx.core.ui.displayCutoutForLandscape
+import org.openedx.core.ui.isImeVisibleState
+import org.openedx.core.ui.noRippleClickable
+import org.openedx.core.ui.rememberWindowSize
+import org.openedx.core.ui.shouldLoadMore
+import org.openedx.core.ui.statusBarsInset
+import org.openedx.core.ui.theme.OpenEdXTheme
+import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.appShapes
+import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.windowSizeValue
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.ui.ThreadItem
@@ -484,7 +530,9 @@ private fun DiscussionThreadsScreen(
                                                                 Icon(
                                                                     modifier = Modifier.size(16.dp),
                                                                     painter = painterResource(id = discussionR.drawable.discussion_ic_add_comment),
-                                                                    contentDescription = stringResource(id = discussionR.string.discussion_add_comment),
+                                                                    contentDescription = stringResource(
+                                                                        id = discussionR.string.discussion_add_comment
+                                                                    ),
                                                                     tint = MaterialTheme.appColors.primaryButtonText
                                                                 )
                                                             }
@@ -557,7 +605,7 @@ private fun DiscussionThreadsScreen(
                                                         textAlign = TextAlign.Center
                                                     )
                                                     Spacer(Modifier.height(40.dp))
-                                                    OpenEdXOutlinedButton(
+                                                    OutlinePrimaryButton(
                                                         modifier = Modifier
                                                             .widthIn(184.dp, Dp.Unspecified),
                                                         text = stringResource(id = discussionR.string.discussion_create_post),
@@ -577,8 +625,6 @@ private fun DiscussionThreadsScreen(
                                                                 style = MaterialTheme.appTypography.labelLarge
                                                             )
                                                         },
-                                                        borderColor = MaterialTheme.appColors.primary,
-                                                        textColor = MaterialTheme.appColors.primary
                                                     )
                                                 }
                                             }
@@ -610,8 +656,6 @@ private fun DiscussionThreadsScreen(
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(name = "NEXUS_5_Light", device = Devices.NEXUS_5, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(name = "NEXUS_5_Dark", device = Devices.NEXUS_5, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun DiscussionThreadsScreenPreview() {
     OpenEdXTheme {
@@ -619,6 +663,30 @@ private fun DiscussionThreadsScreenPreview() {
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             "All posts",
             uiState = DiscussionThreadsUIState.Threads(listOf(mockThread, mockThread, mockThread)),
+            uiMessage = null,
+            onItemClick = {},
+            onBackClick = {},
+            updatedOrder = {},
+            updatedFilter = {},
+            onCreatePostClick = {},
+            viewType = FragmentViewType.FULL_CONTENT,
+            onSwipeRefresh = {},
+            paginationCallback = {},
+            refreshing = false,
+            canLoadMore = false
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DiscussionThreadsEmptyScreenPreview() {
+    OpenEdXTheme {
+        DiscussionThreadsScreen(
+            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
+            "All posts",
+            uiState = DiscussionThreadsUIState.Threads(emptyList()),
             uiMessage = null,
             onItemClick = {},
             onBackClick = {},

@@ -9,7 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -18,11 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,9 +35,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.openedx.core.ui.OutlinePrimaryButton
+import org.openedx.core.ui.PrimaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.whatsnew.R
 
@@ -169,17 +166,11 @@ fun PrevButton(
         label = ""
     )
 
-    OutlinedButton(
+    OutlinePrimaryButton(
         modifier = Modifier
             .testTag("btn_previous")
             .height(42.dp)
             .alpha(prevButtonAnimationFactor),
-        colors = ButtonDefaults.outlinedButtonColors(
-            backgroundColor = MaterialTheme.appColors.background
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.appColors.primary),
-        elevation = null,
-        shape = MaterialTheme.appShapes.navigationButtonShape,
         onClick = onPrevClick,
     ) {
         Row(
@@ -206,15 +197,10 @@ fun NextFinishButton(
     onNextClick: () -> Unit,
     hasNextPage: Boolean
 ) {
-    Button(
+    PrimaryButton(
         modifier = Modifier
             .testTag("btn_next")
             .height(42.dp),
-        colors = ButtonDefaults.buttonColors(
-            backgroundColor = MaterialTheme.appColors.primaryButtonBackground
-        ),
-        elevation = null,
-        shape = MaterialTheme.appShapes.navigationButtonShape,
         onClick = onNextClick
     ) {
         AnimatedContent(
@@ -232,14 +218,13 @@ fun NextFinishButton(
                     Text(
                         modifier = Modifier.testTag("txt_next"),
                         text = stringResource(id = R.string.whats_new_navigation_next),
-                        color = MaterialTheme.appColors.primaryButtonText,
                         style = MaterialTheme.appTypography.labelLarge
                     )
                     Spacer(Modifier.width(8.dp))
                     Icon(
                         painter = painterResource(id = org.openedx.core.R.drawable.core_ic_forward),
                         contentDescription = null,
-                        tint = MaterialTheme.appColors.primaryButtonText
+                        tint = MaterialTheme.appColors.secondaryButtonText,
                     )
                 }
             } else {
@@ -250,14 +235,13 @@ fun NextFinishButton(
                     Text(
                         modifier = Modifier.testTag("txt_done"),
                         text = stringResource(id = R.string.whats_new_navigation_done),
-                        color = MaterialTheme.appColors.primaryButtonText,
                         style = MaterialTheme.appTypography.labelLarge
                     )
                     Spacer(Modifier.width(8.dp))
                     Icon(
                         painter = painterResource(id = org.openedx.core.R.drawable.core_ic_check),
                         contentDescription = null,
-                        tint = MaterialTheme.appColors.primaryButtonText
+                        tint = MaterialTheme.appColors.secondaryButtonText,
                     )
                 }
             }

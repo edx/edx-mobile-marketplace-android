@@ -122,11 +122,13 @@ import org.openedx.core.extension.parcelable
 import org.openedx.core.extension.tagId
 import org.openedx.core.ui.AutoSizeText
 import org.openedx.core.ui.BackBtn
+import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
-import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OutlinePrimaryButton
+import org.openedx.core.ui.PrimaryButton
 import org.openedx.core.ui.SheetContent
+import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -886,7 +888,7 @@ private fun ChangeImageDialog(
                     color = MaterialTheme.appColors.textPrimary
                 )
                 Spacer(Modifier.height(20.dp))
-                OpenEdXButton(
+                PrimaryButton(
                     text = stringResource(id = R.string.profile_select_from_gallery),
                     onClick = onSelectFromGalleryClick,
                     content = {
@@ -894,15 +896,13 @@ private fun ChangeImageDialog(
                             modifier = Modifier.testTag("it_select_from_gallery"),
                             text = stringResource(id = R.string.profile_select_from_gallery),
                             painter = painterResource(id = R.drawable.profile_ic_gallery),
-                            color = Color.White,
+                            color = MaterialTheme.appColors.secondaryButtonText,
                             textStyle = MaterialTheme.appTypography.labelLarge
                         )
                     }
                 )
                 Spacer(Modifier.height(16.dp))
-                OpenEdXOutlinedButton(
-                    borderColor = MaterialTheme.appColors.error,
-                    textColor = MaterialTheme.appColors.textPrimary,
+                OutlinePrimaryButton(
                     text = stringResource(id = R.string.profile_remove_photo),
                     onClick = onRemoveImageClick,
                     content = {
@@ -916,9 +916,7 @@ private fun ChangeImageDialog(
                     }
                 )
                 Spacer(Modifier.height(40.dp))
-                OpenEdXOutlinedButton(
-                    borderColor = MaterialTheme.appColors.primaryButtonBorder,
-                    textColor = MaterialTheme.appColors.primaryButtonBorderedText,
+                TertiaryButton(
                     text = stringResource(id = coreR.string.core_cancel),
                     onClick = onCancelClick
                 )
@@ -1171,10 +1169,9 @@ private fun LeaveProfile(
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.size(40.dp))
-                OpenEdXButton(
+                BrandButton(
                     text = stringResource(id = R.string.profile_leave),
                     onClick = onLeaveClick,
-                    backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
                     content = {
                         Text(
                             modifier = Modifier
@@ -1188,9 +1185,7 @@ private fun LeaveProfile(
                     }
                 )
                 Spacer(Modifier.height(24.dp))
-                OpenEdXOutlinedButton(
-                    borderColor = MaterialTheme.appColors.primaryButtonBorder,
-                    textColor = MaterialTheme.appColors.primaryButtonBorderedText,
+                OutlinePrimaryButton(
                     text = stringResource(id = R.string.profile_keep_editing),
                     onClick = onDismissRequest
                 )
@@ -1264,9 +1259,8 @@ private fun LeaveProfileLandscape(
                         Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        OpenEdXButton(
+                        BrandButton(
                             text = stringResource(id = R.string.profile_leave),
-                            backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
                             content = {
                                 AutoSizeText(
                                     modifier = Modifier.testTag("txt_leave_profile_dialog_leave"),
@@ -1278,9 +1272,7 @@ private fun LeaveProfileLandscape(
                             onClick = onLeaveClick
                         )
                         Spacer(Modifier.height(16.dp))
-                        OpenEdXOutlinedButton(
-                            borderColor = MaterialTheme.appColors.primaryButtonBorder,
-                            textColor = MaterialTheme.appColors.primaryButtonBorderedText,
+                        OutlinePrimaryButton(
                             text = stringResource(id = R.string.profile_keep_editing),
                             onClick = onDismissRequest,
                             content = {

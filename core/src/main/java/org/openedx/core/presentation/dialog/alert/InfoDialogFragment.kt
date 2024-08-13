@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import org.openedx.core.R
-import org.openedx.core.presentation.global.app_upgrade.DefaultTextButton
+import org.openedx.core.ui.PrimaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -109,7 +110,8 @@ private fun InfoDialog(
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.appTypography.bodyMedium
             )
-            DefaultTextButton(
+            PrimaryButton(
+                modifier = Modifier.wrapContentSize(),
                 text = stringResource(R.string.core_ok),
                 onClick = onClick
             )

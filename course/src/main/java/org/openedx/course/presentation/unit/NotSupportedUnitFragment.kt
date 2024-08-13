@@ -1,12 +1,26 @@
 package org.openedx.course.presentation.unit
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,14 +33,16 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import org.openedx.core.ui.PrimaryButton
 import org.openedx.core.ui.WindowSize
+import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.course.R as courseR
@@ -134,13 +150,9 @@ private fun NotSupportedUnitScreen(
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(40.dp))
-                Button(modifier = Modifier
+                PrimaryButton(modifier = Modifier
                     .width(216.dp)
                     .height(42.dp),
-                    shape = MaterialTheme.appShapes.buttonShape,
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = MaterialTheme.appColors.primaryButtonBackground
-                    ),
                     onClick = {
                         uriHandler.openUri(uri)
                     }) {
@@ -153,5 +165,17 @@ private fun NotSupportedUnitScreen(
                 Spacer(Modifier.height(20.dp))
             }
         }
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PageIndicatorViewPreview() {
+    OpenEdXTheme {
+        NotSupportedUnitScreen(
+            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
+            uri = "https://www.text.com"
+        )
     }
 }

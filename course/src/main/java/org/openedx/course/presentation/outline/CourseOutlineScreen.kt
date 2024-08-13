@@ -61,7 +61,7 @@ import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.ui.CircularProgress
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.NoContentScreen
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OutlinePrimaryButton
 import org.openedx.core.ui.TextIcon
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -391,7 +391,7 @@ private fun ResumeCourse(
             )
         }
         Spacer(Modifier.height(16.dp))
-        OpenEdXOutlinedButton(
+        OutlinePrimaryButton(
             text = stringResource(id = R.string.course_resume),
             textColor = MaterialTheme.appColors.primaryButtonBorderedText,
             borderColor = MaterialTheme.appColors.primaryButtonBorder,
@@ -452,7 +452,7 @@ private fun ResumeCourseTablet(
                 )
             }
         }
-        OpenEdXOutlinedButton(
+        OutlinePrimaryButton(
             modifier = Modifier.width(210.dp),
             text = stringResource(id = R.string.course_resume),
             textColor = MaterialTheme.appColors.primaryButtonBorderedText,

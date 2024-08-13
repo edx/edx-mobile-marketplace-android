@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import org.openedx.core.R
 import org.openedx.core.extension.takeIfNotEmpty
-import org.openedx.core.presentation.global.app_upgrade.TransparentTextButton
+import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -151,20 +151,22 @@ private fun CalendarAlertDialog(dialogProperties: DialogProperties, onDismiss: (
             )
         },
         confirmButton = {
-            TransparentTextButton(
-                text = dialogProperties.positiveButton
-            ) {
-                onDismiss()
-                dialogProperties.positiveAction.invoke()
-            }
+            TertiaryButton(
+                text = dialogProperties.positiveButton,
+                onClick = {
+                    onDismiss()
+                    dialogProperties.positiveAction.invoke()
+                }
+            )
         },
         dismissButton = {
-            TransparentTextButton(
-                text = dialogProperties.negativeButton
-            ) {
-                onDismiss()
-                dialogProperties.negativeAction.invoke()
-            }
+            TertiaryButton(
+                text = dialogProperties.negativeButton,
+                onClick = {
+                    onDismiss()
+                    dialogProperties.negativeAction.invoke()
+                }
+            )
         },
     )
 }

@@ -61,8 +61,8 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRequiredScreen
 import org.openedx.core.ui.BackBtn
+import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -186,7 +186,7 @@ private fun RestorePasswordScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp),
-            painter = painterResource(id = org.openedx.core.R.drawable.core_top_header),
+            painter = painterResource(id = R.drawable.core_top_header),
             contentScale = ContentScale.FillBounds,
             contentDescription = null
         )
@@ -297,8 +297,8 @@ private fun RestorePasswordScreen(
                                         CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                                     }
                                 } else {
-                                    OpenEdXButton(
-                                        modifier = buttonWidth.testTag("btn_reset_password"),
+                                    BrandButton(
+                                        modifier = buttonWidth,
                                         text = stringResource(id = authR.string.auth_reset_password),
                                         onClick = {
                                             keyboardController?.hide()
@@ -350,7 +350,7 @@ private fun RestorePasswordScreen(
                                     color = MaterialTheme.appColors.textPrimary
                                 )
                                 Spacer(Modifier.height(48.dp))
-                                OpenEdXButton(
+                                BrandButton(
                                     modifier = buttonWidth,
                                     text = stringResource(id = R.string.core_sign_in),
                                     onClick = {

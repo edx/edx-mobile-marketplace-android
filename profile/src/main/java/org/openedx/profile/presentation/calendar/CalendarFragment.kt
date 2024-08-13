@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.ui.OpenEdXButton
+import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -233,7 +233,7 @@ private fun CalendarScreen(
                                     color = MaterialTheme.appColors.textDark
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
-                                OpenEdXButton(
+                                BrandButton(
                                     modifier = Modifier.fillMaxWidth(0.75f),
                                     text = stringResource(id = R.string.profile_set_up_calendar_sync),
                                     onClick = {

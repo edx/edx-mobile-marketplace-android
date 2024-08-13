@@ -41,7 +41,7 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OutlinePrimaryButton
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -167,15 +167,11 @@ internal fun ManageAccountView(
                                         title = uiState.account.name,
                                         subtitle = uiState.account.email ?: ""
                                     )
-                                    OpenEdXOutlinedButton(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
+                                    OutlinePrimaryButton(
                                         text = stringResource(id = ProfileR.string.profile_edit_profile),
                                         onClick = {
                                             onAction(ManageAccountViewAction.EditAccountClick)
                                         },
-                                        borderColor = MaterialTheme.appColors.primaryButtonBorderedText,
-                                        textColor = MaterialTheme.appColors.primaryButtonBorderedText
                                     )
                                     IconText(
                                         text = stringResource(id = ProfileR.string.profile_delete_profile),

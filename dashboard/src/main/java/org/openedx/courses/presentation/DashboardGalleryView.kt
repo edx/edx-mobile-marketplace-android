@@ -91,9 +91,9 @@ import org.openedx.core.domain.model.Progress
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPUIState
+import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
-import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.PurchasesFulfillmentCompletedDialog
 import org.openedx.core.ui.TextIcon
 import org.openedx.core.ui.UpgradeErrorDialog
@@ -944,9 +944,8 @@ private fun FindACourseButton(
     modifier: Modifier = Modifier,
     findACourseClick: () -> Unit
 ) {
-    OpenEdXButton(
+    BrandButton(
         modifier = modifier
-            .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 20.dp),
         onClick = {
             findACourseClick()
@@ -1095,6 +1094,12 @@ private fun DashboardGalleryViewPreview() {
 @Composable
 private fun NoCoursesInfoPreview() {
     OpenEdXTheme {
-        NoCoursesInfo()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.appColors.background),
+        ) {
+            NoCoursesInfo()
+        }
     }
 }

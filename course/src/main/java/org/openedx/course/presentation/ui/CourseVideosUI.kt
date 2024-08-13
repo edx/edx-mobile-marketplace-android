@@ -29,7 +29,6 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.outlined.Settings
@@ -71,6 +70,7 @@ import org.openedx.core.presentation.settings.video.VideoQualityType
 import org.openedx.core.ui.CircularProgress
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.NoContentScreen
+import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -204,7 +204,7 @@ private fun CourseVideosUI(
         }
 
         var isDownloadConfirmationShowed by rememberSaveable {
-            mutableStateOf(false)
+            mutableStateOf(true)
         }
 
         var isDeleteDownloadsConfirmationShowed by rememberSaveable {
@@ -314,25 +314,21 @@ private fun CourseVideosUI(
                     isDownloadConfirmationShowed = false
                 },
                 confirmButton = {
-                    TextButton(
+                    TertiaryButton(
+                        text = stringResource(id = org.openedx.core.R.string.core_confirm),
                         onClick = {
                             isDownloadConfirmationShowed = false
                             onDownloadAllClick(false)
                         }
-                    ) {
-                        Text(
-                            text = stringResource(id = org.openedx.core.R.string.core_confirm)
-                        )
-                    }
+                    )
                 },
                 dismissButton = {
-                    TextButton(
+                    TertiaryButton(
+                        text = stringResource(id = org.openedx.core.R.string.core_dismiss),
                         onClick = {
                             isDownloadConfirmationShowed = false
                         }
-                    ) {
-                        Text(text = stringResource(id = org.openedx.core.R.string.core_dismiss))
-                    }
+                    )
                 }
             )
         }
@@ -362,25 +358,21 @@ private fun CourseVideosUI(
                     isDeleteDownloadsConfirmationShowed = false
                 },
                 confirmButton = {
-                    TextButton(
+                    TertiaryButton(
+                        text = stringResource(id = org.openedx.core.R.string.core_delete),
                         onClick = {
                             isDeleteDownloadsConfirmationShowed = false
                             onDownloadAllClick(true)
                         }
-                    ) {
-                        Text(
-                            text = stringResource(id = org.openedx.core.R.string.core_delete)
-                        )
-                    }
+                    )
                 },
                 dismissButton = {
-                    TextButton(
+                    TertiaryButton(
+                        text = stringResource(id = org.openedx.core.R.string.core_cancel),
                         onClick = {
                             isDeleteDownloadsConfirmationShowed = false
                         }
-                    ) {
-                        Text(text = stringResource(id = org.openedx.core.R.string.core_cancel))
-                    }
+                    )
                 }
             )
         }
@@ -404,27 +396,21 @@ private fun CourseVideosUI(
                     deleteDownloadBlock = null
                 },
                 confirmButton = {
-                    TextButton(
+                    TertiaryButton(
+                        text = stringResource(id = org.openedx.core.R.string.core_delete),
                         onClick = {
                             deleteDownloadBlock?.let { block ->
                                 onDownloadClick(listOf(block.id))
                             }
                             deleteDownloadBlock = null
                         }
-                    ) {
-                        Text(
-                            text = stringResource(id = org.openedx.core.R.string.core_delete)
-                        )
-                    }
+                    )
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = {
-                            deleteDownloadBlock = null
-                        }
-                    ) {
-                        Text(text = stringResource(id = org.openedx.core.R.string.core_cancel))
-                    }
+                    TertiaryButton(
+                        text = stringResource(id = org.openedx.core.R.string.core_cancel),
+                        onClick = { deleteDownloadBlock = null }
+                    )
                 }
             )
         }

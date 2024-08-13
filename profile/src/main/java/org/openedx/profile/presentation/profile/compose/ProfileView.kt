@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OutlinePrimaryButton
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -142,15 +142,11 @@ internal fun ProfileView(
                                         subtitle = "@${uiState.account.username}"
                                     )
                                     ProfileInfoSection(uiState.account)
-                                    OpenEdXOutlinedButton(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
+                                    OutlinePrimaryButton(
                                         text = stringResource(id = org.openedx.profile.R.string.profile_edit_profile),
                                         onClick = {
                                             onAction(ProfileViewAction.EditAccountClick)
                                         },
-                                        borderColor = MaterialTheme.appColors.primaryButtonBorderedText,
-                                        textColor = MaterialTheme.appColors.primaryButtonBorderedText
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                 }

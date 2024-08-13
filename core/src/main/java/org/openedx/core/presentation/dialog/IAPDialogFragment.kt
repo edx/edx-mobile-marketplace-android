@@ -42,9 +42,9 @@ import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.presentation.iap.IAPViewModel
+import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IAPErrorDialog
-import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.UnlockingAccessView
 import org.openedx.core.ui.ValuePropUpgradeFeatures
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -110,7 +110,7 @@ class IAPDialogFragment : DialogFragment() {
                                     iapState is IAPUIState.ProductData &&
                                             iapViewModel.purchaseData.formattedPrice.isNullOrEmpty()
                                                 .not() -> {
-                                        OpenEdXButton(modifier = Modifier.fillMaxWidth(),
+                                        BrandButton(
                                             text = stringResource(
                                                 id = R.string.iap_upgrade_price,
                                                 iapViewModel.purchaseData.formattedPrice!!,

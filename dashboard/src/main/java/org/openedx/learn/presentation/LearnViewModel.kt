@@ -1,6 +1,5 @@
 package org.openedx.learn.presentation
 
-import androidx.fragment.app.FragmentManager
 import org.openedx.DashboardNavigator
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
@@ -17,10 +16,6 @@ class LearnViewModel(
 
     private val dashboardType get() = config.getDashboardConfig().getType()
     val isProgramTypeWebView get() = config.getProgramConfig().isViewTypeWebView()
-
-    fun onSettingsClick(fragmentManager: FragmentManager) {
-        dashboardRouter.navigateToSettings(fragmentManager)
-    }
 
     val getDashboardFragment get() = DashboardNavigator(dashboardType).getDashboardFragment()
 

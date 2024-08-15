@@ -168,9 +168,6 @@ class NativeDiscoveryFragment : Fragment() {
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStackImmediate()
                     },
-                    onSettingsClick = {
-                        router.navigateToSettings(requireActivity().supportFragmentManager)
-                    }
                 )
                 LaunchedEffect(uiState) {
                     if (querySearch.isNotEmpty()) {
@@ -218,7 +215,6 @@ internal fun DiscoveryScreen(
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
-    onSettingsClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
@@ -323,9 +319,7 @@ internal fun DiscoveryScreen(
                 Toolbar(
                     label = stringResource(id = R.string.discovery_Discovery),
                     canShowBackBtn = canShowBackButton,
-                    canShowSettingsIcon = !canShowBackButton,
                     onBackClick = onBackClick,
-                    onSettingsClick = onSettingsClick
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -521,7 +515,6 @@ private fun DiscoveryScreenPreview() {
             onSignInClick = {},
             onRegisterClick = {},
             onBackClick = {},
-            onSettingsClick = {},
             canShowBackButton = false
         )
     }
@@ -562,7 +555,6 @@ private fun DiscoveryScreenTabletPreview() {
             onSignInClick = {},
             onRegisterClick = {},
             onBackClick = {},
-            onSettingsClick = {},
             canShowBackButton = false
         )
     }

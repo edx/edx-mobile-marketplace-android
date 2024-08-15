@@ -15,12 +15,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,7 +53,6 @@ import org.openedx.core.ui.windowSizeValue
 import org.openedx.dashboard.R
 import org.openedx.dashboard.databinding.FragmentLearnBinding
 import org.openedx.learn.LearnType
-import org.openedx.core.R as CoreR
 
 class LearnFragment : Fragment(R.layout.fragment_learn) {
 
@@ -147,9 +144,6 @@ private fun Header(
     ) {
         Title(
             label = stringResource(id = R.string.dashboard_learn),
-            onSettingsClick = {
-                viewModel.onSettingsClick(fragmentManager)
-            }
         )
         if (viewModel.isProgramTypeWebView) {
             LearnDropdownMenu(
@@ -167,7 +161,6 @@ private fun Header(
 private fun Title(
     modifier: Modifier = Modifier,
     label: String,
-    onSettingsClick: () -> Unit,
 ) {
     Box(
         modifier = modifier.fillMaxWidth()
@@ -180,20 +173,6 @@ private fun Title(
             color = MaterialTheme.appColors.textDark,
             style = MaterialTheme.appTypography.headlineBold
         )
-        IconButton(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 12.dp),
-            onClick = {
-                onSettingsClick()
-            }
-        ) {
-            Icon(
-                imageVector = Icons.Default.ManageAccounts,
-                tint = MaterialTheme.appColors.primary,
-                contentDescription = stringResource(id = CoreR.string.core_accessibility_settings)
-            )
-        }
     }
 }
 
@@ -290,10 +269,7 @@ private fun LearnDropdownMenu(
 @Composable
 private fun HeaderPreview() {
     OpenEdXTheme {
-        Title(
-            label = stringResource(id = R.string.dashboard_learn),
-            onSettingsClick = {}
-        )
+        Title(label = stringResource(id = R.string.dashboard_learn))
     }
 }
 

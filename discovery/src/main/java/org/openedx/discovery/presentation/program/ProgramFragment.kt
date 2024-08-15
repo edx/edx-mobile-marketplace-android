@@ -203,9 +203,6 @@ class ProgramFragment : Fragment() {
                             }
                         }
                     },
-                    onSettingsClick = {
-                        viewModel.navigateToSettings(requireActivity().supportFragmentManager)
-                    }
                 )
             }
         }
@@ -249,7 +246,6 @@ private fun ProgramInfoScreen(
     isNestedFragment: Boolean,
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
-    onSettingsClick: () -> Unit,
     onBackClick: () -> Unit,
     onUriClick: (String, WebViewLink.Authority) -> Unit,
 ) {
@@ -304,9 +300,7 @@ private fun ProgramInfoScreen(
                 Toolbar(
                     label = stringResource(id = R.string.discovery_programs),
                     canShowBackBtn = canShowBackBtn,
-                    canShowSettingsIcon = !canShowBackBtn,
                     onBackClick = onBackClick,
-                    onSettingsClick = onSettingsClick
                 )
             }
 
@@ -388,7 +382,6 @@ fun MyProgramsPreview() {
             hasInternetConnection = false,
             onWebViewUIAction = {},
             onBackClick = {},
-            onSettingsClick = {},
             onUriClick = { _, _ -> },
         )
     }

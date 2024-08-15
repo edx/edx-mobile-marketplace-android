@@ -168,9 +168,6 @@ class WebViewDiscoveryFragment : Fragment() {
                     onSignInClick = {
                         viewModel.navigateToSignIn(parentFragmentManager)
                     },
-                    onSettingsClick = {
-                        viewModel.navigateToSettings(requireActivity().supportFragmentManager)
-                    },
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStackImmediate()
                     }
@@ -207,8 +204,7 @@ private fun WebViewDiscoveryScreen(
     onUriClick: (String, WebViewLink.Authority) -> Unit,
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -263,9 +259,7 @@ private fun WebViewDiscoveryScreen(
             Toolbar(
                 label = stringResource(id = R.string.discovery_explore_the_catalog),
                 canShowBackBtn = isPreLogin,
-                canShowSettingsIcon = !isPreLogin,
                 onBackClick = onBackClick,
-                onSettingsClick = onSettingsClick
             )
 
             Surface {
@@ -424,7 +418,6 @@ private fun WebViewDiscoveryScreenPreview() {
             onUriClick = { _, _ -> },
             onRegisterClick = {},
             onSignInClick = {},
-            onSettingsClick = {},
             onBackClick = {},
         )
     }

@@ -13,8 +13,6 @@ interface DashboardRouter {
         resumeBlockId: String = ""
     )
 
-    fun navigateToSettings(fm: FragmentManager)
-
     fun navigateToAllEnrolledCourses(fm: FragmentManager)
 
     fun getProgramFragment(): Fragment

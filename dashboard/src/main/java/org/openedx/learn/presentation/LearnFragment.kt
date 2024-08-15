@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.viewpager2.widget.ViewPager2
 import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -72,7 +71,6 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
         binding.header.setContent {
             OpenEdXTheme {
                 Header(
-                    fragmentManager = requireParentFragment().parentFragmentManager,
                     defaultLearnType = defaultLearnType,
                     viewPager = binding.viewPager
                 )
@@ -106,7 +104,7 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
     companion object {
         private const val ARG_OPEN_TAB = "open_tab"
         fun newInstance(
-            openTab: String = LearnTab.COURSES.name
+            openTab: String = LearnTab.COURSES.name,
         ): LearnFragment {
             val fragment = LearnFragment()
             fragment.arguments = bundleOf(
@@ -119,7 +117,6 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
 
 @Composable
 private fun Header(
-    fragmentManager: FragmentManager,
     defaultLearnType: LearnType,
     viewPager: ViewPager2,
 ) {

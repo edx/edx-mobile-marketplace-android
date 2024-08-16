@@ -1192,10 +1192,11 @@ fun OutlinePrimaryButton(
 @SuppressLint("ModifierParameter")
 fun TertiaryButton(
     modifier: Modifier = Modifier.wrapContentSize(),
-    text: String,
+    text: String = "",
     onClick: () -> Unit,
     enabled: Boolean = true,
     textColor: Color = MaterialTheme.appColors.textPrimary,
+    content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Button(
         modifier = Modifier
@@ -1211,12 +1212,16 @@ fun TertiaryButton(
         enabled = enabled,
         onClick = onClick,
     ) {
-        Text(
-            modifier = Modifier.testTag("txt_${text.tagId()}"),
-            text = text,
-            style = MaterialTheme.appTypography.labelLarge,
-            color = textColor.copy(alpha = if (enabled) 1f else 0.3f)
-        )
+        if (content == null) {
+            Text(
+                modifier = Modifier.testTag("txt_${text.tagId()}"),
+                text = text,
+                style = MaterialTheme.appTypography.labelLarge,
+                color = textColor.copy(alpha = if (enabled) 1f else 0.3f)
+            )
+        } else {
+            content()
+        }
     }
 }
 

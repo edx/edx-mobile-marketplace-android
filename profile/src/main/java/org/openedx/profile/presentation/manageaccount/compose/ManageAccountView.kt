@@ -42,6 +42,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
 import org.openedx.core.ui.OutlinePrimaryButton
+import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -173,14 +174,18 @@ internal fun ManageAccountView(
                                             onAction(ManageAccountViewAction.EditAccountClick)
                                         },
                                     )
-                                    IconText(
-                                        text = stringResource(id = ProfileR.string.profile_delete_profile),
-                                        painter = painterResource(id = ProfileR.drawable.profile_ic_trash),
-                                        textStyle = MaterialTheme.appTypography.labelLarge,
-                                        color = MaterialTheme.appColors.error,
-                                        onClick = {
-                                            onAction(ManageAccountViewAction.DeleteAccount)
-                                        })
+                                    TertiaryButton(
+                                        onClick = { onAction(ManageAccountViewAction.DeleteAccount) },
+                                        content = {
+                                            IconText(
+                                                text = stringResource(id = ProfileR.string.profile_delete_profile),
+                                                painter = painterResource(id = ProfileR.drawable.profile_ic_trash),
+                                                textStyle = MaterialTheme.appTypography.labelLarge,
+                                                color = MaterialTheme.appColors.error,
+                                            )
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
                                 }
                             }
                         }

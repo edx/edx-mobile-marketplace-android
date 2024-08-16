@@ -765,13 +765,9 @@ private fun PrimaryCourseButtons(
             modifier = titleModifier,
             primaryCourse = primaryCourse,
         )
-        Divider()
-
-        viewsList.forEachIndexed { index, view ->
+        viewsList.forEach { view ->
+            Divider()
             view()
-            if (index < viewsList.size - 1) {
-                Divider()
-            }
         }
     }
 }

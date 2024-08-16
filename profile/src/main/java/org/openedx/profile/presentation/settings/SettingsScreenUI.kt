@@ -450,12 +450,12 @@ private fun LogoutButton(onClick: () -> Unit) {
                 modifier = Modifier.testTag("txt_logout"),
                 text = stringResource(id = profileR.string.profile_logout),
                 style = MaterialTheme.appTypography.titleMedium,
-                color = MaterialTheme.appColors.error
+                color = MaterialTheme.appColors.textPrimary
             )
             Icon(
                 painterResource(id = profileR.drawable.profile_ic_logout),
                 contentDescription = null,
-                tint = MaterialTheme.appColors.error
+                tint = MaterialTheme.appColors.textPrimary
             )
         }
     }
@@ -524,7 +524,7 @@ private fun LogoutDialog(
                 Spacer(Modifier.size(36.dp))
                 BrandButton(
                     text = stringResource(id = profileR.string.profile_logout),
-                    backgroundColor = MaterialTheme.appColors.warning,
+                    backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
                     onClick = onLogoutClick,
                     content = {
                         Box(
@@ -538,7 +538,7 @@ private fun LogoutDialog(
                                     .testTag("txt_logout")
                                     .fillMaxWidth(),
                                 text = stringResource(id = profileR.string.profile_logout),
-                                color = MaterialTheme.appColors.textWarning,
+                                color = MaterialTheme.appColors.primaryButtonText,
                                 style = MaterialTheme.appTypography.labelLarge,
                                 textAlign = TextAlign.Center
                             )
@@ -547,7 +547,7 @@ private fun LogoutDialog(
                                     .testTag("ic_logout"),
                                 painter = painterResource(id = profileR.drawable.profile_ic_logout),
                                 contentDescription = null,
-                                tint = Color.Black
+                                tint = MaterialTheme.appColors.primaryButtonText,
                             )
                         }
                     }

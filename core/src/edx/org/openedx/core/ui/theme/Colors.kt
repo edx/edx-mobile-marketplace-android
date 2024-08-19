@@ -84,7 +84,10 @@ val light_course_home_header_shade = Color(0xFFBABABA)
 val light_course_home_back_btn_background = light_surface
 val light_settings_title_content = light_surface
 val light_progress_bar_color = light_primary_button_background
-val light_progress_bar_background_color = Color(0xFFCCD4E0)
+val light_progress_bar_background_color = Color(0xFFE7E4DB)
+
+val light_primary_card_caution_background = Color(0xFFF3F1ED)
+val light_primary_card_info_background = Color(0xFFE7E4DB)
 
 
 // Dark theme colors scheme
@@ -166,4 +169,7 @@ val dark_course_home_header_shade = Color(0xFF999999)
 val dark_course_home_back_btn_background = Color.Black
 val dark_settings_title_content = Color.White
 val dark_progress_bar_color = dark_primary_button_background
-val dark_progress_bar_background_color = Color(0xFF8E9BAE)
+val dark_progress_bar_background_color = Color(0xFFE7E4DB)
+
+val dark_primary_card_caution_background = Color(0xFF2D494E)
+val dark_primary_card_info_background = Color(0xFF0E3639)

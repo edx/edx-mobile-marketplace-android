@@ -10,6 +10,7 @@
     <string name="dashboard_view_all_with_count">View All My Courses (%1$d)</string>
     <string name="dashboard_view_all">View All</string>
     <string name="dashboard_assignment_due" translatable="false">%1$s %2$s</string>
+    <string name="dashboard_assignment_due_default">View Assignments</string>
     <string name="dashboard_course_filter_all">All</string>
     <string name="dashboard_course_filter_in_progress">In Progress</string>
     <string name="dashboard_course_filter_completed">Completed</string>

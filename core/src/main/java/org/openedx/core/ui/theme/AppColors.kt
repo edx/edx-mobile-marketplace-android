@@ -78,7 +78,10 @@ data class AppColors(
     val settingsTitleContent: Color,
 
     val progressBarColor: Color,
-    val progressBarBackgroundColor: Color
+    val progressBarBackgroundColor: Color,
+
+    val primaryCardCautionBackground: Color,
+    val primaryCardInfoBackground: Color,
 ) {
     val primary: Color get() = material.primary
     val primaryVariant: Color get() = material.primaryVariant

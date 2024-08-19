@@ -75,7 +75,7 @@ fun UpgradeToAccessView(
             primaryIcon = Icons.Filled.EmojiEvents
             textColor = MaterialTheme.appColors.textDark
             shape = RectangleShape
-            backgroundColor = textColor.copy(0.05f)
+            backgroundColor = MaterialTheme.appColors.primaryCardInfoBackground
             secondaryIcon = {
                 Icon(
                     modifier = Modifier

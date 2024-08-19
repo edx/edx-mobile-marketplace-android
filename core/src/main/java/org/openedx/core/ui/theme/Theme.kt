@@ -96,7 +96,10 @@ private val DarkColorPalette = AppColors(
     settingsTitleContent = dark_settings_title_content,
 
     progressBarColor = dark_progress_bar_color,
-    progressBarBackgroundColor = dark_progress_bar_background_color
+    progressBarBackgroundColor = dark_progress_bar_background_color,
+
+    primaryCardCautionBackground = dark_primary_card_caution_background,
+    primaryCardInfoBackground = dark_primary_card_info_background,
 )
 
 private val LightColorPalette = AppColors(
@@ -185,7 +188,10 @@ private val LightColorPalette = AppColors(
     settingsTitleContent = light_settings_title_content,
 
     progressBarColor = light_progress_bar_color,
-    progressBarBackgroundColor = light_progress_bar_background_color
+    progressBarBackgroundColor = light_progress_bar_background_color,
+
+    primaryCardCautionBackground = light_primary_card_caution_background,
+    primaryCardInfoBackground = light_primary_card_info_background,
 )
 
 val MaterialTheme.appColors: AppColors

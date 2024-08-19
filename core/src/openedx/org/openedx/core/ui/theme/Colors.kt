@@ -74,6 +74,8 @@ val light_course_home_back_btn_background = Color.White
 val light_settings_title_content = Color.White
 val light_progress_bar_color = light_primary
 val light_progress_bar_background_color = Color(0xFF97A5BB)
+val light_primary_card_caution_background = Color(0xFFF3F1ED)
+val light_primary_card_info_background = Color(0xFFE7E4DB)
 
 
 val dark_primary = Color(0xFF3F68F8)
@@ -148,3 +150,5 @@ val dark_course_home_back_btn_background = Color.Black
 val dark_settings_title_content = Color.White
 val dark_progress_bar_color = light_primary
 val dark_progress_bar_background_color = Color(0xFF8E9BAE)
+val dark_primary_card_caution_background = Color(0xFF2D494E)
+val dark_primary_card_info_background = Color(0xFF0E3639)

@@ -653,6 +653,19 @@ private fun PrimaryCourseCard(
     }
 }
 
+/**
+ * Manages and displays a dynamic list of primary course card buttons for up to four views: Due,
+ * Future, Upgrade, and Resume. The views are prioritized in the following order: Due, Future,
+ * Upgrade, and Resume.
+ *
+ * If all four views are active, the Future view is omitted to ensure only three buttons
+ * are shown. Unavailable views are automatically excluded from the list, preserving the
+ * established priority.
+ *
+ * Additionally, the visible buttons adhere to a specific color scheme, respecting the
+ * priority order of the colors: caution, info, and brand. The brand color is fixed for the
+ * Resume view.
+ */
 @Composable
 private fun PrimaryCourseButtons(
     modifier: Modifier = Modifier,

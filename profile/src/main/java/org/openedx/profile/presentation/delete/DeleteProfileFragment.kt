@@ -217,7 +217,7 @@ fun DeleteProfileScreen(
                             modifier = Modifier
                                 .size(145.dp)
                                 .align(Alignment.CenterHorizontally),
-                            painter = painterResource(id = profileR.drawable.profile_delete_box),
+                            painter = painterResource(id = profileR.drawable.profile_ic_warning),
                             contentDescription = null,
                         )
                         Spacer(Modifier.height(32.dp))

@@ -632,6 +632,7 @@ private fun EditProfileScreen(
                                             MaterialTheme.appColors.onSurface,
                                             CircleShape
                                         )
+                                        .background(Color.White, CircleShape)
                                         .padding(2.dp)
                                         .size(100.dp)
                                         .clip(CircleShape)

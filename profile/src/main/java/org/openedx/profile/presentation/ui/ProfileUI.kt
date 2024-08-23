@@ -51,7 +51,7 @@ fun ProfileTopic(image: String, title: String, subtitle: String) {
             ),
             modifier = Modifier
                 .testTag("img_profile")
-                .size(80.dp)
+                .size(60.dp)
                 .clip(CircleShape)
         )
         Spacer(modifier = Modifier.width(12.dp))

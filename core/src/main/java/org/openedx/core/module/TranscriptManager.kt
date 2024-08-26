@@ -6,6 +6,7 @@ import org.openedx.core.module.download.AbstractDownloader
 import org.openedx.core.utils.Directories
 import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.IOUtils
+import org.openedx.core.utils.Logger
 import org.openedx.core.utils.Sha1Util
 import subtitleFile.FormatSRT
 import subtitleFile.TimedTextObject
@@ -19,6 +20,8 @@ import java.util.concurrent.TimeUnit
 class TranscriptManager(
     val context: Context,
 ) {
+
+    private val logger = Logger(TAG)
 
     private val transcriptDownloader = object : AbstractDownloader() {
         override val client: OkHttpClient
@@ -67,9 +70,11 @@ class TranscriptManager(
             )
             if (result) {
                 getInputStream(downloadLink)?.let {
-                    val transcriptTimedTextObject =
-                        convertIntoTimedTextObject(it)
-                    transcriptObject = transcriptTimedTextObject
+                    try {
+                        transcriptObject = convertIntoTimedTextObject(it)
+                    } catch (e: NullPointerException) {
+                        logger.e(throwable = e, submitCrashReport = true)
+                    }
                 }
             }
         }
@@ -83,7 +88,7 @@ class TranscriptManager(
             try {
                 transcriptObject = convertIntoTimedTextObject(transcriptInputStream)
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e, submitCrashReport = true)
             }
         } else {
             startTranscriptDownload(transcriptUrl)
@@ -126,5 +131,9 @@ class TranscriptManager(
             return transcriptDir
         }
         return null
+    }
+
+    private companion object {
+        const val TAG = "TranscriptManager"
     }
 }

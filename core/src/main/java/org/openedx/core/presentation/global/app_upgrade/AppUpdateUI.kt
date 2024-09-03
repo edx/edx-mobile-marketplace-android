@@ -38,7 +38,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openedx.core.R
-import org.openedx.core.ui.PrimaryButton
 import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.statusBarsInset
@@ -233,7 +232,7 @@ fun AppUpgradeRequiredButtons(
                 onClick = onAccountSettingsClick
             )
         }
-        PrimaryButton(
+        TertiaryButton(
             modifier = Modifier.wrapContentSize(),
             text = stringResource(id = R.string.core_update),
             onClick = onUpdateClick
@@ -253,7 +252,7 @@ fun AppUpgradeDialogButtons(
             text = stringResource(id = R.string.core_not_now),
             onClick = onNotNowClick
         )
-        PrimaryButton(
+        TertiaryButton(
             modifier = Modifier.wrapContentSize(),
             text = stringResource(id = R.string.core_update),
             onClick = onUpdateClick

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -613,16 +612,11 @@ private fun DiscussionThreadsScreen(
                                                             onCreatePostClick()
                                                         },
                                                         content = {
-                                                            Icon(
-                                                                painter = painterResource(id = discussionR.drawable.discussion_ic_add_comment),
-                                                                contentDescription = null,
-                                                                tint = MaterialTheme.appColors.primary
-                                                            )
-                                                            Spacer(modifier = Modifier.width(6.dp))
-                                                            Text(
+                                                            IconText(
                                                                 text = stringResource(id = discussionR.string.discussion_create_post),
+                                                                painter = painterResource(id = discussionR.drawable.discussion_ic_add_comment),
                                                                 color = MaterialTheme.appColors.primary,
-                                                                style = MaterialTheme.appTypography.labelLarge
+                                                                textStyle = MaterialTheme.appTypography.labelLarge,
                                                             )
                                                         },
                                                     )

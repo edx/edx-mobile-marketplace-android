@@ -1070,7 +1070,7 @@ fun BrandButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
     textColor: Color = MaterialTheme.appColors.primaryButtonText,
-    backgroundColor: Color = Color(0xFFED5C13),//MaterialTheme.appColors.primaryButtonBackground,
+    backgroundColor: Color = MaterialTheme.appColors.primaryButtonBackground,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Button(
@@ -1081,7 +1081,7 @@ fun BrandButton(
                     ?.let { "btn_${text.tagId()}" } ?: ""
             )
             .then(modifier)
-            .height(42.dp),
+            .heightIn(min = 42.dp),
         shape = MaterialTheme.appShapes.buttonShape,
         colors = ButtonDefaults.buttonColors(
             backgroundColor = backgroundColor,
@@ -1095,7 +1095,8 @@ fun BrandButton(
                 modifier = Modifier.testTag("txt_${text.tagId()}"),
                 text = text,
                 style = MaterialTheme.appTypography.labelLarge,
-                color = textColor
+                color = textColor,
+                textAlign = TextAlign.Center
             )
         } else {
             content()
@@ -1119,7 +1120,7 @@ fun OutlineBrandButton(
         modifier = Modifier
             .testTag("btn_${text.tagId()}")
             .then(modifier)
-            .height(42.dp),
+            .heightIn(min = 42.dp),
         onClick = onClick,
         enabled = enabled,
         border = BorderStroke(1.dp, if (enabled) borderColor else borderColor.copy(alpha = 0.3f)),
@@ -1135,6 +1136,7 @@ fun OutlineBrandButton(
                 text = text,
                 style = MaterialTheme.appTypography.labelLarge,
                 color = if (enabled) textColor else textColor.copy(alpha = 0.3f),
+                textAlign = TextAlign.Center
             )
         } else {
             content()

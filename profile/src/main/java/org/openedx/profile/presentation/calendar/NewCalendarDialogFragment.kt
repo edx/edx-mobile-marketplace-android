@@ -168,10 +168,6 @@ private fun NewCalendarDialog(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.appColors.textDark
             )
-            OutlineBrandButton(
-                text = stringResource(id = CoreR.string.core_cancel),
-                onClick = { onCancelClick() }
-            )
             BrandButton(
                 text = stringResource(id = R.string.profile_begin_syncing),
                 onClick = {
@@ -184,6 +180,10 @@ private fun NewCalendarDialog(
                         calendarColor
                     )
                 }
+            )
+            OutlineBrandButton(
+                text = stringResource(id = CoreR.string.core_cancel),
+                onClick = { onCancelClick() }
             )
         }
     }

@@ -120,9 +120,7 @@ import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.extension.getFileName
 import org.openedx.core.extension.parcelable
 import org.openedx.core.extension.tagId
-import org.openedx.core.ui.AutoSizeText
 import org.openedx.core.ui.BackBtn
-import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
 import org.openedx.core.ui.OutlinePrimaryButton
@@ -506,6 +504,7 @@ private fun EditProfileScreen(
 
             if (isOpenChangeImageDialogState && uiState.account.isOlderThanMinAge()) {
                 ChangeImageDialog(
+                    hasProfileImage = imageRes != coreR.drawable.core_ic_default_profile_picture,
                     onSelectFromGalleryClick = {
                         isOpenChangeImageDialogState = false
                         onSelectImageClick()
@@ -844,6 +843,7 @@ private fun LimitedProfileDialog(
 
 @Composable
 private fun ChangeImageDialog(
+    hasProfileImage: Boolean,
     onSelectFromGalleryClick: () -> Unit,
     onRemoveImageClick: () -> Unit,
     onCancelClick: () -> Unit,
@@ -901,20 +901,22 @@ private fun ChangeImageDialog(
                         )
                     }
                 )
-                Spacer(Modifier.height(16.dp))
-                OutlinePrimaryButton(
-                    text = stringResource(id = R.string.profile_remove_photo),
-                    onClick = onRemoveImageClick,
-                    content = {
-                        IconText(
-                            modifier = Modifier.testTag("it_remove_photo"),
-                            text = stringResource(id = R.string.profile_remove_photo),
-                            painter = painterResource(id = R.drawable.profile_ic_remove_image),
-                            color = MaterialTheme.appColors.error,
-                            textStyle = MaterialTheme.appTypography.labelLarge
-                        )
-                    }
-                )
+                if (hasProfileImage) {
+                    Spacer(Modifier.height(16.dp))
+                    OutlinePrimaryButton(
+                        text = stringResource(id = R.string.profile_remove_photo),
+                        onClick = onRemoveImageClick,
+                        content = {
+                            IconText(
+                                modifier = Modifier.testTag("it_remove_photo"),
+                                text = stringResource(id = R.string.profile_remove_photo),
+                                painter = painterResource(id = R.drawable.profile_ic_remove_image),
+                                color = MaterialTheme.appColors.primaryButtonBorderedText,
+                                textStyle = MaterialTheme.appTypography.labelLarge
+                            )
+                        }
+                    )
+                }
                 Spacer(Modifier.height(40.dp))
                 TertiaryButton(
                     text = stringResource(id = coreR.string.core_cancel),
@@ -1169,20 +1171,9 @@ private fun LeaveProfile(
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.size(40.dp))
-                BrandButton(
+                PrimaryButton(
                     text = stringResource(id = R.string.profile_leave),
                     onClick = onLeaveClick,
-                    content = {
-                        Text(
-                            modifier = Modifier
-                                .testTag("txt_leave")
-                                .fillMaxWidth(),
-                            text = stringResource(id = R.string.profile_leave),
-                            color = MaterialTheme.appColors.primaryButtonText,
-                            style = MaterialTheme.appTypography.labelLarge,
-                            textAlign = TextAlign.Center
-                        )
-                    }
                 )
                 Spacer(Modifier.height(24.dp))
                 OutlinePrimaryButton(
@@ -1259,31 +1250,14 @@ private fun LeaveProfileLandscape(
                         Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        BrandButton(
+                        PrimaryButton(
                             text = stringResource(id = R.string.profile_leave),
-                            content = {
-                                AutoSizeText(
-                                    modifier = Modifier.testTag("txt_leave_profile_dialog_leave"),
-                                    text = stringResource(id = R.string.profile_leave),
-                                    style = MaterialTheme.appTypography.bodyMedium,
-                                    color = MaterialTheme.appColors.primaryButtonText
-                                )
-                            },
                             onClick = onLeaveClick
                         )
                         Spacer(Modifier.height(16.dp))
                         OutlinePrimaryButton(
                             text = stringResource(id = R.string.profile_keep_editing),
                             onClick = onDismissRequest,
-                            content = {
-                                AutoSizeText(
-                                    modifier = Modifier
-                                        .testTag("btn_leave_profile_dialog_keep_editing"),
-                                    text = stringResource(id = R.string.profile_keep_editing),
-                                    style = MaterialTheme.appTypography.bodyMedium,
-                                    color = MaterialTheme.appColors.primaryButtonBorderedText
-                                )
-                            }
                         )
                     }
                 }
@@ -1303,8 +1277,8 @@ fun LeaveProfilePreview() {
     }
 }
 
-@Preview(device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(device = Devices.PIXEL_TABLET, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(device = Devices.PIXEL_TABLET, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun LeaveProfileLandscapePreview() {
     OpenEdXTheme {
@@ -1321,6 +1295,7 @@ fun LeaveProfileLandscapePreview() {
 fun ChangeProfileImagePreview() {
     OpenEdXTheme {
         ChangeImageDialog(
+            hasProfileImage = true,
             onSelectFromGalleryClick = {},
             onRemoveImageClick = {},
             onCancelClick = {}

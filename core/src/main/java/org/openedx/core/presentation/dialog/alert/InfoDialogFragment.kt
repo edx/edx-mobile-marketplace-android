@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import org.openedx.core.R
-import org.openedx.core.ui.PrimaryButton
+import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -110,7 +110,7 @@ private fun InfoDialog(
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.appTypography.bodyMedium
             )
-            PrimaryButton(
+            TertiaryButton(
                 modifier = Modifier.wrapContentSize(),
                 text = stringResource(R.string.core_ok),
                 onClick = onClick

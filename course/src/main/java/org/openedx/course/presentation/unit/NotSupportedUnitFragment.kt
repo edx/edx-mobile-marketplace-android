@@ -153,15 +153,10 @@ private fun NotSupportedUnitScreen(
                 PrimaryButton(modifier = Modifier
                     .width(216.dp)
                     .height(42.dp),
+                    text = stringResource(id = courseR.string.course_open_in_browser),
                     onClick = {
                         uriHandler.openUri(uri)
-                    }) {
-                    Text(
-                        text = stringResource(id = courseR.string.course_open_in_browser),
-                        color = MaterialTheme.appColors.primaryButtonText,
-                        style = MaterialTheme.appTypography.labelLarge
-                    )
-                }
+                    })
                 Spacer(Modifier.height(20.dp))
             }
         }

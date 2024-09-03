@@ -47,7 +47,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openedx.core.R
 import org.openedx.core.presentation.dialog.DefaultDialogBox
-import org.openedx.core.ui.PrimaryButton
 import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
@@ -107,7 +106,7 @@ fun ThankYouDialog(
                         text = stringResource(id = R.string.core_not_now),
                         onClick = onNotNowClick
                     )
-                    PrimaryButton(
+                    TertiaryButton(
                         modifier = Modifier.wrapContentSize(),
                         text = stringResource(id = R.string.core_rate_us),
                         onClick = onRateUsClick
@@ -186,7 +185,7 @@ fun FeedbackDialog(
                     text = stringResource(id = R.string.core_not_now),
                     onClick = onNotNowClick
                 )
-                PrimaryButton(
+                TertiaryButton(
                     modifier = Modifier.wrapContentSize(),
                     enabled = feedback.value.isNotEmpty(),
                     text = stringResource(id = R.string.core_share_feedback),
@@ -241,7 +240,7 @@ fun RateDialog(
                     text = stringResource(id = R.string.core_not_now),
                     onClick = onNotNowClick
                 )
-                PrimaryButton(
+                TertiaryButton(
                     modifier = Modifier.wrapContentSize(),
                     enabled = rating.intValue > 0,
                     text = stringResource(id = R.string.core_submit),

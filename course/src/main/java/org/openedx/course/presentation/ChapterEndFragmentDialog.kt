@@ -41,9 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import org.openedx.core.extension.setWidthPercent
-import org.openedx.core.ui.AutoSizeText
-import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.OutlinePrimaryButton
+import org.openedx.core.ui.PrimaryButton
 import org.openedx.core.ui.TextIcon
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
@@ -203,13 +202,13 @@ private fun ChapterEndDialogScreen(
             )
             Spacer(Modifier.height(42.dp))
             if (nextSectionName.isNotEmpty()) {
-                BrandButton(
+                PrimaryButton(
                     text = stringResource(id = R.string.course_next_section),
                     content = {
                         TextIcon(
                             text = stringResource(id = R.string.course_next_section),
                             painter = painterResource(org.openedx.core.R.drawable.core_ic_forward),
-                            color = MaterialTheme.appColors.primaryButtonText,
+                            color = MaterialTheme.appColors.secondaryButtonText,
                             textStyle = MaterialTheme.appTypography.labelLarge,
                             iconModifier = Modifier.rotate(if (isVerticalNavigation) 90f else 0f)
                         )
@@ -221,13 +220,6 @@ private fun ChapterEndDialogScreen(
             OutlinePrimaryButton(
                 text = stringResource(id = R.string.course_back_to_outline),
                 onClick = onBackButtonClick,
-                content = {
-                    AutoSizeText(
-                        text = stringResource(id = R.string.course_back_to_outline),
-                        style = MaterialTheme.appTypography.bodyMedium,
-                        color = MaterialTheme.appColors.primaryButtonBorderedText
-                    )
-                }
             )
             if (nextSectionName.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))
@@ -318,13 +310,13 @@ private fun ChapterEndDialogScreenLandscape(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     if (nextSectionName.isNotEmpty()) {
-                        BrandButton(
+                        PrimaryButton(
                             text = stringResource(id = R.string.course_next_section),
                             content = {
                                 TextIcon(
                                     text = stringResource(id = R.string.course_next_section),
                                     painter = painterResource(org.openedx.core.R.drawable.core_ic_forward),
-                                    color = MaterialTheme.appColors.primaryButtonText,
+                                    color = MaterialTheme.appColors.secondaryButtonText,
                                     textStyle = MaterialTheme.appTypography.labelLarge
                                 )
                             },
@@ -334,14 +326,7 @@ private fun ChapterEndDialogScreenLandscape(
                     }
                     OutlinePrimaryButton(
                         text = stringResource(id = R.string.course_back_to_outline),
-                        onClick = onBackButtonClick,
-                        content = {
-                            AutoSizeText(
-                                text = stringResource(id = R.string.course_back_to_outline),
-                                style = MaterialTheme.appTypography.bodyMedium,
-                                color = MaterialTheme.appColors.primaryButtonBorderedText
-                            )
-                        }
+                        onClick = onBackButtonClick
                     )
                     if (nextSectionName.isNotEmpty()) {
                         Spacer(Modifier.height(24.dp))

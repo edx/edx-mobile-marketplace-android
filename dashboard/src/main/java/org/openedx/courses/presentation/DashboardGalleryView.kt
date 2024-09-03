@@ -947,15 +947,11 @@ private fun FindACourseButton(
     BrandButton(
         modifier = modifier
             .padding(horizontal = 8.dp, vertical = 20.dp),
+        text = stringResource(id = R.string.dashboard_find_a_course),
         onClick = {
             findACourseClick()
         }
-    ) {
-        Text(
-            color = MaterialTheme.appColors.primaryButtonText,
-            text = stringResource(id = R.string.dashboard_find_a_course)
-        )
-    }
+    )
 }
 
 @Composable
@@ -1099,7 +1095,10 @@ private fun NoCoursesInfoPreview() {
                 .fillMaxSize()
                 .background(MaterialTheme.appColors.background),
         ) {
-            NoCoursesInfo()
+            NoCoursesInfo(modifier = Modifier.align(Alignment.Center))
+            FindACourseButton(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                findACourseClick = {})
         }
     }
 }

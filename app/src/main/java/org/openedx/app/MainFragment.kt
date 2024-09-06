@@ -46,6 +46,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         binding.bottomNavView.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.fragmentLearn -> {
+                    viewModel.logLearnTabClickedEvent()
                     binding.viewPager.setCurrentItem(0, false)
                 }
 

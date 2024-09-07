@@ -19,37 +19,26 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
-import org.openedx.core.config.Config
-import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.extension.nonZero
-import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseSku
 import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.IAPAnalytics
-import org.openedx.core.presentation.IAPAnalyticsEvent
-import org.openedx.core.presentation.IAPAnalyticsKeys
-import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
-import org.openedx.core.utils.EmailUtil
 import org.openedx.core.utils.TimeUtils
 
 class IAPViewModel(
     iapFlow: IAPFlow,
     private val purchaseFlowData: PurchaseFlowData,
-    private val appData: AppData,
     private val iapInteractor: IAPInteractor,
-    private val corePreferences: CorePreferences,
     private val analytics: IAPAnalytics,
     private val resourceManager: ResourceManager,
-    private val config: Config,
-    private val iapNotifier: IAPNotifier
+    private val iapNotifier: IAPNotifier,
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow<IAPUIState>(IAPUIState.Loading(IAPLoaderType.PRICE))
@@ -62,6 +51,11 @@ class IAPViewModel(
 
     val purchaseData: PurchaseFlowData
         get() = purchaseFlowData
+
+    val eventLogger = IAPEventLogger(
+        analytics = analytics,
+        purchaseFlowData = purchaseData
+    )
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
@@ -89,7 +83,7 @@ class IAPViewModel(
             iapNotifier.notifier.onEach { event ->
                 when (event) {
                     is CourseDataUpdated -> {
-                        upgradeSuccessEvent()
+                        eventLogger.upgradeSuccessEvent()
                         _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                         _uiState.value = IAPUIState.CourseDataUpdated
                     }
@@ -99,7 +93,7 @@ class IAPViewModel(
 
         when (iapFlow) {
             IAPFlow.USER_INITIATED -> {
-                loadIAPScreenEvent()
+                eventLogger.loadIAPScreenEvent()
                 loadPrice()
             }
 
@@ -117,13 +111,13 @@ class IAPViewModel(
                 ?.apply {
                     _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PRICE)
                     runCatching {
-                        iapInteractor.loadPrice(purchaseFlowData.productInfo?.storeSku!!)
+                        iapInteractor.loadPrice(purchaseFlowData.productInfo?.storeSku!!+"_")
                     }.onSuccess {
                         this.formattedPrice = it.formattedPrice
                         this.price = it.getPriceAmount()
                         this.currencyCode = it.priceCurrencyCode
                         _uiState.value =
-                            IAPUIState.ProductData(formattedPrice = this.formattedPrice!!)
+                            IAPUIState.ProductData(formattedPrice = it.formattedPrice)
                     }.onFailure {
                         if (it is IAPException) {
                             updateErrorState(it)
@@ -142,13 +136,14 @@ class IAPViewModel(
     }
 
     fun startPurchaseFlow() {
-        upgradeNowClickedEvent()
+        eventLogger.upgradeNowClickedEvent()
         _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
         purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
-        purchaseFlowData.takeIf { purchaseFlowData.courseName != null && it.productInfo != null }
-            ?.apply {
-                addToBasket(productInfo?.courseSku!!)
-            } ?: run {
+        val courseName = purchaseFlowData.courseName
+        val productInfo = purchaseFlowData.productInfo
+
+        if (courseName == null || productInfo == null) {
+            // Handle missing data error
             updateErrorState(
                 IAPException(
                     requestType = IAPRequestType.NO_SKU_CODE,
@@ -156,29 +151,14 @@ class IAPViewModel(
                     errorMessage = ""
                 )
             )
+            return
         }
-    }
 
-    private fun addToBasket(courseSku: String) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
-                iapInteractor.addToBasket(courseSku)
+                iapInteractor.addToBasket(productInfo.courseSku)
             }.onSuccess { basketId ->
                 purchaseFlowData.basketId = basketId
-                processCheckout(basketId)
-            }.onFailure {
-                if (it is IAPException) {
-                    updateErrorState(it)
-                }
-            }
-        }
-    }
-
-    private fun processCheckout(basketId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
-                iapInteractor.processCheckout(basketId)
-            }.onSuccess {
                 _uiState.value = IAPUIState.PurchaseProduct
             }.onFailure {
                 if (it is IAPException) {
@@ -191,11 +171,10 @@ class IAPViewModel(
     fun purchaseItem(activity: FragmentActivity) {
         viewModelScope.launch(Dispatchers.IO) {
             takeIf {
-                corePreferences.user?.id != null && purchaseFlowData.productInfo != null
+                purchaseFlowData.productInfo != null
             }?.apply {
                 iapInteractor.purchaseItem(
                     activity,
-                    corePreferences.user?.id!!,
                     purchaseFlowData.productInfo!!,
                     purchaseListeners
                 )
@@ -261,133 +240,17 @@ class IAPViewModel(
     }
 
     fun showFeedbackScreen(context: Context, flowType: String, message: String) {
-        EmailUtil.showFeedbackScreen(
-            context = context,
-            feedbackEmailAddress = config.getFeedbackEmailAddress(),
-            subject = context.getString(R.string.core_error_upgrading_course_in_app),
-            feedback = message,
-            appVersion = appData.versionName
-        )
-        logIAPErrorActionEvent(flowType, IAPAction.ACTION_GET_HELP.action)
+        iapInteractor.showFeedbackScreen(context, message)
+        eventLogger.logIAPErrorActionEvent(flowType, IAPAction.ACTION_GET_HELP.action)
     }
 
     private fun updateErrorState(iapException: IAPException) {
-        val feedbackErrorMessage: String = iapException.getFormattedErrorMessage()
-        when (iapException.requestType) {
-            IAPRequestType.PAYMENT_SDK_CODE -> {
-                if (BillingClient.BillingResponseCode.USER_CANCELED == iapException.httpErrorCode) {
-                    canceledByUserEvent()
-                } else {
-                    purchaseErrorEvent(feedbackErrorMessage)
-                }
-            }
-
-            IAPRequestType.PRICE_CODE,
-            IAPRequestType.NO_SKU_CODE -> {
-                priceLoadErrorEvent(feedbackErrorMessage)
-            }
-
-            else -> {
-                courseUpgradeErrorEvent(feedbackErrorMessage)
-            }
-        }
+        eventLogger.logExceptionEvent(iapException)
         if (BillingClient.BillingResponseCode.USER_CANCELED != iapException.httpErrorCode) {
             _uiState.value = IAPUIState.Error(iapException)
         } else {
             _uiState.value = IAPUIState.Clear
         }
-    }
-
-    private fun upgradeNowClickedEvent() {
-        logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED)
-    }
-
-    private fun upgradeSuccessEvent() {
-        val elapsedTime = TimeUtils.getCurrentTime() - purchaseFlowData.flowStartTime
-        logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_SUCCESS, buildMap {
-            put(IAPAnalyticsKeys.ELAPSED_TIME.key, elapsedTime)
-        }.toMutableMap())
-    }
-
-    private fun purchaseErrorEvent(error: String) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_ERROR, buildMap {
-            put(IAPAnalyticsKeys.ERROR.key, error)
-        }.toMutableMap())
-    }
-
-    private fun canceledByUserEvent() {
-        logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_CANCELED)
-    }
-
-    private fun courseUpgradeErrorEvent(error: String) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_ERROR, buildMap {
-            put(IAPAnalyticsKeys.ERROR.key, error)
-        }.toMutableMap())
-    }
-
-    private fun priceLoadErrorEvent(error: String) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_PRICE_LOAD_ERROR, buildMap {
-            put(IAPAnalyticsKeys.ERROR.key, error)
-        }.toMutableMap())
-    }
-
-    fun logIAPErrorActionEvent(alertType: String, action: String) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
-            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, alertType)
-            put(IAPAnalyticsKeys.ERROR_ACTION.key, action)
-        }.toMutableMap())
-    }
-
-    private fun getIAPEventParams(): MutableMap<String, Any?> {
-        return buildMap {
-            purchaseFlowData.takeIf { it.courseId.isNullOrBlank().not() }?.let {
-                put(IAPAnalyticsKeys.COURSE_ID.key, purchaseFlowData.courseId)
-                put(
-                    IAPAnalyticsKeys.PACING.key,
-                    if (purchaseFlowData.isSelfPaced == true) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
-                )
-            }
-            purchaseFlowData.productInfo?.lmsUSDPrice?.nonZero()?.let { lmsUSDPrice ->
-                put(IAPAnalyticsKeys.LMS_USD_PRICE.key, lmsUSDPrice)
-            }
-            purchaseFlowData.price.nonZero()?.let { localizedPrice ->
-                put(IAPAnalyticsKeys.LOCALIZED_PRICE.key, localizedPrice)
-            }
-            purchaseFlowData.currencyCode.takeIfNotEmpty()?.let { currencyCode ->
-                put(IAPAnalyticsKeys.CURRENCY_CODE.key, currencyCode)
-            }
-            purchaseFlowData.componentId?.takeIf { it.isNotBlank() }?.let { componentId ->
-                put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
-            }
-            put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
-        }.toMutableMap()
-    }
-
-    private fun logIAPEvent(
-        event: IAPAnalyticsEvent,
-        params: MutableMap<String, Any?> = mutableMapOf(),
-    ) {
-        params.apply {
-            put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            putAll(getIAPEventParams())
-        }
-        analytics.logIAPEvent(
-            event = event,
-            params = params,
-            screenName = purchaseFlowData.screenName.orEmpty()
-        )
-    }
-
-    private fun loadIAPScreenEvent() {
-        val event = IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED
-        val params = buildMap {
-            put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            purchaseFlowData.screenName?.takeIfNotEmpty()?.let { screenName ->
-                put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
-            }
-            putAll(getIAPEventParams())
-        }
-        analytics.logScreenEvent(screenName = event.eventName, params = params)
     }
 
     fun clearIAPFLow() {

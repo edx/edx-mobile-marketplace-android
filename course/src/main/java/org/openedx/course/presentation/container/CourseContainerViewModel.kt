@@ -1,12 +1,16 @@
 package org.openedx.course.presentation.container
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.annotation.StringRes
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.Purchase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,15 +26,29 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.ImageProcessor
+import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
+import org.openedx.core.domain.model.iap.PurchaseFlowData
+import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isFalse
+import org.openedx.core.extension.isNotNull
 import org.openedx.core.extension.isTrue
-import org.openedx.core.presentation.global.AppData
+import org.openedx.core.module.billing.BillingProcessor
+import org.openedx.core.module.billing.getCourseSku
+import org.openedx.core.module.billing.getPriceAmount
+import org.openedx.core.presentation.IAPAnalytics
+import org.openedx.core.presentation.IAPAnalyticsScreen
+import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPEventLogger
+import org.openedx.core.presentation.iap.IAPLoaderType
+import org.openedx.core.presentation.iap.IAPRequestType
+import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncUIState
 import org.openedx.core.system.CalendarManager
@@ -39,7 +57,6 @@ import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CalendarSyncEvent.CheckCalendarSyncEvent
 import org.openedx.core.system.notifier.CalendarSyncEvent.CreateCalendarSyncEvent
 import org.openedx.core.system.notifier.CourseCompletionSet
-import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.CourseDatesShifted
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
@@ -66,17 +83,18 @@ class CourseContainerViewModel(
     val courseId: String,
     var courseName: String,
     private var resumeBlockId: String,
-    private val appData: AppData,
     private val config: Config,
     private val interactor: CourseInteractor,
     private val calendarManager: CalendarManager,
     private val resourceManager: ResourceManager,
     private val courseNotifier: CourseNotifier,
     private val iapNotifier: IAPNotifier,
+    private val iapInteractor: IAPInteractor,
     private val networkConnection: NetworkConnection,
     private val corePreferences: CorePreferences,
     private val coursePreferences: CoursePreferences,
     private val courseAnalytics: CourseAnalytics,
+    private val iapAnalytics: IAPAnalytics,
     private val imageProcessor: ImageProcessor,
     val courseRouter: CourseRouter,
 ) : BaseViewModel() {
@@ -92,6 +110,9 @@ class CourseContainerViewModel(
     private val _errorMessage = SingleEventLiveData<String>()
     val errorMessage: LiveData<String>
         get() = _errorMessage
+
+    private val _iapState = MutableStateFlow<IAPUIState>(IAPUIState.Clear)
+    val iapState: StateFlow<IAPUIState> = _iapState.asStateFlow()
 
     private val _showProgress = MutableStateFlow(true)
     val showProgress: StateFlow<Boolean> =
@@ -109,12 +130,9 @@ class CourseContainerViewModel(
     val uiMessage: SharedFlow<UIMessage>
         get() = _uiMessage.asSharedFlow()
 
-    private val iapConfig
-        get() = corePreferences.appConfig.iapConfig
+    val purchaseFlowData: PurchaseFlowData = PurchaseFlowData()
 
-    private val isIAPEnabled
-        get() = iapConfig.isEnabled &&
-                iapConfig.disableVersions.contains(appData.versionName).not()
+    val eventLogger = IAPEventLogger(analytics = iapAnalytics, purchaseFlowData = purchaseFlowData)
 
     private var _canShowUpgradeButton = MutableStateFlow(false)
     val canShowUpgradeButton: StateFlow<Boolean>
@@ -145,6 +163,27 @@ class CourseContainerViewModel(
 
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
+
+    private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
+        override fun onPurchaseComplete(purchase: Purchase) {
+            if (purchase.getCourseSku() == purchaseFlowData.productInfo?.courseSku) {
+                _iapState.value =
+                    IAPUIState.Loading(loaderType = IAPLoaderType.FULL_SCREEN)
+                purchaseFlowData.purchaseToken = purchase.purchaseToken
+                executeOrder(purchaseFlowData)
+            }
+        }
+
+        override fun onPurchaseCancel(responseCode: Int, message: String) {
+            updateErrorState(
+                IAPException(
+                    IAPRequestType.PAYMENT_SDK_CODE,
+                    httpErrorCode = responseCode,
+                    errorMessage = message
+                )
+            )
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -200,15 +239,25 @@ class CourseContainerViewModel(
         viewModelScope.launch {
             try {
                 _courseDetails = interactor.getEnrollmentDetails(courseId)
-                _showProgress.value = false
                 _courseDetails?.let { courseDetails ->
-                    courseName = courseDetails.courseInfoOverview.name
-                    _canShowUpgradeButton.value = isIAPEnabled && courseDetails.isUpgradeable
-                    loadCourseImage(courseDetails.courseInfoOverview.media?.image?.large)
+                    val courseInfoOverview = courseDetails.courseInfoOverview
+                    courseName = courseInfoOverview.name
+                    _canShowUpgradeButton.value =
+                        iapInteractor.isIAPEnabled && courseDetails.isUpgradeable
+                    loadCourseImage(courseInfoOverview.media?.image?.large)
+                    _showProgress.value = false
                     if (courseDetails.hasAccess.isFalse()) {
                         _dataReady.value = false
                         if (courseDetails.isAuditAccessExpired) {
-                            if (_canShowUpgradeButton.value) {
+                            if (_canShowUpgradeButton.value && courseInfoOverview.productInfo.isNotNull()) {
+                                purchaseFlowData.apply {
+                                    courseId = courseDetails.id
+                                    courseName = courseInfoOverview.name
+                                    isSelfPaced = courseInfoOverview.isSelfPaced
+                                    productInfo = courseInfoOverview.productInfo
+                                    screenName = IAPAnalyticsScreen.COURSE_DASHBOARD.screenName
+                                }
+                                loadPrice()
                                 _courseAccessStatus.value =
                                     CourseAccessError.AUDIT_EXPIRED_UPGRADABLE
                             } else {
@@ -232,7 +281,9 @@ class CourseContainerViewModel(
                         }
                         _dataReady.value = true
                         if (isIAPFlow) {
-                            iapNotifier.send(CourseDataUpdated())
+                            eventLogger.upgradeSuccessEvent()
+                            _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
+                            _iapState.value = IAPUIState.CourseDataUpdated
                         }
                     }
                 } ?: run {
@@ -242,6 +293,37 @@ class CourseContainerViewModel(
                 e.printStackTrace()
                 _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 _showProgress.value = false
+            }
+        }
+    }
+
+    fun loadPrice() {
+        eventLogger.loadIAPScreenEvent()
+        viewModelScope.launch(Dispatchers.IO) {
+            purchaseFlowData.takeIf { it.courseId != null && it.productInfo != null }
+                ?.apply {
+                    _iapState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PRICE)
+                    runCatching {
+                        iapInteractor.loadPrice(purchaseFlowData.productInfo?.storeSku!! + "_")
+                    }.onSuccess {
+                        this.formattedPrice = it.formattedPrice
+                        this.price = it.getPriceAmount()
+                        this.currencyCode = it.priceCurrencyCode
+                        _iapState.value =
+                            IAPUIState.ProductData(formattedPrice = it.formattedPrice)
+                    }.onFailure {
+                        if (it is IAPException) {
+                            updateErrorState(it)
+                        }
+                    }
+                } ?: run {
+                updateErrorState(
+                    IAPException(
+                        requestType = IAPRequestType.PRICE_CODE,
+                        httpErrorCode = IAPRequestType.PRICE_CODE.hashCode(),
+                        errorMessage = ""
+                    )
+                )
             }
         }
     }
@@ -261,6 +343,116 @@ class CourseContainerViewModel(
                 }
             }
         )
+    }
+
+    fun startPurchaseFlow() {
+        eventLogger.upgradeNowClickedEvent()
+        _iapState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
+        purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
+        val courseName = purchaseFlowData.courseName
+        val productInfo = purchaseFlowData.productInfo
+
+        if (courseName == null || productInfo == null) {
+            // Handle missing data error
+            updateErrorState(
+                IAPException(
+                    requestType = IAPRequestType.NO_SKU_CODE,
+                    httpErrorCode = IAPRequestType.NO_SKU_CODE.hashCode(),
+                    errorMessage = ""
+                )
+            )
+            return
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                iapInteractor.addToBasket(productInfo.courseSku)
+            }.onSuccess { basketId ->
+                purchaseFlowData.basketId = basketId
+                _iapState.value = IAPUIState.PurchaseProduct
+            }.onFailure {
+                if (it is IAPException) {
+                    updateErrorState(it)
+                }
+            }
+        }
+    }
+
+    fun purchaseItem(activity: FragmentActivity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            takeIf {
+                purchaseFlowData.productInfo != null
+            }?.apply {
+                iapInteractor.purchaseItem(
+                    activity,
+                    purchaseFlowData.productInfo!!,
+                    purchaseListeners
+                )
+            }
+        }
+    }
+
+    private fun executeOrder(purchaseFlowData: PurchaseFlowData) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                iapInteractor.executeOrder(
+                    basketId = purchaseFlowData.basketId,
+                    purchaseToken = purchaseFlowData.purchaseToken!!,
+                    price = purchaseFlowData.price,
+                    currencyCode = purchaseFlowData.currencyCode,
+                )
+            }.onSuccess {
+                consumeOrderForFurtherPurchases(purchaseFlowData)
+            }.onFailure {
+                if (it is IAPException) {
+                    updateErrorState(it)
+                }
+            }
+        }
+    }
+
+
+    private fun consumeOrderForFurtherPurchases(purchaseFlowData: PurchaseFlowData) {
+        viewModelScope.launch(Dispatchers.IO) {
+            purchaseFlowData.purchaseToken?.let {
+                runCatching {
+                    iapInteractor.consumePurchase(it)
+                }.onSuccess {
+                    updateCourseData()
+                }.onFailure {
+                    if (it is IAPException) {
+                        updateErrorState(it)
+                    }
+                }
+            }
+        }
+    }
+
+    fun refreshCourse() {
+        _iapState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
+        purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
+        updateCourseData()
+    }
+
+    fun retryExecuteOrder() {
+        executeOrder(purchaseFlowData)
+    }
+
+    fun retryToConsumeOrder() {
+        consumeOrderForFurtherPurchases(purchaseFlowData)
+    }
+
+    private fun updateCourseData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            purchaseFlowData.courseId?.let { courseId ->
+                iapNotifier.send(UpdateCourseData(courseId))
+            }
+        }
+    }
+
+    fun showFeedbackScreen(context: Context, flowType: String, message: String) {
+        iapInteractor.showFeedbackScreen(context, message)
+        eventLogger.logIAPErrorActionEvent(flowType, IAPAction.ACTION_GET_HELP.action)
     }
 
     fun onRefresh(courseContainerTab: CourseContainerTab) {
@@ -302,6 +494,27 @@ class CourseContainerViewModel(
             }
             _refreshing.value = false
             courseNotifier.send(CourseStructureUpdated(courseId))
+        }
+    }
+
+    private fun updateErrorState(iapException: IAPException) {
+        eventLogger.logExceptionEvent(iapException)
+        if (BillingClient.BillingResponseCode.USER_CANCELED != iapException.httpErrorCode) {
+            _iapState.value = IAPUIState.Error(iapException)
+        } else {
+            clearIAPState()
+        }
+    }
+
+    fun isFullScreenLoading(): Boolean {
+        return _iapState.value is IAPUIState.Loading &&
+                (_iapState.value as IAPUIState.Loading).loaderType == IAPLoaderType.FULL_SCREEN
+    }
+
+    fun clearIAPState() {
+        _iapState.value = IAPUIState.Clear
+        purchaseFlowData.formattedPrice?.let {
+            _iapState.value = IAPUIState.ProductData(it)
         }
     }
 

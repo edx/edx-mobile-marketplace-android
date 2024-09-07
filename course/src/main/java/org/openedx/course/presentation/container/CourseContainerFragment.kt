@@ -24,6 +24,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
@@ -74,14 +76,20 @@ import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.viewBinding
+import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPFlow
+import org.openedx.core.presentation.iap.IAPRequestType
+import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialog
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
+import org.openedx.core.ui.CheckmarkView
 import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.OpenEdXOutlinedButton
 import org.openedx.core.ui.RoundTabsBar
+import org.openedx.core.ui.UnlockingAccessView
 import org.openedx.core.ui.UpgradeToAccessView
 import org.openedx.core.ui.UpgradeToAccessViewType
 import org.openedx.core.ui.WindowSize
@@ -176,7 +184,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.showProgress.collect {
-                binding.progressBar.isVisible = it
+                binding.progressBar.isVisible = it && viewModel.isFullScreenLoading().not()
             }
         }
     }
@@ -192,13 +200,12 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
     private fun initCourseView() {
         binding.composeCollapsingLayout.setContent {
             val isNavigationEnabled by viewModel.isNavigationEnabled.collectAsState()
-            val fm = requireActivity().supportFragmentManager
             CourseDashboard(
                 viewModel = viewModel,
                 isNavigationEnabled = isNavigationEnabled,
                 isResumed = isResumed,
                 openTab = requireArguments().getString(ARG_OPEN_TAB, CourseContainerTab.HOME.name),
-                fragmentManager = fm,
+                fragmentActivity = requireActivity(),
                 onRefresh = { page ->
                     onRefresh(page)
                 }
@@ -326,13 +333,14 @@ fun CourseDashboard(
     isNavigationEnabled: Boolean,
     isResumed: Boolean,
     openTab: String,
-    fragmentManager: FragmentManager,
+    fragmentActivity: FragmentActivity,
     onRefresh: (page: Int) -> Unit,
 ) {
     OpenEdXTheme {
         val windowSize = rememberWindowSize()
         val scope = rememberCoroutineScope()
         val scaffoldState = rememberScaffoldState()
+        val fragmentManager = fragmentActivity.supportFragmentManager
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
@@ -450,8 +458,14 @@ fun CourseDashboard(
                         },
                         bodyContent = {
                             when (accessStatus.value) {
+                                CourseAccessError.AUDIT_EXPIRED_UPGRADABLE -> {
+                                    AuditExpiredUpgradableView(
+                                        viewModel = viewModel,
+                                        fragmentActivity = fragmentActivity
+                                    )
+                                }
+
                                 CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE,
-                                CourseAccessError.AUDIT_EXPIRED_UPGRADABLE,
                                 CourseAccessError.NOT_YET_STARTED,
                                 CourseAccessError.UNKNOWN,
                                 -> {
@@ -609,6 +623,183 @@ private fun DashboardPager(
                             HandoutsType.Announcements
                         )
                     })
+            }
+        }
+    }
+}
+
+@Composable
+private fun AuditExpiredUpgradableView(
+    viewModel: CourseContainerViewModel,
+    fragmentActivity: FragmentActivity,
+) {
+    val iapState by viewModel.iapState.collectAsState()
+
+    when (iapState) {
+        is IAPUIState.PurchaseProduct -> {
+            viewModel.purchaseItem(fragmentActivity)
+        }
+
+        is IAPUIState.Error -> {
+            val iapException = (iapState as IAPUIState.Error).iapException
+            IAPErrorDialog(iapException = iapException, onIAPAction = { iapAction ->
+                when (iapAction) {
+                    IAPAction.ACTION_RELOAD_PRICE -> {
+                        viewModel.eventLogger.logIAPErrorActionEvent(
+                            iapException.requestType.request,
+                            IAPAction.ACTION_RELOAD_PRICE.action
+                        )
+                        viewModel.loadPrice()
+                    }
+
+                    IAPAction.ACTION_CLOSE -> {
+                        viewModel.eventLogger.logIAPErrorActionEvent(
+                            iapException.requestType.request,
+                            IAPAction.ACTION_CLOSE.action
+                        )
+                        viewModel.clearIAPState()
+                    }
+
+                    IAPAction.ACTION_OK -> {
+                        viewModel.eventLogger.logIAPErrorActionEvent(
+                            iapException.requestType.request,
+                            IAPAction.ACTION_OK.action
+                        )
+                        viewModel.clearIAPState()
+                    }
+
+                    IAPAction.ACTION_REFRESH -> {
+                        viewModel.eventLogger.logIAPErrorActionEvent(
+                            iapException.requestType.request,
+                            IAPAction.ACTION_REFRESH.action
+                        )
+                        viewModel.refreshCourse()
+                    }
+
+                    IAPAction.ACTION_GET_HELP -> {
+                        viewModel.showFeedbackScreen(
+                            fragmentActivity,
+                            iapException.requestType.request,
+                            iapException.getFormattedErrorMessage()
+                        )
+                        viewModel.clearIAPState()
+                    }
+
+                    IAPAction.ACTION_RETRY -> {
+                        viewModel.eventLogger.logIAPErrorActionEvent(
+                            iapException.requestType.request,
+                            IAPAction.ACTION_RETRY.action
+                        )
+                        if (iapException.requestType == IAPRequestType.CONSUME_CODE) {
+                            viewModel.retryToConsumeOrder()
+                        } else if (iapException.requestType == IAPRequestType.EXECUTE_ORDER_CODE) {
+                            viewModel.retryExecuteOrder()
+                        }
+                    }
+
+                    else -> {
+                        // ignore
+                    }
+                }
+            })
+        }
+
+        is IAPUIState.Clear -> {
+            viewModel.clearIAPState()
+        }
+
+        else -> {}
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsInset()
+            .background(MaterialTheme.appColors.background),
+        contentAlignment = Alignment.Center
+    ) {
+        if (viewModel.isFullScreenLoading()) {
+            UnlockingAccessView()
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        Image(
+                            modifier = Modifier.size(72.dp),
+                            painter = painterResource(id = R.drawable.course_ic_circled_arrow_up),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(MaterialTheme.appColors.progressBarBackgroundColor),
+                        )
+                    }
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        text = stringResource(
+                            R.string.course_error_expired_upgradeable_title,
+                            TimeUtils.getCourseAccessFormattedDate(
+                                LocalContext.current,
+                                viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires
+                                    ?: Date()
+                            )
+                        ),
+                        style = MaterialTheme.appTypography.bodyMedium,
+                        color = MaterialTheme.appColors.textDark
+                    )
+
+                    CheckmarkView(stringResource(id = org.openedx.core.R.string.iap_earn_certificate))
+                    CheckmarkView(stringResource(id = org.openedx.core.R.string.iap_unlock_access))
+                    CheckmarkView(stringResource(id = org.openedx.core.R.string.iap_full_access_course))
+
+                }
+                OpenEdXOutlinedButton(
+                    text = stringResource(R.string.course_find_new_course_button),
+                    backgroundColor = MaterialTheme.appColors.background,
+                    textColor = MaterialTheme.appColors.primary,
+                    borderColor = MaterialTheme.appColors.primary,
+                    onClick = {
+                        viewModel.courseRouter.navigateToDiscover(fragmentActivity.supportFragmentManager)
+                    }
+                )
+
+                when (iapState) {
+                    is IAPUIState.Loading,
+                    is IAPUIState.PurchaseProduct,
+                    is IAPUIState.Error,
+                    -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(42.dp),
+                            color = MaterialTheme.appColors.primary
+                        )
+                    }
+
+                    is IAPUIState.ProductData -> {
+                        OpenEdXButton(modifier = Modifier.fillMaxWidth(),
+                            text = stringResource(
+                                id = org.openedx.core.R.string.iap_upgrade_price,
+                                viewModel.purchaseFlowData.formattedPrice ?: 0.0,
+                            ),
+                            onClick = {
+                                viewModel.startPurchaseFlow()
+                            })
+                    }
+
+                    else -> {
+
+                    }
+                }
             }
         }
     }

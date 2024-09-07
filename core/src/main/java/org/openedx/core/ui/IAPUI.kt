@@ -38,6 +38,7 @@ fun ValuePropUpgradeFeatures(modifier: Modifier = Modifier, courseName: String) 
         modifier = modifier
             .background(color = MaterialTheme.appColors.background)
             .padding(all = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
         Text(
             modifier = Modifier.padding(vertical = 32.dp),
@@ -59,9 +60,7 @@ fun ValuePropUpgradeFeatures(modifier: Modifier = Modifier, courseName: String) 
 @Composable
 fun CheckmarkView(text: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

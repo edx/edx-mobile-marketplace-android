@@ -18,6 +18,7 @@ import org.openedx.core.module.billing.getCourseSku
 import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPRequestType
+import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.EmailUtil
 
 class IAPInteractor(
@@ -26,10 +27,11 @@ class IAPInteractor(
     private val config: Config,
     private val repository: IAPRepository,
     private val preferencesManager: CorePreferences,
+    private val iapNotifier: IAPNotifier,
 ) {
     private val iapConfig
         get() = preferencesManager.appConfig.iapConfig
-    private val isIAPEnabled
+    val isIAPEnabled
         get() = iapConfig.isEnabled && iapConfig.disableVersions.contains(appData.versionName).not()
 
     fun showFeedbackScreen(context: Context, message: String) {
@@ -68,28 +70,30 @@ class IAPInteractor(
 
     suspend fun addToBasket(courseSku: String): Long {
         val basketResponse = repository.addToBasket(courseSku)
+        repository.proceedCheckout(basketResponse.basketId)
         return basketResponse.basketId
     }
 
-    suspend fun processCheckout(basketId: Long) {
+    private suspend fun processCheckout(basketId: Long) {
         repository.proceedCheckout(basketId)
     }
 
     suspend fun purchaseItem(
         activity: FragmentActivity,
-        id: Long,
         productInfo: ProductInfo,
         purchaseListeners: BillingProcessor.PurchaseListeners,
     ) {
-        billingProcessor.setPurchaseListener(purchaseListeners)
-        billingProcessor.purchaseItem(activity, id, productInfo)
+        preferencesManager.user?.id?.let { id ->
+            billingProcessor.setPurchaseListener(purchaseListeners)
+            billingProcessor.purchaseItem(activity, id, productInfo)
+        }
     }
 
     suspend fun executeOrder(
         basketId: Long,
         purchaseToken: String,
         price: Double,
-        currencyCode: String
+        currencyCode: String,
     ) {
         repository.executeOrder(
             basketId = basketId,

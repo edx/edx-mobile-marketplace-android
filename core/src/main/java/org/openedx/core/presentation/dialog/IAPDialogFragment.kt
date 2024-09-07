@@ -145,7 +145,7 @@ class IAPDialogFragment : DialogFragment() {
                             IAPErrorDialog(iapException = iapException, onIAPAction = { iapAction ->
                                 when (iapAction) {
                                     IAPAction.ACTION_RELOAD_PRICE -> {
-                                        iapViewModel.logIAPErrorActionEvent(
+                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
                                             iapException.requestType.request,
                                             IAPAction.ACTION_RELOAD_PRICE.action
                                         )
@@ -153,7 +153,7 @@ class IAPDialogFragment : DialogFragment() {
                                     }
 
                                     IAPAction.ACTION_CLOSE -> {
-                                        iapViewModel.logIAPErrorActionEvent(
+                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
                                             iapException.requestType.request,
                                             IAPAction.ACTION_CLOSE.action
                                         )
@@ -161,7 +161,7 @@ class IAPDialogFragment : DialogFragment() {
                                     }
 
                                     IAPAction.ACTION_OK -> {
-                                        iapViewModel.logIAPErrorActionEvent(
+                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
                                             iapException.requestType.request,
                                             IAPAction.ACTION_OK.action
                                         )
@@ -169,7 +169,7 @@ class IAPDialogFragment : DialogFragment() {
                                     }
 
                                     IAPAction.ACTION_REFRESH -> {
-                                        iapViewModel.logIAPErrorActionEvent(
+                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
                                             iapException.requestType.request,
                                             IAPAction.ACTION_REFRESH.action
                                         )
@@ -186,7 +186,7 @@ class IAPDialogFragment : DialogFragment() {
                                     }
 
                                     IAPAction.ACTION_RETRY -> {
-                                        iapViewModel.logIAPErrorActionEvent(
+                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
                                             iapException.requestType.request,
                                             IAPAction.ACTION_RETRY.action
                                         )

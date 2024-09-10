@@ -90,7 +90,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 putString(ARG_INFO_TYPE, "")
             }
 
-            when (requireArguments().getString(ARG_OPEN_TAB, HomeTab.LEARN.name)) {
+            when (requireArguments().getString(ARG_OPEN_TAB, "")) {
                 HomeTab.LEARN.name,
                 HomeTab.PROGRAMS.name -> {
                     binding.bottomNavView.selectedItemId = R.id.fragmentLearn

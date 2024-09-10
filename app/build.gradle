@@ -152,9 +152,9 @@ dependencies {
     api "com.google.firebase:firebase-messaging"
 
     // Segment Library
-    implementation "com.segment.analytics.kotlin:android:1.14.2"
+    implementation "com.segment.analytics.kotlin:android:1.16.3"
     // Segment's Firebase integration
-    implementation 'com.segment.analytics.kotlin.destinations:firebase:1.5.2'
+    implementation 'com.segment.analytics.kotlin.destinations:firebase:1.5.6'
     // Braze SDK Integration
     implementation "com.braze:braze-segment-kotlin:1.4.2"
     implementation "com.braze:android-sdk-ui:30.2.0"

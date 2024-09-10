@@ -1,6 +1,11 @@
 package org.openedx.app.analytics
 
 import android.content.Context
+import com.segment.analytics.kotlin.core.BaseEvent
+import com.segment.analytics.kotlin.core.ScreenEvent
+import com.segment.analytics.kotlin.core.TrackEvent
+import com.segment.analytics.kotlin.core.platform.EventPlugin
+import com.segment.analytics.kotlin.core.platform.Plugin
 import com.segment.analytics.kotlin.destinations.braze.BrazeDestination
 import com.segment.analytics.kotlin.destinations.firebase.FirebaseDestination
 import org.openedx.app.BuildConfig
@@ -12,18 +17,46 @@ import com.segment.analytics.kotlin.core.Analytics as SegmentTracker
 class SegmentAnalytics(context: Context, config: Config) : Analytics {
 
     private val logger = Logger(TAG)
-    private var tracker: SegmentTracker
 
-    init {
-        // Create an analytics client with the given application context and Segment write key.
-        tracker = SegmentAnalyticsBuilder(config.getSegmentConfig().segmentWriteKey, context) {
+    // Create an analytics client with the given application context and Segment write key.
+    private var tracker: SegmentTracker =
+        SegmentAnalyticsBuilder(config.getSegmentConfig().segmentWriteKey, context) {
             // Automatically track Lifecycle events
             trackApplicationLifecycleEvents = true
             flushAt = 20
             flushInterval = 30
         }
+
+    init {
         if (config.getFirebaseConfig().isSegmentAnalyticsSource()) {
             tracker.add(plugin = FirebaseDestination(context = context))
+
+            tracker.find(FirebaseDestination::class)?.add(object : EventPlugin {
+                override lateinit var analytics: SegmentTracker
+                override val type = Plugin.Type.Before
+
+                override fun execute(event: BaseEvent): BaseEvent {
+                    when (event) {
+                        is ScreenEvent -> {
+                            event.apply {
+                                name = AnalyticsUtils.makeFirebaseAnalyticsKey(name)
+                            }
+                        }
+
+                        is TrackEvent -> {
+                            event.apply {
+                                this.event = AnalyticsUtils.makeFirebaseAnalyticsKey(this.event)
+                                properties = AnalyticsUtils.formatFirebaseAnalyticsDataForSegment(properties)
+                            }
+                        }
+
+                        else -> {
+                            //do nothing
+                        }
+                    }
+                    return event
+                }
+            })
         }
 
         if (config.getFirebaseConfig()

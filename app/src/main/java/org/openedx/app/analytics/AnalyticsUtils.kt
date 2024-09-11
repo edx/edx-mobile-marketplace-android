@@ -22,9 +22,8 @@ object AnalyticsUtils {
         }.toBundle()
     }
 
-    fun formatFirebaseAnalyticsDataForSegment(`object`: Any): Properties {
-        val properties = `object` as Properties
-        val newProperties = buildJsonObject {
+    fun formatFirebaseAnalyticsDataForSegment(properties: Properties): Properties {
+        return buildJsonObject {
             for ((key, value) in properties) {
                 put(
                     makeFirebaseAnalyticsKey(key),
@@ -32,6 +31,5 @@ object AnalyticsUtils {
                 )
             }
         }
-        return newProperties
     }
 }

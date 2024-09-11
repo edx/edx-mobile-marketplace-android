@@ -31,30 +31,24 @@ class SegmentAnalytics(context: Context, config: Config) : Analytics {
         if (config.getFirebaseConfig().isSegmentAnalyticsSource()) {
             tracker.add(plugin = FirebaseDestination(context = context))
 
+            // Override the default event plugin to format the event and properties
+            // according to Firebase Analytics guidelines
             tracker.find(FirebaseDestination::class)?.add(object : EventPlugin {
                 override lateinit var analytics: SegmentTracker
                 override val type = Plugin.Type.Before
 
-                override fun execute(event: BaseEvent): BaseEvent {
-                    when (event) {
-                        is ScreenEvent -> {
-                            event.apply {
-                                name = AnalyticsUtils.makeFirebaseAnalyticsKey(name)
-                            }
-                        }
-
-                        is TrackEvent -> {
-                            event.apply {
-                                this.event = AnalyticsUtils.makeFirebaseAnalyticsKey(this.event)
-                                properties = AnalyticsUtils.formatFirebaseAnalyticsDataForSegment(properties)
-                            }
-                        }
-
-                        else -> {
-                            //do nothing
-                        }
+                override fun track(payload: TrackEvent): BaseEvent {
+                    return payload.apply {
+                        this.event = AnalyticsUtils.makeFirebaseAnalyticsKey(this.event)
+                        properties =
+                            AnalyticsUtils.formatFirebaseAnalyticsDataForSegment(properties)
                     }
-                    return event
+                }
+
+                override fun screen(payload: ScreenEvent): BaseEvent {
+                    return payload.apply {
+                        name = AnalyticsUtils.makeFirebaseAnalyticsKey(name)
+                    }
                 }
             })
         }

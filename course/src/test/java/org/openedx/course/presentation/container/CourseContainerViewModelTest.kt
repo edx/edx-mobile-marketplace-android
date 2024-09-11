@@ -267,6 +267,12 @@ class CourseContainerViewModelTest {
                 any()
             )
         } returns Unit
+        every {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
+                any()
+            )
+        } returns Unit
         viewModel.fetchCourseDetails()
         advanceUntilIdle()
 
@@ -274,6 +280,12 @@ class CourseContainerViewModelTest {
         verify(exactly = 1) {
             analytics.logScreenEvent(
                 CourseAnalyticsEvent.DASHBOARD.eventName,
+                any()
+            )
+        }
+        verify(exactly = 1) {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
                 any()
             )
         }
@@ -309,6 +321,12 @@ class CourseContainerViewModelTest {
                 any()
             )
         } returns Unit
+        every {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
+                any()
+            )
+        } returns Unit
         viewModel.fetchCourseDetails()
         advanceUntilIdle()
 
@@ -316,6 +334,12 @@ class CourseContainerViewModelTest {
         verify(exactly = 1) {
             analytics.logScreenEvent(
                 CourseAnalyticsEvent.DASHBOARD.eventName,
+                any()
+            )
+        }
+        verify(exactly = 1) {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
                 any()
             )
         }
@@ -352,12 +376,24 @@ class CourseContainerViewModelTest {
                 any()
             )
         } returns Unit
+        every {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
+                any()
+            )
+        } returns Unit
         viewModel.fetchCourseDetails()
         advanceUntilIdle()
         coVerify(exactly = 0) { courseApi.getEnrollmentDetails(any()) }
         verify(exactly = 1) {
             analytics.logScreenEvent(
                 CourseAnalyticsEvent.DASHBOARD.eventName,
+                any()
+            )
+        }
+        verify(exactly = 1) {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
                 any()
             )
         }

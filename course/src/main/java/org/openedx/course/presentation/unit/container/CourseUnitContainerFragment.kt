@@ -78,7 +78,6 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 val encodedVideo = currentBlock.studentViewData?.encodedVideos
                 binding.mediaRouteButton.isVisible = currentBlock.type == BlockType.VIDEO
                         && encodedVideo?.hasNonYoutubeVideo == true
-                        && !encodedVideo.videoUrl.endsWith(".m3u8")
             }
         }
     }

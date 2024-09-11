@@ -111,7 +111,7 @@ class IAPViewModel(
                 ?.apply {
                     _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PRICE)
                     runCatching {
-                        iapInteractor.loadPrice(purchaseFlowData.productInfo?.storeSku!!+"_")
+                        iapInteractor.loadPrice(purchaseFlowData.productInfo?.storeSku!!)
                     }.onSuccess {
                         this.formattedPrice = it.formattedPrice
                         this.price = it.getPriceAmount()

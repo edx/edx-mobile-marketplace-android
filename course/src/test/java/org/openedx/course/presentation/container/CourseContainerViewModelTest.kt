@@ -29,6 +29,7 @@ import org.openedx.core.data.api.CourseApi
 import org.openedx.core.data.model.CourseStructureModel
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.CourseAccessDetails
 import org.openedx.core.domain.model.CourseAccessError
@@ -40,7 +41,7 @@ import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.domain.model.iap.ProductInfo
-import org.openedx.core.presentation.global.AppData
+import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.system.CalendarManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
@@ -52,7 +53,6 @@ import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseRouter
-import java.net.UnknownHostException
 import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -70,14 +70,15 @@ class CourseContainerViewModelTest {
     private val networkConnection = mockk<NetworkConnection>()
     private val courseNotifier = spyk<CourseNotifier>()
     private val iapNotifier = spyk<IAPNotifier>()
-    private val analytics = mockk<CourseAnalytics>()
+    private val iapInteractor = mockk<IAPInteractor>()
+    private val courseAnalytics = mockk<CourseAnalytics>()
+    private val iapAnalytics = mockk<IAPAnalytics>()
     private val corePreferences = mockk<CorePreferences>()
     private val coursePreferences = mockk<CoursePreferences>()
     private val mockBitmap = mockk<Bitmap>()
     private val imageProcessor = mockk<ImageProcessor>()
     private val courseRouter = mockk<CourseRouter>()
     private val courseApi = mockk<CourseApi>()
-    private val appData = mockk<AppData>()
 
     private val openEdx = "OpenEdx"
     private val calendarTitle = "OpenEdx - Abc"
@@ -242,27 +243,28 @@ class CourseContainerViewModelTest {
     @Test
     fun `getCourseEnrollmentDetails unknown exception`() = runTest {
         val viewModel = CourseContainerViewModel(
-            "",
-            "",
-            "",
-            appData,
-            config,
-            interactor,
-            calendarManager,
-            resourceManager,
-            courseNotifier,
-            iapNotifier,
-            networkConnection,
-            corePreferences,
-            coursePreferences,
-            analytics,
-            imageProcessor,
-            courseRouter
+            courseId = "",
+            courseName = "",
+            resumeBlockId = "",
+            config = config,
+            interactor = interactor,
+            calendarManager = calendarManager,
+            resourceManager = resourceManager,
+            courseNotifier = courseNotifier,
+            iapNotifier = iapNotifier,
+            iapInteractor = iapInteractor,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            coursePreferences = coursePreferences,
+            courseAnalytics = courseAnalytics,
+            iapAnalytics = iapAnalytics,
+            imageProcessor = imageProcessor,
+            courseRouter = courseRouter,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getEnrollmentDetails(any()) } throws Exception()
         every {
-            analytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.DASHBOARD.eventName,
                 any()
             )
@@ -272,7 +274,7 @@ class CourseContainerViewModelTest {
 
         coVerify(exactly = 1) { interactor.getEnrollmentDetails(any()) }
         verify(exactly = 1) {
-            analytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.DASHBOARD.eventName,
                 any()
             )
@@ -284,27 +286,28 @@ class CourseContainerViewModelTest {
     @Test
     fun `getCourseEnrollmentDetails success with internet`() = runTest {
         val viewModel = CourseContainerViewModel(
-            "",
-            "",
-            "",
-            appData,
-            config,
-            interactor,
-            calendarManager,
-            resourceManager,
-            courseNotifier,
-            iapNotifier,
-            networkConnection,
-            corePreferences,
-            coursePreferences,
-            analytics,
-            imageProcessor,
-            courseRouter
+            courseId = "",
+            courseName = "",
+            resumeBlockId = "",
+            config = config,
+            interactor = interactor,
+            calendarManager = calendarManager,
+            resourceManager = resourceManager,
+            courseNotifier = courseNotifier,
+            iapNotifier = iapNotifier,
+            iapInteractor = iapInteractor,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            coursePreferences = coursePreferences,
+            courseAnalytics = courseAnalytics,
+            iapAnalytics = iapAnalytics,
+            imageProcessor = imageProcessor,
+            courseRouter = courseRouter,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
         every {
-            analytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.DASHBOARD.eventName,
                 any()
             )
@@ -314,7 +317,7 @@ class CourseContainerViewModelTest {
 
         coVerify(exactly = 1) { interactor.getEnrollmentDetails(any()) }
         verify(exactly = 1) {
-            analytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.DASHBOARD.eventName,
                 any()
             )
@@ -327,27 +330,28 @@ class CourseContainerViewModelTest {
     @Test
     fun `getCourseEnrollmentDetails success without internet`() = runTest {
         val viewModel = CourseContainerViewModel(
-            "",
-            "",
-            "",
-            appData,
-            config,
-            interactor,
-            calendarManager,
-            resourceManager,
-            courseNotifier,
-            iapNotifier,
-            networkConnection,
-            corePreferences,
-            coursePreferences,
-            analytics,
-            imageProcessor,
-            courseRouter
+            courseId = "",
+            courseName = "",
+            resumeBlockId = "",
+            config = config,
+            interactor = interactor,
+            calendarManager = calendarManager,
+            resourceManager = resourceManager,
+            courseNotifier = courseNotifier,
+            iapNotifier = iapNotifier,
+            iapInteractor = iapInteractor,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            coursePreferences = coursePreferences,
+            courseAnalytics = courseAnalytics,
+            iapAnalytics = iapAnalytics,
+            imageProcessor = imageProcessor,
+            courseRouter = courseRouter,
         )
         every { networkConnection.isOnline() } returns false
         coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
         every {
-            analytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.DASHBOARD.eventName,
                 any()
             )
@@ -356,7 +360,7 @@ class CourseContainerViewModelTest {
         advanceUntilIdle()
         coVerify(exactly = 0) { courseApi.getEnrollmentDetails(any()) }
         verify(exactly = 1) {
-            analytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.DASHBOARD.eventName,
                 any()
             )
@@ -370,22 +374,23 @@ class CourseContainerViewModelTest {
     @Test
     fun `updateData unknown exception`() = runTest {
         val viewModel = CourseContainerViewModel(
-            "",
-            "",
-            "",
-            appData,
-            config,
-            interactor,
-            calendarManager,
-            resourceManager,
-            courseNotifier,
-            iapNotifier,
-            networkConnection,
-            corePreferences,
-            coursePreferences,
-            analytics,
-            imageProcessor,
-            courseRouter
+            courseId = "",
+            courseName = "",
+            resumeBlockId = "",
+            config = config,
+            interactor = interactor,
+            calendarManager = calendarManager,
+            resourceManager = resourceManager,
+            courseNotifier = courseNotifier,
+            iapNotifier = iapNotifier,
+            iapInteractor = iapInteractor,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            coursePreferences = coursePreferences,
+            courseAnalytics = courseAnalytics,
+            iapAnalytics = iapAnalytics,
+            imageProcessor = imageProcessor,
+            courseRouter = courseRouter,
         )
         coEvery { interactor.getCourseStructure(any(), true) } throws Exception()
         coEvery { courseNotifier.send(CourseStructureUpdated("")) } returns Unit
@@ -402,22 +407,23 @@ class CourseContainerViewModelTest {
     @Test
     fun `updateData success`() = runTest {
         val viewModel = CourseContainerViewModel(
-            "",
-            "",
-            "",
-            appData,
-            config,
-            interactor,
-            calendarManager,
-            resourceManager,
-            courseNotifier,
-            iapNotifier,
-            networkConnection,
-            corePreferences,
-            coursePreferences,
-            analytics,
-            imageProcessor,
-            courseRouter
+            courseId = "",
+            courseName = "",
+            resumeBlockId = "",
+            config = config,
+            interactor = interactor,
+            calendarManager = calendarManager,
+            resourceManager = resourceManager,
+            courseNotifier = courseNotifier,
+            iapNotifier = iapNotifier,
+            iapInteractor = iapInteractor,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            coursePreferences = coursePreferences,
+            courseAnalytics = courseAnalytics,
+            iapAnalytics = iapAnalytics,
+            imageProcessor = imageProcessor,
+            courseRouter = courseRouter,
         )
         coEvery { interactor.getEnrollmentDetails(any()) } returns courseDetails
         coEvery { interactor.getCourseStructure(any(), true) } returns courseStructure

@@ -7,6 +7,9 @@ import java.util.*
 
 object LocaleUtils {
 
+    // Due to legal reasons we need to disable some countries
+    private val disabledCountries: List<String> = listOf("RU")
+
     fun getBirthYearsRange(): List<RegistrationField.Option> {
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         return (currentYear - USER_MAX_YEAR..currentYear - 0).reversed().map {
@@ -47,6 +50,7 @@ object LocaleUtils {
 
     private fun getAvailableCountries() = Locale.getISOCountries()
         .asSequence()
+        .minus(disabledCountries)
         .map {
             RegistrationField.Option(it, Locale("", it).getDisplayCountry(defaultLocale), "")
         }

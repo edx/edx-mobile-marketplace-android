@@ -19,7 +19,7 @@ class SegmentAnalytics(context: Context, config: Config) : Analytics {
     private val logger = Logger(TAG)
 
     // Create an analytics client with the given application context and Segment write key.
-    private var tracker: SegmentTracker =
+    private val tracker: SegmentTracker =
         SegmentAnalyticsBuilder(config.getSegmentConfig().segmentWriteKey, context) {
             // Automatically track Lifecycle events
             trackApplicationLifecycleEvents = true

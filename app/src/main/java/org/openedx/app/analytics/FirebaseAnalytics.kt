@@ -7,7 +7,7 @@ import org.openedx.core.utils.Logger
 class FirebaseAnalytics(context: Context) : Analytics {
 
     private val logger = Logger(TAG)
-    private var tracker: FirebaseAnalytics = FirebaseAnalytics.getInstance(context)
+    private val tracker: FirebaseAnalytics = FirebaseAnalytics.getInstance(context)
 
     override fun logScreenEvent(screenName: String, params: Map<String, Any?>) {
         tracker.logEvent(

@@ -24,6 +24,7 @@ import org.openedx.core.domain.model.VideoQuality
 import org.openedx.core.module.TranscriptManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
+import org.openedx.core.utils.Logger
 import org.openedx.course.data.repository.CourseRepository
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsKey
@@ -48,7 +49,7 @@ class EncodedVideoUnitViewModel(
     transcriptManager,
     courseAnalytics
 ) {
-
+    private val logger = Logger(TAG)
     private val _isVideoEnded = MutableLiveData(false)
     val isVideoEnded: LiveData<Boolean>
         get() = _isVideoEnded
@@ -104,8 +105,10 @@ class EncodedVideoUnitViewModel(
         initPlayer()
 
         val executor = Executors.newSingleThreadExecutor()
-        CastContext.getSharedInstance(context, executor).result?.let { castContext ->
+        CastContext.getSharedInstance(context, executor).addOnSuccessListener { castContext ->
             castPlayer = CastPlayer(castContext)
+        }.addOnFailureListener {
+            logger.e(it, true)
         }
     }
 
@@ -184,5 +187,9 @@ class EncodedVideoUnitViewModel(
         } else {
             CourseAnalyticsKey.NATIVE.key
         }
+    }
+
+    private companion object {
+        private const val TAG = "EncodedVideoUnitViewModel"
     }
 }

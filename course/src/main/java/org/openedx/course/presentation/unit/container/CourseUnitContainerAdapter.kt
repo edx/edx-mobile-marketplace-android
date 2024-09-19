@@ -66,13 +66,6 @@ class CourseUnitContainerAdapter(
                 )
             }
 
-            block.studentViewMultiDevice.not() -> {
-                NotSupportedUnitFragment.newInstance(
-                    block.id,
-                    block.lmsWebUrl
-                )
-            }
-
             block.isHTMLBlock ||
                     block.isProblemBlock ||
                     block.isOpenAssessmentBlock ||

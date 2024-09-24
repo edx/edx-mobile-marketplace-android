@@ -18,7 +18,6 @@ import org.openedx.core.module.billing.getCourseSku
 import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPRequestType
-import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.EmailUtil
 
 class IAPInteractor(
@@ -27,7 +26,6 @@ class IAPInteractor(
     private val config: Config,
     private val repository: IAPRepository,
     private val preferencesManager: CorePreferences,
-    private val iapNotifier: IAPNotifier,
 ) {
     private val iapConfig
         get() = preferencesManager.appConfig.iapConfig
@@ -72,10 +70,6 @@ class IAPInteractor(
         val basketResponse = repository.addToBasket(courseSku)
         repository.proceedCheckout(basketResponse.basketId)
         return basketResponse.basketId
-    }
-
-    private suspend fun processCheckout(basketId: Long) {
-        repository.proceedCheckout(basketId)
     }
 
     suspend fun purchaseItem(
@@ -139,7 +133,6 @@ class IAPInteractor(
             }?.let { oneTimeProductDetails ->
                 val courseSku = purchase.getCourseSku() ?: return@let
                 val basketId = addToBasket(courseSku)
-                processCheckout(basketId)
                 executeOrder(
                     basketId = basketId,
                     purchaseToken = purchase.purchaseToken,

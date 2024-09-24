@@ -154,9 +154,13 @@ class IAPViewModel(
             return
         }
 
+        addToBasket(productInfo.courseSku)
+    }
+
+    private fun addToBasket(courseSku: String) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
-                iapInteractor.addToBasket(productInfo.courseSku)
+                iapInteractor.addToBasket(courseSku)
             }.onSuccess { basketId ->
                 purchaseFlowData.basketId = basketId
                 _uiState.value = IAPUIState.PurchaseProduct

@@ -25,17 +25,17 @@ class IAPEventLogger(
         }.toMutableMap())
     }
 
-    fun purchaseErrorEvent(error: String) {
+    private fun purchaseErrorEvent(error: String) {
         logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_ERROR, buildMap {
             put(IAPAnalyticsKeys.ERROR.key, error)
         }.toMutableMap())
     }
 
-    fun canceledByUserEvent() {
+    private fun canceledByUserEvent() {
         logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_CANCELED)
     }
 
-    fun courseUpgradeErrorEvent(error: String) {
+    private fun courseUpgradeErrorEvent(error: String) {
         logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_ERROR, buildMap {
             put(IAPAnalyticsKeys.ERROR.key, error)
         }.toMutableMap())
@@ -47,7 +47,7 @@ class IAPEventLogger(
         }.toMutableMap())
     }
 
-    fun logExceptionEvent(iapException: IAPException){
+    fun logExceptionEvent(iapException: IAPException) {
         val feedbackErrorMessage: String = iapException.getFormattedErrorMessage()
         when (iapException.requestType) {
             IAPRequestType.PAYMENT_SDK_CODE -> {
@@ -69,6 +69,7 @@ class IAPEventLogger(
             }
         }
     }
+
     fun logIAPErrorActionEvent(alertType: String, action: String) {
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
             put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, alertType)

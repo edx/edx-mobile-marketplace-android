@@ -448,7 +448,7 @@ val screenModule = module {
     }
 
     single { IAPRepository(get()) }
-    factory { IAPInteractor(get(), get(), get(), get(), get(), get()) }
+    factory { IAPInteractor(get(), get(), get(), get(), get()) }
     viewModel { (iapFlow: IAPFlow, purchaseFlowData: PurchaseFlowData) ->
         IAPViewModel(
             iapFlow = iapFlow,

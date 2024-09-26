@@ -10,7 +10,7 @@
     <item
         android:id="@+id/fragmentDiscover"
         android:enabled="true"
-        android:icon="@drawable/app_ic_discover_selector"
+        android:icon="@drawable/app_ic_discover_tab"
         android:title="@string/app_navigation_discovery" />
 
     <item

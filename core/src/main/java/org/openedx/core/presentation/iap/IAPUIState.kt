@@ -17,16 +17,6 @@ enum class IAPLoaderType {
     PRICE, PURCHASE_FLOW, FULL_SCREEN, RESTORE_PURCHASES
 }
 
-enum class IAPFlow(val value: String) {
-    RESTORE("restore"),
-    SILENT("silent"),
-    USER_INITIATED("user_initiated");
-
-    fun value(): String {
-        return this.name.lowercase()
-    }
-}
-
 enum class IAPAction(val action: String) {
     ACTION_USER_INITIATED("user_initiated"),
     ACTION_GET_HELP("get_help"),

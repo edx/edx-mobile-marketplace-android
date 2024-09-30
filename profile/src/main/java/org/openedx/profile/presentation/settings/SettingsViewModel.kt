@@ -25,11 +25,8 @@ import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.presentation.IAPAnalytics
-import org.openedx.core.presentation.IAPAnalyticsEvent
-import org.openedx.core.presentation.IAPAnalyticsKeys
-import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.global.AppData
-import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPEventLogger
 import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
@@ -83,6 +80,8 @@ class SettingsViewModel(
     private val _appUpgradeEvent = MutableStateFlow<AppUpgradeEvent?>(null)
     val appUpgradeEvent: StateFlow<AppUpgradeEvent?>
         get() = _appUpgradeEvent.asStateFlow()
+
+    val eventLogger = IAPEventLogger(analytics = iapAnalytics, isSilentIAPFlow = false)
 
     val isLogistrationEnabled get() = config.isPreLoginExperienceEnabled()
 
@@ -241,10 +240,7 @@ class SettingsViewModel(
     }
 
     fun restorePurchase() {
-        iapAnalytics.logIAPEvent(
-            event = IAPAnalyticsEvent.IAP_RESTORE_PURCHASE_CLICKED,
-            screenName = IAPAnalyticsScreen.PROFILE.screenName,
-        )
+        eventLogger.logRestorePurchasesClickedEvent()
         viewModelScope.launch(Dispatchers.IO) {
             val userId = corePreferences.user?.id ?: return@launch
 
@@ -256,10 +252,7 @@ class SettingsViewModel(
                 iapInteractor.processUnfulfilledPurchase(userId)
             }.onSuccess {
                 if (it) {
-                    iapAnalytics.logIAPEvent(
-                        event = IAPAnalyticsEvent.IAP_UNFULFILLED_PURCHASE_INITIATED,
-                        screenName = IAPAnalyticsScreen.PROFILE.screenName,
-                    )
+                    eventLogger.logUnfulfilledPurchaseInitiatedEvent()
                     _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
                 } else {
                     _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
@@ -280,40 +273,13 @@ class SettingsViewModel(
         }
     }
 
-    fun logIAPCancelEvent() {
-        iapAnalytics.logIAPEvent(
-            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
-            buildMap {
-                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_RESTORE.action)
-                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE.action)
-            }.toMutableMap(),
-            screenName = IAPAnalyticsScreen.PROFILE.screenName,
-        )
-    }
-
     fun showFeedbackScreen(context: Context, message: String) {
         iapInteractor.showFeedbackScreen(context, message)
-        iapAnalytics.logIAPEvent(
-            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
-            params = buildMap {
-                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
-                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP.action)
-            }.toMutableMap(),
-            screenName = IAPAnalyticsScreen.PROFILE.screenName,
-        )
+        eventLogger.logGetHelpEvent()
     }
 
     fun onRestorePurchaseCancel() {
-        iapAnalytics.logIAPEvent(
-            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
-            params = buildMap {
-                put(
-                    IAPAnalyticsKeys.ACTION.key,
-                    IAPAction.ACTION_CLOSE.action
-                )
-            }.toMutableMap(),
-            screenName = IAPAnalyticsScreen.PROFILE.screenName,
-        )
+        eventLogger.onRestorePurchaseCancel()
     }
 
     fun clearIAPState() {

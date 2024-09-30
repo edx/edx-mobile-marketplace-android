@@ -16,7 +16,6 @@ import org.openedx.core.data.repository.iap.IAPRepository
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.presentation.dialog.selectorbottomsheet.SelectDialogViewModel
-import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPViewModel
 import org.openedx.core.presentation.settings.video.VideoQualityViewModel
 import org.openedx.core.ui.WindowSize
@@ -451,9 +450,8 @@ val screenModule = module {
 
     single { IAPRepository(get()) }
     factory { IAPInteractor(get(), get(), get(), get(), get()) }
-    viewModel { (iapFlow: IAPFlow, purchaseFlowData: PurchaseFlowData) ->
+    viewModel { (purchaseFlowData: PurchaseFlowData) ->
         IAPViewModel(
-            iapFlow = iapFlow,
             purchaseFlowData = purchaseFlowData,
             get(),
             get(),

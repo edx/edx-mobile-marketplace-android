@@ -1,11 +1,7 @@
 package org.openedx.core.presentation
 
 interface IAPAnalytics {
-    fun logIAPEvent(
-        event: IAPAnalyticsEvent,
-        params: MutableMap<String, Any?> = mutableMapOf(),
-        screenName: String,
-    )
+    fun logEvent(event: String, params: Map<String, Any?>)
 
     fun logScreenEvent(screenName: String, params: Map<String, Any?>)
 }

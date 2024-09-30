@@ -24,15 +24,14 @@ import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.EnrolledCourse
+import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.presentation.IAPAnalytics
-import org.openedx.core.presentation.IAPAnalyticsEvent
-import org.openedx.core.presentation.IAPAnalyticsKeys
 import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
-import org.openedx.core.presentation.iap.IAPFlow
+import org.openedx.core.presentation.iap.IAPEventLogger
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.ResourceManager
@@ -98,6 +97,8 @@ class DashboardListViewModel(
     private val _appUpgradeEvent = MutableLiveData<AppUpgradeEvent>()
     val appUpgradeEvent: LiveData<AppUpgradeEvent>
         get() = _appUpgradeEvent
+
+    private val eventLogger = IAPEventLogger(analytics = iapAnalytics, isSilentIAPFlow = true)
 
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
@@ -216,7 +217,7 @@ class DashboardListViewModel(
             }
 
             IAPAction.ACTION_ERROR_CLOSE -> {
-                logIAPCancelEvent()
+                eventLogger.logIAPCancelEvent()
                 clearIAPState()
             }
 
@@ -302,10 +303,7 @@ class DashboardListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             iapInteractor.detectUnfulfilledPurchase(
                 onSuccess = {
-                    iapAnalytics.logIAPEvent(
-                        event = IAPAnalyticsEvent.IAP_UNFULFILLED_PURCHASE_INITIATED,
-                        screenName = IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName,
-                    )
+                    eventLogger.logUnfulfilledPurchaseInitiatedEvent()
                     _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
                 },
                 onFailure = {
@@ -325,25 +323,7 @@ class DashboardListViewModel(
 
     private fun showFeedbackScreen(message: String) {
         iapInteractor.showFeedbackScreen(context, message)
-        iapAnalytics.logIAPEvent(
-            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
-            params = buildMap {
-                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
-                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP.action)
-            }.toMutableMap(),
-            screenName = IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName,
-        )
-    }
-
-    private fun logIAPCancelEvent() {
-        iapAnalytics.logIAPEvent(
-            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
-            params = buildMap {
-                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
-                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE.action)
-            }.toMutableMap(),
-            screenName = IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName,
-        )
+        eventLogger.logGetHelpEvent()
     }
 
     private fun clearIAPState() {

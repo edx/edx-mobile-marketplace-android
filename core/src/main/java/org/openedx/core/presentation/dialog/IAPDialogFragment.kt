@@ -32,12 +32,11 @@ import androidx.fragment.app.DialogFragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.R
+import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.extension.parcelable
-import org.openedx.core.extension.serializable
 import org.openedx.core.presentation.iap.IAPAction
-import org.openedx.core.presentation.iap.IAPFlow
 import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
@@ -54,7 +53,6 @@ class IAPDialogFragment : DialogFragment() {
 
     private val iapViewModel by viewModel<IAPViewModel> {
         parametersOf(
-            requireArguments().serializable<IAPFlow>(ARG_IAP_FLOW),
             requireArguments().parcelable<PurchaseFlowData>(ARG_PURCHASE_FLOW_DATA)
         )
     }
@@ -236,7 +234,6 @@ class IAPDialogFragment : DialogFragment() {
     companion object {
         const val TAG = "IAPDialogFragment"
 
-        private const val ARG_IAP_FLOW = "iap_flow"
         private const val ARG_PURCHASE_FLOW_DATA = "purchase_flow_data"
 
         fun newInstance(
@@ -246,10 +243,11 @@ class IAPDialogFragment : DialogFragment() {
             courseName: String = "",
             isSelfPaced: Boolean = false,
             componentId: String? = null,
-            productInfo: ProductInfo? = null
+            productInfo: ProductInfo? = null,
         ): IAPDialogFragment {
             val fragment = IAPDialogFragment()
             val purchaseFlowData = PurchaseFlowData().apply {
+                this.iapFlow = iapFlow
                 this.screenName = screenName
                 this.courseId = courseId
                 this.courseName = courseName
@@ -259,7 +257,6 @@ class IAPDialogFragment : DialogFragment() {
             }
 
             fragment.arguments = bundleOf(
-                ARG_IAP_FLOW to iapFlow,
                 ARG_PURCHASE_FLOW_DATA to purchaseFlowData
             )
             return fragment

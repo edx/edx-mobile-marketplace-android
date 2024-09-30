@@ -34,6 +34,7 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
+import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isFalse
@@ -175,13 +176,17 @@ class CourseContainerViewModel(
         }
 
         override fun onPurchaseCancel(responseCode: Int, message: String) {
-            updateErrorState(
-                IAPException(
-                    IAPRequestType.PAYMENT_SDK_CODE,
-                    httpErrorCode = responseCode,
-                    errorMessage = message
-                )
-            )
+            _iapState.value =
+                IAPUIState.Loading(loaderType = IAPLoaderType.FULL_SCREEN)
+            purchaseFlowData.purchaseToken = "purchase.purchaseToken"
+            executeOrder(purchaseFlowData)
+//            updateErrorState(
+//                IAPException(
+//                    IAPRequestType.PAYMENT_SDK_CODE,
+//                    httpErrorCode = responseCode,
+//                    errorMessage = message
+//                )
+//            )
         }
     }
 
@@ -256,6 +261,7 @@ class CourseContainerViewModel(
                                     isSelfPaced = courseInfoOverview.isSelfPaced
                                     productInfo = courseInfoOverview.productInfo
                                     screenName = IAPAnalyticsScreen.COURSE_DASHBOARD.screenName
+                                    iapFlow = IAPFlow.USER_INITIATED
                                 }
                                 loadPrice()
                                 _courseAccessStatus.value =
@@ -270,20 +276,34 @@ class CourseContainerViewModel(
                             _courseAccessStatus.value = CourseAccessError.UNKNOWN
                         }
                     } else {
-                        _courseAccessStatus.value = CourseAccessError.NONE
-                        _isNavigationEnabled.value = true
-                        _calendarSyncUIState.update { state ->
-                            state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
-                        }
-                        if (resumeBlockId.isNotEmpty()) {
-                            delay(500L)
-                            courseNotifier.send(CourseOpenBlock(resumeBlockId))
-                        }
-                        _dataReady.value = true
-                        if (isIAPFlow) {
-                            eventLogger.upgradeSuccessEvent()
-                            _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
-                            _iapState.value = IAPUIState.CourseDataUpdated
+                        if(isIAPFlow.not()){
+                            purchaseFlowData.apply {
+                                courseId = courseDetails.id
+                                courseName = courseInfoOverview.name
+                                isSelfPaced = courseInfoOverview.isSelfPaced
+                                productInfo = courseInfoOverview.productInfo
+                                screenName = IAPAnalyticsScreen.COURSE_DASHBOARD.screenName
+                                iapFlow = IAPFlow.USER_INITIATED
+                            }
+                            loadPrice()
+                            _courseAccessStatus.value =
+                                CourseAccessError.AUDIT_EXPIRED_UPGRADABLE
+                        }else {
+                            _courseAccessStatus.value = CourseAccessError.NONE
+                            _isNavigationEnabled.value = true
+                            _calendarSyncUIState.update { state ->
+                                state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
+                            }
+                            if (resumeBlockId.isNotEmpty()) {
+                                delay(500L)
+                                courseNotifier.send(CourseOpenBlock(resumeBlockId))
+                            }
+                            _dataReady.value = true
+                            if (isIAPFlow) {
+                                eventLogger.upgradeSuccessEvent()
+                                _uiMessage.emit(UIMessage.ToastMessage("1."+ resourceManager.getString(R.string.iap_success_message)))
+                                _iapState.value = IAPUIState.CourseDataUpdated
+                            }
                         }
                     }
                 } ?: run {
@@ -393,22 +413,23 @@ class CourseContainerViewModel(
     }
 
     private fun executeOrder(purchaseFlowData: PurchaseFlowData) {
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
-                iapInteractor.executeOrder(
-                    basketId = purchaseFlowData.basketId,
-                    purchaseToken = purchaseFlowData.purchaseToken!!,
-                    price = purchaseFlowData.price,
-                    currencyCode = purchaseFlowData.currencyCode,
-                )
-            }.onSuccess {
-                consumeOrderForFurtherPurchases(purchaseFlowData)
-            }.onFailure {
-                if (it is IAPException) {
-                    updateErrorState(it)
-                }
-            }
-        }
+        updateCourseData()
+//        viewModelScope.launch(Dispatchers.IO) {
+//            runCatching {
+//                iapInteractor.executeOrder(
+//                    basketId = purchaseFlowData.basketId,
+//                    purchaseToken = purchaseFlowData.purchaseToken!!,
+//                    price = purchaseFlowData.price,
+//                    currencyCode = purchaseFlowData.currencyCode,
+//                )
+//            }.onSuccess {
+//                consumeOrderForFurtherPurchases(purchaseFlowData)
+//            }.onFailure {
+//                if (it is IAPException) {
+//                    updateErrorState(it)
+//                }
+//            }
+//        }
     }
 
 

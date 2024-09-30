@@ -1,34 +1,39 @@
 package org.openedx.core.presentation.iap
 
 import com.android.billingclient.api.BillingClient
+import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.extension.isNull
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.nonZero
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.IAPAnalyticsEvent
 import org.openedx.core.presentation.IAPAnalyticsKeys
+import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.utils.TimeUtils
 
 class IAPEventLogger(
     private val analytics: IAPAnalytics,
-    private val purchaseFlowData: PurchaseFlowData,
+    private val purchaseFlowData: PurchaseFlowData? = null,
+    private val isSilentIAPFlow: Boolean? = null,
 ) {
     fun upgradeNowClickedEvent() {
         logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED)
     }
 
     fun upgradeSuccessEvent() {
-        val elapsedTime = TimeUtils.getCurrentTime() - purchaseFlowData.flowStartTime
+        val elapsedTime = TimeUtils.getCurrentTime() - (purchaseFlowData?.flowStartTime ?: 0L)
         logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_SUCCESS, buildMap {
             put(IAPAnalyticsKeys.ELAPSED_TIME.key, elapsedTime)
-        }.toMutableMap())
+        })
     }
 
     private fun purchaseErrorEvent(error: String) {
         logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_ERROR, buildMap {
             put(IAPAnalyticsKeys.ERROR.key, error)
-        }.toMutableMap())
+        })
     }
 
     private fun canceledByUserEvent() {
@@ -38,13 +43,13 @@ class IAPEventLogger(
     private fun courseUpgradeErrorEvent(error: String) {
         logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_ERROR, buildMap {
             put(IAPAnalyticsKeys.ERROR.key, error)
-        }.toMutableMap())
+        })
     }
 
     private fun priceLoadErrorEvent(error: String) {
         logIAPEvent(IAPAnalyticsEvent.IAP_PRICE_LOAD_ERROR, buildMap {
             put(IAPAnalyticsKeys.ERROR.key, error)
-        }.toMutableMap())
+        })
     }
 
     fun logExceptionEvent(iapException: IAPException) {
@@ -74,14 +79,48 @@ class IAPEventLogger(
         logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
             put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, alertType)
             put(IAPAnalyticsKeys.ERROR_ACTION.key, action)
-        }.toMutableMap())
+        })
+    }
+
+    fun logRestorePurchasesClickedEvent() {
+        logIAPEvent(IAPAnalyticsEvent.IAP_RESTORE_PURCHASE_CLICKED)
+    }
+
+    fun logUnfulfilledPurchaseInitiatedEvent() {
+        logIAPEvent(IAPAnalyticsEvent.IAP_UNFULFILLED_PURCHASE_INITIATED)
+    }
+
+    fun logGetHelpEvent() {
+        logIAPEvent(
+            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
+            params = buildMap {
+                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
+                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP.action)
+            })
+    }
+
+    fun logIAPCancelEvent() {
+        logIAPEvent(
+            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
+            params = buildMap {
+                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
+                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE.action)
+            })
+    }
+
+    fun onRestorePurchaseCancel() {
+        logIAPEvent(
+            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
+            params = buildMap {
+                put(IAPAnalyticsKeys.ACTION.key, IAPAction.ACTION_CLOSE.action)
+            })
     }
 
     fun loadIAPScreenEvent() {
         val event = IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED
         val params = buildMap {
             put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            purchaseFlowData.screenName?.takeIfNotEmpty()?.let { screenName ->
+            purchaseFlowData?.screenName?.takeIfNotEmpty()?.let { screenName ->
                 put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
             }
             putAll(getIAPEventParams())
@@ -89,43 +128,69 @@ class IAPEventLogger(
         analytics.logScreenEvent(screenName = event.eventName, params = params)
     }
 
-    private fun getIAPEventParams(): MutableMap<String, Any?> {
+    private fun getIAPEventParams(): Map<String, Any?> {
+        if (purchaseFlowData.isNull() || purchaseFlowData?.courseId.isNullOrEmpty()) return emptyMap()
+
         return buildMap {
-            purchaseFlowData.takeIf { it.courseId.isNullOrBlank().not() }?.let {
-                put(IAPAnalyticsKeys.COURSE_ID.key, purchaseFlowData.courseId)
+            purchaseFlowData?.apply {
+                put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
                 put(
                     IAPAnalyticsKeys.PACING.key,
-                    if (purchaseFlowData.isSelfPaced == true) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
+                    if (isSelfPaced.isTrue()) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
                 )
+                productInfo?.lmsUSDPrice?.nonZero()?.let { lmsUSDPrice ->
+                    put(IAPAnalyticsKeys.LMS_USD_PRICE.key, lmsUSDPrice)
+                }
+                price.nonZero()?.let { localizedPrice ->
+                    put(IAPAnalyticsKeys.LOCALIZED_PRICE.key, localizedPrice)
+                }
+                currencyCode.takeIfNotEmpty()?.let { currencyCode ->
+                    put(IAPAnalyticsKeys.CURRENCY_CODE.key, currencyCode)
+                }
+                componentId?.takeIfNotEmpty()?.let { componentId ->
+                    put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
+                }
+                iapFlow?.let { iapFlow ->
+                    put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, iapFlow.value)
+                }
+                put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
+                screenName?.takeIfNotEmpty()?.let { screenName ->
+                    put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
+                }
             }
-            purchaseFlowData.productInfo?.lmsUSDPrice?.nonZero()?.let { lmsUSDPrice ->
-                put(IAPAnalyticsKeys.LMS_USD_PRICE.key, lmsUSDPrice)
-            }
-            purchaseFlowData.price.nonZero()?.let { localizedPrice ->
-                put(IAPAnalyticsKeys.LOCALIZED_PRICE.key, localizedPrice)
-            }
-            purchaseFlowData.currencyCode.takeIfNotEmpty()?.let { currencyCode ->
-                put(IAPAnalyticsKeys.CURRENCY_CODE.key, currencyCode)
-            }
-            purchaseFlowData.componentId?.takeIf { it.isNotBlank() }?.let { componentId ->
-                put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
-            }
+        }
+    }
+
+    private fun getUnfulfilledIAPEventParams(): Map<String, Any?> {
+        if (isSilentIAPFlow.isNull()) return emptyMap()
+
+        return buildMap {
             put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
-        }.toMutableMap()
+            if (isSilentIAPFlow.isTrue()) {
+                put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.SILENT.value)
+                put(
+                    IAPAnalyticsKeys.SCREEN_NAME.key,
+                    IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName
+                )
+            } else {
+                put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.RESTORE.value)
+                put(IAPAnalyticsKeys.SCREEN_NAME.key, IAPAnalyticsScreen.PROFILE.screenName)
+            }
+        }
     }
 
     private fun logIAPEvent(
         event: IAPAnalyticsEvent,
-        params: MutableMap<String, Any?> = mutableMapOf(),
+        params: Map<String, Any?> = mutableMapOf(),
     ) {
-        params.apply {
-            put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            putAll(getIAPEventParams())
-        }
-        analytics.logIAPEvent(
-            event = event,
-            params = params,
-            screenName = purchaseFlowData.screenName.orEmpty()
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(IAPAnalyticsKeys.NAME.key, event.biValue)
+                putAll(params)
+                putAll(getIAPEventParams())
+                putAll(getUnfulfilledIAPEventParams())
+            },
         )
     }
 }

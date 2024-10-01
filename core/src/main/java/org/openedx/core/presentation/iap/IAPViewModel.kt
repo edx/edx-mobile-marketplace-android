@@ -84,7 +84,7 @@ class IAPViewModel(
                 when (event) {
                     is CourseDataUpdated -> {
                         eventLogger.upgradeSuccessEvent()
-                        _uiMessage.emit(UIMessage.ToastMessage("2."+resourceManager.getString(R.string.iap_success_message)))
+                        _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                         _uiState.value = IAPUIState.CourseDataUpdated
                     }
                 }

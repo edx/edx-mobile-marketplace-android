@@ -284,13 +284,7 @@ class CourseContainerViewModel(
                         _dataReady.value = true
                         if (isIAPFlow) {
                             eventLogger.upgradeSuccessEvent()
-                            _uiMessage.emit(
-                                UIMessage.ToastMessage(
-                                    "1." + resourceManager.getString(
-                                        R.string.iap_success_message
-                                    )
-                                )
-                            )
+                            _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                             _iapState.value = IAPUIState.CourseDataUpdated
                         }
                     }

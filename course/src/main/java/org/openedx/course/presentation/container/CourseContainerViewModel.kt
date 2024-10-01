@@ -176,17 +176,13 @@ class CourseContainerViewModel(
         }
 
         override fun onPurchaseCancel(responseCode: Int, message: String) {
-            _iapState.value =
-                IAPUIState.Loading(loaderType = IAPLoaderType.FULL_SCREEN)
-            purchaseFlowData.purchaseToken = "purchase.purchaseToken"
-            executeOrder(purchaseFlowData)
-//            updateErrorState(
-//                IAPException(
-//                    IAPRequestType.PAYMENT_SDK_CODE,
-//                    httpErrorCode = responseCode,
-//                    errorMessage = message
-//                )
-//            )
+            updateErrorState(
+                IAPException(
+                    IAPRequestType.PAYMENT_SDK_CODE,
+                    httpErrorCode = responseCode,
+                    errorMessage = message
+                )
+            )
         }
     }
 
@@ -276,34 +272,26 @@ class CourseContainerViewModel(
                             _courseAccessStatus.value = CourseAccessError.UNKNOWN
                         }
                     } else {
-                        if(isIAPFlow.not()){
-                            purchaseFlowData.apply {
-                                courseId = courseDetails.id
-                                courseName = courseInfoOverview.name
-                                isSelfPaced = courseInfoOverview.isSelfPaced
-                                productInfo = courseInfoOverview.productInfo
-                                screenName = IAPAnalyticsScreen.COURSE_DASHBOARD.screenName
-                                iapFlow = IAPFlow.USER_INITIATED
-                            }
-                            loadPrice()
-                            _courseAccessStatus.value =
-                                CourseAccessError.AUDIT_EXPIRED_UPGRADABLE
-                        }else {
-                            _courseAccessStatus.value = CourseAccessError.NONE
-                            _isNavigationEnabled.value = true
-                            _calendarSyncUIState.update { state ->
-                                state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
-                            }
-                            if (resumeBlockId.isNotEmpty()) {
-                                delay(500L)
-                                courseNotifier.send(CourseOpenBlock(resumeBlockId))
-                            }
-                            _dataReady.value = true
-                            if (isIAPFlow) {
-                                eventLogger.upgradeSuccessEvent()
-                                _uiMessage.emit(UIMessage.ToastMessage("1."+ resourceManager.getString(R.string.iap_success_message)))
-                                _iapState.value = IAPUIState.CourseDataUpdated
-                            }
+                        _courseAccessStatus.value = CourseAccessError.NONE
+                        _isNavigationEnabled.value = true
+                        _calendarSyncUIState.update { state ->
+                            state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
+                        }
+                        if (resumeBlockId.isNotEmpty()) {
+                            delay(500L)
+                            courseNotifier.send(CourseOpenBlock(resumeBlockId))
+                        }
+                        _dataReady.value = true
+                        if (isIAPFlow) {
+                            eventLogger.upgradeSuccessEvent()
+                            _uiMessage.emit(
+                                UIMessage.ToastMessage(
+                                    "1." + resourceManager.getString(
+                                        R.string.iap_success_message
+                                    )
+                                )
+                            )
+                            _iapState.value = IAPUIState.CourseDataUpdated
                         }
                     }
                 } ?: run {
@@ -413,23 +401,22 @@ class CourseContainerViewModel(
     }
 
     private fun executeOrder(purchaseFlowData: PurchaseFlowData) {
-        updateCourseData()
-//        viewModelScope.launch(Dispatchers.IO) {
-//            runCatching {
-//                iapInteractor.executeOrder(
-//                    basketId = purchaseFlowData.basketId,
-//                    purchaseToken = purchaseFlowData.purchaseToken!!,
-//                    price = purchaseFlowData.price,
-//                    currencyCode = purchaseFlowData.currencyCode,
-//                )
-//            }.onSuccess {
-//                consumeOrderForFurtherPurchases(purchaseFlowData)
-//            }.onFailure {
-//                if (it is IAPException) {
-//                    updateErrorState(it)
-//                }
-//            }
-//        }
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                iapInteractor.executeOrder(
+                    basketId = purchaseFlowData.basketId,
+                    purchaseToken = purchaseFlowData.purchaseToken!!,
+                    price = purchaseFlowData.price,
+                    currencyCode = purchaseFlowData.currencyCode,
+                )
+            }.onSuccess {
+                consumeOrderForFurtherPurchases(purchaseFlowData)
+            }.onFailure {
+                if (it is IAPException) {
+                    updateErrorState(it)
+                }
+            }
+        }
     }
 
 

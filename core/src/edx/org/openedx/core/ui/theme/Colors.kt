@@ -169,7 +169,7 @@ val dark_course_home_header_shade = Color(0xFF999999)
 val dark_course_home_back_btn_background = Color.Black
 val dark_settings_title_content = Color.White
 val dark_progress_bar_color = dark_primary_button_background
-val dark_progress_bar_background_color = Color(0xFFE7E4DB)
+val dark_progress_bar_background_color = Color(0xFF707070)
 
 val dark_primary_card_caution_background = Color(0xFF2D494E)
 val dark_primary_card_info_background = Color(0xFF0E3639)

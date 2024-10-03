@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.ImageProcessor
-import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
@@ -35,6 +34,7 @@ import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
 import org.openedx.core.domain.model.iap.IAPFlow
+import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isFalse
@@ -44,7 +44,6 @@ import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseSku
 import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.IAPAnalytics
-import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPEventLogger
 import org.openedx.core.presentation.iap.IAPLoaderType
@@ -58,6 +57,7 @@ import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CalendarSyncEvent.CheckCalendarSyncEvent
 import org.openedx.core.system.notifier.CalendarSyncEvent.CreateCalendarSyncEvent
 import org.openedx.core.system.notifier.CourseCompletionSet
+import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.CourseDatesShifted
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
@@ -226,13 +226,16 @@ class CourseContainerViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    fetchCourseDetails(true)
+                    fetchCourseDetails(
+                        isIAPFlow = event.isCourseDashboard,
+                        isExpiredCoursePurchase = event.isExpiredCoursePurchase
+                    )
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)
     }
 
-    fun fetchCourseDetails(isIAPFlow: Boolean = false) {
+    fun fetchCourseDetails(isIAPFlow: Boolean = false, isExpiredCoursePurchase: Boolean = false) {
         if (isIAPFlow.not()) {
             courseDashboardViewed()
         }
@@ -256,7 +259,7 @@ class CourseContainerViewModel(
                                     courseName = courseInfoOverview.name
                                     isSelfPaced = courseInfoOverview.isSelfPaced
                                     productInfo = courseInfoOverview.productInfo
-                                    screenName = IAPAnalyticsScreen.COURSE_DASHBOARD.screenName
+                                    screenName = IAPFlowSource.COURSE_DASHBOARD.screen
                                     iapFlow = IAPFlow.USER_INITIATED
                                 }
                                 loadPrice()
@@ -281,12 +284,22 @@ class CourseContainerViewModel(
                             delay(500L)
                             courseNotifier.send(CourseOpenBlock(resumeBlockId))
                         }
-                        _dataReady.value = true
                         if (isIAPFlow) {
-                            eventLogger.upgradeSuccessEvent()
-                            _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
+                            if (isExpiredCoursePurchase) {
+                                eventLogger.upgradeSuccessEvent()
+                                _uiMessage.emit(
+                                    UIMessage.ToastMessage(
+                                        resourceManager.getString(
+                                            CoreR.string.iap_success_message
+                                        )
+                                    )
+                                )
+                            } else {
+                                iapNotifier.send(CourseDataUpdated())
+                            }
                             _iapState.value = IAPUIState.CourseDataUpdated
                         }
+                        _dataReady.value = true
                     }
                 } ?: run {
                     _courseAccessStatus.value = CourseAccessError.UNKNOWN
@@ -446,8 +459,13 @@ class CourseContainerViewModel(
 
     private fun updateCourseData() {
         viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.courseId?.let { courseId ->
-                iapNotifier.send(UpdateCourseData(courseId))
+            purchaseFlowData.courseId?.let { _ ->
+                iapNotifier.send(
+                    UpdateCourseData(
+                        isCourseDashboard = true,
+                        isExpiredCoursePurchase = true
+                    )
+                )
             }
         }
     }

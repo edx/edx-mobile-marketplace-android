@@ -24,10 +24,10 @@ import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.iap.IAPFlow
+import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.presentation.IAPAnalytics
-import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPEventLogger
@@ -181,7 +181,7 @@ class DashboardGalleryViewModel(
                 if (course != null) {
                     IAPDialogFragment.newInstance(
                         iapFlow = IAPFlow.USER_INITIATED,
-                        screenName = IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName,
+                        screenName = IAPFlowSource.COURSE_ENROLLMENT.screen,
                         courseId = course.course.id,
                         courseName = course.course.name,
                         isSelfPaced = course.course.isSelfPaced,
@@ -196,7 +196,7 @@ class DashboardGalleryViewModel(
             IAPAction.ACTION_COMPLETION -> {
                 IAPDialogFragment.newInstance(
                     IAPFlow.SILENT,
-                    IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName
+                    IAPFlowSource.COURSE_ENROLLMENT.screen
                 ).show(
                     fragmentManager,
                     IAPDialogFragment.TAG
@@ -243,7 +243,7 @@ class DashboardGalleryViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    updateCourses(isIAPFlow = true)
+                    updateCourses(isIAPFlow = event.isCourseDashboard.not())
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)

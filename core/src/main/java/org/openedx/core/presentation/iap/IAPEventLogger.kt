@@ -11,7 +11,6 @@ import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.IAPAnalyticsEvent
 import org.openedx.core.presentation.IAPAnalyticsKeys
-import org.openedx.core.presentation.IAPAnalyticsScreen
 import org.openedx.core.utils.TimeUtils
 
 class IAPEventLogger(
@@ -166,16 +165,13 @@ class IAPEventLogger(
 
         return buildMap {
             put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
-            if (isSilentIAPFlow.isTrue()) {
-                put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.SILENT.value)
-                put(
-                    IAPAnalyticsKeys.SCREEN_NAME.key,
-                    IAPAnalyticsScreen.COURSE_ENROLLMENT.screenName
-                )
-            } else {
-                put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, IAPFlow.RESTORE.value)
-                put(IAPAnalyticsKeys.SCREEN_NAME.key, IAPAnalyticsScreen.PROFILE.screenName)
+            purchaseFlowData?.screenName?.takeIfNotEmpty()?.let { screenName ->
+                put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
             }
+            put(
+                IAPAnalyticsKeys.IAP_FLOW_TYPE.key,
+                if (isSilentIAPFlow.isTrue()) IAPFlow.SILENT.value else IAPFlow.RESTORE.value
+            )
         }
     }
 

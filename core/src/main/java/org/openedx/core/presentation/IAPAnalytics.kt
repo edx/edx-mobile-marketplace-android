@@ -70,9 +70,3 @@ enum class IAPAnalyticsKeys(val key: String) {
     SCREEN_NAME("screen_name"),
     ERROR_ALERT_TYPE("error_alert_type"),
 }
-
-enum class IAPAnalyticsScreen(val screenName: String) {
-    COURSE_ENROLLMENT("course_enrollment"),
-    COURSE_DASHBOARD("course_dashboard"),
-    PROFILE("profile"),
-}

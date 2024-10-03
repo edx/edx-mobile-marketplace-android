@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.domain.model.iap.IAPFlow
-import org.openedx.core.presentation.IAPAnalyticsScreen
+import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.ui.rememberWindowSize
@@ -126,7 +126,7 @@ class SettingsFragment : Fragment() {
                             IAPAction.ACTION_RESTORE -> {
                                 IAPDialogFragment.newInstance(
                                     IAPFlow.RESTORE,
-                                    IAPAnalyticsScreen.PROFILE.screenName
+                                    IAPFlowSource.PROFILE.screen
                                 ).show(
                                     requireActivity().supportFragmentManager,
                                     IAPDialogFragment.TAG

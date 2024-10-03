@@ -21,6 +21,7 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.IAPFlow
+import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.module.billing.BillingProcessor
@@ -239,8 +240,8 @@ class IAPViewModel(
 
     private fun updateCourseData() {
         viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.courseId?.let { courseId ->
-                iapNotifier.send(UpdateCourseData(courseId))
+            purchaseFlowData.courseId?.let { _ ->
+                iapNotifier.send(UpdateCourseData(IAPFlowSource.COURSE_DASHBOARD.screen == purchaseData.screenName))
             }
         }
     }

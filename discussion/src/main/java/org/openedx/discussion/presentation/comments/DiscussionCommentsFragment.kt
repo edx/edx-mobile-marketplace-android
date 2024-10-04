@@ -191,15 +191,9 @@ private fun DiscussionCommentsScreen(
     }
 
     val sendButtonColor = if (responseValue.isEmpty()) {
-        MaterialTheme.appColors.textFieldBorder
+        MaterialTheme.appColors.primaryButtonBackground.copy(alpha = 0.3f)
     } else {
         MaterialTheme.appColors.primaryButtonBackground
-    }
-
-    val iconButtonColor = if (responseValue.isEmpty()) {
-        MaterialTheme.appColors.textFieldBackgroundVariant
-    } else {
-        Color.White
     }
 
     Scaffold(
@@ -419,7 +413,7 @@ private fun DiscussionCommentsScreen(
                                                 modifier = Modifier.padding(7.dp),
                                                 painter = painterResource(id = R.drawable.discussion_ic_send),
                                                 contentDescription = stringResource(id = R.string.discussion_add_response),
-                                                tint = iconButtonColor
+                                                tint = MaterialTheme.appColors.primaryButtonText
                                             )
                                         }
                                     }

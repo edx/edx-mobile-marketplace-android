@@ -227,7 +227,7 @@ class CourseContainerViewModel(
             when (event) {
                 is UpdateCourseData -> {
                     fetchCourseDetails(
-                        isIAPFlow = event.isCourseDashboard,
+                        isIAPFlow = event.isPurchasedFromCourseDashboard,
                         isExpiredCoursePurchase = event.isExpiredCoursePurchase
                     )
                 }
@@ -289,9 +289,7 @@ class CourseContainerViewModel(
                                 eventLogger.upgradeSuccessEvent()
                                 _uiMessage.emit(
                                     UIMessage.ToastMessage(
-                                        resourceManager.getString(
-                                            CoreR.string.iap_success_message
-                                        )
+                                        resourceManager.getString(CoreR.string.iap_success_message)
                                     )
                                 )
                             } else {
@@ -459,10 +457,10 @@ class CourseContainerViewModel(
 
     private fun updateCourseData() {
         viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.courseId?.let { _ ->
+            purchaseFlowData.courseId?.let {
                 iapNotifier.send(
                     UpdateCourseData(
-                        isCourseDashboard = true,
+                        isPurchasedFromCourseDashboard = true,
                         isExpiredCoursePurchase = true
                     )
                 )

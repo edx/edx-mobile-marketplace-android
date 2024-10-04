@@ -270,7 +270,7 @@ class CourseContainerViewModelTest {
             )
         } returns Unit
         every {
-           courseAnalytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.HOME_TAB.eventName,
                 any()
             )
@@ -286,7 +286,7 @@ class CourseContainerViewModelTest {
             )
         }
         verify(exactly = 1) {
-           courseAnalytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.HOME_TAB.eventName,
                 any()
             )
@@ -325,7 +325,7 @@ class CourseContainerViewModelTest {
             )
         } returns Unit
         every {
-           courseAnalytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.HOME_TAB.eventName,
                 any()
             )
@@ -341,7 +341,7 @@ class CourseContainerViewModelTest {
             )
         }
         verify(exactly = 1) {
-           courseAnalytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.HOME_TAB.eventName,
                 any()
             )
@@ -381,7 +381,7 @@ class CourseContainerViewModelTest {
             )
         } returns Unit
         every {
-           courseAnalytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.HOME_TAB.eventName,
                 any()
             )
@@ -396,7 +396,7 @@ class CourseContainerViewModelTest {
             )
         }
         verify(exactly = 1) {
-           courseAnalytics.logScreenEvent(
+            courseAnalytics.logScreenEvent(
                 CourseAnalyticsEvent.HOME_TAB.eventName,
                 any()
             )

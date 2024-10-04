@@ -113,7 +113,7 @@ class DashboardListViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    updateCourses(isIAPFlow = event.isCourseDashboard.not())
+                    updateCourses(isIAPFlow = event.isPurchasedFromCourseDashboard.not())
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)

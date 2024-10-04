@@ -49,7 +49,7 @@ enum class IAPFlow(val value: String) {
     }
 }
 
-enum class IAPFlowSource(val screen:String){
+enum class IAPFlowSource(val screen: String) {
     COURSE_ENROLLMENT("course_enrollment"),
     COURSE_DASHBOARD("course_dashboard"),
     PROFILE("profile"),

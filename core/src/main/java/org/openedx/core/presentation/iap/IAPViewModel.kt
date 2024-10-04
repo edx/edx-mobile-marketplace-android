@@ -240,7 +240,7 @@ class IAPViewModel(
 
     private fun updateCourseData() {
         viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.courseId?.let { _ ->
+            purchaseFlowData.courseId?.let {
                 iapNotifier.send(UpdateCourseData(IAPFlowSource.COURSE_DASHBOARD.screen == purchaseData.screenName))
             }
         }

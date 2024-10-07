@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -111,7 +110,6 @@ private fun InfoDialog(
                 style = MaterialTheme.appTypography.bodyMedium
             )
             TertiaryButton(
-                modifier = Modifier.wrapContentSize(),
                 text = stringResource(R.string.core_ok),
                 onClick = onClick
             )

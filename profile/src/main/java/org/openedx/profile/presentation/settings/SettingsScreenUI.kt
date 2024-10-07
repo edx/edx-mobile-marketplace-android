@@ -524,7 +524,6 @@ private fun LogoutDialog(
                 Spacer(Modifier.size(36.dp))
                 BrandButton(
                     text = stringResource(id = profileR.string.profile_logout),
-                    backgroundColor = MaterialTheme.appColors.primaryButtonBackground,
                     onClick = onLogoutClick,
                     content = {
                         Box(

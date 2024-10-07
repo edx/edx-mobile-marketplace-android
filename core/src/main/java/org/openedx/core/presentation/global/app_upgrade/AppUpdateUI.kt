@@ -233,7 +233,6 @@ fun AppUpgradeRequiredButtons(
             )
         }
         TertiaryButton(
-            modifier = Modifier.wrapContentSize(),
             text = stringResource(id = R.string.core_update),
             onClick = onUpdateClick
         )
@@ -253,7 +252,6 @@ fun AppUpgradeDialogButtons(
             onClick = onNotNowClick
         )
         TertiaryButton(
-            modifier = Modifier.wrapContentSize(),
             text = stringResource(id = R.string.core_update),
             onClick = onUpdateClick
         )

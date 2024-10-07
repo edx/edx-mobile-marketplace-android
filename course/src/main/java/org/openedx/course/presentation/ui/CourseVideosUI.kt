@@ -204,7 +204,7 @@ private fun CourseVideosUI(
         }
 
         var isDownloadConfirmationShowed by rememberSaveable {
-            mutableStateOf(true)
+            mutableStateOf(false)
         }
 
         var isDeleteDownloadsConfirmationShowed by rememberSaveable {

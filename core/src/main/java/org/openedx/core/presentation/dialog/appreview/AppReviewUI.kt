@@ -107,7 +107,6 @@ fun ThankYouDialog(
                         onClick = onNotNowClick
                     )
                     TertiaryButton(
-                        modifier = Modifier.wrapContentSize(),
                         text = stringResource(id = R.string.core_rate_us),
                         onClick = onRateUsClick
                     )
@@ -186,7 +185,6 @@ fun FeedbackDialog(
                     onClick = onNotNowClick
                 )
                 TertiaryButton(
-                    modifier = Modifier.wrapContentSize(),
                     enabled = feedback.value.isNotEmpty(),
                     text = stringResource(id = R.string.core_share_feedback),
                     onClick = onShareClick
@@ -241,7 +239,6 @@ fun RateDialog(
                     onClick = onNotNowClick
                 )
                 TertiaryButton(
-                    modifier = Modifier.wrapContentSize(),
                     enabled = rating.intValue > 0,
                     text = stringResource(id = R.string.core_submit),
                     onClick = onSubmitClick

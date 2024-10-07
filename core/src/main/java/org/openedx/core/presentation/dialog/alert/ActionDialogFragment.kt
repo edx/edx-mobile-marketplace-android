@@ -174,7 +174,6 @@ private fun ActionDialog(
                 )
                 Spacer(modifier = Modifier.size(16.dp))
                 TertiaryButton(
-                    modifier = Modifier.wrapContentSize(),
                     text = stringResource(R.string.core_continue),
                     onClick = onNegativeClick
                 )

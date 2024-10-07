@@ -78,7 +78,7 @@ import org.openedx.core.extension.TextConverter
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
-import org.openedx.core.ui.OutlinePrimaryButton
+import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.SheetContent
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -604,7 +604,7 @@ private fun DiscussionThreadsScreen(
                                                         textAlign = TextAlign.Center
                                                     )
                                                     Spacer(Modifier.height(40.dp))
-                                                    OutlinePrimaryButton(
+                                                    OpenEdXOutlinePrimaryButton(
                                                         modifier = Modifier
                                                             .widthIn(184.dp, Dp.Unspecified),
                                                         text = stringResource(id = discussionR.string.discussion_create_post),

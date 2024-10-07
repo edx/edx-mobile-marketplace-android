@@ -41,8 +41,8 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
-import org.openedx.core.ui.OutlinePrimaryButton
-import org.openedx.core.ui.TertiaryButton
+import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
+import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -168,13 +168,14 @@ internal fun ManageAccountView(
                                         title = uiState.account.name,
                                         subtitle = uiState.account.email ?: ""
                                     )
-                                    OutlinePrimaryButton(
+                                    OpenEdXOutlinePrimaryButton(
                                         text = stringResource(id = ProfileR.string.profile_edit_profile),
                                         onClick = {
                                             onAction(ManageAccountViewAction.EditAccountClick)
                                         },
                                     )
-                                    TertiaryButton(
+                                    OpenEdXTertiaryButton(
+                                        text = stringResource(id = ProfileR.string.profile_delete_profile),
                                         onClick = { onAction(ManageAccountViewAction.DeleteAccount) },
                                         content = {
                                             IconText(

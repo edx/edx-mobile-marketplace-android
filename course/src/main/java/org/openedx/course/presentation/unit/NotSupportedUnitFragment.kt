@@ -37,7 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import org.openedx.core.ui.PrimaryButton
+import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.rememberWindowSize
@@ -150,9 +150,10 @@ private fun NotSupportedUnitScreen(
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(40.dp))
-                PrimaryButton(modifier = Modifier
-                    .width(216.dp)
-                    .height(42.dp),
+                OpenEdXPrimaryButton(
+                    modifier = Modifier
+                        .width(216.dp)
+                        .height(42.dp),
                     text = stringResource(id = courseR.string.course_open_in_browser),
                     onClick = {
                         uriHandler.openUri(uri)

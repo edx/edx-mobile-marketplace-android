@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import org.openedx.core.R
 import org.openedx.core.extension.takeIfNotEmpty
-import org.openedx.core.ui.TertiaryButton
+import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -151,7 +151,7 @@ private fun CalendarAlertDialog(dialogProperties: DialogProperties, onDismiss: (
             )
         },
         confirmButton = {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = dialogProperties.positiveButton,
                 onClick = {
                     onDismiss()
@@ -160,7 +160,7 @@ private fun CalendarAlertDialog(dialogProperties: DialogProperties, onDismiss: (
             )
         },
         dismissButton = {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = dialogProperties.negativeButton,
                 onClick = {
                     onDismiss()

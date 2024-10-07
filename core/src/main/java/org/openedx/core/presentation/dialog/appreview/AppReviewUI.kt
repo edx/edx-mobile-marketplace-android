@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
@@ -47,7 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openedx.core.R
 import org.openedx.core.presentation.dialog.DefaultDialogBox
-import org.openedx.core.ui.TertiaryButton
+import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -102,11 +101,11 @@ fun ThankYouDialog(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    TertiaryButton(
+                    OpenEdXTertiaryButton(
                         text = stringResource(id = R.string.core_not_now),
                         onClick = onNotNowClick
                     )
-                    TertiaryButton(
+                    OpenEdXTertiaryButton(
                         text = stringResource(id = R.string.core_rate_us),
                         onClick = onRateUsClick
                     )
@@ -180,11 +179,11 @@ fun FeedbackDialog(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                TertiaryButton(
+                OpenEdXTertiaryButton(
                     text = stringResource(id = R.string.core_not_now),
                     onClick = onNotNowClick
                 )
-                TertiaryButton(
+                OpenEdXTertiaryButton(
                     enabled = feedback.value.isNotEmpty(),
                     text = stringResource(id = R.string.core_share_feedback),
                     onClick = onShareClick
@@ -234,11 +233,11 @@ fun RateDialog(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                TertiaryButton(
+                OpenEdXTertiaryButton(
                     text = stringResource(id = R.string.core_not_now),
                     onClick = onNotNowClick
                 )
-                TertiaryButton(
+                OpenEdXTertiaryButton(
                     enabled = rating.intValue > 0,
                     text = stringResource(id = R.string.core_submit),
                     onClick = onSubmitClick

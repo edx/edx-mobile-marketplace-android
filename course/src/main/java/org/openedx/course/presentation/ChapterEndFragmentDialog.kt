@@ -41,8 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import org.openedx.core.extension.setWidthPercent
-import org.openedx.core.ui.OutlinePrimaryButton
-import org.openedx.core.ui.PrimaryButton
+import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
+import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.TextIcon
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
@@ -202,7 +202,7 @@ private fun ChapterEndDialogScreen(
             )
             Spacer(Modifier.height(42.dp))
             if (nextSectionName.isNotEmpty()) {
-                PrimaryButton(
+                OpenEdXPrimaryButton(
                     text = stringResource(id = R.string.course_next_section),
                     content = {
                         TextIcon(
@@ -217,7 +217,7 @@ private fun ChapterEndDialogScreen(
                 )
                 Spacer(Modifier.height(16.dp))
             }
-            OutlinePrimaryButton(
+            OpenEdXOutlinePrimaryButton(
                 text = stringResource(id = R.string.course_back_to_outline),
                 onClick = onBackButtonClick,
             )
@@ -310,7 +310,7 @@ private fun ChapterEndDialogScreenLandscape(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     if (nextSectionName.isNotEmpty()) {
-                        PrimaryButton(
+                        OpenEdXPrimaryButton(
                             text = stringResource(id = R.string.course_next_section),
                             content = {
                                 TextIcon(
@@ -324,7 +324,7 @@ private fun ChapterEndDialogScreenLandscape(
                         )
                         Spacer(Modifier.height(16.dp))
                     }
-                    OutlinePrimaryButton(
+                    OpenEdXOutlinePrimaryButton(
                         text = stringResource(id = R.string.course_back_to_outline),
                         onClick = onBackButtonClick
                     )

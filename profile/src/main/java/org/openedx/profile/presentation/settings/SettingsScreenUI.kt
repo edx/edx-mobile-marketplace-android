@@ -39,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -59,9 +58,9 @@ import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
-import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.CheckingPurchasesDialog
 import org.openedx.core.ui.FakePurchasesFulfillmentCompleted
+import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.UpgradeErrorDialog
 import org.openedx.core.ui.WindowSize
@@ -348,7 +347,7 @@ private fun ManageAccountSection(onManageAccountClick: () -> Unit) {
 private fun SupportInfoSection(
     uiState: SettingsUIState.Data,
     appUpgradeEvent: AppUpgradeEvent?,
-    onAction: (SettingsScreenAction) -> Unit,
+    onAction: (SettingsScreenAction) -> Unit
 ) {
     Column {
         Text(
@@ -522,7 +521,7 @@ private fun LogoutDialog(
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.size(36.dp))
-                BrandButton(
+                OpenEdXBrandButton(
                     text = stringResource(id = profileR.string.profile_logout),
                     onClick = onLogoutClick,
                     content = {
@@ -560,7 +559,7 @@ private fun LogoutDialog(
 private fun AppVersionItem(
     versionName: String,
     appUpgradeEvent: AppUpgradeEvent?,
-    onClick: () -> Unit,
+    onClick: () -> Unit
 ) {
     Box(modifier = Modifier.padding(20.dp)) {
         when (appUpgradeEvent) {
@@ -627,7 +626,7 @@ private fun AppVersionItemAppToDate(versionName: String) {
 private fun AppVersionItemUpgradeRecommended(
     versionName: String,
     appUpgradeEvent: AppUpgradeEvent.UpgradeRecommendedEvent,
-    onClick: () -> Unit,
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -670,7 +669,7 @@ private fun AppVersionItemUpgradeRecommended(
 @Composable
 fun AppVersionItemUpgradeRequired(
     versionName: String,
-    onClick: () -> Unit,
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier

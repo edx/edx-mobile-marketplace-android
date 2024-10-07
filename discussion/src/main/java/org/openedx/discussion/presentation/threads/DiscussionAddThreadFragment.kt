@@ -75,8 +75,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.UIMessage
 import org.openedx.core.ui.BackBtn
-import org.openedx.core.ui.BrandButton
 import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.OpenEdXOutlinedTextField
 import org.openedx.core.ui.SheetContent
 import org.openedx.core.ui.WindowSize
@@ -437,7 +437,7 @@ private fun DiscussionAddThreadScreen(
                                 if (isLoading) {
                                     CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                                 } else {
-                                    BrandButton(
+                                    OpenEdXBrandButton(
                                         modifier = buttonWidth,
                                         text = if (currentPage == 0) {
                                             stringResource(id = discussionR.string.discussion_create_post)

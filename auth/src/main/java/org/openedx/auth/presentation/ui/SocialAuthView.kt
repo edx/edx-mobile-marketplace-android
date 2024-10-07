@@ -19,7 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openedx.auth.R
 import org.openedx.auth.data.model.AuthType
-import org.openedx.core.ui.BrandButton
+import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 
@@ -43,7 +43,7 @@ internal fun SocialAuthView(
             } else {
                 R.string.auth_continue_google
             }
-            BrandButton(
+            OpenEdXBrandButton(
                 backgroundColor = MaterialTheme.appColors.authGoogleButtonBackground,
                 onClick = { onEvent(AuthType.GOOGLE) }
             ) {
@@ -67,7 +67,7 @@ internal fun SocialAuthView(
             } else {
                 R.string.auth_continue_facebook
             }
-            BrandButton(
+            OpenEdXBrandButton(
                 backgroundColor = MaterialTheme.appColors.authFacebookButtonBackground,
                 onClick = { onEvent(AuthType.FACEBOOK) }
             ) {
@@ -93,7 +93,7 @@ internal fun SocialAuthView(
             } else {
                 R.string.auth_continue_microsoft
             }
-            BrandButton(
+            OpenEdXBrandButton(
                 backgroundColor = MaterialTheme.appColors.authMicrosoftButtonBackground,
                 onClick = { onEvent(AuthType.MICROSOFT) }
             ) {

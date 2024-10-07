@@ -60,8 +60,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.DialogFragment
 import org.openedx.core.presentation.dialog.DefaultDialogBox
-import org.openedx.core.ui.BrandButton
-import org.openedx.core.ui.OutlineBrandButton
+import org.openedx.core.ui.OpenEdXBrandButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.crop
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
@@ -168,7 +168,7 @@ private fun NewCalendarDialog(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.appColors.textDark
             )
-            BrandButton(
+            OpenEdXBrandButton(
                 text = stringResource(id = R.string.profile_begin_syncing),
                 onClick = {
                     onBeginSyncingClick(
@@ -181,7 +181,7 @@ private fun NewCalendarDialog(
                     )
                 }
             )
-            OutlineBrandButton(
+            OpenEdXOutlineBrandButton(
                 text = stringResource(id = CoreR.string.core_cancel),
                 onClick = { onCancelClick() }
             )

@@ -123,10 +123,10 @@ import org.openedx.core.extension.tagId
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
-import org.openedx.core.ui.OutlinePrimaryButton
-import org.openedx.core.ui.PrimaryButton
+import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
+import org.openedx.core.ui.OpenEdXPrimaryButton
+import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.SheetContent
-import org.openedx.core.ui.TertiaryButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -888,7 +888,7 @@ private fun ChangeImageDialog(
                     color = MaterialTheme.appColors.textPrimary
                 )
                 Spacer(Modifier.height(20.dp))
-                PrimaryButton(
+                OpenEdXPrimaryButton(
                     text = stringResource(id = R.string.profile_select_from_gallery),
                     onClick = onSelectFromGalleryClick,
                     content = {
@@ -903,7 +903,7 @@ private fun ChangeImageDialog(
                 )
                 if (hasProfileImage) {
                     Spacer(Modifier.height(16.dp))
-                    OutlinePrimaryButton(
+                    OpenEdXOutlinePrimaryButton(
                         text = stringResource(id = R.string.profile_remove_photo),
                         onClick = onRemoveImageClick,
                         content = {
@@ -918,7 +918,7 @@ private fun ChangeImageDialog(
                     )
                 }
                 Spacer(Modifier.height(40.dp))
-                TertiaryButton(
+                OpenEdXTertiaryButton(
                     text = stringResource(id = coreR.string.core_cancel),
                     onClick = onCancelClick
                 )
@@ -1171,12 +1171,12 @@ private fun LeaveProfile(
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.size(40.dp))
-                PrimaryButton(
+                OpenEdXPrimaryButton(
                     text = stringResource(id = R.string.profile_leave),
                     onClick = onLeaveClick,
                 )
                 Spacer(Modifier.height(24.dp))
-                OutlinePrimaryButton(
+                OpenEdXOutlinePrimaryButton(
                     text = stringResource(id = R.string.profile_keep_editing),
                     onClick = onDismissRequest
                 )
@@ -1250,12 +1250,12 @@ private fun LeaveProfileLandscape(
                         Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        PrimaryButton(
+                        OpenEdXPrimaryButton(
                             text = stringResource(id = R.string.profile_leave),
                             onClick = onLeaveClick
                         )
                         Spacer(Modifier.height(16.dp))
-                        OutlinePrimaryButton(
+                        OpenEdXOutlinePrimaryButton(
                             text = stringResource(id = R.string.profile_keep_editing),
                             onClick = onDismissRequest,
                         )

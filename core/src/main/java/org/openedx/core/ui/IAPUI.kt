@@ -181,7 +181,7 @@ fun NoSkuErrorDialog(
             )
         },
         confirmButton = {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = stringResource(id = R.string.core_ok),
                 onClick = onConfirm
             )
@@ -232,17 +232,17 @@ fun CourseAlreadyPurchasedExecuteErrorDialog(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                TertiaryButton(
+                OpenEdXTertiaryButton(
                     text = positiveText,
                     onClick = onPositiveClick
                 )
 
-                TertiaryButton(
+                OpenEdXTertiaryButton(
                     text = negativeText,
                     onClick = onNegativeClick
                 )
 
-                TertiaryButton(
+                OpenEdXTertiaryButton(
                     text = neutralText,
                     onClick = onNeutralClick
                 )
@@ -286,13 +286,13 @@ fun UpgradeErrorDialog(
             )
         },
         confirmButton = {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = confirmText,
                 onClick = onConfirm
             )
         },
         dismissButton = {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = dismissText,
                 onClick = onDismiss
             )
@@ -358,13 +358,13 @@ fun FakePurchasesFulfillmentCompleted(onCancel: () -> Unit, onGetHelp: () -> Uni
             )
         },
         confirmButton = {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = stringResource(id = R.string.core_cancel),
                 onClick = onCancel
             )
         },
         dismissButton = {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = stringResource(id = R.string.iap_get_help),
                 onClick = onGetHelp
             )
@@ -400,13 +400,13 @@ fun PurchasesFulfillmentCompletedDialog(onConfirm: () -> Unit, onDismiss: () -> 
             )
         },
         confirmButton = {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = stringResource(id = R.string.iap_label_refresh_now),
                 onClick = onConfirm
             )
         },
         dismissButton = {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = stringResource(id = R.string.iap_label_continue_without_update),
                 onClick = onDismiss
             )

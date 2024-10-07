@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -38,7 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openedx.core.R
-import org.openedx.core.ui.TertiaryButton
+import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -227,12 +226,12 @@ fun AppUpgradeRequiredButtons(
         horizontalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         if (showAccountSettingsButton) {
-            TertiaryButton(
+            OpenEdXTertiaryButton(
                 text = stringResource(id = R.string.core_account_settings),
                 onClick = onAccountSettingsClick
             )
         }
-        TertiaryButton(
+        OpenEdXTertiaryButton(
             text = stringResource(id = R.string.core_update),
             onClick = onUpdateClick
         )
@@ -247,11 +246,11 @@ fun AppUpgradeDialogButtons(
     Row(
         horizontalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        TertiaryButton(
+        OpenEdXTertiaryButton(
             text = stringResource(id = R.string.core_not_now),
             onClick = onNotNowClick
         )
-        TertiaryButton(
+        OpenEdXTertiaryButton(
             text = stringResource(id = R.string.core_update),
             onClick = onUpdateClick
         )

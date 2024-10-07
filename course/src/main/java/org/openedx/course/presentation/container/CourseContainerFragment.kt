@@ -79,8 +79,8 @@ import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialog
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
-import org.openedx.core.ui.OutlinePrimaryButton
-import org.openedx.core.ui.PrimaryButton
+import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
+import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.RoundTabsBar
 import org.openedx.core.ui.UpgradeToAccessView
 import org.openedx.core.ui.UpgradeToAccessViewType
@@ -720,14 +720,14 @@ private fun SetupCourseAccessErrorButtons(
         CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE,
         CourseAccessError.NOT_YET_STARTED,
         -> {
-            PrimaryButton(
+            OpenEdXPrimaryButton(
                 text = stringResource(R.string.course_label_back),
                 onClick = { fragmentManager.popBackStack() },
             )
         }
 
         CourseAccessError.AUDIT_EXPIRED_UPGRADABLE -> {
-            OutlinePrimaryButton(
+            OpenEdXOutlinePrimaryButton(
                 text = stringResource(R.string.course_find_new_course_button),
                 onClick = {
                     viewModel.courseRouter.navigateToDiscover(fragmentManager)
@@ -754,7 +754,7 @@ private fun SetupCourseAccessErrorButtons(
 
         CourseAccessError.UNKNOWN -> {
             if (viewModel.hasInternetConnection) {
-                PrimaryButton(
+                OpenEdXPrimaryButton(
                     text = stringResource(R.string.course_label_back),
                     onClick = { fragmentManager.popBackStack() },
                 )

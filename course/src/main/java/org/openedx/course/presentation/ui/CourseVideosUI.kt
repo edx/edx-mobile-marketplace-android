@@ -70,7 +70,7 @@ import org.openedx.core.presentation.settings.video.VideoQualityType
 import org.openedx.core.ui.CircularProgress
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.NoContentScreen
-import org.openedx.core.ui.TertiaryButton
+import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -314,7 +314,7 @@ private fun CourseVideosUI(
                     isDownloadConfirmationShowed = false
                 },
                 confirmButton = {
-                    TertiaryButton(
+                    OpenEdXTertiaryButton(
                         text = stringResource(id = org.openedx.core.R.string.core_confirm),
                         onClick = {
                             isDownloadConfirmationShowed = false
@@ -323,7 +323,7 @@ private fun CourseVideosUI(
                     )
                 },
                 dismissButton = {
-                    TertiaryButton(
+                    OpenEdXTertiaryButton(
                         text = stringResource(id = org.openedx.core.R.string.core_dismiss),
                         onClick = {
                             isDownloadConfirmationShowed = false
@@ -358,7 +358,7 @@ private fun CourseVideosUI(
                     isDeleteDownloadsConfirmationShowed = false
                 },
                 confirmButton = {
-                    TertiaryButton(
+                    OpenEdXTertiaryButton(
                         text = stringResource(id = org.openedx.core.R.string.core_delete),
                         onClick = {
                             isDeleteDownloadsConfirmationShowed = false
@@ -367,7 +367,7 @@ private fun CourseVideosUI(
                     )
                 },
                 dismissButton = {
-                    TertiaryButton(
+                    OpenEdXTertiaryButton(
                         text = stringResource(id = org.openedx.core.R.string.core_cancel),
                         onClick = {
                             isDeleteDownloadsConfirmationShowed = false
@@ -396,7 +396,7 @@ private fun CourseVideosUI(
                     deleteDownloadBlock = null
                 },
                 confirmButton = {
-                    TertiaryButton(
+                    OpenEdXTertiaryButton(
                         text = stringResource(id = org.openedx.core.R.string.core_delete),
                         onClick = {
                             deleteDownloadBlock?.let { block ->
@@ -407,7 +407,7 @@ private fun CourseVideosUI(
                     )
                 },
                 dismissButton = {
-                    TertiaryButton(
+                    OpenEdXTertiaryButton(
                         text = stringResource(id = org.openedx.core.R.string.core_cancel),
                         onClick = { deleteDownloadBlock = null }
                     )

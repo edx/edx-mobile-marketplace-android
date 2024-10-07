@@ -88,8 +88,8 @@ import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.IconText
-import org.openedx.core.ui.OutlinePrimaryButton
-import org.openedx.core.ui.PrimaryButton
+import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
+import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -341,9 +341,10 @@ fun NavigationUnitsButtons(
         horizontalArrangement = Arrangement.Center
     ) {
         if (hasPrevBlock) {
-            OutlinePrimaryButton(
+            OpenEdXOutlinePrimaryButton(
                 modifier = Modifier
                     .height(42.dp),
+                text = stringResource(R.string.course_navigation_prev),
                 onClick = onPrevClick,
             ) {
                 Row(
@@ -366,9 +367,10 @@ fun NavigationUnitsButtons(
             }
             Spacer(Modifier.width(16.dp))
         }
-        PrimaryButton(
+        OpenEdXPrimaryButton(
             modifier = Modifier
                 .height(42.dp),
+            text = nextButtonText,
             onClick = onNextClick
         ) {
             Row(
@@ -1004,7 +1006,7 @@ fun CourseDatesBanner(
         }
 
         banner.bannerType.buttonResId.nonZero()?.let {
-            PrimaryButton(
+            OpenEdXPrimaryButton(
                 text = stringResource(id = it),
                 onClick = resetDates,
             )
@@ -1058,7 +1060,7 @@ fun CourseDatesBannerTablet(
             }
         }
         banner.bannerType.buttonResId.nonZero()?.let {
-            PrimaryButton(
+            OpenEdXPrimaryButton(
                 modifier = Modifier.width(210.dp),
                 text = stringResource(id = it),
                 onClick = resetDates,
@@ -1104,7 +1106,7 @@ fun DatesShiftedSnackBar(
                 style = MaterialTheme.appTypography.titleSmall,
             )
             if (showAction) {
-                OutlinePrimaryButton(
+                OpenEdXOutlinePrimaryButton(
                     modifier = Modifier
                         .padding(top = 16.dp),
                     text = stringResource(id = coreR.string.core_dates_view_all_dates),

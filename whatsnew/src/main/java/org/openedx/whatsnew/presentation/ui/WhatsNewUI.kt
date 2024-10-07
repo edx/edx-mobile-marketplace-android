@@ -35,8 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.openedx.core.ui.OutlinePrimaryButton
-import org.openedx.core.ui.PrimaryButton
+import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
+import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
@@ -166,11 +166,11 @@ fun PrevButton(
         label = ""
     )
 
-    OutlinePrimaryButton(
+    OpenEdXOutlinePrimaryButton(
         modifier = Modifier
-            .testTag("btn_previous")
             .height(42.dp)
             .alpha(prevButtonAnimationFactor),
+        text = stringResource(R.string.whats_new_navigation_previous),
         onClick = onPrevClick,
     ) {
         Row(
@@ -197,10 +197,10 @@ fun NextFinishButton(
     onNextClick: () -> Unit,
     hasNextPage: Boolean
 ) {
-    PrimaryButton(
+    OpenEdXPrimaryButton(
         modifier = Modifier
-            .testTag("btn_next")
             .height(42.dp),
+        text = stringResource(id = R.string.whats_new_navigation_next),
         onClick = onNextClick
     ) {
         AnimatedContent(

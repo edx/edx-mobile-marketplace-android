@@ -1064,7 +1064,7 @@ fun OfflineModeDialog(
 
 @Composable
 @SuppressLint("ModifierParameter")
-fun BrandButton(
+fun OpenEdXBrandButton(
     modifier: Modifier = Modifier.fillMaxWidth(),
     text: String = "",
     onClick: () -> Unit,
@@ -1106,9 +1106,9 @@ fun BrandButton(
 
 @Composable
 @SuppressLint("ModifierParameter")
-fun OutlineBrandButton(
+fun OpenEdXOutlineBrandButton(
     modifier: Modifier = Modifier.fillMaxWidth(),
-    text: String = "",
+    text: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
     textColor: Color = MaterialTheme.appColors.primaryButtonBackground,
@@ -1118,7 +1118,11 @@ fun OutlineBrandButton(
 ) {
     OutlinedButton(
         modifier = Modifier
-            .testTag("btn_${text.tagId()}")
+            .testTag(
+                text
+                    .takeIfNotEmpty()
+                    ?.let { "btn_${text.tagId()}" } ?: ""
+            )
             .then(modifier)
             .heightIn(min = 42.dp),
         onClick = onClick,
@@ -1146,16 +1150,16 @@ fun OutlineBrandButton(
 
 @Composable
 @SuppressLint("ModifierParameter")
-fun PrimaryButton(
+fun OpenEdXPrimaryButton(
     modifier: Modifier = Modifier.fillMaxWidth(),
-    text: String = "",
+    text: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
     textColor: Color = MaterialTheme.appColors.secondaryButtonText,
     backgroundColor: Color = MaterialTheme.appColors.secondaryButtonBackground,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    BrandButton(
+    OpenEdXBrandButton(
         modifier = modifier,
         text = text,
         onClick = onClick,
@@ -1168,9 +1172,9 @@ fun PrimaryButton(
 
 @Composable
 @SuppressLint("ModifierParameter")
-fun OutlinePrimaryButton(
+fun OpenEdXOutlinePrimaryButton(
     modifier: Modifier = Modifier.fillMaxWidth(),
-    text: String = "",
+    text: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
     textColor: Color = MaterialTheme.appColors.primaryButtonBorderedText,
@@ -1178,7 +1182,7 @@ fun OutlinePrimaryButton(
     borderColor: Color = MaterialTheme.appColors.primaryButtonBorderedText,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    OutlineBrandButton(
+    OpenEdXOutlineBrandButton(
         modifier = modifier,
         text = text,
         onClick = onClick,
@@ -1192,9 +1196,9 @@ fun OutlinePrimaryButton(
 
 @Composable
 @SuppressLint("ModifierParameter")
-fun TertiaryButton(
+fun OpenEdXTertiaryButton(
     modifier: Modifier = Modifier.wrapContentSize(),
-    text: String = "",
+    text: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
     textColor: Color = MaterialTheme.appColors.textPrimary,
@@ -1202,7 +1206,11 @@ fun TertiaryButton(
 ) {
     Button(
         modifier = Modifier
-            .testTag("btn_${text.tagId()}")
+            .testTag(
+                text
+                    .takeIfNotEmpty()
+                    ?.let { "btn_${text.tagId()}" } ?: ""
+            )
             .then(modifier)
             .height(42.dp),
         shape = MaterialTheme.appShapes.buttonShape,
@@ -1284,7 +1292,7 @@ fun FullScreenErrorView(
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(16.dp))
-        PrimaryButton(
+        OpenEdXPrimaryButton(
             modifier = Modifier
                 .widthIn(Dp.Unspecified, 162.dp),
             text = stringResource(id = errorType.actionResId),
@@ -1336,7 +1344,7 @@ fun AuthButtonsPanel(
     onSignInClick: () -> Unit,
 ) {
     Row {
-        BrandButton(
+        OpenEdXBrandButton(
             modifier = Modifier
                 .testTag("btn_register")
                 .width(0.dp)
@@ -1345,7 +1353,7 @@ fun AuthButtonsPanel(
             onClick = { onRegisterClick() }
         )
 
-        OutlineBrandButton(
+        OpenEdXOutlineBrandButton(
             modifier = Modifier
                 .testTag("btn_sign_in")
                 .width(100.dp)
@@ -1509,20 +1517,24 @@ private fun ButtonsPreview() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            BrandButton(text = "BrandButton", onClick = {}, enabled = true)
-            BrandButton(text = "BrandButtonDisable", onClick = {}, enabled = false)
-            OutlineBrandButton(text = "OutlineBrandButton", onClick = {}, enabled = true)
-            OutlineBrandButton(text = "OutlineBrandButtonDisable", onClick = {}, enabled = false)
-            PrimaryButton(text = "PrimaryButton", onClick = {}, enabled = true)
-            PrimaryButton(text = "PrimaryButtonDisable", onClick = {}, enabled = false)
-            OutlinePrimaryButton(text = "OutlinePrimaryButton", onClick = {}, enabled = true)
-            OutlinePrimaryButton(
-                text = "OutlinePrimaryButtonDisable",
+            OpenEdXBrandButton(text = "BrandButton", onClick = {}, enabled = true)
+            OpenEdXBrandButton(text = "BrandButtonDisabled", onClick = {}, enabled = false)
+            OpenEdXOutlineBrandButton(text = "OutlineBrandButton", onClick = {}, enabled = true)
+            OpenEdXOutlineBrandButton(
+                text = "OutlineBrandButtonDisabled",
                 onClick = {},
                 enabled = false
             )
-            TertiaryButton(text = "TertiaryButton", onClick = {}, enabled = true)
-            TertiaryButton(text = "TertiaryButtonDisable", onClick = {}, enabled = false)
+            OpenEdXPrimaryButton(text = "PrimaryButton", onClick = {}, enabled = true)
+            OpenEdXPrimaryButton(text = "PrimaryButtonDisabled", onClick = {}, enabled = false)
+            OpenEdXOutlinePrimaryButton(text = "OutlinePrimaryButton", onClick = {}, enabled = true)
+            OpenEdXOutlinePrimaryButton(
+                text = "OutlinePrimaryButtonDisabled",
+                onClick = {},
+                enabled = false
+            )
+            OpenEdXTertiaryButton(text = "TertiaryButton", onClick = {}, enabled = true)
+            OpenEdXTertiaryButton(text = "TertiaryButtonDisabled", onClick = {}, enabled = false)
         }
     }
 }

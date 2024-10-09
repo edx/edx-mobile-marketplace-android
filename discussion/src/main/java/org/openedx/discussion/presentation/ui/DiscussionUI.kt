@@ -29,6 +29,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -77,10 +79,10 @@ fun ThreadMainItem(
         CoreR.drawable.core_ic_default_profile_picture
     }
 
-    val votePainter = if (thread.voted) {
-        painterResource(id = R.drawable.discussion_ic_like_success)
+    val voteIcon = if (thread.voted) {
+        Icons.Filled.ThumbUp
     } else {
-        painterResource(id = R.drawable.discussion_ic_like)
+        Icons.Outlined.ThumbUp
     }
     val reportText = if (thread.abuseFlagged) {
         stringResource(id = R.string.discussion_unreport)
@@ -168,7 +170,7 @@ fun ThreadMainItem(
                     thread.voteCount,
                     thread.voteCount
                 ),
-                painter = votePainter,
+                icon = voteIcon,
                 color = MaterialTheme.appColors.textPrimary,
                 textStyle = MaterialTheme.appTypography.labelLarge,
                 onClick = {
@@ -219,10 +221,10 @@ fun CommentItem(
     } else {
         MaterialTheme.appColors.textPrimary
     }
-    val votePainter = if (comment.voted) {
-        painterResource(id = R.drawable.discussion_ic_like_success)
+    val voteIcon = if (comment.voted) {
+        Icons.Filled.ThumbUp
     } else {
-        painterResource(id = R.drawable.discussion_ic_like)
+        Icons.Outlined.ThumbUp
     }
 
     val context = LocalContext.current
@@ -317,7 +319,7 @@ fun CommentItem(
                         comment.voteCount,
                         comment.voteCount
                     ),
-                    painter = votePainter,
+                    icon = voteIcon,
                     color = MaterialTheme.appColors.textPrimary,
                     textStyle = MaterialTheme.appTypography.labelLarge,
                     onClick = {
@@ -375,10 +377,10 @@ fun CommentMainItem(
         MaterialTheme.appColors.textPrimary
     }
 
-    val votePainter = if (comment.voted) {
-        painterResource(id = R.drawable.discussion_ic_like_success)
+    val voteIcon = if (comment.voted) {
+        Icons.Filled.ThumbUp
     } else {
-        painterResource(id = R.drawable.discussion_ic_like)
+        Icons.Outlined.ThumbUp
     }
 
     val context = LocalContext.current
@@ -452,7 +454,7 @@ fun CommentMainItem(
                         comment.voteCount,
                         comment.voteCount
                     ),
-                    painter = votePainter,
+                    icon = voteIcon,
                     color = MaterialTheme.appColors.textPrimary,
                     textStyle = MaterialTheme.appTypography.labelLarge,
                     onClick = {

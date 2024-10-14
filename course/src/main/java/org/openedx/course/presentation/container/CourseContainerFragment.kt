@@ -86,6 +86,8 @@ import org.openedx.core.ui.CheckmarkView
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OfflineModeDialog
+import org.openedx.core.ui.OpenEdXBrandButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.RoundTabsBar
@@ -288,7 +290,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
                                 CalendarSyncDialogType.LOADING_DIALOG,
                                 CalendarSyncDialogType.PERMISSION_DIALOG,
                                 CalendarSyncDialogType.NONE,
-                                -> {
+                                    -> {
                                 }
                             }
 
@@ -468,7 +470,7 @@ fun CourseDashboard(
                                 CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE,
                                 CourseAccessError.NOT_YET_STARTED,
                                 CourseAccessError.UNKNOWN,
-                                -> {
+                                    -> {
                                     CourseAccessErrorView(
                                         viewModel = viewModel,
                                         accessError = accessStatus.value,
@@ -763,7 +765,7 @@ private fun AuditExpiredUpgradableView(
                     CheckmarkView(stringResource(id = org.openedx.core.R.string.iap_full_access_course))
 
                 }
-                OpenEdXOutlinedButton(
+                OpenEdXOutlineBrandButton(
                     text = stringResource(R.string.course_find_new_course_button),
                     backgroundColor = MaterialTheme.appColors.background,
                     textColor = MaterialTheme.appColors.primary,
@@ -777,7 +779,7 @@ private fun AuditExpiredUpgradableView(
                     is IAPUIState.Loading,
                     is IAPUIState.PurchaseProduct,
                     is IAPUIState.Error,
-                    -> {
+                        -> {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .size(42.dp),
@@ -786,7 +788,7 @@ private fun AuditExpiredUpgradableView(
                     }
 
                     is IAPUIState.ProductData -> {
-                        OpenEdXButton(modifier = Modifier.fillMaxWidth(),
+                        OpenEdXBrandButton(modifier = Modifier.fillMaxWidth(),
                             text = stringResource(
                                 id = org.openedx.core.R.string.iap_upgrade_price,
                                 viewModel.purchaseFlowData.formattedPrice ?: 0.0,
@@ -910,7 +912,7 @@ private fun SetupCourseAccessErrorButtons(
     when (accessError) {
         CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE,
         CourseAccessError.NOT_YET_STARTED,
-        -> {
+            -> {
             OpenEdXPrimaryButton(
                 text = stringResource(R.string.course_label_back),
                 onClick = { fragmentManager.popBackStack() },

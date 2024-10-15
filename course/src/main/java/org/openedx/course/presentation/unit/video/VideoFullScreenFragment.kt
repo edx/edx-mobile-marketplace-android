@@ -3,6 +3,7 @@ package org.openedx.course.presentation.unit.video
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.core.os.bundleOf
 import androidx.core.view.WindowInsetsCompat
@@ -63,6 +64,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         viewModel.videoUrl = requireArguments().getString(ARG_BLOCK_VIDEO_URL, "")
         blockId = requireArguments().getString(ARG_BLOCK_ID, "")
         if (viewModel.currentVideoTime == 0L) {
@@ -187,6 +189,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
         super.onPause()
         exoPlayer?.removeListener(exoPlayerListener)
         exoPlayer?.pause()
+        activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onDestroyView() {

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
@@ -75,6 +76,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         windowSize = computeWindowSizeClasses()
         lifecycle.addObserver(viewModel)
         handler.post(videoTimeRunnable)
@@ -275,6 +277,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 viewModel.getCurrentVideoTime()
             )
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     companion object {

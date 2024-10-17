@@ -33,7 +33,7 @@ class CourseUnitContainerAdapter(
                     val videoUrl = if (viewModel.getDownloadModelById(block.id) != null) {
                         isDownloaded = true
                         viewModel.getDownloadModelById(block.id)!!.path
-                    } else videoUrl
+                    } else getPreferredVideoInfoForStreaming(viewModel.videoQuality).url
                     if (videoUrl.isNotEmpty()) {
                         VideoUnitFragment.newInstance(
                             block.id,

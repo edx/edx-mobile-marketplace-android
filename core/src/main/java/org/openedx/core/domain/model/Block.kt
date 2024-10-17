@@ -119,7 +119,7 @@ data class EncodedVideos(
                 || hls?.url != null
                 || fallback?.url != null
 
-    val videoUrl: String
+    private val videoUrl: String
         get() = fallback?.url
             ?: hls?.url
             ?: desktopMp4?.url
@@ -132,6 +132,54 @@ data class EncodedVideos(
 
     val hasYoutubeUrl: Boolean
         get() = youtube?.url?.isNotEmpty() == true
+
+    fun getPreferredVideoInfoForStreaming(preferredVideoStreaming: VideoQuality): VideoInfo {
+        return when (preferredVideoStreaming) {
+            VideoQuality.AUTO -> {
+                listOfNotNull(
+                    mobileLow,
+                    mobileHigh,
+                    desktopMp4,
+                    hls,
+                    youtube,
+                    fallback,
+                ).minBy { it.streamPriority }
+            }
+
+            VideoQuality.OPTION_720P -> {
+                listOfNotNull(
+                    desktopMp4,
+                    mobileHigh,
+                    mobileLow,
+                    hls,
+                    youtube,
+                    fallback,
+                ).first()
+            }
+
+            VideoQuality.OPTION_540P -> {
+                listOfNotNull(
+                    mobileHigh,
+                    mobileLow,
+                    desktopMp4,
+                    hls,
+                    youtube,
+                    fallback,
+                ).first()
+            }
+
+            VideoQuality.OPTION_360P -> {
+                listOfNotNull(
+                    mobileLow,
+                    mobileHigh,
+                    desktopMp4,
+                    hls,
+                    youtube,
+                    fallback,
+                ).first()
+            }
+        }
+    }
 
     fun getPreferredVideoInfoForDownloading(preferredVideoQuality: VideoQuality): VideoInfo? {
         var preferredVideoInfo = when (preferredVideoQuality) {
@@ -186,7 +234,8 @@ data class EncodedVideos(
 
 data class VideoInfo(
     val url: String,
-    val fileSize: Int,
+    val fileSize: Long,
+    val streamPriority: Int,
 )
 
 data class BlockCounts(

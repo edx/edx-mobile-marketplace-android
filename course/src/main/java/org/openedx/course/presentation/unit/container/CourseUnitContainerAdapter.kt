@@ -31,7 +31,7 @@ class CourseUnitContainerAdapter(
                     val downloadModel = viewModel.getDownloadModelById(block.id)
                     val isDownloaded = downloadModel != null
 
-                    val videoUrl = downloadModel?.path ?: videoUrl
+                    val videoUrl = downloadModel?.path ?: getPreferredVideoInfoForStreaming(viewModel.videoQuality).url
                     val transcripts =
                         downloadModel?.transcriptPaths ?: block.studentViewData?.transcripts
 

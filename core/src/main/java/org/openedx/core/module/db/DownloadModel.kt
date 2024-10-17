@@ -3,7 +3,7 @@ package org.openedx.core.module.db
 data class DownloadModel(
     val id: String,
     val title: String,
-    val size: Int,
+    val size: Long,
     val path: String,
     val url: String,
     val type: FileType,

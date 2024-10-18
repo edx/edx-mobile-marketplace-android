@@ -12,7 +12,7 @@ data class DownloadModelEntity(
     @ColumnInfo("title")
     val title: String,
     @ColumnInfo("size")
-    val size: Int,
+    val size: Long,
     @ColumnInfo("path")
     val path: String,
     @ColumnInfo("url")

@@ -90,7 +90,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        binding.playerView.keepScreenOn = true
         binding.cvVideoTitle?.setContent {
             OpenEdXTheme {
                 VideoTitle(text = requireArguments().getString(ARG_TITLE) ?: "")

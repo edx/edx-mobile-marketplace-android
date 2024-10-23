@@ -75,7 +75,6 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.playerView.keepScreenOn = true
         binding.root.setOnApplyWindowInsetsListener { _, insets ->
             val insetsCompat = WindowInsetsCompat.toWindowInsetsCompat(insets)
                 .getInsets(WindowInsetsCompat.Type.systemBars())
@@ -185,6 +184,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
     }
 
     override fun onPause() {
+        binding.playerView.keepScreenOn = false
         super.onPause()
         exoPlayer?.removeListener(exoPlayerListener)
         exoPlayer?.pause()
@@ -205,6 +205,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
 
     override fun onResume() {
         super.onResume()
+        binding.playerView.keepScreenOn = true
         exoPlayer?.addListener(exoPlayerListener)
     }
 

@@ -185,9 +185,9 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
 
     override fun onPause() {
         binding.playerView.keepScreenOn = false
-        super.onPause()
         exoPlayer?.removeListener(exoPlayerListener)
         exoPlayer?.pause()
+        super.onPause()
     }
 
     override fun onDestroyView() {

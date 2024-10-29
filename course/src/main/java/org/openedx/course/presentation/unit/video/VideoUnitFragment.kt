@@ -90,7 +90,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         binding.cvVideoTitle?.setContent {
             OpenEdXTheme {
                 VideoTitle(text = requireArguments().getString(ARG_TITLE) ?: "")
@@ -238,6 +237,16 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 )
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.playerView.keepScreenOn = true
+    }
+
+    override fun onPause() {
+        binding.playerView.keepScreenOn = false
+        super.onPause()
     }
 
     @UnstableApi

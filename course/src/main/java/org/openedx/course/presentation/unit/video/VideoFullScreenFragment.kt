@@ -12,12 +12,10 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.Clock
-import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector
-import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
@@ -123,7 +121,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
             playerView.setShowNextButton(false)
             playerView.setShowPreviousButton(false)
             val mediaItem = MediaItem.fromUri(viewModel.videoUrl)
-            setPlayerMedia(mediaItem)
+            exoPlayer?.setMediaItem(mediaItem, viewModel.currentVideoTime)
             exoPlayer?.prepare()
             exoPlayer?.playWhenReady = viewModel.isPlaying ?: false
 
@@ -159,21 +157,6 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
                     )
                 }
             })
-        }
-    }
-
-    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-    private fun setPlayerMedia(mediaItem: MediaItem) {
-        if (viewModel.videoUrl.endsWith(".m3u8")) {
-            val factory = DefaultDataSource.Factory(requireContext())
-            val mediaSource: HlsMediaSource =
-                HlsMediaSource.Factory(factory).createMediaSource(mediaItem)
-            exoPlayer?.setMediaSource(mediaSource, viewModel.currentVideoTime)
-        } else {
-            exoPlayer?.setMediaItem(
-                mediaItem,
-                viewModel.currentVideoTime
-            )
         }
     }
 

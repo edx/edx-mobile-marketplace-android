@@ -35,7 +35,7 @@ class CourseUnitContainerAdapter(
                     val transcripts =
                         downloadModel?.transcriptPaths ?: block.studentViewData?.transcripts
 
-                    if (videoUrl.isNotEmpty()) {
+                    if (videoUrl.isNotEmpty() && videoUrl != youtube?.url) {
                         VideoUnitFragment.newInstance(
                             block.id,
                             viewModel.courseId,

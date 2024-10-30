@@ -21,6 +21,7 @@ class VideoViewModel(
     var videoUrl = ""
     var currentVideoTime = 0L
     var isPlaying: Boolean? = null
+    var transcripts = emptyMap<String, String>()
 
     private var isBlockAlreadyCompleted = false
 

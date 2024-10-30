@@ -43,7 +43,8 @@ interface CourseRouter {
         videoTime: Long,
         blockId: String,
         courseId: String,
-        isPlaying: Boolean
+        isPlaying: Boolean,
+        transcripts: Map<String, String>
     )
 
     fun navigateToFullScreenYoutubeVideo(

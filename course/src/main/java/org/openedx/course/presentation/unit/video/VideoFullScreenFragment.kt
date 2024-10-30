@@ -25,7 +25,9 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.domain.model.VideoQuality
+import org.openedx.core.extension.objectToString
 import org.openedx.core.extension.requestApplyInsetsWhenAttached
+import org.openedx.core.extension.stringToObject
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.global.viewBinding
 import org.openedx.course.R
@@ -69,6 +71,9 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
         if (viewModel.isPlaying == null) {
             viewModel.isPlaying = requireArguments().getBoolean(ARG_IS_PLAYING)
         }
+        viewModel.transcripts = stringToObject<Map<String, String>>(
+            requireArguments().getString(ARG_TRANSCRIPTS, "")
+        ) ?: emptyMap()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -199,6 +204,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
         private const val ARG_BLOCK_ID = "blockId"
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_IS_PLAYING = "isPlaying"
+        private const val ARG_TRANSCRIPTS = "transcripts"
 
         fun newInstance(
             videoUrl: String,
@@ -206,6 +212,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
             blockId: String,
             courseId: String,
             isPlaying: Boolean,
+            transcripts: Map<String, String>,
         ): VideoFullScreenFragment {
             val fragment = VideoFullScreenFragment()
             fragment.arguments = bundleOf(
@@ -213,7 +220,8 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
                 ARG_VIDEO_TIME to videoTime,
                 ARG_BLOCK_ID to blockId,
                 ARG_COURSE_ID to courseId,
-                ARG_IS_PLAYING to isPlaying
+                ARG_IS_PLAYING to isPlaying,
+                ARG_TRANSCRIPTS to objectToString(transcripts),
             )
             return fragment
         }

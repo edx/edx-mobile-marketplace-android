@@ -233,7 +233,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     viewModel.exoPlayer?.currentPosition ?: 0L,
                     viewModel.blockId,
                     viewModel.courseId,
-                    viewModel.isPlaying
+                    viewModel.isPlaying,
+                    viewModel.transcripts,
                 )
             }
         }

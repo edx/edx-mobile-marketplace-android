@@ -126,7 +126,10 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
             playerView.setShowNextButton(false)
             playerView.setShowPreviousButton(false)
             playerView.setShowSubtitleButton(true)
-            val mediaItem = MediaItem.fromUri(viewModel.videoUrl)
+            val mediaItem = MediaItem.Builder()
+                .setUri(viewModel.videoUrl)
+                .setSubtitleConfigurations(viewModel.getSubtitlesConfiguration())
+                .build()
             exoPlayer?.setMediaItem(mediaItem, viewModel.currentVideoTime)
             exoPlayer?.prepare()
             exoPlayer?.playWhenReady = viewModel.isPlaying ?: false

@@ -1,7 +1,10 @@
 package org.openedx.course.presentation.unit.video
 
+import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import kotlinx.coroutines.launch
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.notifier.CourseCompletionSet
@@ -59,4 +62,13 @@ class VideoViewModel(
     }
 
     fun getVideoQuality() = preferencesManager.videoSettings.videoStreamingQuality
+
+    fun getSubtitlesConfiguration(): List<MediaItem.SubtitleConfiguration> {
+        return transcripts.map { (language, uri) ->
+            MediaItem.SubtitleConfiguration.Builder(Uri.parse(uri))
+                .setMimeType(MimeTypes.APPLICATION_SUBRIP)
+                .setLanguage(language)
+                .build()
+        }
+    }
 }

@@ -11,6 +11,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.Clock
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -128,7 +129,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
             playerView.setShowSubtitleButton(true)
             val mediaItem = MediaItem.Builder()
                 .setUri(viewModel.videoUrl)
-                .setSubtitleConfigurations(viewModel.getSubtitlesConfiguration())
+                .setSubtitleConfigurations(viewModel.subtitleConfigurations)
                 .build()
             exoPlayer?.setMediaItem(mediaItem, viewModel.currentVideoTime)
             exoPlayer?.prepare()
@@ -154,6 +155,16 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
                     if (playbackState == Player.STATE_ENDED) {
                         viewModel.markBlockCompleted(blockId, CourseAnalyticsKey.NATIVE.key)
                     }
+                }
+
+                override fun onTracksChanged(tracks: Tracks) {
+                    super.onTracksChanged(tracks)
+                    viewModel.selectedLanguage = tracks.groups
+                        .firstOrNull { it.isSelected && it.type == C.TRACK_TYPE_TEXT }
+                        ?.getTrackFormat(0)
+                        ?.language ?: ""
+
+                    playerView.hideController()
                 }
 
                 override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {

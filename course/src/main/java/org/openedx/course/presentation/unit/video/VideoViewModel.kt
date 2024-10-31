@@ -24,10 +24,21 @@ class VideoViewModel(
     var videoUrl = ""
     var currentVideoTime = 0L
     var isPlaying: Boolean? = null
-    var transcripts = emptyMap<String, String>()
 
     private var isBlockAlreadyCompleted = false
 
+    var transcripts = emptyMap<String, String>()
+    var selectedLanguage: String = ""
+    val subtitleConfigurations: List<MediaItem.SubtitleConfiguration>
+        get() = transcripts.map { (language, uri) ->
+            val selectionFlags = if (language == selectedLanguage) C.SELECTION_FLAG_DEFAULT else 0
+
+            MediaItem.SubtitleConfiguration.Builder(Uri.parse(uri))
+                .setMimeType(MimeTypes.APPLICATION_SUBRIP)
+                .setSelectionFlags(selectionFlags)
+                .setLanguage(language)
+                .build()
+        }
 
     fun sendTime() {
         if (currentVideoTime != C.TIME_UNSET) {
@@ -62,13 +73,4 @@ class VideoViewModel(
     }
 
     fun getVideoQuality() = preferencesManager.videoSettings.videoStreamingQuality
-
-    fun getSubtitlesConfiguration(): List<MediaItem.SubtitleConfiguration> {
-        return transcripts.map { (language, uri) ->
-            MediaItem.SubtitleConfiguration.Builder(Uri.parse(uri))
-                .setMimeType(MimeTypes.APPLICATION_SUBRIP)
-                .setLanguage(language)
-                .build()
-        }
-    }
 }

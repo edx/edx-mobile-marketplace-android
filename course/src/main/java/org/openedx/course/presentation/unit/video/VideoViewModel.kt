@@ -10,6 +10,7 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.notifier.CourseCompletionSet
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseVideoPositionChanged
+import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.data.repository.CourseRepository
 import org.openedx.course.presentation.CourseAnalytics
 
@@ -30,15 +31,20 @@ class VideoViewModel(
     var transcripts = emptyMap<String, String>()
     var selectedLanguage: String = ""
     val subtitleConfigurations: List<MediaItem.SubtitleConfiguration>
-        get() = transcripts.map { (language, uri) ->
-            val selectionFlags = if (language == selectedLanguage) C.SELECTION_FLAG_DEFAULT else 0
+        get() = transcripts
+            .toSortedMap(
+                compareBy { LocaleUtils.getLanguageByLanguageCode(it) }
+            )
+            .map { (language, uri) ->
+                val selectionFlags =
+                    if (language == selectedLanguage) C.SELECTION_FLAG_DEFAULT else 0
 
-            MediaItem.SubtitleConfiguration.Builder(Uri.parse(uri))
-                .setMimeType(MimeTypes.APPLICATION_SUBRIP)
-                .setSelectionFlags(selectionFlags)
-                .setLanguage(language)
-                .build()
-        }
+                MediaItem.SubtitleConfiguration.Builder(Uri.parse(uri))
+                    .setMimeType(MimeTypes.APPLICATION_SUBRIP)
+                    .setSelectionFlags(selectionFlags)
+                    .setLanguage(language)
+                    .build()
+            }
 
     fun sendTime() {
         if (currentVideoTime != C.TIME_UNSET) {

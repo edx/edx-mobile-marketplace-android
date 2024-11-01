@@ -100,6 +100,15 @@ class TranscriptManager(
         return transcriptObject
     }
 
+    fun getDownloadedTranscript(encodedUrl: String): TimedTextObject? {
+        return runCatching {
+            val file = File(encodedUrl)
+            FileInputStream(file).use { transcriptInputStream ->
+                convertIntoTimedTextObject(transcriptInputStream)
+            }
+        }.getOrNull()
+    }
+
     suspend fun cancelTranscriptDownloading() {
         transcriptDownloader.cancelDownloading()
     }

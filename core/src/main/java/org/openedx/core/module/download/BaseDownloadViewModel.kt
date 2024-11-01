@@ -14,9 +14,11 @@ import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
+import org.openedx.core.module.db.TranscriptsDownloadedState
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.presentation.CoreAnalyticsEvent
 import org.openedx.core.presentation.CoreAnalyticsKey
+import org.openedx.core.utils.Directories
 import org.openedx.core.utils.Sha1Util
 import java.io.File
 
@@ -135,6 +137,8 @@ abstract class BaseDownloadViewModel(
                 val extension = url.split('.').lastOrNull() ?: "mp4"
                 val path =
                     folder + File.separator + "${Sha1Util.SHA1(block.displayName)}.$extension"
+                val transcriptUrls = block.studentViewData?.transcripts?.toMap() ?: emptyMap()
+                val transcriptPaths = getTranscriptPaths(folder, transcriptUrls)
                 if (downloadModelList.find { it.id == blockId && it.downloadedState.isDownloaded } == null) {
                     downloadModels.add(
                         DownloadModel(
@@ -145,7 +149,10 @@ abstract class BaseDownloadViewModel(
                             url,
                             block.downloadableType,
                             DownloadedState.WAITING,
-                            null
+                            null,
+                            transcriptUrls,
+                            transcriptPaths,
+                            TranscriptsDownloadedState.NOT_DOWNLOADED,
                         )
                     )
                 }
@@ -247,6 +254,20 @@ abstract class BaseDownloadViewModel(
                 put(CoreAnalyticsKey.ACTION.key, toggle)
             }
         )
+    }
+
+    private fun getTranscriptPaths(
+        folder: String,
+        transcripts: Map<String, String>
+    ): Map<String, String> {
+        val videosDir = File(folder, Directories.VIDEOS.name)
+        val transcriptDir = File(videosDir, Directories.SUBTITLES.name)
+        transcriptDir.mkdirs()
+
+        return transcripts.mapValues {
+            val hash = Sha1Util.SHA1(it.value)
+            File(transcriptDir, hash).path
+        }
     }
 
     private fun logSubsectionDownloadEvent(subsectionId: String, numberOfVideos: Int) {

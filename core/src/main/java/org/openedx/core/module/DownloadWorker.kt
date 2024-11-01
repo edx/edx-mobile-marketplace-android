@@ -11,14 +11,20 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.inject
 import org.openedx.core.R
+import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadModelEntity
 import org.openedx.core.module.db.DownloadedState
+import org.openedx.core.module.db.TranscriptsDownloadedState
 import org.openedx.core.module.download.CurrentProgress
 import org.openedx.core.module.download.FileDownloader
 import org.openedx.core.system.notifier.DownloadNotifier
@@ -48,6 +54,7 @@ class DownloadWorker(
     private var lastUpdateTime = 0L
 
     private val fileDownloader by inject<FileDownloader>(FileDownloader::class.java)
+    private val transcriptManager by inject<TranscriptManager>(TranscriptManager::class.java)
 
     override suspend fun doWork(): Result {
         updateProgress()
@@ -131,23 +138,56 @@ class DownloadWorker(
                     )
                 )
             )
-            val isSuccess = fileDownloader.download(downloadTask.url, downloadTask.path)
-            if (isSuccess) {
+            val isVideoDownloaded = fileDownloader.download(downloadTask.url, downloadTask.path)
+            val isTranscriptsDownloaded = if (isVideoDownloaded) downloadTranscripts(downloadTask)
+            else false
+
+            if (isVideoDownloaded) {
                 downloadDao.updateDownloadModel(
                     DownloadModelEntity.createFrom(
                         downloadTask.copy(
                             downloadedState = DownloadedState.DOWNLOADED,
-                            size = File(downloadTask.path).length().toInt()
+                            size = File(downloadTask.path).length().toInt(),
+                            transcriptDownloadedStatus = if (isTranscriptsDownloaded) {
+                                TranscriptsDownloadedState.DOWNLOADED
+                            } else {
+                                TranscriptsDownloadedState.NOT_DOWNLOADED
+                            }
                         )
                     )
                 )
             } else {
                 downloadDao.removeDownloadModel(downloadTask.id)
             }
+
             newDownload()
         } else {
             return
         }
+    }
+
+    private suspend fun downloadTranscripts(downloadTask: DownloadModel): Boolean = coroutineScope {
+        if (downloadTask.transcriptUrls.isEmpty()) {
+            downloadDao.updateDownloadModel(
+                DownloadModelEntity.createFrom(
+                    downloadTask.copy(
+                        transcriptDownloadedStatus = TranscriptsDownloadedState.DOWNLOADED
+                    )
+                )
+            )
+            return@coroutineScope true
+        }
+
+        val allDownloads = downloadTask.transcriptUrls.mapNotNull { (language, url) ->
+            val path = downloadTask.transcriptPaths[language]
+            if (path.isNotNullOrEmpty()) {
+                async(Dispatchers.IO) { transcriptManager.download(url, path!!) }
+            } else {
+                null
+            }
+        }
+
+        return@coroutineScope allDownloads.awaitAll().all { it }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

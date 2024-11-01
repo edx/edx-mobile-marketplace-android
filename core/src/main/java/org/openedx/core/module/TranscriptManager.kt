@@ -61,6 +61,10 @@ class TranscriptManager(
         } else FileInputStream(file)
     }
 
+    suspend fun download(url: String, path: String): Boolean {
+        return transcriptDownloader.download(url, path)
+    }
+
     private suspend fun startTranscriptDownload(downloadLink: String) {
         if (!has(downloadLink)) {
             val file = File(getTranscriptDir(), Sha1Util.SHA1(downloadLink))

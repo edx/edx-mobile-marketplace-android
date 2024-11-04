@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
@@ -241,11 +242,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onResume() {
         super.onResume()
-        binding.playerView.keepScreenOn = true
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onPause() {
-        binding.playerView.keepScreenOn = false
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onPause()
     }
 

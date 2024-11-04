@@ -3,6 +3,7 @@ package org.openedx.course.presentation.unit.video
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.core.os.bundleOf
 import androidx.core.view.WindowInsetsCompat
@@ -184,7 +185,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
     }
 
     override fun onPause() {
-        binding.playerView.keepScreenOn = false
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         exoPlayer?.removeListener(exoPlayerListener)
         exoPlayer?.pause()
         super.onPause()
@@ -205,7 +206,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
 
     override fun onResume() {
         super.onResume()
-        binding.playerView.keepScreenOn = true
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         exoPlayer?.addListener(exoPlayerListener)
     }
 

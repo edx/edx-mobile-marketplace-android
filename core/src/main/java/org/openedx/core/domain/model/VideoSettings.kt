@@ -6,9 +6,11 @@ data class VideoSettings(
     val wifiDownloadOnly: Boolean,
     val videoStreamingQuality: VideoQuality,
     val videoDownloadQuality: VideoQuality,
+    val videoPlaybackSpeed: VideoPlaybackSpeed,
 ) {
     companion object {
-        val default = VideoSettings(true, VideoQuality.AUTO, VideoQuality.AUTO)
+        val default =
+            VideoSettings(true, VideoQuality.AUTO, VideoQuality.AUTO, VideoPlaybackSpeed.SPEED_1_0X)
     }
 }
 
@@ -47,4 +49,16 @@ enum class VideoQuality(
         height = 720,
         tagId = "high",
     );
+}
+
+enum class VideoPlaybackSpeed(val speedValue: Float) {
+    SPEED_0_25X(0.25f), SPEED_0_50X(0.5f), SPEED_0_75X(0.75f),
+    SPEED_1_0X(1.0f), SPEED_1_25X(1.25f), SPEED_1_50X(1.5f),
+    SPEED_1_75X(1.75f), SPEED_2_0X(2.0f);
+
+    companion object {
+        fun getVideoPlaybackSpeed(speedValue: Float): VideoPlaybackSpeed {
+            return entries.find { it.speedValue == speedValue } ?: SPEED_1_0X
+        }
+    }
 }

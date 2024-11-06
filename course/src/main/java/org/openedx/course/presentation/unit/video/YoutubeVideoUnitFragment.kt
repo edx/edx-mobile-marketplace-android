@@ -31,7 +31,6 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
 import org.openedx.course.databinding.FragmentYoutubeVideoUnitBinding
-import org.openedx.course.presentation.CourseAnalyticsKey
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
@@ -39,7 +38,10 @@ import org.openedx.course.presentation.ui.VideoTitle
 class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) {
 
     private val viewModel by viewModel<VideoUnitViewModel> {
-        parametersOf(requireArguments().getString(ARG_COURSE_ID, ""))
+        parametersOf(
+            requireArguments().getString(ARG_COURSE_ID, ""),
+            requireArguments().getString(ARG_BLOCK_ID, "")
+        )
     }
     private val router by inject<CourseRouter>()
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
@@ -147,12 +149,17 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         val listener = object : AbstractYouTubePlayerListener() {
             var isMarkBlockCompletedCalled = false
 
+            override fun onVideoDuration(youTubePlayer: YouTubePlayer, duration: Float) {
+                super.onVideoDuration(youTubePlayer, duration)
+                viewModel.videoDuration = (duration * 1000f).toLong()
+            }
+
             override fun onCurrentSecond(youTubePlayer: YouTubePlayer, second: Float) {
                 super.onCurrentSecond(youTubePlayer, second)
                 viewModel.setCurrentVideoTime((second * 1000f).toLong())
                 val completePercentage = second / youtubeTrackerListener.videoDuration
                 if (completePercentage >= 0.8f && !isMarkBlockCompletedCalled) {
-                    viewModel.markBlockCompleted(blockId, CourseAnalyticsKey.YOUTUBE.key)
+                    viewModel.markBlockCompleted(blockId)
                     isMarkBlockCompletedCalled = true
                 }
                 if (completePercentage >= 0.99f && !appReviewManager.isDialogShowed) {
@@ -174,7 +181,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                     viewModel.videoUrl,
                     viewModel.isPlaying,
                     viewModel.getCurrentVideoTime(),
-                    CourseAnalyticsKey.YOUTUBE.key
+                    viewModel.videoDuration
                 )
             }
 
@@ -191,6 +198,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                             requireActivity().supportFragmentManager,
                             viewModel.videoUrl,
                             viewModel.getCurrentVideoTime(),
+                            viewModel.videoDuration,
                             blockId,
                             viewModel.courseId,
                             viewModel.isPlaying
@@ -211,12 +219,12 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                     }
                 }
                 youTubePlayer.addListener(youtubeTrackerListener)
-                viewModel.logLoadedCompletedEvent(
-                    viewModel.videoUrl,
-                    true,
-                    viewModel.getCurrentVideoTime(),
-                    CourseAnalyticsKey.YOUTUBE.key
-                )
+//                viewModel.logLoadedCompletedEvent(
+//                    viewModel.videoUrl,
+//                    true,
+//                    viewModel.getCurrentVideoTime(),
+//                    CourseAnalyticsKey.YOUTUBE.key
+//                )
             }
         }
 

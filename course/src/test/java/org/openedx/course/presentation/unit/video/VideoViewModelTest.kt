@@ -51,18 +51,18 @@ class VideoViewModelTest {
     @Test
     fun `sendTime test`() = runTest {
         val viewModel =
-            VideoViewModel("", courseRepository, notifier, preferenceManager, courseAnalytics)
-        coEvery { notifier.send(CourseVideoPositionChanged("", 0, false)) } returns Unit
+            VideoViewModel("", "", courseRepository, notifier, preferenceManager, courseAnalytics)
+        coEvery { notifier.send(CourseVideoPositionChanged("", 0, 0, false)) } returns Unit
         viewModel.sendTime()
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { notifier.send(CourseVideoPositionChanged("", 0, false)) }
+        coVerify(exactly = 1) { notifier.send(CourseVideoPositionChanged("", 0, 0, false)) }
     }
 
     @Test
     fun `markBlockCompleted exception`() = runTest {
         val viewModel =
-            VideoViewModel("", courseRepository, notifier, preferenceManager, courseAnalytics)
+            VideoViewModel("", "", courseRepository, notifier, preferenceManager, courseAnalytics)
         coEvery {
             courseRepository.markBlocksCompletion(
                 any(),
@@ -75,7 +75,7 @@ class VideoViewModelTest {
                 any()
             )
         } returns Unit
-        viewModel.markBlockCompleted("", "")
+        viewModel.markBlockCompleted("")
         advanceUntilIdle()
 
         coVerify(exactly = 1) {
@@ -96,7 +96,7 @@ class VideoViewModelTest {
     @Test
     fun `markBlockCompleted success`() = runTest {
         val viewModel =
-            VideoViewModel("", courseRepository, notifier, preferenceManager, courseAnalytics)
+            VideoViewModel("", "", courseRepository, notifier, preferenceManager, courseAnalytics)
         coEvery {
             courseRepository.markBlocksCompletion(
                 any(),
@@ -109,7 +109,7 @@ class VideoViewModelTest {
                 any()
             )
         } returns Unit
-        viewModel.markBlockCompleted("", "")
+        viewModel.markBlockCompleted("")
         advanceUntilIdle()
 
         coVerify(exactly = 1) {

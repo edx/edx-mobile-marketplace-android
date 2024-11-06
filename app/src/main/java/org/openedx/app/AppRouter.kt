@@ -267,6 +267,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         fm: FragmentManager,
         videoUrl: String,
         videoTime: Long,
+        videoDuration: Long,
         blockId: String,
         courseId: String,
         isPlaying: Boolean,
@@ -277,6 +278,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
             VideoFullScreenFragment.newInstance(
                 videoUrl = videoUrl,
                 videoTime = videoTime,
+                videoDuration = videoDuration,
                 blockId = blockId,
                 courseId = courseId,
                 isPlaying = isPlaying,
@@ -289,6 +291,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         fm: FragmentManager,
         videoUrl: String,
         videoTime: Long,
+        videoDuration: Long,
         blockId: String,
         courseId: String,
         isPlaying: Boolean,
@@ -298,6 +301,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
             YoutubeVideoFullScreenFragment.newInstance(
                 videoUrl,
                 videoTime,
+                videoDuration,
                 blockId,
                 courseId,
                 isPlaying

@@ -27,7 +27,10 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
 
     private val binding by viewBinding(FragmentYoutubeVideoFullScreenBinding::bind)
     private val viewModel by viewModel<VideoViewModel> {
-        parametersOf(requireArguments().getString(ARG_COURSE_ID, ""))
+        parametersOf(
+            requireArguments().getString(ARG_COURSE_ID, ""),
+            requireArguments().getString(ARG_BLOCK_ID, "")
+        )
     }
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
 
@@ -41,6 +44,9 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
         blockId = requireArguments().getString(ARG_BLOCK_ID, "")
         if (viewModel.currentVideoTime == 0L) {
             viewModel.currentVideoTime = requireArguments().getLong(ARG_VIDEO_TIME, 0)
+        }
+        if (viewModel.videoDuration == 0L) {
+            viewModel.videoDuration = requireArguments().getLong(ARG_VIDEO_DURATION, 0)
         }
         if (viewModel.isPlaying == null) {
             viewModel.isPlaying = requireArguments().getBoolean(ARG_IS_PLAYING)
@@ -79,7 +85,7 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
             ) {
                 super.onStateChange(youTubePlayer, state)
                 if (state == PlayerConstants.PlayerState.ENDED) {
-                    viewModel.markBlockCompleted(blockId, CourseAnalyticsKey.YOUTUBE.key)
+                    viewModel.markBlockCompleted(blockId)
                 }
                 viewModel.isPlaying = when (state) {
                     PlayerConstants.PlayerState.PLAYING -> true
@@ -93,7 +99,7 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
                 viewModel.currentVideoTime = (second * 1000f).toLong()
                 val completePercentage = second / youtubeTrackerListener.videoDuration
                 if (completePercentage >= 0.8f && !isMarkBlockCompletedCalled) {
-                    viewModel.markBlockCompleted(blockId, CourseAnalyticsKey.YOUTUBE.key)
+                    viewModel.markBlockCompleted(blockId)
                     isMarkBlockCompletedCalled = true
                 }
                 if (completePercentage >= 0.99f && !appReviewManager.isDialogShowed) {
@@ -135,6 +141,7 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
     companion object {
         private const val ARG_BLOCK_VIDEO_URL = "blockVideoUrl"
         private const val ARG_VIDEO_TIME = "videoTime"
+        private const val ARG_VIDEO_DURATION = "videoDuration"
         private const val ARG_BLOCK_ID = "blockID"
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_IS_PLAYING = "isPlaying"
@@ -142,6 +149,7 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
         fun newInstance(
             videoUrl: String,
             videoTime: Long,
+            videoDuration: Long,
             blockId: String,
             courseId: String,
             isPlaying: Boolean,
@@ -150,6 +158,7 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
             fragment.arguments = bundleOf(
                 ARG_BLOCK_VIDEO_URL to videoUrl,
                 ARG_VIDEO_TIME to videoTime,
+                ARG_VIDEO_DURATION to videoDuration,
                 ARG_BLOCK_ID to blockId,
                 ARG_COURSE_ID to courseId,
                 ARG_IS_PLAYING to isPlaying

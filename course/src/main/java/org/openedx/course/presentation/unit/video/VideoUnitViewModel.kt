@@ -20,15 +20,17 @@ import org.openedx.course.presentation.CourseAnalytics
 import subtitleFile.TimedTextObject
 
 open class VideoUnitViewModel(
-    val courseId: String,
+    courseId: String,
+    blockId: String,
     private val courseRepository: CourseRepository,
     private val notifier: CourseNotifier,
     private val networkConnection: NetworkConnection,
     private val transcriptManager: TranscriptManager,
     courseAnalytics: CourseAnalytics,
-) : BaseVideoViewModel(courseId, courseAnalytics) {
+) : BaseVideoViewModel(courseId, blockId, courseAnalytics) {
 
     var videoUrl = ""
+    var videoDuration = 0L
     var transcripts = emptyMap<String, String>()
     var isPlaying = true
     var transcriptLanguage = AppDataConstants.defaultLocale.language ?: "en"
@@ -65,6 +67,7 @@ open class VideoUnitViewModel(
                 if (it is CourseVideoPositionChanged && videoUrl == it.videoUrl) {
                     _isUpdated.value = false
                     _currentVideoTime.value = it.videoTime
+                    videoDuration = it.videoDuration
                     _isUpdated.value = true
                     isPlaying = it.isPlaying
                 } else if (it is CourseSubtitleLanguageChanged) {
@@ -106,9 +109,9 @@ open class VideoUnitViewModel(
     }
 
 
-    open fun markBlockCompleted(blockId: String, medium: String) {
+    open fun markBlockCompleted(blockId: String) {
         if (!isBlockAlreadyCompleted) {
-            logLoadedCompletedEvent(videoUrl, false, getCurrentVideoTime(), medium)
+            logVideoCompletedEvent(videoUrl, getCurrentVideoTime())
             viewModelScope.launch {
                 try {
                     isBlockAlreadyCompleted = true

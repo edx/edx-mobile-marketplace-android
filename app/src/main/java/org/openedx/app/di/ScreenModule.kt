@@ -50,6 +50,7 @@ import org.openedx.discovery.presentation.search.CourseSearchViewModel
 import org.openedx.discussion.data.repository.DiscussionRepository
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionComment
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.comments.DiscussionCommentsViewModel
 import org.openedx.discussion.presentation.responses.DiscussionResponsesViewModel
 import org.openedx.discussion.presentation.search.DiscussionSearchThreadViewModel
@@ -418,31 +419,44 @@ val screenModule = module {
     }
     viewModel { (courseId: String, topicId: String, threadType: String) ->
         DiscussionThreadsViewModel(
-            get(),
-            get(),
-            get(),
             courseId,
             topicId,
-            threadType
+            threadType,
+            get(),
+            get(),
+            get(),
         )
     }
-    viewModel { (thread: org.openedx.discussion.domain.model.Thread) ->
+    viewModel { (courseId: String, thread: Thread) ->
         DiscussionCommentsViewModel(
+            courseId,
+            thread,
             get(),
             get(),
             get(),
-            thread
+            get(),
         )
     }
-    viewModel { (comment: DiscussionComment) ->
+    viewModel { (courseId: String, threadId: String, comment: DiscussionComment) ->
         DiscussionResponsesViewModel(
+            courseId,
+            threadId,
+            comment,
             get(),
             get(),
             get(),
-            comment
+            get(),
         )
     }
-    viewModel { (courseId: String) -> DiscussionAddThreadViewModel(get(), get(), get(), courseId) }
+    viewModel { (courseId: String) ->
+        DiscussionAddThreadViewModel(
+            courseId,
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
     viewModel { (courseId: String) ->
         DiscussionSearchThreadViewModel(
             get(),

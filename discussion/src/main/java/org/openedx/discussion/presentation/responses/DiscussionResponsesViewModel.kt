@@ -3,7 +3,7 @@ package org.openedx.discussion.presentation.responses
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import org.openedx.core.BaseViewModel
+import kotlinx.coroutines.launch
 import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
@@ -11,16 +11,21 @@ import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionComment
+import org.openedx.discussion.presentation.BaseDiscussionViewModel
+import org.openedx.discussion.presentation.DiscussionAnalytics
+import org.openedx.discussion.presentation.DiscussionAnalyticsType
 import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
-import kotlinx.coroutines.launch
 
 class DiscussionResponsesViewModel(
+    val courseId: String,
+    val threadId: String,
+    private var comment: DiscussionComment,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
-    private var comment: DiscussionComment,
-) : BaseViewModel() {
+    private val analytics: DiscussionAnalytics,
+) : BaseDiscussionViewModel(courseId, threadId, analytics) {
 
     private val _uiState = MutableLiveData<DiscussionResponsesUIState>()
     val uiState: LiveData<DiscussionResponsesUIState>
@@ -109,9 +114,22 @@ class DiscussionResponsesViewModel(
                 if (index != -1) {
                     comments[index] =
                         comments[index].copy(voted = response.voted, voteCount = response.voteCount)
+                    logLikeToggleEvent(
+                        responseId = response.id,
+                        commentId = comment.id,
+                        discussionType = DiscussionAnalyticsType.COMMENT.value,
+                        likePost = vote,
+                        author = comment.author,
+                    )
                 } else {
                     comment = comment.copy(voted = response.voted, voteCount = response.voteCount)
                     sendUpdatedComment()
+                    logLikeToggleEvent(
+                        responseId = response.id,
+                        discussionType = DiscussionAnalyticsType.RESPONSE.value,
+                        likePost = vote,
+                        author = response.author,
+                    )
                 }
                 _uiState.value = DiscussionResponsesUIState.Success(comment, comments.toList())
             } catch (e: Exception) {
@@ -135,9 +153,22 @@ class DiscussionResponsesViewModel(
                 }
                 if (index != -1) {
                     comments[index] = comments[index].copy(abuseFlagged = response.abuseFlagged)
+                    logReportToggleEvent(
+                        responseId = response.id,
+                        commentId = comment.id,
+                        discussionType = DiscussionAnalyticsType.COMMENT.value,
+                        reportPost = vote,
+                        author = comment.author,
+                    )
                 } else {
                     comment = comment.copy(abuseFlagged = response.abuseFlagged)
                     sendUpdatedComment()
+                    logReportToggleEvent(
+                        responseId = response.id,
+                        discussionType = DiscussionAnalyticsType.RESPONSE.value,
+                        reportPost = vote,
+                        author = response.author,
+                    )
                 }
                 _uiState.value = DiscussionResponsesUIState.Success(comment, comments.toList())
             } catch (e: Exception) {
@@ -166,6 +197,11 @@ class DiscussionResponsesViewModel(
                 }
                 _uiState.value =
                     DiscussionResponsesUIState.Success(comment, comments.toList())
+                logCommentAddedEvent(
+                    responseId = response.id,
+                    commentId = comment.id,
+                    author = response.author,
+                )
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =

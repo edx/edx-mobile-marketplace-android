@@ -457,6 +457,7 @@ class DeepLinkRouter(
                             launch(Dispatchers.Main) {
                                 appRouter.navigateToDiscussionComments(
                                     fm = fm,
+                                    courseId = courseId,
                                     thread = thread
                                 )
                             }
@@ -500,6 +501,7 @@ class DeepLinkRouter(
                 launch(Dispatchers.Main) {
                     appRouter.navigateToDiscussionComments(
                         fm = fm,
+                        courseId = courseId,
                         thread = thread
                     )
                 }
@@ -507,6 +509,8 @@ class DeepLinkRouter(
                 launch(Dispatchers.Main) {
                     appRouter.navigateToDiscussionResponses(
                         fm = fm,
+                        courseId = courseId,
+                        threadId = threadId,
                         comment = response,
                         isClosed = false
                     )
@@ -549,6 +553,7 @@ class DeepLinkRouter(
                 launch(Dispatchers.Main) {
                     appRouter.navigateToDiscussionComments(
                         fm = fm,
+                        courseId = courseId,
                         thread = thread
                     )
                 }
@@ -556,6 +561,8 @@ class DeepLinkRouter(
                 launch(Dispatchers.Main) {
                     appRouter.navigateToDiscussionResponses(
                         fm = fm,
+                        courseId = courseId,
+                        threadId = threadId,
                         comment = comment,
                         isClosed = false
                     )

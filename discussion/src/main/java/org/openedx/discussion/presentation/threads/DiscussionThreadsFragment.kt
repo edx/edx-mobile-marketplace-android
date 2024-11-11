@@ -155,6 +155,7 @@ class DiscussionThreadsFragment : Fragment() {
                     onItemClick = {
                         router.navigateToDiscussionComments(
                             requireActivity().supportFragmentManager,
+                            viewModel.courseId,
                             it
                         )
                     },

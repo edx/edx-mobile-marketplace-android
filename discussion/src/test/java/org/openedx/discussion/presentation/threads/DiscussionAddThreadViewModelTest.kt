@@ -1,8 +1,27 @@
 package org.openedx.discussion.presentation.threads
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TestRule
 import org.openedx.core.R
 import org.openedx.core.UIMessage
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.system.ResourceManager
@@ -11,18 +30,9 @@ import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionProfile
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Topic
+import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
-import io.mockk.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.*
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TestRule
-import org.openedx.core.data.storage.CorePreferences
 import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -36,6 +46,7 @@ class DiscussionAddThreadViewModelTest {
     private val resourceManager = mockk<ResourceManager>()
     private val interactor = mockk<DiscussionInteractor>()
     private val preferencesManager = mockk<CorePreferences>()
+    private val analytics = mockk<DiscussionAnalytics>()
     private val notifier = mockk<DiscussionNotifier>(relaxed = true)
 
     private val noInternet = "Slow or no internet connection"
@@ -173,7 +184,8 @@ class DiscussionAddThreadViewModelTest {
 
     @Test
     fun `createThread no internet connection exception`() = runTest {
-        val viewModel = DiscussionAddThreadViewModel(interactor, resourceManager, notifier, "")
+        val viewModel =
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery {
             interactor.createThread(
                 any(),
@@ -198,7 +210,8 @@ class DiscussionAddThreadViewModelTest {
 
     @Test
     fun `createThread unknown exception`() = runTest {
-        val viewModel = DiscussionAddThreadViewModel(interactor, resourceManager, notifier, "")
+        val viewModel =
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery {
             interactor.createThread(
                 any(),
@@ -223,7 +236,8 @@ class DiscussionAddThreadViewModelTest {
 
     @Test
     fun `createThread success`() = runTest {
-        val viewModel = DiscussionAddThreadViewModel(interactor, resourceManager, notifier, "")
+        val viewModel =
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery {
             interactor.createThread(
                 any(),
@@ -234,12 +248,12 @@ class DiscussionAddThreadViewModelTest {
                 any()
             )
         } returns mockThread
-
+        every { analytics.logEvent(any(), any()) } returns Unit
         viewModel.createThread("", "", "", "", false)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any(), any()) }
-
+        verify { analytics.logEvent(any(), any()) }
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.newThread.value != null)
         assert(viewModel.isLoading.value == false)
@@ -247,7 +261,8 @@ class DiscussionAddThreadViewModelTest {
 
     @Test
     fun `sendThreadAdded notifier test`() = runTest {
-        val viewModel = DiscussionAddThreadViewModel(interactor, resourceManager, notifier, "")
+        val viewModel =
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery { notifier.send(mockk<DiscussionThreadAdded>()) }
         viewModel.sendThreadAdded()
         advanceUntilIdle()
@@ -255,7 +270,8 @@ class DiscussionAddThreadViewModelTest {
 
     @Test
     fun `getHandledTopicById existed id`() = runTest {
-        val viewModel = DiscussionAddThreadViewModel(interactor, resourceManager, notifier, "")
+        val viewModel =
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery { interactor.getCachedTopics(any()) } returns topics
 
         advanceUntilIdle()
@@ -265,7 +281,8 @@ class DiscussionAddThreadViewModelTest {
 
     @Test
     fun `getHandledTopicById  no existed id`() = runTest {
-        val viewModel = DiscussionAddThreadViewModel(interactor, resourceManager, notifier, "")
+        val viewModel =
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery { interactor.getCachedTopics(any()) } returns topics
 
         advanceUntilIdle()

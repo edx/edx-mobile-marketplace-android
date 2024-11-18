@@ -101,15 +101,7 @@ class SignInViewModel(
                 interactor.login(username, password)
                 _uiState.update { it.copy(loginSuccess = true) }
                 setMetadata(AuthType.PASSWORD)
-                logEvent(
-                    AuthAnalyticsEvent.SIGN_IN_SUCCESS,
-                    buildMap {
-                        put(
-                            AuthAnalyticsKey.METHOD.key,
-                            AuthType.PASSWORD.methodName.lowercase()
-                        )
-                    }
-                )
+                logSignInSuccessEvent(AuthType.PASSWORD)
                 appNotifier.send(SignInEvent())
             } catch (e: Exception) {
                 if (e is EdxError.InvalidGrantException) {
@@ -176,6 +168,7 @@ class SignInViewModel(
             _uiState.update { it.copy(loginSuccess = true) }
             setMetadata(authType)
             _uiState.update { it.copy(showProgress = false) }
+            logSignInSuccessEvent(authType)
             appNotifier.send(SignInEvent())
         }
     }
@@ -245,6 +238,17 @@ class SignInViewModel(
             params = buildMap {
                 put(AuthAnalyticsKey.NAME.key, event.biValue)
                 putAll(params)
+            }
+        )
+    }
+
+    private fun logSignInSuccessEvent(authType: AuthType) {
+        val event = AuthAnalyticsEvent.SIGN_IN_SUCCESS
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(AuthAnalyticsKey.NAME.key, event.biValue)
+                put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
             }
         )
     }

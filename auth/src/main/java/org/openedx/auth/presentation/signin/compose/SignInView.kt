@@ -226,6 +226,30 @@ private fun AuthForm(
     var isPasswordError by rememberSaveable { mutableStateOf(false) }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        if (state.isSocialAuthEnabled) {
+            SocialAuthView(
+                modifier = buttonWidth,
+                isGoogleAuthEnabled = state.isGoogleAuthEnabled,
+                isFacebookAuthEnabled = state.isFacebookAuthEnabled,
+                isMicrosoftAuthEnabled = state.isMicrosoftAuthEnabled,
+                lastSignIn = state.lastSignIn,
+                isSignIn = true,
+            ) {
+                keyboardController?.hide()
+                onEvent(AuthEvent.SocialSignIn(it))
+            }
+            Text(
+                modifier = Modifier
+                    .testTag("txt_sign_in_with_email")
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                text = stringResource(
+                    id = R.string.auth_sign_in_with_email
+                ),
+                color = MaterialTheme.appColors.textPrimary,
+                style = MaterialTheme.appTypography.titleSmall
+            )
+        }
         LoginTextField(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -305,18 +329,6 @@ private fun AuthForm(
                     }
                 }
             )
-        }
-        if (state.isSocialAuthEnabled) {
-            SocialAuthView(
-                modifier = buttonWidth,
-                isGoogleAuthEnabled = state.isGoogleAuthEnabled,
-                isFacebookAuthEnabled = state.isFacebookAuthEnabled,
-                isMicrosoftAuthEnabled = state.isMicrosoftAuthEnabled,
-                isSignIn = true,
-            ) {
-                keyboardController?.hide()
-                onEvent(AuthEvent.SocialSignIn(it))
-            }
         }
     }
 }
@@ -409,7 +421,12 @@ private fun SignInScreenPreview() {
     OpenEdXTheme {
         LoginScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            state = SignInUIState(),
+            state = SignInUIState().copy(
+                isSocialAuthEnabled = true,
+                isFacebookAuthEnabled = true,
+                isGoogleAuthEnabled = true,
+                isMicrosoftAuthEnabled = true,
+            ),
             uiMessage = null,
             onEvent = {},
         )

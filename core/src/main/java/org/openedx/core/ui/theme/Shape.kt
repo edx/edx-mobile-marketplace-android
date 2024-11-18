@@ -16,6 +16,7 @@ data class AppShapes(
     val screenBackgroundShapeFull: CornerBasedShape,
     val courseImageShape: CornerBasedShape,
     val dialogShape: CornerBasedShape,
+    val socialAuthButtonShape: CornerBasedShape,
 )
 
 val MaterialTheme.appShapes: AppShapes

@@ -59,6 +59,7 @@ val light_card_view_border = light_text_field_border
 val light_divider = light_primary
 val light_certificate_foreground = light_surface
 val light_bottom_sheet_toggle = light_text_accent
+val light_social_auth_divider = Color(0xFFADADAD)
 
 val light_rate_stars = light_warning
 val light_inactive_button_background = Color(0xFFFCFCFC)
@@ -143,6 +144,7 @@ val dark_secondary_button_bordered_text = Color(0xFFD23228) // Brand 500
 val dark_card_view_background = dark_surface
 val dark_card_view_border = dark_text_field_border
 val dark_divider = dark_primary
+val dark_social_auth_divider = dark_onSurface
 
 val dark_certificate_foreground = Color(0xD92EB865)
 val dark_bottom_sheet_toggle = Color(0xFF03C7E8) // Accent A Isotope Blue

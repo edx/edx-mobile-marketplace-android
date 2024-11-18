@@ -44,4 +44,8 @@
     <string name="auth_cdata_template" translatable="false"><![CDATA[<a href="%1$s">%2$s</a>]]></string>
     <string name="auth_accessibility_show_password">Show password</string>
     <string name="auth_accessibility_hide_password">Hide password</string>
+    <string name="auth_continue_with">Continue with:</string>
+    <string name="auth_last_sign_in">Last sign in</string>
+    <string name="auth_sign_in_with_email">Or sign in with email:</string>
+    <string name="auth_register_below">Or register below:</string>
 </resources>

@@ -1,5 +1,6 @@
 package org.openedx.core.ui.theme
 
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes
@@ -20,6 +21,7 @@ internal val LocalShapes = staticCompositionLocalOf {
         cardShape = RoundedCornerShape(12.dp),
         screenBackgroundShapeFull = RoundedCornerShape(24.dp),
         courseImageShape = RoundedCornerShape(8.dp),
-        dialogShape = RoundedCornerShape(24.dp)
+        dialogShape = RoundedCornerShape(24.dp),
+        socialAuthButtonShape = CircleShape,
     )
 }

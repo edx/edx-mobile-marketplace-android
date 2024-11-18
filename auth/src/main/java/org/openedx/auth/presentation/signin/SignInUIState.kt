@@ -1,5 +1,6 @@
 package org.openedx.auth.presentation.signin
 
+import org.openedx.auth.data.model.AuthType
 import org.openedx.core.domain.model.RegistrationField
 
 /**
@@ -18,6 +19,7 @@ internal data class SignInUIState(
     val isMicrosoftAuthEnabled: Boolean = false,
     val isSocialAuthEnabled: Boolean = false,
     val isLogistrationEnabled: Boolean = false,
+    val lastSignIn: AuthType = AuthType.PASSWORD,
     val showProgress: Boolean = false,
     val loginSuccess: Boolean = false,
     val agreement: RegistrationField? = null,

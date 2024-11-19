@@ -27,13 +27,14 @@ class CourseUnitContainerAdapter(
                     (block.studentViewData?.encodedVideos?.hasVideoUrl == true ||
                             block.studentViewData?.encodedVideos?.hasYoutubeUrl == true)) -> {
                 val encodedVideos = block.studentViewData?.encodedVideos!!
-                val transcripts = block.studentViewData!!.transcripts
                 with(encodedVideos) {
-                    var isDownloaded = false
-                    val videoUrl = if (viewModel.getDownloadModelById(block.id) != null) {
-                        isDownloaded = true
-                        viewModel.getDownloadModelById(block.id)!!.path
-                    } else videoUrl
+                    val downloadModel = viewModel.getDownloadModelById(block.id)
+                    val isDownloaded = downloadModel != null
+
+                    val videoUrl = downloadModel?.path ?: videoUrl
+                    val transcripts =
+                        downloadModel?.transcriptPaths ?: block.studentViewData?.transcripts
+
                     if (videoUrl.isNotEmpty()) {
                         VideoUnitFragment.newInstance(
                             block.id,

@@ -40,6 +40,7 @@ import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadModelEntity
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
+import org.openedx.core.module.db.TranscriptsDownloadedState
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.system.ResourceManager
@@ -181,7 +182,10 @@ class CourseSectionViewModelTest {
         "url",
         FileType.VIDEO,
         DownloadedState.NOT_DOWNLOADED,
-        null
+        null,
+        emptyMap(),
+        emptyMap(),
+        TranscriptsDownloadedState.NOT_DOWNLOADED,
     )
 
     @Before

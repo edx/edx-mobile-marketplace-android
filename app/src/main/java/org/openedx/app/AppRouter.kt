@@ -270,10 +270,18 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         blockId: String,
         courseId: String,
         isPlaying: Boolean,
+        transcripts: Map<String, String>,
     ) {
         replaceFragmentWithBackStack(
             fm,
-            VideoFullScreenFragment.newInstance(videoUrl, videoTime, blockId, courseId, isPlaying)
+            VideoFullScreenFragment.newInstance(
+                videoUrl = videoUrl,
+                videoTime = videoTime,
+                blockId = blockId,
+                courseId = courseId,
+                isPlaying = isPlaying,
+                transcripts = transcripts,
+            )
         )
     }
 

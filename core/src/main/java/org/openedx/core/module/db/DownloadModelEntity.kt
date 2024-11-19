@@ -3,6 +3,8 @@ package org.openedx.core.module.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import org.openedx.core.extension.objectToString
+import org.openedx.core.extension.stringToObject
 
 @Entity(tableName = "download_model")
 data class DownloadModelEntity(
@@ -22,7 +24,13 @@ data class DownloadModelEntity(
     @ColumnInfo("downloadedState")
     val downloadedState: String,
     @ColumnInfo("progress")
-    val progress: Float?
+    val progress: Float?,
+    @ColumnInfo("transcriptUrls")
+    val transcriptUrls: String,
+    @ColumnInfo("transcriptPaths")
+    val transcriptPaths: String,
+    @ColumnInfo("transcriptDownloadedStatus")
+    val transcriptDownloadedStatus: String,
 ) {
 
     fun mapToDomain() = DownloadModel(
@@ -33,7 +41,10 @@ data class DownloadModelEntity(
         url,
         FileType.valueOf(type),
         DownloadedState.valueOf(downloadedState),
-        progress
+        progress,
+        stringToObject<Map<String, String>>(transcriptUrls) ?: emptyMap(),
+        stringToObject<Map<String, String>>(transcriptPaths) ?: emptyMap(),
+        TranscriptsDownloadedState.valueOf(transcriptDownloadedStatus),
     )
 
     companion object {
@@ -48,7 +59,10 @@ data class DownloadModelEntity(
                     url,
                     type.name,
                     downloadedState.name,
-                    progress
+                    progress,
+                    objectToString(transcriptUrls),
+                    objectToString(transcriptPaths),
+                    transcriptDownloadedStatus.name
                 )
             }
         }

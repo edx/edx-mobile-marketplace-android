@@ -79,6 +79,13 @@ class DownloadWorkerController(
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+            downloadModel.transcriptPaths.values.forEach { path ->
+                try {
+                    File(path).delete()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         }
 
         if (hasDownloading) fileDownloader.cancelDownloading()

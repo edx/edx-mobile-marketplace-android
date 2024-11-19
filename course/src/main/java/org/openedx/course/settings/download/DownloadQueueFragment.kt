@@ -46,6 +46,7 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
+import org.openedx.core.module.db.TranscriptsDownloadedState
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -230,7 +231,10 @@ private fun DownloadQueueScreenPreview() {
                         url = "",
                         type = FileType.VIDEO,
                         downloadedState = DownloadedState.DOWNLOADING,
-                        progress = 0f
+                        progress = 0f,
+                        transcriptUrls = emptyMap(),
+                        transcriptPaths = emptyMap(),
+                        transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED,
                     ),
                     DownloadModel(
                         id = "",
@@ -240,7 +244,10 @@ private fun DownloadQueueScreenPreview() {
                         url = "",
                         type = FileType.VIDEO,
                         downloadedState = DownloadedState.DOWNLOADING,
-                        progress = 0f
+                        progress = 0f,
+                        transcriptUrls = emptyMap(),
+                        transcriptPaths = emptyMap(),
+                        transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED,
                     )
                 ),
                 currentProgressId = "",

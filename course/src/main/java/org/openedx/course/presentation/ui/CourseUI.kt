@@ -86,6 +86,7 @@ import org.openedx.core.extension.toFileSize
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
+import org.openedx.core.module.db.TranscriptsDownloadedState
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.IconText
 import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
@@ -1273,7 +1274,10 @@ private fun OfflineQueueCardPreview() {
                     url = "",
                     type = FileType.VIDEO,
                     downloadedState = DownloadedState.DOWNLOADING,
-                    progress = 0f
+                    progress = 0f,
+                    transcriptUrls = emptyMap(),
+                    transcriptPaths = emptyMap(),
+                    transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED
                 ),
                 progressValue = 10,
                 progressSize = 30,

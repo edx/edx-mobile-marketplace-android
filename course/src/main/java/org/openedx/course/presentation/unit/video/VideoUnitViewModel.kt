@@ -78,7 +78,14 @@ open class VideoUnitViewModel(
 
     fun downloadSubtitles() {
         viewModelScope.launch(Dispatchers.IO) {
-            transcriptManager.downloadTranscriptsForVideo(getTranscriptUrl())?.let { result ->
+            val transcriptUrl = getTranscriptUrl()
+            val timedTextObject = if (isDownloaded) {
+                transcriptManager.getDownloadedTranscript(transcriptUrl)
+            } else {
+                transcriptManager.downloadTranscriptsForVideo(transcriptUrl)
+            }
+
+            timedTextObject?.let { result ->
                 _transcriptObject.postValue(result)
                 timeList = result.captions.values.toList()
                     .map { it.start.mseconds.toLong() }

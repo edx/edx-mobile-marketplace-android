@@ -8,7 +8,10 @@ data class DownloadModel(
     val url: String,
     val type: FileType,
     val downloadedState: DownloadedState,
-    val progress: Float?
+    val progress: Float?,
+    val transcriptUrls: Map<String, String>,
+    val transcriptPaths: Map<String, String>,
+    val transcriptDownloadedStatus: TranscriptsDownloadedState,
 )
 
 enum class DownloadedState {
@@ -23,6 +26,10 @@ enum class DownloadedState {
         get() {
             return this == DOWNLOADED
         }
+}
+
+enum class TranscriptsDownloadedState {
+    DOWNLOADED, NOT_DOWNLOADED;
 }
 
 enum class FileType {

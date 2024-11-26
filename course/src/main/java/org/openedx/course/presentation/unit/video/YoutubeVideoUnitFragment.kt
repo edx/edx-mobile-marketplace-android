@@ -219,12 +219,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                     }
                 }
                 youTubePlayer.addListener(youtubeTrackerListener)
-//                viewModel.logLoadedCompletedEvent(
-//                    viewModel.videoUrl,
-//                    true,
-//                    viewModel.getCurrentVideoTime(),
-//                    CourseAnalyticsKey.YOUTUBE.key
-//                )
+                viewModel.logVideoLoadedEvent(viewModel.videoUrl)
             }
         }
 

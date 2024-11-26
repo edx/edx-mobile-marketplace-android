@@ -178,8 +178,8 @@ class DiscussionResponsesFragment : Fragment() {
     }
 
     companion object {
-        private const val ARG_COURSE_ID = "argCourseId"
-        private const val ARG_THREAD_ID = "argThreadId"
+        private const val ARG_COURSE_ID = "courseId"
+        private const val ARG_THREAD_ID = "threadId"
         private const val ARG_COMMENT = "comment"
         private const val ARG_IS_CLOSED = "isClosed"
 

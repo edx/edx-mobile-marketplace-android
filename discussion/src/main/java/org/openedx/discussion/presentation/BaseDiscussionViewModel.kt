@@ -122,7 +122,7 @@ open class BaseDiscussionViewModel(
 
     private fun logEvent(event: DiscussionAnalyticsEvent, params: Map<String, Any?>) {
         analytics.logEvent(
-            event = event.name,
+            event = event.eventName,
             params = buildMap {
                 put(DiscussionAnalyticsParam.NAME.key, event.biValue)
                 put(DiscussionAnalyticsParam.COURSE_ID.key, courseId)

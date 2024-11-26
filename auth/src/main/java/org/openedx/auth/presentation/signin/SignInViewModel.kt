@@ -63,6 +63,7 @@ class SignInViewModel(
             isMicrosoftAuthEnabled = config.getMicrosoftConfig().isEnabled(),
             isSocialAuthEnabled = config.isSocialAuthEnabled(),
             isLogistrationEnabled = config.isPreLoginExperienceEnabled(),
+            lastSignIn = AuthType.valueOf(preferencesManager.lastSignInType),
             agreement = agreementProvider.getAgreement(isSignIn = true)?.createHonorCodeField(),
         )
     )
@@ -99,16 +100,8 @@ class SignInViewModel(
             try {
                 interactor.login(username, password)
                 _uiState.update { it.copy(loginSuccess = true) }
-                setUserId()
-                logEvent(
-                    AuthAnalyticsEvent.SIGN_IN_SUCCESS,
-                    buildMap {
-                        put(
-                            AuthAnalyticsKey.METHOD.key,
-                            AuthType.PASSWORD.methodName.lowercase()
-                        )
-                    }
-                )
+                setMetadata(AuthType.PASSWORD)
+                logSignInSuccessEvent(AuthType.PASSWORD)
                 appNotifier.send(SignInEvent())
             } catch (e: Exception) {
                 if (e is EdxError.InvalidGrantException) {
@@ -173,8 +166,9 @@ class SignInViewModel(
         }.onSuccess {
             logger.d { "Social login (${authType.methodName}) success" }
             _uiState.update { it.copy(loginSuccess = true) }
-            setUserId()
+            setMetadata(authType)
             _uiState.update { it.copy(showProgress = false) }
+            logSignInSuccessEvent(authType)
             appNotifier.send(SignInEvent())
         }
     }
@@ -189,10 +183,11 @@ class SignInViewModel(
         _uiState.update { it.copy(showProgress = false) }
     }
 
-    private fun setUserId() {
+    private fun setMetadata(authType: AuthType) {
         preferencesManager.user?.let {
             analytics.setUserIdForSession(it.id)
         }
+        preferencesManager.lastSignInType = authType.name
     }
 
     private suspend fun SocialAuthResponse?.checkToken() {
@@ -243,6 +238,17 @@ class SignInViewModel(
             params = buildMap {
                 put(AuthAnalyticsKey.NAME.key, event.biValue)
                 putAll(params)
+            }
+        )
+    }
+
+    private fun logSignInSuccessEvent(authType: AuthType) {
+        val event = AuthAnalyticsEvent.SIGN_IN_SUCCESS
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(AuthAnalyticsKey.NAME.key, event.biValue)
+                put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
             }
         )
     }

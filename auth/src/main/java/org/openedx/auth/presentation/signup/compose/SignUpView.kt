@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -346,6 +347,31 @@ internal fun SignUpView(
                                             color = MaterialTheme.appColors.textPrimary,
                                             style = MaterialTheme.appTypography.titleSmall
                                         )
+                                        if (uiState.isSocialAuthEnabled) {
+                                            Spacer(modifier = Modifier.height(24.dp))
+                                            SocialAuthView(
+                                                modifier = buttonWidth,
+                                                isGoogleAuthEnabled = uiState.isGoogleAuthEnabled,
+                                                isFacebookAuthEnabled = uiState.isFacebookAuthEnabled,
+                                                isMicrosoftAuthEnabled = uiState.isMicrosoftAuthEnabled,
+                                                isSignIn = false,
+                                            ) {
+                                                keyboardController?.hide()
+                                                onRegisterClick(it)
+                                            }
+                                            Text(
+                                                modifier = Modifier
+                                                    .testTag("txt_register_below")
+                                                    .padding(top = 8.dp)
+                                                    .offset(y = 8.dp)
+                                                    .fillMaxWidth(),
+                                                text = stringResource(
+                                                    id = R.string.auth_register_below
+                                                ),
+                                                color = MaterialTheme.appColors.textPrimary,
+                                                style = MaterialTheme.appTypography.titleSmall
+                                            )
+                                        }
                                     }
                                 }
                                 RequiredFields(
@@ -445,18 +471,6 @@ internal fun SignUpView(
                                             onRegisterClick(AuthType.PASSWORD)
                                         }
                                     )
-                                }
-                                if (uiState.isSocialAuthEnabled && uiState.socialAuth == null) {
-                                    SocialAuthView(
-                                        modifier = buttonWidth,
-                                        isGoogleAuthEnabled = uiState.isGoogleAuthEnabled,
-                                        isFacebookAuthEnabled = uiState.isFacebookAuthEnabled,
-                                        isMicrosoftAuthEnabled = uiState.isMicrosoftAuthEnabled,
-                                        isSignIn = false,
-                                    ) {
-                                        keyboardController?.hide()
-                                        onRegisterClick(it)
-                                    }
                                 }
                                 Spacer(Modifier.height(70.dp))
                             }

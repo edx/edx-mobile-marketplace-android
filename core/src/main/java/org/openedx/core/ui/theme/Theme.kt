@@ -54,6 +54,7 @@ private val DarkColorPalette = AppColors(
     cardViewBackground = dark_card_view_background,
     cardViewBorder = dark_card_view_border,
     divider = dark_divider,
+    socialAuthDivider = dark_social_auth_divider,
 
     certificateForeground = dark_certificate_foreground,
     bottomSheetToggle = dark_bottom_sheet_toggle,
@@ -146,6 +147,7 @@ private val LightColorPalette = AppColors(
     cardViewBackground = light_card_view_background,
     cardViewBorder = light_card_view_border,
     divider = light_divider,
+    socialAuthDivider = light_social_auth_divider,
 
     certificateForeground = light_certificate_foreground,
     bottomSheetToggle = light_bottom_sheet_toggle,

@@ -3,6 +3,7 @@ package org.openedx.app.data.storage
 import android.content.Context
 import com.google.gson.Gson
 import org.openedx.app.BuildConfig
+import org.openedx.auth.data.model.AuthType
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
@@ -167,6 +168,12 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         }
         get() = getBoolean(RESET_APP_DIRECTORY, true)
 
+    override var lastSignInType: String
+        set(value) {
+            saveString(LAST_SIGN_IN_TYPE, AuthType.valueOf(value).name)
+        }
+        get() = getString(LAST_SIGN_IN_TYPE, AuthType.PASSWORD.name)
+
     override fun setCalendarSyncEventsDialogShown(courseName: String) {
         saveBoolean(courseName.replaceSpace("_"), true)
     }
@@ -189,5 +196,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val VIDEO_SETTINGS_DOWNLOAD_QUALITY = "video_settings_download_quality"
         private const val APP_CONFIG = "app_config"
         private const val RESET_APP_DIRECTORY = "reset_app_directory"
+        private const val LAST_SIGN_IN_TYPE = "last_sign_in_type"
     }
 }

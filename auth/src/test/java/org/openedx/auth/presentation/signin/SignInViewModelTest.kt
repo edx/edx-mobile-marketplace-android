@@ -22,6 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.auth.R
+import org.openedx.auth.data.model.AuthType
 import org.openedx.auth.domain.interactor.AuthInteractor
 import org.openedx.auth.presentation.AgreementProvider
 import org.openedx.auth.presentation.AuthAnalytics
@@ -38,7 +39,6 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.presentation.global.WhatsNewGlobalManager
 import org.openedx.core.system.EdxError
 import org.openedx.core.system.ResourceManager
-import org.openedx.core.system.notifier.app.AppEvent
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.SignInEvent
 import java.net.UnknownHostException
@@ -88,6 +88,7 @@ class SignInViewModelTest {
         every { config.getGoogleConfig() } returns GoogleConfig()
         every { config.getMicrosoftConfig() } returns MicrosoftConfig()
         every { analytics.logScreenEvent(any(), any()) } returns Unit
+        every { preferencesManager.lastSignInType } returns AuthType.PASSWORD.name
     }
 
     @After
@@ -237,6 +238,7 @@ class SignInViewModelTest {
         every { validator.isPasswordValid(any()) } returns true
         every { preferencesManager.user } returns user
         every { analytics.setUserIdForSession(any()) } returns Unit
+        every { preferencesManager.lastSignInType = AuthType.PASSWORD.name } returns Unit
         every { analytics.logEvent(any(), any()) } returns Unit
         coEvery { appNotifier.send(any<SignInEvent>()) } returns Unit
         val viewModel = SignInViewModel(

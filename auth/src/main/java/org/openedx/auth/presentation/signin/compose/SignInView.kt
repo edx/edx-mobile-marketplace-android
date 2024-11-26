@@ -228,7 +228,7 @@ private fun AuthForm(
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         if (state.isSocialAuthEnabled) {
             SocialAuthView(
-                modifier = buttonWidth,
+                modifier = buttonWidth.fillMaxWidth(),
                 isGoogleAuthEnabled = state.isGoogleAuthEnabled,
                 isFacebookAuthEnabled = state.isFacebookAuthEnabled,
                 isMicrosoftAuthEnabled = state.isMicrosoftAuthEnabled,

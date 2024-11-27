@@ -267,6 +267,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         fm: FragmentManager,
         videoUrl: String,
         videoTime: Long,
+        videoDuration: Long,
         blockId: String,
         courseId: String,
         isPlaying: Boolean,
@@ -277,6 +278,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
             VideoFullScreenFragment.newInstance(
                 videoUrl = videoUrl,
                 videoTime = videoTime,
+                videoDuration = videoDuration,
                 blockId = blockId,
                 courseId = courseId,
                 isPlaying = isPlaying,
@@ -289,6 +291,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         fm: FragmentManager,
         videoUrl: String,
         videoTime: Long,
+        videoDuration: Long,
         blockId: String,
         courseId: String,
         isPlaying: Boolean,
@@ -298,6 +301,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
             YoutubeVideoFullScreenFragment.newInstance(
                 videoUrl,
                 videoTime,
+                videoDuration,
                 blockId,
                 courseId,
                 isPlaying
@@ -332,21 +336,27 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         )
     }
 
-    override fun navigateToDiscussionComments(fm: FragmentManager, thread: Thread) {
+    override fun navigateToDiscussionComments(
+        fm: FragmentManager,
+        courseId: String,
+        thread: Thread,
+    ) {
         replaceFragmentWithBackStack(
             fm,
-            DiscussionCommentsFragment.newInstance(thread)
+            DiscussionCommentsFragment.newInstance(courseId, thread)
         )
     }
 
     override fun navigateToDiscussionResponses(
         fm: FragmentManager,
+        courseId: String,
+        threadId: String,
         comment: DiscussionComment,
         isClosed: Boolean,
     ) {
         replaceFragmentWithBackStack(
             fm,
-            DiscussionResponsesFragment.newInstance(comment, isClosed)
+            DiscussionResponsesFragment.newInstance(courseId, threadId, comment, isClosed)
         )
     }
 

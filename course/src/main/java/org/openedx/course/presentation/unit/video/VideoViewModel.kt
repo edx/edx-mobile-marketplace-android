@@ -7,6 +7,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import kotlinx.coroutines.launch
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.model.VideoPlaybackSpeed
 import org.openedx.core.system.notifier.CourseCompletionSet
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseVideoPositionChanged
@@ -15,16 +16,20 @@ import org.openedx.course.data.repository.CourseRepository
 import org.openedx.course.presentation.CourseAnalytics
 
 class VideoViewModel(
-    private val courseId: String,
+    courseId: String,
+    blockId: String,
     private val courseRepository: CourseRepository,
     private val notifier: CourseNotifier,
     private val preferencesManager: CorePreferences,
     courseAnalytics: CourseAnalytics,
-) : BaseVideoViewModel(courseId, courseAnalytics) {
+) : BaseVideoViewModel(courseId, blockId, courseAnalytics) {
 
     var videoUrl = ""
     var currentVideoTime = 0L
+    var videoDuration = 0L
     var isPlaying: Boolean? = null
+    val videoSettings
+        get() = preferencesManager.videoSettings
 
     private var isBlockAlreadyCompleted = false
 
@@ -53,6 +58,7 @@ class VideoViewModel(
                     CourseVideoPositionChanged(
                         videoUrl,
                         currentVideoTime,
+                        videoDuration,
                         isPlaying ?: false
                     )
                 )
@@ -60,9 +66,9 @@ class VideoViewModel(
         }
     }
 
-    fun markBlockCompleted(blockId: String, medium: String) {
+    fun markBlockCompleted(blockId: String) {
         if (!isBlockAlreadyCompleted) {
-            logLoadedCompletedEvent(videoUrl, false, currentVideoTime, medium)
+            logVideoCompletedEvent(videoUrl, videoDuration)
             viewModelScope.launch {
                 try {
                     isBlockAlreadyCompleted = true
@@ -78,5 +84,10 @@ class VideoViewModel(
         }
     }
 
-    fun getVideoQuality() = preferencesManager.videoSettings.videoStreamingQuality
+    fun getVideoQuality() = videoSettings.videoStreamingQuality
+
+    fun setVideoPlaybackSpeed(speed: Float) {
+        preferencesManager.videoSettings =
+            videoSettings.copy(videoPlaybackSpeed = VideoPlaybackSpeed.getVideoPlaybackSpeed(speed))
+    }
 }

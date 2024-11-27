@@ -122,12 +122,12 @@ class DiscussionThreadsViewModelTest {
             )
         } throws UnknownHostException()
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.ALL_POSTS,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.ALL_POSTS
         )
         advanceUntilIdle()
 
@@ -142,12 +142,12 @@ class DiscussionThreadsViewModelTest {
     @Test
     fun `getThreadByType AllThreads unknown exception`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.ALL_POSTS,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.ALL_POSTS
         )
         coEvery { interactor.getAllThreads(any(), any(), any(), any()) } throws Exception()
         advanceUntilIdle()
@@ -173,12 +173,12 @@ class DiscussionThreadsViewModelTest {
             Pagination(10, "", 4, "1")
         )
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.ALL_POSTS,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.ALL_POSTS
         )
         advanceUntilIdle()
 
@@ -201,12 +201,12 @@ class DiscussionThreadsViewModelTest {
             )
         } throws UnknownHostException()
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.FOLLOWING_POSTS,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.FOLLOWING_POSTS
         )
         advanceUntilIdle()
 
@@ -221,12 +221,12 @@ class DiscussionThreadsViewModelTest {
     @Test
     fun `getThreadByType FollowingPosts unknown exception`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.FOLLOWING_POSTS,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.FOLLOWING_POSTS
         )
         coEvery {
             interactor.getFollowingThreads(
@@ -276,12 +276,12 @@ class DiscussionThreadsViewModelTest {
             Pagination(10, "", 4, "1")
         )
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.FOLLOWING_POSTS,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.FOLLOWING_POSTS
         )
         advanceUntilIdle()
 
@@ -304,12 +304,12 @@ class DiscussionThreadsViewModelTest {
             )
         } throws UnknownHostException()
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.TOPIC,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.TOPIC
         )
         advanceUntilIdle()
 
@@ -324,12 +324,12 @@ class DiscussionThreadsViewModelTest {
     @Test
     fun `getThreadByType Topic unknown exception`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.TOPIC,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.TOPIC
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } throws Exception()
         advanceUntilIdle()
@@ -355,12 +355,12 @@ class DiscussionThreadsViewModelTest {
             Pagination(10, "", 4, "1")
         )
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.TOPIC,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.TOPIC
         )
         advanceUntilIdle()
 
@@ -374,12 +374,12 @@ class DiscussionThreadsViewModelTest {
     @Test
     fun `filterThreads All posts`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.TOPIC,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.TOPIC
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
             threads,
@@ -394,12 +394,12 @@ class DiscussionThreadsViewModelTest {
     @Test
     fun `filterThreads UNREAD`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.TOPIC,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.TOPIC
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
             threads,
@@ -414,12 +414,12 @@ class DiscussionThreadsViewModelTest {
     @Test
     fun `filterThreads UNANSWERED`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.TOPIC,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.TOPIC
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
             threads,
@@ -444,12 +444,12 @@ class DiscussionThreadsViewModelTest {
             Pagination(10, "", 4, "1")
         )
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.TOPIC,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.TOPIC
         )
         viewModel.updateThread("")
         advanceUntilIdle()
@@ -480,12 +480,12 @@ class DiscussionThreadsViewModelTest {
             emit(DiscussionThreadAdded())
         }
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.TOPIC,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.TOPIC
         )
 
 
@@ -519,12 +519,12 @@ class DiscussionThreadsViewModelTest {
             emit(DiscussionThreadDataChanged(mockThread.copy(id = "1")))
         }
         val viewModel = DiscussionThreadsViewModel(
+            "",
+            "",
+            DiscussionTopicsViewModel.TOPIC,
             interactor,
             resourceManager,
             notifier,
-            "",
-            "",
-            DiscussionTopicsViewModel.TOPIC
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()

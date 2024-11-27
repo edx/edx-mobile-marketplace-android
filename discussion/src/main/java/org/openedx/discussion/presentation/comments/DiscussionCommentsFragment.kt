@@ -9,18 +9,45 @@ import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -41,30 +68,42 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.extension.parcelable
-import org.openedx.core.ui.*
+import org.openedx.core.ui.BackBtn
+import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.WindowSize
+import org.openedx.core.ui.WindowType
+import org.openedx.core.ui.displayCutoutForLandscape
+import org.openedx.core.ui.rememberWindowSize
+import org.openedx.core.ui.shouldLoadMore
+import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.windowSizeValue
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.ui.CommentItem
 import org.openedx.discussion.presentation.ui.ThreadMainItem
-import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.core.parameter.parametersOf
-import org.openedx.discussion.R
 
 
 class DiscussionCommentsFragment : Fragment() {
 
     private val viewModel by viewModel<DiscussionCommentsViewModel> {
-        parametersOf((requireArguments().parcelable(ARG_THREAD)!!))
+        parametersOf(
+            requireArguments().getString(ARG_COURSE_ID, ""),
+            requireArguments().parcelable(ARG_THREAD)!!
+        )
     }
     private val router by inject<DiscussionRouter>()
 
@@ -121,7 +160,11 @@ class DiscussionCommentsFragment : Fragment() {
                     },
                     onCommentClick = {
                         router.navigateToDiscussionResponses(
-                            requireActivity().supportFragmentManager, it, viewModel.thread.closed
+                            requireActivity().supportFragmentManager,
+                            viewModel.courseId,
+                            viewModel.thread.id,
+                            it,
+                            viewModel.thread.closed
                         )
                     },
                     onUserPhotoClick = { username ->
@@ -147,11 +190,16 @@ class DiscussionCommentsFragment : Fragment() {
         const val ACTION_REPORT_THREAD = "action_report_thread"
         const val ACTION_FOLLOW_THREAD = "action_follow_thread"
 
+        private const val ARG_COURSE_ID = "argCourseId"
         private const val ARG_THREAD = "argThread"
 
-        fun newInstance(thread: org.openedx.discussion.domain.model.Thread): DiscussionCommentsFragment {
+        fun newInstance(
+            courseId: String,
+            thread: Thread,
+        ): DiscussionCommentsFragment {
             val fragment = DiscussionCommentsFragment()
             fragment.arguments = bundleOf(
+                ARG_COURSE_ID to courseId,
                 ARG_THREAD to thread
             )
             return fragment

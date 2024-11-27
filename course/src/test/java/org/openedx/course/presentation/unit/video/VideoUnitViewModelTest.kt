@@ -59,6 +59,7 @@ class VideoUnitViewModelTest {
     fun `markBlockCompleted exception`() = runTest {
         val viewModel = VideoUnitViewModel(
             "",
+            "",
             courseRepository,
             notifier,
             networkConnection,
@@ -77,7 +78,7 @@ class VideoUnitViewModelTest {
                 any()
             )
         } returns Unit
-        viewModel.markBlockCompleted("", "")
+        viewModel.markBlockCompleted("")
         advanceUntilIdle()
 
         coVerify(exactly = 1) {
@@ -98,6 +99,7 @@ class VideoUnitViewModelTest {
     fun `markBlockCompleted success`() = runTest {
         val viewModel = VideoUnitViewModel(
             "",
+            "",
             courseRepository,
             notifier,
             networkConnection,
@@ -116,7 +118,7 @@ class VideoUnitViewModelTest {
                 any()
             )
         } returns Unit
-        viewModel.markBlockCompleted("", "")
+        viewModel.markBlockCompleted("")
         advanceUntilIdle()
 
         coVerify(exactly = 1) {
@@ -137,6 +139,7 @@ class VideoUnitViewModelTest {
     fun `CourseVideoPositionChanged notifier test`() = runTest {
         val viewModel = VideoUnitViewModel(
             "",
+            "",
             courseRepository,
             notifier,
             networkConnection,
@@ -148,6 +151,7 @@ class VideoUnitViewModelTest {
                 CourseVideoPositionChanged(
                     "",
                     10,
+                    1000,
                     false
                 )
             )

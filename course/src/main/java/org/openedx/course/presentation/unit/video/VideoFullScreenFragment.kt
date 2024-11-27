@@ -34,13 +34,15 @@ import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.global.viewBinding
 import org.openedx.course.R
 import org.openedx.course.databinding.FragmentVideoFullScreenBinding
-import org.openedx.course.presentation.CourseAnalyticsKey
 
 class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
 
     private val binding by viewBinding(FragmentVideoFullScreenBinding::bind)
     private val viewModel by viewModel<VideoViewModel> {
-        parametersOf(requireArguments().getString(ARG_COURSE_ID, ""))
+        parametersOf(
+            requireArguments().getString(ARG_COURSE_ID, ""),
+            requireArguments().getString(ARG_BLOCK_ID, "")
+        )
     }
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
 
@@ -58,7 +60,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
                 if (!appReviewManager.isDialogShowed) {
                     appReviewManager.tryToOpenRateDialog()
                 }
-                viewModel.markBlockCompleted(blockId, CourseAnalyticsKey.NATIVE.key)
+                viewModel.markBlockCompleted(blockId)
             }
         }
     }
@@ -69,6 +71,9 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
         blockId = requireArguments().getString(ARG_BLOCK_ID, "")
         if (viewModel.currentVideoTime == 0L) {
             viewModel.currentVideoTime = requireArguments().getLong(ARG_VIDEO_TIME, 0)
+        }
+        if (viewModel.videoDuration == 0L) {
+            viewModel.videoDuration = requireArguments().getLong(ARG_VIDEO_DURATION, 0)
         }
         if (viewModel.isPlaying == null) {
             viewModel.isPlaying = requireArguments().getBoolean(ARG_IS_PLAYING)
@@ -122,7 +127,9 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
                     DefaultLoadControl(),
                     DefaultBandwidthMeter.getSingletonInstance(requireContext()),
                     DefaultAnalyticsCollector(Clock.DEFAULT)
-                ).build()
+                ).build().apply {
+                    setPlaybackSpeed(viewModel.videoSettings.videoPlaybackSpeed.speedValue)
+                }
             }
             playerView.player = exoPlayer
             playerView.setShowNextButton(false)
@@ -147,14 +154,14 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
                         viewModel.videoUrl,
                         isPlaying,
                         viewModel.currentVideoTime,
-                        CourseAnalyticsKey.NATIVE.key
+                        viewModel.videoDuration,
                     )
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     super.onPlaybackStateChanged(playbackState)
                     if (playbackState == Player.STATE_ENDED) {
-                        viewModel.markBlockCompleted(blockId, CourseAnalyticsKey.NATIVE.key)
+                        viewModel.markBlockCompleted(blockId)
                     }
                 }
 
@@ -170,11 +177,14 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
 
                 override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
                     super.onPlaybackParametersChanged(playbackParameters)
+                    val oldSpeed = viewModel.videoSettings.videoPlaybackSpeed.speedValue
+                    viewModel.setVideoPlaybackSpeed(playbackParameters.speed)
                     viewModel.logVideoSpeedEvent(
                         viewModel.videoUrl,
+                        oldSpeed,
                         playbackParameters.speed,
                         viewModel.currentVideoTime,
-                        CourseAnalyticsKey.NATIVE.key
+                        viewModel.videoDuration,
                     )
                 }
             })
@@ -216,6 +226,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
     companion object {
         private const val ARG_BLOCK_VIDEO_URL = "blockVideoUrl"
         private const val ARG_VIDEO_TIME = "videoTime"
+        private const val ARG_VIDEO_DURATION = "videoDuration"
         private const val ARG_BLOCK_ID = "blockId"
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_IS_PLAYING = "isPlaying"
@@ -224,6 +235,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
         fun newInstance(
             videoUrl: String,
             videoTime: Long,
+            videoDuration: Long,
             blockId: String,
             courseId: String,
             isPlaying: Boolean,
@@ -233,6 +245,7 @@ class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
             fragment.arguments = bundleOf(
                 ARG_BLOCK_VIDEO_URL to videoUrl,
                 ARG_VIDEO_TIME to videoTime,
+                ARG_VIDEO_DURATION to videoDuration,
                 ARG_BLOCK_ID to blockId,
                 ARG_COURSE_ID to courseId,
                 ARG_IS_PLAYING to isPlaying,

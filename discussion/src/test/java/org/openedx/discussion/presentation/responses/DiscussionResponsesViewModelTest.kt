@@ -1,8 +1,28 @@
 package org.openedx.discussion.presentation.responses
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TestRule
 import org.openedx.core.R
 import org.openedx.core.UIMessage
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.extension.LinkedImageText
 import org.openedx.core.system.ResourceManager
@@ -10,15 +30,8 @@ import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.CommentsData
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.system.notifier.DiscussionNotifier
-import io.mockk.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.*
-import org.junit.*
-import org.junit.Assert.*
-import org.junit.rules.TestRule
-import org.openedx.core.data.storage.CorePreferences
 import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -32,6 +45,7 @@ class DiscussionResponsesViewModelTest {
     private val resourceManager = mockk<ResourceManager>()
     private val interactor = mockk<DiscussionInteractor>()
     private val preferencesManager = mockk<CorePreferences>()
+    private val analytics = mockk<DiscussionAnalytics>()
     private val notifier = mockk<DiscussionNotifier>(relaxed = true)
 
     private val noInternet = "Slow or no internet connection"
@@ -131,10 +145,13 @@ class DiscussionResponsesViewModelTest {
         coEvery { interactor.getCommentsResponses(any(), any()) } throws UnknownHostException()
 
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         advanceUntilIdle()
 
@@ -151,10 +168,13 @@ class DiscussionResponsesViewModelTest {
         coEvery { interactor.getCommentsResponses(any(), any()) } throws Exception()
 
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
 
         advanceUntilIdle()
@@ -174,10 +194,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
 
         advanceUntilIdle()
@@ -197,10 +220,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         advanceUntilIdle()
 
@@ -219,10 +245,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         viewModel.fetchMore()
         advanceUntilIdle()
@@ -242,10 +271,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.getCommentsResponses(any(), eq(2)) } returns CommentsData(
             comments,
@@ -269,10 +301,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.setCommentVoted(any(), any()) } throws UnknownHostException()
         viewModel.setCommentUpvoted("", false)
@@ -291,10 +326,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.setCommentVoted(any(), any()) } throws Exception()
         viewModel.setCommentUpvoted("", false)
@@ -313,18 +351,22 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.setCommentVoted(any(), any()) } returns mockComment.copy(id = "0")
+        every { analytics.logEvent(any(), any()) } returns Unit
         viewModel.updateCommentResponses()
         viewModel.setCommentUpvoted("", false)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.setCommentVoted(any(), any()) }
-
+        verify { analytics.logEvent(any(), any()) }
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.uiState.value is DiscussionResponsesUIState.Success)
     }
@@ -336,18 +378,22 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.setCommentVoted(any(), any()) } returns mockComment.copy(id = "2")
+        every { analytics.logEvent(any(), any()) } returns Unit
         viewModel.updateCommentResponses()
         viewModel.setCommentUpvoted("", false)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.setCommentVoted(any(), any()) }
-
+        verify { analytics.logEvent(any(), any()) }
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.uiState.value is DiscussionResponsesUIState.Success)
     }
@@ -359,10 +405,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } throws UnknownHostException()
         viewModel.setCommentReported("", false)
@@ -381,10 +430,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } throws Exception()
         viewModel.setCommentReported("", false)
@@ -403,17 +455,21 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } returns mockComment.copy(id = "0")
+        every { analytics.logEvent(any(), any()) } returns Unit
         viewModel.setCommentReported("", false)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.setCommentFlagged(any(), any()) }
-
+        verify { analytics.logEvent(any(), any()) }
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.uiState.value is DiscussionResponsesUIState.Success)
     }
@@ -425,19 +481,23 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } returns mockComment.copy(id = "0")
+        every { analytics.logEvent(any(), any()) } returns Unit
 
         viewModel.updateCommentResponses()
         viewModel.setCommentReported("", false)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.setCommentFlagged(any(), any()) }
-
+        verify { analytics.logEvent(any(), any()) }
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.uiState.value is DiscussionResponsesUIState.Success)
     }
@@ -449,10 +509,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } throws UnknownHostException()
 
@@ -473,10 +536,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } throws Exception()
 
@@ -497,10 +563,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
 
@@ -521,10 +590,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
         every { preferencesManager.user?.username } returns ""
@@ -542,10 +614,13 @@ class DiscussionResponsesViewModelTest {
             Pagination(10, "2", 4, "1")
         )
         val viewModel = DiscussionResponsesViewModel(
+            "",
+            "",
+            mockComment.copy(id = "0"),
             interactor,
             resourceManager,
             notifier,
-            mockComment.copy(id = "0")
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
         every { preferencesManager.user?.username } returns ""

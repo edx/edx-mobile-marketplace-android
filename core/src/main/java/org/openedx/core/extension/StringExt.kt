@@ -35,7 +35,7 @@ fun String.replaceSpace(target: String = ""): String = this.replace(" ", target)
 fun String.tagId(): String = this.replaceSpace("_").lowercase(Locale.getDefault())
 
 fun String.takeIfNotEmpty(): String? {
-    return if (this.isEmpty().not()) this else null
+    return if (this.isNotNullOrEmpty()) this else null
 }
 
 fun String?.isNotNullOrEmpty(): Boolean {

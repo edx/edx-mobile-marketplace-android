@@ -18,12 +18,12 @@ import org.openedx.discussion.system.notifier.DiscussionThreadAdded
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 
 class DiscussionThreadsViewModel(
+    val courseId: String,
+    val topicId: String,
+    private val threadType: String,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
-    val courseId: String,
-    val topicId: String,
-    private val threadType: String
 ) : BaseViewModel() {
 
     private val _uiState = MutableLiveData<DiscussionThreadsUIState>()

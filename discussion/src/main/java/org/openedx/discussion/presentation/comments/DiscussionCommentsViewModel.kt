@@ -4,7 +4,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import org.openedx.core.BaseViewModel
+import kotlinx.coroutines.launch
 import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
@@ -13,22 +13,27 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.domain.model.Thread
+import org.openedx.discussion.presentation.BaseDiscussionViewModel
+import org.openedx.discussion.presentation.DiscussionAnalytics
+import org.openedx.discussion.presentation.DiscussionAnalyticsType
 import org.openedx.discussion.system.notifier.DiscussionCommentAdded
 import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
-import kotlinx.coroutines.launch
 
 class DiscussionCommentsViewModel(
+    val courseId: String,
+    thread: Thread,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
-    thread: org.openedx.discussion.domain.model.Thread,
-) : BaseViewModel() {
+    private val analytics: DiscussionAnalytics,
+) : BaseDiscussionViewModel(courseId, thread.id, analytics) {
 
     val title = resourceManager.getString(thread.type.resId)
 
-    var thread: org.openedx.discussion.domain.model.Thread
+    var thread: Thread
         private set
     private var commentCount = 0
 
@@ -183,6 +188,11 @@ class DiscussionCommentsViewModel(
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
                 sendThreadUpdated()
+                logLikeToggleEvent(
+                    discussionType = DiscussionAnalyticsType.THREAD.value,
+                    likePost = vote,
+                    author = thread.author
+                )
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -203,6 +213,7 @@ class DiscussionCommentsViewModel(
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
                 sendThreadUpdated()
+                logFollowToggleEvent(followed, thread.author)
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -223,6 +234,11 @@ class DiscussionCommentsViewModel(
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
                 sendThreadUpdated()
+                logReportToggleEvent(
+                    discussionType = DiscussionAnalyticsType.THREAD.value,
+                    reportPost = reported,
+                    author = thread.author
+                )
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -246,6 +262,12 @@ class DiscussionCommentsViewModel(
                     comments[index].copy(voted = response.voted, voteCount = response.voteCount)
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
+                logLikeToggleEvent(
+                    responseId = response.id,
+                    discussionType = DiscussionAnalyticsType.RESPONSE.value,
+                    likePost = vote,
+                    author = response.author
+                )
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -268,6 +290,12 @@ class DiscussionCommentsViewModel(
                 comments[index] = comments[index].copy(abuseFlagged = response.abuseFlagged)
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
+                logReportToggleEvent(
+                    responseId = response.id,
+                    discussionType = DiscussionAnalyticsType.RESPONSE.value,
+                    reportPost = vote,
+                    author = response.author
+                )
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -294,6 +322,10 @@ class DiscussionCommentsViewModel(
                 }
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
+                logResponseAddedEvent(
+                    responseId = response.id,
+                    author = response.author
+                )
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =

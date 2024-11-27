@@ -3,6 +3,7 @@ package org.openedx.discussion.presentation
 import androidx.fragment.app.FragmentManager
 import org.openedx.core.FragmentViewType
 import org.openedx.discussion.domain.model.DiscussionComment
+import org.openedx.discussion.domain.model.Thread
 
 interface DiscussionRouter {
 
@@ -17,13 +18,16 @@ interface DiscussionRouter {
 
     fun navigateToDiscussionComments(
         fm: FragmentManager,
-        thread: org.openedx.discussion.domain.model.Thread
+        courseId: String,
+        thread: Thread,
     )
 
     fun navigateToDiscussionResponses(
         fm: FragmentManager,
+        courseId: String,
+        threadId: String,
         comment: DiscussionComment,
-        isClosed: Boolean
+        isClosed: Boolean,
     )
 
     fun navigateToAddThread(

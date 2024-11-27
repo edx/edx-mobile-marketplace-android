@@ -41,6 +41,7 @@ interface CourseRouter {
         fm: FragmentManager,
         videoUrl: String,
         videoTime: Long,
+        videoDuration: Long,
         blockId: String,
         courseId: String,
         isPlaying: Boolean,
@@ -51,6 +52,7 @@ interface CourseRouter {
         fm: FragmentManager,
         videoUrl: String,
         videoTime: Long,
+        videoDuration: Long,
         blockId: String,
         courseId: String,
         isPlaying: Boolean

@@ -67,7 +67,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
                 val completePercentage = it.currentPosition.toDouble() / it.duration.toDouble()
                 if (completePercentage >= 0.8f) {
-                    viewModel.markBlockCompleted(viewModel.blockId, CourseAnalyticsKey.NATIVE.key)
+                    viewModel.markBlockCompleted(viewModel.blockId)
                 }
             }
             handler.postDelayed(this, 200)
@@ -232,6 +232,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     requireActivity().supportFragmentManager,
                     viewModel.videoUrl,
                     viewModel.exoPlayer?.currentPosition ?: 0L,
+                    viewModel.exoPlayer?.duration?: 0L,
                     viewModel.blockId,
                     viewModel.courseId,
                     viewModel.isPlaying,

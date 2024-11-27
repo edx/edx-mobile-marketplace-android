@@ -8,6 +8,7 @@ import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
 import org.openedx.core.domain.model.AppConfig
+import org.openedx.core.domain.model.VideoPlaybackSpeed
 import org.openedx.core.domain.model.VideoQuality
 import org.openedx.core.domain.model.VideoSettings
 import org.openedx.core.extension.replaceSpace
@@ -109,6 +110,7 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
             saveBoolean(VIDEO_SETTINGS_WIFI_DOWNLOAD_ONLY, value.wifiDownloadOnly)
             saveString(VIDEO_SETTINGS_STREAMING_QUALITY, value.videoStreamingQuality.name)
             saveString(VIDEO_SETTINGS_DOWNLOAD_QUALITY, value.videoDownloadQuality.name)
+            saveString(VIDEO_PLAYBACK_SPEED, value.videoPlaybackSpeed.name)
         }
         get() {
             val wifiDownloadOnly = getBoolean(VIDEO_SETTINGS_WIFI_DOWNLOAD_ONLY, defValue = true)
@@ -116,11 +118,14 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
                 getString(VIDEO_SETTINGS_STREAMING_QUALITY, defValue = VideoQuality.AUTO.name)
             val downloadQualityString =
                 getString(VIDEO_SETTINGS_DOWNLOAD_QUALITY, defValue = VideoQuality.AUTO.name)
+            val videoPlaybackSpeed =
+                getString(VIDEO_PLAYBACK_SPEED, defValue = VideoPlaybackSpeed.SPEED_1_0X.name)
 
             return VideoSettings(
                 wifiDownloadOnly = wifiDownloadOnly,
                 videoStreamingQuality = VideoQuality.valueOf(streamingQualityString),
-                videoDownloadQuality = VideoQuality.valueOf(downloadQualityString)
+                videoDownloadQuality = VideoQuality.valueOf(downloadQualityString),
+                videoPlaybackSpeed = VideoPlaybackSpeed.valueOf(videoPlaybackSpeed)
             )
         }
 
@@ -194,6 +199,7 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val VIDEO_SETTINGS_WIFI_DOWNLOAD_ONLY = "video_settings_wifi_download_only"
         private const val VIDEO_SETTINGS_STREAMING_QUALITY = "video_settings_streaming_quality"
         private const val VIDEO_SETTINGS_DOWNLOAD_QUALITY = "video_settings_download_quality"
+        private const val VIDEO_PLAYBACK_SPEED = "video_playback_speed"
         private const val APP_CONFIG = "app_config"
         private const val RESET_APP_DIRECTORY = "reset_app_directory"
         private const val LAST_SIGN_IN_TYPE = "last_sign_in_type"

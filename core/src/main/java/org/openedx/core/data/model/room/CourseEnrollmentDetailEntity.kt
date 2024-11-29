@@ -20,12 +20,6 @@ data class CourseEnrollmentDetailsEntity(
     @PrimaryKey
     @ColumnInfo("id")
     val id: String,
-    @ColumnInfo("courseUpdates")
-    val courseUpdates: String,
-    @ColumnInfo("courseHandouts")
-    val courseHandouts: String,
-    @ColumnInfo("discussionUrl")
-    val discussionUrl: String,
     @Embedded
     val courseAccessDetails: CourseAccessDetailsDb,
     @Embedded
@@ -34,6 +28,12 @@ data class CourseEnrollmentDetailsEntity(
     val enrollmentDetails: EnrollmentDetailsDB,
     @Embedded
     val courseInfoOverview: CourseInfoOverviewDB,
+    @ColumnInfo("courseUpdates")
+    val courseUpdates: String,
+    @ColumnInfo("courseHandouts")
+    val courseHandouts: String,
+    @ColumnInfo("discussionUrl")
+    val discussionUrl: String,
 ) {
     fun mapToDomain(): CourseEnrollmentDetails {
         return CourseEnrollmentDetails(

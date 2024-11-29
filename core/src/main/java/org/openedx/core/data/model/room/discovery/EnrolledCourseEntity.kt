@@ -154,7 +154,6 @@ data class CoursewareAccessDb(
             userFragment
         )
     }
-
 }
 
 data class CertificateDb(
@@ -267,6 +266,8 @@ data class EnrollmentDetailsDB(
 }
 
 data class CourseAccessDetailsDb(
+    @Embedded
+    val coursewareAccess: CoursewareAccessDb?,
     @ColumnInfo("hasUnmetPrerequisites")
     val hasUnmetPrerequisites: Boolean,
     @ColumnInfo("isTooEarly")
@@ -275,8 +276,6 @@ data class CourseAccessDetailsDb(
     val isStaff: Boolean,
     @ColumnInfo("auditAccessExpires")
     var auditAccessExpires: String?,
-    @Embedded
-    val coursewareAccess: CoursewareAccessDb?,
 ) {
     fun mapToDomain(): CourseAccessDetails {
         return CourseAccessDetails(

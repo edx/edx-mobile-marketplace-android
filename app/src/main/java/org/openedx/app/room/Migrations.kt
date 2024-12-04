@@ -10,15 +10,7 @@ object Migrations {
             db.execSQL("ALTER TABLE download_model ADD COLUMN transcriptUrls TEXT NOT NULL DEFAULT ''")
             db.execSQL("ALTER TABLE download_model ADD COLUMN transcriptPaths TEXT NOT NULL DEFAULT ''")
             db.execSQL("ALTER TABLE download_model ADD COLUMN transcriptDownloadedStatus TEXT NOT NULL DEFAULT 'NOT_DOWNLOADED'")
-        }
-    }
-
-    val MIGRATION_2_3 = object : Migration(2, 3) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-
-            database.execSQL("DROP TABLE IF EXISTS course_enrollment_details_table")
-
-            database.execSQL(
+            db.execSQL(
                 """
             CREATE TABLE IF NOT EXISTS course_enrollment_details_table (
                 id TEXT PRIMARY KEY NOT NULL,
@@ -58,22 +50,6 @@ object Migrations {
                 name TEXT NOT NULL
             )
         """
-            )
-
-            database.execSQL(
-                """
-    CREATE TABLE IF NOT EXISTS course_modes_table (
-        course_id TEXT NOT NULL,
-        slug TEXT,
-        sku TEXT,
-        androidSku TEXT,
-        iosSku TEXT,
-        minPrice REAL,
-        storeSku TEXT,
-        PRIMARY KEY(course_id, slug),
-        FOREIGN KEY(course_id) REFERENCES course_enrollment_details_table(id) ON DELETE CASCADE
-    )
-    """
             )
         }
     }

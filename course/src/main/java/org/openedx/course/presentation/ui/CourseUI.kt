@@ -792,8 +792,6 @@ fun CourseSubSectionItem(
                     R.string.course_subsection_assignment_info,
                     block.assignmentProgress?.assignmentType ?: "",
                     due ?: "",
-                    block.assignmentProgress?.numPointsEarned?.toInt() ?: 0,
-                    block.assignmentProgress?.numPointsPossible?.toInt() ?: 0
                 )
             Spacer(modifier = Modifier.height(8.dp))
             Text(

@@ -5,6 +5,7 @@ import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import org.openedx.core.data.model.room.CourseEnrollmentDetailsEntity
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.takeIfNotEmpty
 import java.lang.reflect.Type
@@ -38,6 +39,19 @@ data class CourseEnrollmentDetails(
             certificate = certificate?.mapToDomain(),
             enrollmentDetails = enrollmentDetails.mapToDomain(),
             courseInfoOverview = courseInfoOverview.mapToDomain(),
+        )
+    }
+
+    fun mapToRoomEntity(): CourseEnrollmentDetailsEntity {
+        return CourseEnrollmentDetailsEntity(
+            id = id,
+            courseUpdates = courseUpdates ?: "",
+            courseHandouts = courseHandouts ?: "",
+            discussionUrl = discussionUrl ?: "",
+            courseAccessDetails = courseAccessDetails.mapToRoomEntity(),
+            certificate = certificate?.mapToRoomEntity(),
+            enrollmentDetails = enrollmentDetails.mapToRoomEntity(),
+            courseInfoOverview = courseInfoOverview.mapToRoomEntity()
         )
     }
 

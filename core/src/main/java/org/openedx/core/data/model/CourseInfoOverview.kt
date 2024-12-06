@@ -1,6 +1,9 @@
 package org.openedx.core.data.model
 
 import com.google.gson.annotations.SerializedName
+import org.openedx.core.data.model.room.CourseInfoOverviewDB
+import org.openedx.core.data.model.room.CourseModeDB
+import org.openedx.core.data.model.room.MediaDb
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.utils.TimeUtils
@@ -57,4 +60,21 @@ data class CourseInfoOverview(
             )
         }
     )
+
+    fun mapToRoomEntity(): CourseInfoOverviewDB {
+        return CourseInfoOverviewDB(
+            name = name,
+            number = number,
+            org = org,
+            start = start ?: "",
+            startDisplay = startDisplay,
+            startType = startType,
+            end = end ?: "",
+            isSelfPaced = isSelfPaced,
+            media = MediaDb.createFrom(media),
+            courseSharingUtmParameters = courseSharingUtmParameters.mapToRoomEntity(),
+            courseAbout = courseAbout,
+            courseModes = courseModes?.map { CourseModeDB.createFrom(it.mapToDomain()) },
+        )
+    }
 }

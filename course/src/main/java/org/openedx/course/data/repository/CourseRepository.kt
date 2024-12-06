@@ -21,6 +21,7 @@ class CourseRepository(
     private val networkConnection: NetworkConnection,
 ) {
     private var courseStructure = mutableMapOf<String, CourseStructure>()
+    private var courseEnrollmentDetails = mutableMapOf<String, CourseEnrollmentDetails>()
 
     suspend fun removeDownloadModel(id: String) {
         downloadDao.removeDownloadModel(id)
@@ -60,7 +61,21 @@ class CourseRepository(
     }
 
     suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
-        return api.getEnrollmentDetails(courseId = courseId).mapToDomain()
+        if (networkConnection.isOnline()) {
+            val response = api.getEnrollmentDetails(courseId = courseId)
+            courseDao.insertCourseEnrollmentDetails(response.mapToRoomEntity())
+            courseEnrollmentDetails[courseId] = response.mapToDomain()
+
+        } else {
+            val cachedCourseEnrollmentDetails = courseDao.getCourseEnrollmentDetails(courseId)
+            if (cachedCourseEnrollmentDetails != null) {
+                courseEnrollmentDetails[courseId] = cachedCourseEnrollmentDetails.mapToDomain()
+            } else {
+                throw NoCachedDataException()
+            }
+        }
+
+        return courseEnrollmentDetails[courseId]!!
     }
 
     suspend fun getCourseStatus(courseId: String): CourseComponentStatus {

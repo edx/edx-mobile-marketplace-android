@@ -154,7 +154,6 @@ data class CoursewareAccessDb(
             userFragment
         )
     }
-
 }
 
 data class CertificateDb(

@@ -3,6 +3,7 @@ package org.openedx.app.room
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import org.openedx.core.data.model.room.CourseEnrollmentDetailsEntity
 import org.openedx.core.data.model.room.CourseStructureEntity
 import org.openedx.core.data.model.room.discovery.EnrolledCourseEntity
 import org.openedx.core.module.db.DownloadDao
@@ -22,7 +23,8 @@ const val DATABASE_NAME = "OpenEdX_db"
         CourseEntity::class,
         EnrolledCourseEntity::class,
         CourseStructureEntity::class,
-        DownloadModelEntity::class
+        DownloadModelEntity::class,
+        CourseEnrollmentDetailsEntity::class,
     ],
     version = DATABASE_VERSION,
     exportSchema = false

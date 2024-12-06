@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import org.openedx.core.data.model.room.CourseEnrollmentDetailsEntity
 import org.openedx.core.data.model.room.CourseStructureEntity
 import org.openedx.core.data.model.room.discovery.EnrolledCourseEntity
 
@@ -12,6 +13,12 @@ interface CourseDao {
 
     @Query("SELECT * FROM course_enrolled_table WHERE id=:id")
     suspend fun getEnrolledCourseById(id: String): EnrolledCourseEntity?
+
+    @Query("SELECT * FROM course_enrollment_details_table WHERE id=:id")
+    suspend fun getCourseEnrollmentDetails(id: String): CourseEnrollmentDetailsEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCourseEnrollmentDetails(vararg courseEnrollmentDetails: CourseEnrollmentDetailsEntity)
 
     @Query("SELECT * FROM course_structure_table WHERE id=:id")
     suspend fun getCourseStructureById(id: String): CourseStructureEntity?

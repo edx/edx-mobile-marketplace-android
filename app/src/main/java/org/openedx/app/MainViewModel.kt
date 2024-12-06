@@ -1,5 +1,8 @@
 package org.openedx.app
 
+import android.annotation.SuppressLint
+import android.content.Context
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -16,7 +19,9 @@ import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.NavigationToDiscovery
 import org.openedx.discovery.presentation.DiscoveryNavigator
 
+@SuppressLint("StaticFieldLeak")
 class MainViewModel(
+    private val context: Context,
     private val config: Config,
     private val notifier: DiscoveryNotifier,
     private val analytics: AppAnalytics,
@@ -43,6 +48,7 @@ class MainViewModel(
             }
             .distinctUntilChanged()
             .launchIn(viewModelScope)
+        logSettingPermissionStatusEvent()
     }
 
     fun enableBottomBar(enable: Boolean) {
@@ -52,7 +58,7 @@ class MainViewModel(
     fun logLearnTabClickedEvent() {
         logScreenEvent(AppAnalyticsEvent.LEARN)
     }
-    
+
     fun logDiscoveryTabClickedEvent() {
         logScreenEvent(AppAnalyticsEvent.DISCOVER)
     }
@@ -68,5 +74,19 @@ class MainViewModel(
                 put(AppAnalyticsKey.NAME.key, event.biValue)
             }
         )
+    }
+
+    private fun logSettingPermissionStatusEvent() {
+        val event = AppAnalyticsEvent.NOTIFICATION_PERMISSION
+        val permissionStatus =
+            if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                PermissionStatus.AUTHORIZED
+            } else {
+                PermissionStatus.DENIED
+            }
+        analytics.logEvent(event.eventName, buildMap {
+            put(AppAnalyticsKey.NAME.key, event.biValue)
+            put(AppAnalyticsKey.STATUS.key, permissionStatus.status)
+        })
     }
 }

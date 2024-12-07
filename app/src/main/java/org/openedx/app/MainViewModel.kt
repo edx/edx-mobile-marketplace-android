@@ -48,7 +48,7 @@ class MainViewModel(
             }
             .distinctUntilChanged()
             .launchIn(viewModelScope)
-        logSettingPermissionStatusEvent()
+        logNotificationPermissionStatusEvent()
     }
 
     fun enableBottomBar(enable: Boolean) {
@@ -76,7 +76,7 @@ class MainViewModel(
         )
     }
 
-    private fun logSettingPermissionStatusEvent() {
+    private fun logNotificationPermissionStatusEvent() {
         val event = AppAnalyticsEvent.NOTIFICATION_PERMISSION
         val permissionStatus =
             if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {

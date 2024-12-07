@@ -38,5 +38,4 @@ enum class AppAnalyticsKey(val key: String) {
 enum class PermissionStatus(val status: String) {
     DENIED("denied"),
     AUTHORIZED("authorized"),
-    NOT_DETERMINED("not_determined"),
 }

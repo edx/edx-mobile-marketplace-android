@@ -24,6 +24,8 @@ class OAuthHelper(
         }
     }
 
+    internal fun isGoogleAuthEnabled() = googleAuthHelper.isGoogleAuthEnabled()
+
     fun clear() {
         facebookAuthHelper.clear()
     }

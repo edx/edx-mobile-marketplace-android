@@ -6,6 +6,7 @@ import com.braze.configuration.BrazeConfig
 import com.braze.ui.BrazeDeeplinkHandler
 import com.google.firebase.FirebaseApp
 import io.branch.referral.Branch
+import org.edx.mobile.segment.SegmentAnalytics
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -67,6 +68,19 @@ class OpenEdXApp : Application() {
     private fun initPlugins() {
         if (config.getFirebaseConfig().enabled) {
             pluginManager.addPlugin(OEXFirebaseAnalytics(context = this))
+        }
+        val segmentConfig = config.getSegmentConfig()
+        if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank()) {
+            pluginManager.addPlugin(
+                SegmentAnalytics(
+                    context = this,
+                    segmentWriteKey = segmentConfig.segmentWriteKey,
+                    logsEnabled = BuildConfig.DEBUG,
+                    firebaseDestinationEnabled = config.getFirebaseConfig()
+                        .isSegmentAnalyticsSource(),
+                    brazeDestinationEnabled = config.getBrazeConfig().isEnabled
+                )
+            )
         }
     }
 }

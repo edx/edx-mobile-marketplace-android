@@ -4,7 +4,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import org.openedx.app.data.api.NotificationsApi
 import org.openedx.app.data.networking.AppUpgradeInterceptor
 import org.openedx.app.data.networking.HandleErrorInterceptor
 import org.openedx.app.data.networking.HeadersInterceptor
@@ -17,6 +16,7 @@ import org.openedx.core.data.api.CourseApi
 import org.openedx.core.data.api.iap.InAppPurchasesApi
 import org.openedx.discovery.data.api.DiscoveryApi
 import org.openedx.discussion.data.api.DiscussionApi
+import org.openedx.notifications.data.api.NotificationsApi
 import org.openedx.profile.data.api.ProfileApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

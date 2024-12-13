@@ -103,6 +103,10 @@ class Config(context: Context) {
         return getObjectOrNewInstance(DASHBOARD, DashboardConfig::class.java)
     }
 
+    fun isPushNotificationsEnabled(): Boolean {
+        return getBoolean(PUSH_NOTIFICATIONS_ENABLED, false)
+    }
+
     fun getBranchConfig(): BranchConfig {
         return getObjectOrNewInstance(BRANCH, BranchConfig::class.java)
     }
@@ -176,6 +180,7 @@ class Config(context: Context) {
         private const val DISCOVERY = "DISCOVERY"
         private const val PROGRAM = "PROGRAM"
         private const val DASHBOARD = "DASHBOARD"
+        private const val PUSH_NOTIFICATIONS_ENABLED = "PUSH_NOTIFICATIONS_ENABLED"
         private const val BRANCH = "BRANCH"
         private const val UI_COMPONENTS = "UI_COMPONENTS"
         private const val PLATFORM_NAME = "PLATFORM_NAME"

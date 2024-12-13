@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -29,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -74,10 +76,13 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
                     }, false
                 )
                 Header(
-                    selectedLearnType = uiState.learnType,
+                    uiState = uiState,
                     onUpdateLearnType = { learnType ->
                         viewModel.updateLearnType(learnType)
                     },
+                    onNotificationBadgeClick = {
+                        viewModel.onNotificationBadgeClick()
+                    }
                 )
             }
         }
@@ -111,8 +116,9 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
 
 @Composable
 private fun Header(
-    selectedLearnType: LearnType,
-    onUpdateLearnType: (LearnType) -> Unit
+    uiState: LearnUIState,
+    onUpdateLearnType: (LearnType) -> Unit,
+    onNotificationBadgeClick: () -> Unit,
 ) {
     val viewModel: LearnViewModel = koinViewModel()
     val windowSize = rememberWindowSize()
@@ -135,13 +141,15 @@ private fun Header(
     ) {
         Title(
             label = stringResource(id = R.string.dashboard_learn),
+            hasUnreadNotifications = uiState.hasUnreadNotifications,
+            onNotificationBadgeClick = onNotificationBadgeClick
         )
         if (viewModel.isProgramTypeWebView) {
             LearnDropdownMenu(
                 modifier = Modifier
                     .align(Alignment.Start)
                     .padding(horizontal = 16.dp),
-                selectedLearnType = selectedLearnType,
+                selectedLearnType = uiState.learnType,
                 onUpdateLearnType = onUpdateLearnType
             )
         }
@@ -152,6 +160,8 @@ private fun Header(
 private fun Title(
     modifier: Modifier = Modifier,
     label: String,
+    hasUnreadNotifications: Boolean = false,
+    onNotificationBadgeClick: () -> Unit,
 ) {
     Box(
         modifier = modifier.fillMaxWidth()
@@ -164,6 +174,25 @@ private fun Title(
             color = MaterialTheme.appColors.textDark,
             style = MaterialTheme.appTypography.headlineBold
         )
+        IconButton(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp),
+            onClick = {
+                onNotificationBadgeClick()
+            }
+        ) {
+            val notificationIcon = if (hasUnreadNotifications) {
+                R.drawable.dashboard_ic_notification_bubble_badge
+            } else {
+                R.drawable.dashboard_ic_notification_badge
+            }
+            Icon(
+                painter = painterResource(id = notificationIcon),
+                tint = Color.Unspecified,
+                contentDescription = stringResource(id = R.string.dashboard_notification_badge)
+            )
+        }
     }
 }
 
@@ -249,7 +278,7 @@ private fun LearnDropdownMenu(
 @Composable
 private fun HeaderPreview() {
     OpenEdXTheme {
-        Title(label = stringResource(id = R.string.dashboard_learn))
+        Title(label = stringResource(id = R.string.dashboard_learn), onNotificationBadgeClick = {})
     }
 }
 

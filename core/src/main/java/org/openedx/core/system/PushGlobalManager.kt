@@ -1,3 +1,5 @@
 package org.openedx.core.system
 
-interface PushGlobalManager
+interface PushGlobalManager {
+    suspend fun getUnreadNotificationsCount(): Int
+}

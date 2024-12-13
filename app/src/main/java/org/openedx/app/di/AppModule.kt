@@ -7,7 +7,6 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
-import org.openedx.notifications.PushManager
 import org.koin.android.ext.koin.androidApplication
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -67,6 +66,7 @@ import org.openedx.discovery.presentation.DiscoveryRouter
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.system.notifier.DiscussionNotifier
+import org.openedx.notifications.PushManager
 import org.openedx.profile.data.storage.ProfilePreferences
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileRouter
@@ -206,6 +206,7 @@ val appModule = module {
     single<WhatsNewAnalytics> { get<AnalyticsManager>() }
     single<IAPAnalytics> { get<AnalyticsManager>() }
 
+    single { PushManager(get()) }
     single<PushGlobalManager> { get<PushManager>() }
 
     factory { AgreementProvider(get(), get()) }

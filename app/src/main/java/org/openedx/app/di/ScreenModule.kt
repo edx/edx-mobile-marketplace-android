@@ -58,6 +58,8 @@ import org.openedx.discussion.presentation.threads.DiscussionAddThreadViewModel
 import org.openedx.discussion.presentation.threads.DiscussionThreadsViewModel
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
 import org.openedx.learn.presentation.LearnViewModel
+import org.openedx.notifications.data.repository.NotificationsRepository
+import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.profile.data.repository.ProfileRepository
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Account
@@ -173,7 +175,7 @@ val screenModule = module {
     }
     viewModel { AllEnrolledCoursesViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { (openTab: String) ->
-        LearnViewModel(openTab, get(), get(), get())
+        LearnViewModel(openTab, get(), get(), get(), get())
     }
 
     factory { DiscoveryRepository(get(), get(), get()) }
@@ -477,6 +479,9 @@ val screenModule = module {
             get(),
         )
     }
+
+    single { NotificationsRepository(get()) }
+    factory { NotificationsInteractor(get()) }
 
     single { IAPRepository(get()) }
     factory { IAPInteractor(get(), get(), get(), get(), get()) }

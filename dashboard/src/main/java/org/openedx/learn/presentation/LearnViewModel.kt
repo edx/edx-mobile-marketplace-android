@@ -1,6 +1,7 @@
 package org.openedx.learn.presentation
 
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -9,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.openedx.DashboardNavigator
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.dashboard.presentation.DashboardAnalytics
 import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
 import org.openedx.dashboard.presentation.DashboardAnalyticsKey
@@ -20,6 +22,7 @@ class LearnViewModel(
     private val config: Config,
     private val dashboardRouter: DashboardRouter,
     private val analytics: DashboardAnalytics,
+    private val pushManager: PushGlobalManager
 ) : BaseViewModel() {
     private val _uiState = MutableStateFlow(
         LearnUIState(
@@ -51,6 +54,20 @@ class LearnViewModel(
                 }
             }
         }
+        if (config.isPushNotificationsEnabled()) {
+            checkNotificationCount()
+        }
+    }
+
+    private fun checkNotificationCount() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val unreadNotifications = pushManager.getUnreadNotificationsCount()
+            _uiState.update { it.copy(hasUnreadNotifications = unreadNotifications > 0) }
+        }
+    }
+
+    fun onNotificationBadgeClick() {
+        _uiState.update { it.copy(hasUnreadNotifications = false) }
     }
 
     fun updateLearnType(learnType: LearnType) {

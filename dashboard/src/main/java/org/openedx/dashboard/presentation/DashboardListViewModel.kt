@@ -34,12 +34,14 @@ import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPEventLogger
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
+import org.openedx.core.system.PushNotifier
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.IAPNotifier
+import org.openedx.core.system.notifier.PushEvent
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
@@ -54,11 +56,12 @@ class DashboardListViewModel(
     private val resourceManager: ResourceManager,
     private val discoveryNotifier: DiscoveryNotifier,
     private val iapNotifier: IAPNotifier,
+    private val pushNotifier: PushNotifier,
     private val analytics: DashboardAnalytics,
     private val appNotifier: AppNotifier,
     private val preferencesManager: CorePreferences,
-    private val iapAnalytics: IAPAnalytics,
     private val iapInteractor: IAPInteractor,
+    iapAnalytics: IAPAnalytics,
 ) : BaseViewModel() {
 
     private val coursesList = mutableListOf<EnrolledCourse>()
@@ -160,6 +163,7 @@ class DashboardListViewModel(
                 if (isIAPFlow) {
                     iapNotifier.send(CourseDataUpdated())
                 }
+                pushNotifier.send(PushEvent.RefreshPushEvent)
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =

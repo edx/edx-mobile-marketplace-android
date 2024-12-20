@@ -11,6 +11,8 @@ import org.openedx.DashboardNavigator
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.system.PushGlobalManager
+import org.openedx.core.system.PushNotifier
+import org.openedx.core.system.notifier.PushEvent
 import org.openedx.dashboard.presentation.DashboardAnalytics
 import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
 import org.openedx.dashboard.presentation.DashboardAnalyticsKey
@@ -22,7 +24,8 @@ class LearnViewModel(
     private val config: Config,
     private val dashboardRouter: DashboardRouter,
     private val analytics: DashboardAnalytics,
-    private val pushManager: PushGlobalManager
+    private val pushManager: PushGlobalManager,
+    private val pushNotifier: PushNotifier
 ) : BaseViewModel() {
     private val _uiState = MutableStateFlow(
         LearnUIState(
@@ -46,6 +49,12 @@ class LearnViewModel(
 
     init {
         viewModelScope.launch {
+            pushNotifier.notifier.collect { event ->
+                if (event is PushEvent.RefreshPushEvent) {
+                    checkNotificationCount()
+                }
+            }
+
             _uiState.collect { uiState ->
                 if (uiState.learnType == LearnType.COURSES) {
                     logMyCoursesTabClickedEvent()
@@ -54,15 +63,15 @@ class LearnViewModel(
                 }
             }
         }
-        if (config.isPushNotificationsEnabled()) {
-            checkNotificationCount()
-        }
+        checkNotificationCount()
     }
 
     private fun checkNotificationCount() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val unreadNotifications = pushManager.getUnreadNotificationsCount()
-            _uiState.update { it.copy(hasUnreadNotifications = unreadNotifications > 0) }
+        if (config.isPushNotificationsEnabled()) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val unreadNotifications = pushManager.getUnreadNotificationsCount()
+                _uiState.update { it.copy(hasUnreadNotifications = unreadNotifications > 0) }
+            }
         }
     }
 

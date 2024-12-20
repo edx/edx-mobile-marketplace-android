@@ -36,12 +36,14 @@ import org.openedx.core.domain.model.DashboardCourseList
 import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.presentation.IAPAnalytics
+import org.openedx.core.system.PushNotifier
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.IAPNotifier
+import org.openedx.core.system.notifier.PushEvent
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 import java.net.UnknownHostException
@@ -61,6 +63,7 @@ class DashboardViewModelTest {
     private val networkConnection = mockk<NetworkConnection>()
     private val discoveryNotifier = mockk<DiscoveryNotifier>()
     private val iapNotifier = mockk<IAPNotifier>()
+    private val pushNotifier = mockk<PushNotifier>()
     private val analytics = mockk<DashboardAnalytics>()
     private val appNotifier = mockk<AppNotifier>()
     private val iapAnalytics = mockk<IAPAnalytics>()
@@ -112,11 +115,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
         coEvery { interactor.getEnrolledCourses(any()) } throws UnknownHostException()
         advanceUntilIdle()
@@ -143,11 +147,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
 
         coEvery { interactor.getEnrolledCourses(any()) } throws Exception()
@@ -175,11 +180,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
 
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
@@ -207,11 +213,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
 
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList.copy(
@@ -248,11 +255,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
 
         advanceUntilIdle()
@@ -278,11 +286,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
 
         coEvery { interactor.getEnrolledCourses(any()) } throws UnknownHostException()
@@ -312,11 +321,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
 
         coEvery { interactor.getEnrolledCourses(any()) } throws Exception()
@@ -340,6 +350,7 @@ class DashboardViewModelTest {
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
         coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
+        coEvery { pushNotifier.send(any<PushEvent.RefreshPushEvent>()) } returns Unit
 
         val viewModel = DashboardListViewModel(
             context,
@@ -349,11 +360,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
 
         viewModel.updateCourses()
@@ -383,6 +395,7 @@ class DashboardViewModelTest {
         )
         coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
+        coEvery { pushNotifier.send(any<PushEvent.RefreshPushEvent>()) } returns Unit
 
         val viewModel = DashboardListViewModel(
             context,
@@ -392,11 +405,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
 
         viewModel.updateCourses()
@@ -425,11 +439,12 @@ class DashboardViewModelTest {
             resourceManager,
             discoveryNotifier,
             iapNotifier,
+            pushNotifier,
             analytics,
             appNotifier,
             corePreferences,
+            iapInteractor,
             iapAnalytics,
-            iapInteractor
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()

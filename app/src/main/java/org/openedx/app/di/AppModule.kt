@@ -7,6 +7,7 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
+import org.openedx.notifications.PushManager
 import org.koin.android.ext.koin.androidApplication
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -46,6 +47,7 @@ import org.openedx.core.presentation.global.WhatsNewGlobalManager
 import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRouter
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.CalendarManager
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
@@ -203,6 +205,8 @@ val appModule = module {
     single<ProfileAnalytics> { get<AnalyticsManager>() }
     single<WhatsNewAnalytics> { get<AnalyticsManager>() }
     single<IAPAnalytics> { get<AnalyticsManager>() }
+
+    single<PushGlobalManager> { get<PushManager>() }
 
     factory { AgreementProvider(get(), get()) }
     factory { FacebookAuthHelper() }

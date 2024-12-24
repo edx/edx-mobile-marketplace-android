@@ -40,6 +40,8 @@ import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.NavigationToDiscovery
+import org.openedx.core.system.notifier.PushEvent
+import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.utils.FileUtil
@@ -57,9 +59,10 @@ class DashboardGalleryViewModel(
     private val fileUtil: FileUtil,
     private val dashboardRouter: DashboardRouter,
     private val iapNotifier: IAPNotifier,
+    private val pushNotifier: PushNotifier,
     private val iapInteractor: IAPInteractor,
-    private val iapAnalytics: IAPAnalytics,
     private val windowSize: WindowSize,
+    iapAnalytics: IAPAnalytics,
 ) : BaseViewModel() {
 
     val apiHostUrl get() = config.getApiHostURL()
@@ -145,6 +148,10 @@ class DashboardGalleryViewModel(
         }
         _updating.value = isUpdating
         getCourses(isIAPFlow = isIAPFlow)
+    }
+
+    fun refreshPushBadgeCount() {
+        viewModelScope.launch { pushNotifier.send(PushEvent.RefreshBadgeCount) }
     }
 
     fun navigateToDiscovery() {

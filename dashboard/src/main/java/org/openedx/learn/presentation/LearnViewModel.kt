@@ -1,6 +1,7 @@
 package org.openedx.learn.presentation
 
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -9,6 +10,9 @@ import kotlinx.coroutines.launch
 import org.openedx.DashboardNavigator
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
+import org.openedx.core.system.PushGlobalManager
+import org.openedx.core.system.notifier.PushEvent
+import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.dashboard.presentation.DashboardAnalytics
 import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
 import org.openedx.dashboard.presentation.DashboardAnalyticsKey
@@ -20,6 +24,8 @@ class LearnViewModel(
     private val config: Config,
     private val dashboardRouter: DashboardRouter,
     private val analytics: DashboardAnalytics,
+    private val pushManager: PushGlobalManager,
+    private val pushNotifier: PushNotifier
 ) : BaseViewModel() {
     private val _uiState = MutableStateFlow(
         LearnUIState(
@@ -27,7 +33,8 @@ class LearnViewModel(
                 LearnType.PROGRAMS
             } else {
                 LearnType.COURSES
-            }
+            },
+            showNotificationIcon = config.isPushNotificationsEnabled()
         )
     )
 
@@ -43,20 +50,43 @@ class LearnViewModel(
 
     init {
         viewModelScope.launch {
-            _uiState.collect { uiState ->
-                if (uiState.learnType == LearnType.COURSES) {
-                    logMyCoursesTabClickedEvent()
-                } else {
-                    logMyProgramsTabClickedEvent()
+            launch {
+                _uiState.collect { uiState ->
+                    if (uiState.learnType == LearnType.COURSES) {
+                        logMyCoursesTabClickedEvent()
+                    } else {
+                        logMyProgramsTabClickedEvent()
+                    }
+                }
+            }
+            launch {
+                pushNotifier.notifier.collect { event ->
+                    if (event is PushEvent.RefreshBadgeCount) {
+                        checkNotificationCount()
+                    }
                 }
             }
         }
+        checkNotificationCount()
     }
 
     fun updateLearnType(learnType: LearnType) {
         viewModelScope.launch {
             _uiState.update { it.copy(learnType = learnType) }
         }
+    }
+
+    private fun checkNotificationCount() {
+        if (config.isPushNotificationsEnabled()) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val unreadNotifications = pushManager.getUnreadNotificationsCount()
+                _uiState.update { it.copy(hasUnreadNotifications = unreadNotifications > 0) }
+            }
+        }
+    }
+
+    fun onNotificationBadgeClick() {
+        _uiState.update { it.copy(hasUnreadNotifications = false) }
     }
 
     private fun logMyCoursesTabClickedEvent() {

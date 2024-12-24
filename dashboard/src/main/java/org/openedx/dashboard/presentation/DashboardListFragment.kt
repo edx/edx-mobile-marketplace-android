@@ -157,6 +157,7 @@ class DashboardListFragment : Fragment() {
                     },
                     onSwipeRefresh = {
                         viewModel.updateCourses()
+                        viewModel.refreshPushBadgeCount()
                     },
                     paginationCallback = {
                         viewModel.fetchMore()

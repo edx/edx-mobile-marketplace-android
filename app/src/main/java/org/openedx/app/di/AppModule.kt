@@ -7,7 +7,6 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
-import org.openedx.notifications.PushManager
 import org.koin.android.ext.koin.androidApplication
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -48,6 +47,7 @@ import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRouter
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.CalendarManager
 import org.openedx.core.system.PushGlobalManager
+import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
@@ -67,6 +67,7 @@ import org.openedx.discovery.presentation.DiscoveryRouter
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.system.notifier.DiscussionNotifier
+import org.openedx.notifications.PushManager
 import org.openedx.profile.data.storage.ProfilePreferences
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileRouter
@@ -115,6 +116,7 @@ val appModule = module {
     single { DownloadNotifier() }
     single { VideoNotifier() }
     single { DiscoveryNotifier() }
+    single { PushNotifier() }
     single { IAPNotifier() }
 
     single { AppRouter() }
@@ -206,6 +208,7 @@ val appModule = module {
     single<WhatsNewAnalytics> { get<AnalyticsManager>() }
     single<IAPAnalytics> { get<AnalyticsManager>() }
 
+    single { PushManager(get()) }
     single<PushGlobalManager> { get<PushManager>() }
 
     factory { AgreementProvider(get(), get()) }

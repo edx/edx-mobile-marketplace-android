@@ -139,6 +139,7 @@ fun DashboardGalleryView(
             when (action) {
                 DashboardGalleryScreenAction.SwipeRefresh -> {
                     viewModel.updateCourses()
+                    viewModel.refreshPushBadgeCount()
                 }
 
                 DashboardGalleryScreenAction.ViewAll -> {

@@ -33,7 +33,6 @@ import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPEventLogger
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
-import org.openedx.core.system.PushNotifier
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
@@ -42,6 +41,7 @@ import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.NavigationToDiscovery
 import org.openedx.core.system.notifier.PushEvent
+import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.utils.FileUtil
@@ -148,7 +148,10 @@ class DashboardGalleryViewModel(
         }
         _updating.value = isUpdating
         getCourses(isIAPFlow = isIAPFlow)
-        viewModelScope.launch { pushNotifier.send(PushEvent.RefreshPushEvent) }
+    }
+
+    fun refreshPushBadgeCount() {
+        viewModelScope.launch { pushNotifier.send(PushEvent.RefreshBadgeCount) }
     }
 
     fun navigateToDiscovery() {

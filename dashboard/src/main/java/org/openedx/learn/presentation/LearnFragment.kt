@@ -141,6 +141,7 @@ private fun Header(
     ) {
         Title(
             label = stringResource(id = R.string.dashboard_learn),
+            showNotificationIcon = uiState.showNotificationIcon,
             hasUnreadNotifications = uiState.hasUnreadNotifications,
             onNotificationBadgeClick = onNotificationBadgeClick
         )
@@ -160,6 +161,7 @@ private fun Header(
 private fun Title(
     modifier: Modifier = Modifier,
     label: String,
+    showNotificationIcon: Boolean = false,
     hasUnreadNotifications: Boolean = false,
     onNotificationBadgeClick: () -> Unit,
 ) {
@@ -174,24 +176,26 @@ private fun Title(
             color = MaterialTheme.appColors.textDark,
             style = MaterialTheme.appTypography.headlineBold
         )
-        IconButton(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 12.dp),
-            onClick = {
-                onNotificationBadgeClick()
+        if (showNotificationIcon) {
+            IconButton(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 12.dp),
+                onClick = {
+                    onNotificationBadgeClick()
+                }
+            ) {
+                val notificationIcon = if (hasUnreadNotifications) {
+                    R.drawable.dashboard_ic_notification_bubble_badge
+                } else {
+                    R.drawable.dashboard_ic_notification_badge
+                }
+                Icon(
+                    painter = painterResource(id = notificationIcon),
+                    tint = Color.Unspecified,
+                    contentDescription = stringResource(id = R.string.dashboard_notification_badge)
+                )
             }
-        ) {
-            val notificationIcon = if (hasUnreadNotifications) {
-                R.drawable.dashboard_ic_notification_bubble_badge
-            } else {
-                R.drawable.dashboard_ic_notification_badge
-            }
-            Icon(
-                painter = painterResource(id = notificationIcon),
-                tint = Color.Unspecified,
-                contentDescription = stringResource(id = R.string.dashboard_notification_badge)
-            )
         }
     }
 }
@@ -278,7 +282,9 @@ private fun LearnDropdownMenu(
 @Composable
 private fun HeaderPreview() {
     OpenEdXTheme {
-        Title(label = stringResource(id = R.string.dashboard_learn), onNotificationBadgeClick = {})
+        Title(label = stringResource(id = R.string.dashboard_learn),
+            showNotificationIcon = true,
+            onNotificationBadgeClick = {})
     }
 }
 

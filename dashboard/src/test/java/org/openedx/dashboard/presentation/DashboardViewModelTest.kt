@@ -36,7 +36,7 @@ import org.openedx.core.domain.model.DashboardCourseList
 import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.presentation.IAPAnalytics
-import org.openedx.core.system.PushNotifier
+import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
@@ -350,7 +350,7 @@ class DashboardViewModelTest {
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
         coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
-        coEvery { pushNotifier.send(any<PushEvent.RefreshPushEvent>()) } returns Unit
+        coEvery { pushNotifier.send(any<PushEvent.RefreshBadgeCount>()) } returns Unit
 
         val viewModel = DashboardListViewModel(
             context,
@@ -395,7 +395,7 @@ class DashboardViewModelTest {
         )
         coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
-        coEvery { pushNotifier.send(any<PushEvent.RefreshPushEvent>()) } returns Unit
+        coEvery { pushNotifier.send(any<PushEvent.RefreshBadgeCount>()) } returns Unit
 
         val viewModel = DashboardListViewModel(
             context,

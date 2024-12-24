@@ -47,7 +47,7 @@ import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRouter
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.CalendarManager
 import org.openedx.core.system.PushGlobalManager
-import org.openedx.core.system.PushNotifier
+import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier

@@ -60,6 +60,7 @@ import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
 import org.openedx.learn.presentation.LearnViewModel
 import org.openedx.notifications.data.repository.NotificationsRepository
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
+import org.openedx.notifications.presentation.inbox.NotificationsInboxViewModel
 import org.openedx.profile.data.repository.ProfileRepository
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Account
@@ -484,6 +485,8 @@ val screenModule = module {
 
     single { NotificationsRepository(get()) }
     factory { NotificationsInteractor(get()) }
+
+    viewModel { NotificationsInboxViewModel(get()) }
 
     single { IAPRepository(get()) }
     factory { IAPInteractor(get(), get(), get(), get(), get()) }

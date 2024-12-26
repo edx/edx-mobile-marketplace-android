@@ -1,3 +1,4 @@
 <resources>
-
+    <string name="notifications_notifications">Notifications</string>
+    <string name="notifications_accessibility_settings">Settings</string>
 </resources>

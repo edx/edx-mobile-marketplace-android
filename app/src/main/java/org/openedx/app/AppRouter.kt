@@ -42,6 +42,7 @@ import org.openedx.discussion.presentation.responses.DiscussionResponsesFragment
 import org.openedx.discussion.presentation.search.DiscussionSearchThreadFragment
 import org.openedx.discussion.presentation.threads.DiscussionAddThreadFragment
 import org.openedx.discussion.presentation.threads.DiscussionThreadsFragment
+import org.openedx.notifications.presentation.inbox.NotificationsInboxFragment
 import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.profile.presentation.anothersaccount.AnothersProfileFragment
@@ -147,6 +148,10 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
 
     override fun getProgramFragment(): Fragment {
         return ProgramFragment.newInstance(isNestedFragment = true)
+    }
+
+    override fun navigateToNotificationsInbox(fm: FragmentManager) {
+        replaceFragmentWithBackStack(fm, NotificationsInboxFragment())
     }
 
     override fun navigateToCourseInfo(

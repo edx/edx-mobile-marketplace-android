@@ -81,7 +81,7 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
                         viewModel.updateLearnType(learnType)
                     },
                     onNotificationBadgeClick = {
-                        viewModel.onNotificationBadgeClick()
+                        viewModel.onNotificationBadgeClick(requireActivity().supportFragmentManager)
                     }
                 )
             }

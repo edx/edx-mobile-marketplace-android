@@ -1,8 +1,10 @@
 package org.openedx.notifications.domain.model
 
+import java.util.Date
+
 data class InboxNotifications(
     val pagination: Pagination,
-    val notifications: List<NotificationItem>
+    val notifications: Map<InboxSection, List<NotificationItem>>,
 )
 
 data class Pagination(
@@ -11,7 +13,7 @@ data class Pagination(
     val count: Int,
     val numPages: Int,
     val currentPage: Int,
-    val start: Int
+    val start: Int,
 )
 
 data class NotificationItem(
@@ -21,9 +23,9 @@ data class NotificationItem(
     val contentContext: NotificationContent,
     val content: String,
     val contentUrl: String,
-    val lastRead: String,
-    val lastSeen: String,
-    val created: String
+    val lastRead: Date?,
+    val lastSeen: Date?,
+    val created: Date?,
 )
 
 data class NotificationContent(
@@ -36,5 +38,5 @@ data class NotificationContent(
     val postTitle: String,
     val courseName: String,
     val replierName: String,
-    val emailContent: String
+    val emailContent: String,
 )

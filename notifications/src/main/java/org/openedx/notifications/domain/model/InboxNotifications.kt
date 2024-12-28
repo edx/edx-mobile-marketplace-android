@@ -1,5 +1,6 @@
 package org.openedx.notifications.domain.model
 
+import androidx.compose.ui.text.AnnotatedString
 import java.util.Date
 
 data class InboxNotifications(
@@ -21,7 +22,7 @@ data class NotificationItem(
     val appName: String,
     val notificationType: String,
     val contentContext: NotificationContent,
-    val content: String,
+    val content: AnnotatedString,
     val contentUrl: String,
     val lastRead: Date?,
     val lastSeen: Date?,

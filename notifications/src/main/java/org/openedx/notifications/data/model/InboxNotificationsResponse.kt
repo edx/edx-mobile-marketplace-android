@@ -5,6 +5,7 @@ import org.openedx.core.utils.TimeUtils
 import org.openedx.notifications.domain.model.InboxNotifications
 import org.openedx.notifications.domain.model.InboxSection
 import org.openedx.notifications.domain.model.Pagination
+import org.openedx.notifications.utils.TextUtils
 import java.util.Date
 import org.openedx.notifications.domain.model.NotificationContent as DomainNotificationContent
 import org.openedx.notifications.domain.model.NotificationItem as DomainNotificationItem
@@ -74,7 +75,7 @@ data class NotificationItem(
         appName = appName,
         notificationType = notificationType,
         contentContext = contentContext.mapToDomain(),
-        content = content,
+        content = TextUtils.htmlContentToAnnotatedString(content),
         contentUrl = contentUrl,
         lastRead = TimeUtils.iso8601ToDate(lastRead ?: ""),
         lastSeen = TimeUtils.iso8601ToDate(lastSeen ?: ""),

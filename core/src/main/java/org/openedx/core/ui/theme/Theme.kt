@@ -101,6 +101,8 @@ private val DarkColorPalette = AppColors(
 
     primaryCardCautionBackground = dark_primary_card_caution_background,
     primaryCardInfoBackground = dark_primary_card_info_background,
+
+    notificationTimestamp = dark_notification_timestamp,
 )
 
 private val LightColorPalette = AppColors(
@@ -194,6 +196,8 @@ private val LightColorPalette = AppColors(
 
     primaryCardCautionBackground = light_primary_card_caution_background,
     primaryCardInfoBackground = light_primary_card_info_background,
+
+    notificationTimestamp = light_notification_timestamp,
 )
 
 val MaterialTheme.appColors: AppColors

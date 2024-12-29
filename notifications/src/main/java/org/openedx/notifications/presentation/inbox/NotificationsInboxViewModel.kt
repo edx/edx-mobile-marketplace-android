@@ -68,10 +68,20 @@ class NotificationsInboxViewModel(
                     InboxUIState.Empty
                 }
             } catch (e: Exception) {
-                _uiState.value = InboxUIState.Error
+                if (nextPage == 1) {
+                    _uiState.value = InboxUIState.Error
+                } else {
+                    _canLoadMore.value = true
+                }
             } finally {
                 isLoading = false
             }
         }
+    }
+
+    fun onReloadNotifications() {
+        _canLoadMore.value = true
+        nextPage = 1
+        internalLoadNotifications()
     }
 }

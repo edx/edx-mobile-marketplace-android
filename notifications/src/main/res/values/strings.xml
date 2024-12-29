@@ -5,6 +5,8 @@
     <string name="notifications_this_week">This Week</string>
     <string name="notifications_older">Older</string>
     <string name="notification_now">Now</string>
+    <string name="notifications_no_notifications_yet">No notifications yet</string>
+    <string name="notifications_no_notifications_yet_description">When you receive notifications they’ll show up here</string>
     <plurals name="notifications_date_format_seconds_ago">
         <item quantity="one">%1$s second ago</item>
         <item quantity="other">%1$s seconds ago</item>

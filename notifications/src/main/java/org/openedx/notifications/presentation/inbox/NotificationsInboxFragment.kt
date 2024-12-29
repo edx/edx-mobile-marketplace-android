@@ -1,6 +1,5 @@
 package org.openedx.notifications.presentation.inbox
 
-import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -31,6 +30,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.SignalWifiStatusbarConnectedNoInternet4
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -49,13 +50,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.extension.isNull
 import org.openedx.core.ui.BackBtn
+import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -72,6 +76,7 @@ import org.openedx.notifications.domain.model.NotificationContent
 import org.openedx.notifications.domain.model.NotificationItem
 import org.openedx.notifications.utils.TextUtils
 import java.util.Date
+import org.openedx.core.R as coreR
 
 class NotificationsInboxFragment : Fragment() {
 
@@ -99,6 +104,9 @@ class NotificationsInboxFragment : Fragment() {
                     onSettingsClick = {
 
                     },
+                    onReloadNotifications = {
+                        viewModel.onReloadNotifications()
+                    },
                     paginationCallBack = {
                         viewModel.fetchMore()
                     },
@@ -115,6 +123,7 @@ private fun InboxView(
     canLoadMore: Boolean,
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onReloadNotifications: () -> Unit,
     paginationCallBack: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -210,13 +219,26 @@ private fun InboxView(
                         }
                     }
 
-                    else -> {
+                    is InboxUIState.Loading -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center,
                         ) {
                             CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                         }
+                    }
+
+                    is InboxUIState.Empty -> {
+                        InboxStateView(
+                            uiState = InboxUIState.Empty,
+                        )
+                    }
+
+                    is InboxUIState.Error -> {
+                        InboxStateView(
+                            uiState = InboxUIState.Error,
+                            onReloadNotifications = onReloadNotifications
+                        )
                     }
                 }
             }
@@ -332,28 +354,87 @@ private fun NotificationItemView(
     }
 }
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showBackground = true)
 @Composable
-private fun InboxPreview() {
+fun InboxStateView(
+    modifier: Modifier = Modifier,
+    uiState: InboxUIState,
+    onReloadNotifications: () -> Unit = { },
+) {
+    val iconResId = if (uiState is InboxUIState.Empty) Icons.Outlined.Notifications
+    else Icons.Outlined.SignalWifiStatusbarConnectedNoInternet4
+
+    val titleResId = if (uiState is InboxUIState.Empty) R.string.notifications_no_notifications_yet
+    else coreR.string.core_no_internet_connection
+
+    val descriptionResId =
+        if (uiState is InboxUIState.Empty) R.string.notifications_no_notifications_yet_description
+        else coreR.string.core_no_internet_connection_description
+
+    Column(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .size(62.dp)
+                .background(MaterialTheme.appColors.primaryCardCautionBackground)
+                .padding(4.dp),
+        ) {
+            Icon(
+                modifier = Modifier
+                    .size(42.dp)
+                    .align(Alignment.Center),
+                imageVector = iconResId,
+                contentDescription = null,
+                tint = MaterialTheme.appColors.onSurface
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = stringResource(titleResId),
+            style = MaterialTheme.appTypography.titleLarge,
+            color = MaterialTheme.appColors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = stringResource(descriptionResId),
+            style = MaterialTheme.appTypography.bodyLarge,
+            color = MaterialTheme.appColors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (uiState is InboxUIState.Error) {
+            OpenEdXPrimaryButton(
+                modifier = Modifier
+                    .widthIn(Dp.Unspecified, 162.dp),
+                text = stringResource(id = coreR.string.core_reload),
+                textColor = MaterialTheme.appColors.secondaryButtonText,
+                backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
+                onClick = onReloadNotifications,
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun InboxPreview(
+    @PreviewParameter(InboxUiStatePreviewParameterProvider::class) uiState: InboxUIState,
+) {
     OpenEdXTheme {
         InboxView(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = InboxUIState.Data(
-                notifications = mapOf(
-                    InboxSection.RECENT to listOf(
-                        mockNotificationItem,
-                        mockNotificationItem
-                    ),
-                    InboxSection.OLDER to listOf(
-                        mockNotificationItem,
-                        mockNotificationItem
-                    )
-                )
-            ),
+            uiState = uiState,
             canLoadMore = true,
             onBackClick = { },
             onSettingsClick = { },
+            onReloadNotifications = { },
             paginationCallBack = { },
         )
     }
@@ -381,3 +462,22 @@ private val mockNotificationItem = NotificationItem(
         emailContent = "",
     )
 )
+
+private class InboxUiStatePreviewParameterProvider : PreviewParameterProvider<InboxUIState> {
+    override val values = sequenceOf(
+        InboxUIState.Data(
+            notifications = mapOf(
+                InboxSection.RECENT to listOf(
+                    mockNotificationItem,
+                    mockNotificationItem
+                ),
+                InboxSection.OLDER to listOf(
+                    mockNotificationItem,
+                    mockNotificationItem
+                )
+            )
+        ),
+        InboxUIState.Empty,
+        InboxUIState.Error
+    )
+}

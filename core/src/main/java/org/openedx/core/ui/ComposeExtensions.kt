@@ -88,6 +88,11 @@ fun LazyGridState.shouldLoadMore(rememberedIndex: MutableState<Int>, threshold: 
     return false
 }
 
+fun LazyListState.shouldLoadMore(threshold: Int): Boolean {
+    val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return false
+    return lastVisibleIndex >= layoutInfo.totalItemsCount - 1 - threshold
+}
+
 fun Modifier.statusBarsInset(): Modifier = composed {
     val topInset = (LocalContext.current as? InsetHolder)?.topInset ?: 0
     return@composed this

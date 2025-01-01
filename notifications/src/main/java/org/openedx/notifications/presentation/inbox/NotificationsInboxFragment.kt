@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +37,6 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -56,8 +56,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.core.UIMessage
 import org.openedx.core.extension.isNull
 import org.openedx.core.ui.BackBtn
+import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -91,11 +93,13 @@ class NotificationsInboxFragment : Fragment() {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
                 val uiState by viewModel.uiState.collectAsState()
+                val uiMessage by viewModel.uiMessage.collectAsState(null)
                 val canLoadMore by viewModel.canLoadMore.collectAsState()
 
                 InboxView(
                     windowSize = windowSize,
                     uiState = uiState,
+                    uiMessage = uiMessage,
                     canLoadMore = canLoadMore,
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
@@ -109,6 +113,12 @@ class NotificationsInboxFragment : Fragment() {
                     paginationCallBack = {
                         viewModel.fetchMore()
                     },
+                    markNotificationAsRead = { notification, inboxSection ->
+                        viewModel.markNotificationAsRead(
+                            notification = notification,
+                            inboxSection = inboxSection,
+                        )
+                    }
                 )
             }
         }
@@ -119,17 +129,16 @@ class NotificationsInboxFragment : Fragment() {
 private fun InboxView(
     windowSize: WindowSize,
     uiState: InboxUIState,
+    uiMessage: UIMessage?,
     canLoadMore: Boolean,
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onReloadNotifications: () -> Unit,
     paginationCallBack: () -> Unit,
+    markNotificationAsRead: (notificationItem: NotificationItem, inboxSection: InboxSection) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
-    val firstVisibleIndex = remember {
-        mutableIntStateOf(scrollState.firstVisibleItemIndex)
-    }
     val topBarWidth by remember(key1 = windowSize) {
         mutableStateOf(
             windowSize.windowSizeValue(
@@ -157,6 +166,9 @@ private fun InboxView(
             .navigationBarsPadding(),
         backgroundColor = MaterialTheme.appColors.background
     ) { paddingValues ->
+
+        HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
+
         Column(
             Modifier
                 .fillMaxSize()
@@ -192,7 +204,12 @@ private fun InboxView(
                                     }
 
                                     items(items) { item ->
-                                        NotificationItemView(item = item)
+                                        NotificationItemView(
+                                            modifier = Modifier.clickable {
+                                                markNotificationAsRead(item, section)
+                                            },
+                                            item = item,
+                                        )
                                     }
 
                                     item {
@@ -212,7 +229,7 @@ private fun InboxView(
                                 }
                             }
 
-                            if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
+                            if (scrollState.shouldLoadMore(4)) {
                                 paginationCallBack()
                             }
                         }
@@ -342,6 +359,8 @@ private fun NotificationItemView(
                             .size(8.dp)
                             .background(MaterialTheme.appColors.primaryButtonBackground)
                     )
+                } else {
+                    Spacer(modifier = Modifier.size(8.dp))
                 }
             }
             Text(
@@ -430,11 +449,13 @@ private fun InboxPreview(
         InboxView(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             uiState = uiState,
+            uiMessage = null,
             canLoadMore = true,
             onBackClick = { },
             onSettingsClick = { },
             onReloadNotifications = { },
             paginationCallBack = { },
+            markNotificationAsRead = { _, _ -> },
         )
     }
 }

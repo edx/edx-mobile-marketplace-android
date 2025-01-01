@@ -1,5 +1,6 @@
 package org.openedx.notifications.domain.model
 
+import org.openedx.core.extension.isNull
 import java.util.Date
 
 data class InboxNotifications(
@@ -26,7 +27,11 @@ data class NotificationItem(
     val lastRead: Date?,
     val lastSeen: Date?,
     val created: Date?,
-)
+) {
+    fun isUnread(): Boolean {
+        return lastRead.isNull()
+    }
+}
 
 data class NotificationContent(
     val paragraph: String,

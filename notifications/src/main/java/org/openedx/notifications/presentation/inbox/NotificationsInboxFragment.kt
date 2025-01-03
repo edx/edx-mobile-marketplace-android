@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -34,6 +35,9 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.SignalWifiStatusbarConnectedNoInternet4
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -99,11 +103,13 @@ class NotificationsInboxFragment : Fragment() {
                 val uiState by viewModel.uiState.collectAsState()
                 val uiMessage by viewModel.uiMessage.collectAsState(null)
                 val canLoadMore by viewModel.canLoadMore.collectAsState()
+                val refreshing by viewModel.isRefreshing.collectAsState()
 
                 InboxView(
                     windowSize = windowSize,
                     uiState = uiState,
                     uiMessage = uiMessage,
+                    refreshing = refreshing,
                     canLoadMore = canLoadMore,
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
@@ -118,6 +124,9 @@ class NotificationsInboxFragment : Fragment() {
                                 viewModel.navigateToPushNotificationsSettings(requireActivity().supportFragmentManager)
                             }
                         }
+                    },
+                    onSwipeRefresh = {
+                        viewModel.updateNotifications()
                     },
                     onReloadNotifications = {
                         viewModel.onReloadNotifications()
@@ -137,14 +146,17 @@ class NotificationsInboxFragment : Fragment() {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun InboxView(
     windowSize: WindowSize,
     uiState: InboxUIState,
     uiMessage: UIMessage?,
     canLoadMore: Boolean,
+    refreshing: Boolean,
     onBackClick: () -> Unit,
     onSettingsClick: (NotificationsMenuType) -> Unit,
+    onSwipeRefresh: () -> Unit,
     onReloadNotifications: () -> Unit,
     paginationCallBack: () -> Unit,
     markNotificationAsRead: (notificationItem: NotificationItem, inboxSection: InboxSection) -> Unit,
@@ -170,6 +182,10 @@ private fun InboxView(
             )
         )
     }
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = refreshing,
+        onRefresh = { onSwipeRefresh() },
+    )
     val loadMoreTriggerThreshold = 4
 
     Scaffold(
@@ -197,78 +213,88 @@ private fun InboxView(
             )
 
             Surface(
-                modifier = contentWidth,
                 color = MaterialTheme.appColors.background
             ) {
-                when (uiState) {
-                    is InboxUIState.Data -> {
-                        LazyColumn(
-                            Modifier
-                                .weight(1f)
-                                .background(MaterialTheme.appColors.background),
-                            state = scrollState,
-                        ) {
-                            uiState.notifications.forEach { (section, items) ->
-                                if (items.isNotEmpty()) {
-                                    item {
-                                        SectionHeader(
-                                            section = section,
-                                        )
-                                    }
+                Box(
+                    modifier = Modifier.pullRefresh(pullRefreshState),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    when (uiState) {
+                        is InboxUIState.Data -> {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .background(MaterialTheme.appColors.background)
+                                    .then(contentWidth),
+                                state = scrollState,
+                            ) {
+                                uiState.notifications.forEach { (section, items) ->
+                                    if (items.isNotEmpty()) {
+                                        item {
+                                            SectionHeader(
+                                                section = section,
+                                            )
+                                        }
 
-                                    items(items) { item ->
-                                        NotificationItemView(
-                                            modifier = Modifier.clickable {
-                                                markNotificationAsRead(item, section)
-                                            },
-                                            item = item,
-                                        )
-                                    }
+                                        items(items) { item ->
+                                            NotificationItemView(
+                                                modifier = Modifier.clickable {
+                                                    markNotificationAsRead(item, section)
+                                                },
+                                                item = item,
+                                            )
+                                        }
 
-                                    item {
-                                        Spacer(Modifier.height(24.dp))
-                                    }
-                                }
-                            }
-
-                            if (canLoadMore) {
-                                item {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                                        item {
+                                            Spacer(Modifier.height(24.dp))
+                                        }
                                     }
                                 }
-                            }
 
-                            if (scrollState.shouldLoadMore(loadMoreTriggerThreshold)) {
-                                paginationCallBack()
+                                if (canLoadMore) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                                        }
+                                    }
+                                }
+
+                                if (scrollState.shouldLoadMore(loadMoreTriggerThreshold)) {
+                                    paginationCallBack()
+                                }
                             }
+                        }
+
+                        is InboxUIState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                            }
+                        }
+
+                        is InboxUIState.Empty -> {
+                            InboxStateView(
+                                uiState = InboxUIState.Empty,
+                            )
+                        }
+
+                        is InboxUIState.Error -> {
+                            InboxStateView(
+                                uiState = InboxUIState.Error,
+                                onReloadNotifications = onReloadNotifications
+                            )
                         }
                     }
 
-                    is InboxUIState.Loading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                        }
-                    }
-
-                    is InboxUIState.Empty -> {
-                        InboxStateView(
-                            uiState = InboxUIState.Empty,
-                        )
-                    }
-
-                    is InboxUIState.Error -> {
-                        InboxStateView(
-                            uiState = InboxUIState.Error,
-                            onReloadNotifications = onReloadNotifications
-                        )
-                    }
+                    PullRefreshIndicator(
+                        refreshing,
+                        pullRefreshState,
+                        Modifier.align(Alignment.TopCenter)
+                    )
                 }
             }
         }
@@ -518,8 +544,10 @@ private fun InboxPreview(
             uiState = uiState,
             uiMessage = null,
             canLoadMore = true,
+            refreshing = true,
             onBackClick = { },
             onSettingsClick = { },
+            onSwipeRefresh = { },
             onReloadNotifications = { },
             paginationCallBack = { },
             markNotificationAsRead = { _, _ -> },

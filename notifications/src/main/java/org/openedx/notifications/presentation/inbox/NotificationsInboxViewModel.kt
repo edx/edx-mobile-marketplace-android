@@ -33,6 +33,9 @@ class NotificationsInboxViewModel(
     private val _canLoadMore = MutableStateFlow(true)
     val canLoadMore = _canLoadMore.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
     private val notifications: MutableMap<InboxSection, MutableList<NotificationItem>> =
         mutableMapOf(
             InboxSection.RECENT to mutableListOf(),
@@ -89,18 +92,21 @@ class NotificationsInboxViewModel(
 
                 // Update the UI state based on whether any notifications exist
                 _uiState.value = if (notifications.values.any { it.isNotEmpty() }) {
-                    InboxUIState.Data(notifications = notifications)
+                    InboxUIState.Data(notifications = notifications.toMap())
                 } else {
                     InboxUIState.Empty
                 }
             } catch (e: Exception) {
-                if (nextPage == 1) {
-                    _uiState.value = InboxUIState.Error
-                } else {
+                if (_isRefreshing.value) {
+                    emitErrorMessage(e)
+                } else if (nextPage > 1) {
                     _canLoadMore.value = true
+                } else {
+                    _uiState.value = InboxUIState.Error
                 }
             } finally {
                 isLoading = false
+                _isRefreshing.value = false
             }
         }
     }
@@ -108,6 +114,15 @@ class NotificationsInboxViewModel(
     fun onReloadNotifications() {
         _canLoadMore.value = true
         nextPage = 1
+        internalLoadNotifications()
+    }
+
+    fun updateNotifications() {
+        _isRefreshing.value = true
+        nextPage = 1
+        InboxSection.entries.forEach { section ->
+            notifications[section] = mutableListOf()
+        }
         internalLoadNotifications()
     }
 

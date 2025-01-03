@@ -1087,6 +1087,7 @@ fun OpenEdXBrandButton(
             backgroundColor = backgroundColor,
             disabledBackgroundColor = backgroundColor.copy(alpha = 0.3f)
         ),
+        elevation = null,
         enabled = enabled,
         onClick = onClick,
     ) {

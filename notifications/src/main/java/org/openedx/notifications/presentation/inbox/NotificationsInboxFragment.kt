@@ -47,7 +47,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -294,13 +293,13 @@ private fun SectionHeader(
     section: InboxSection,
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.padding(bottom = 24.dp),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = stringResource(id = section.titleResId),
-            modifier = Modifier.padding(bottom = 24.dp),
+            modifier = Modifier,
             style = MaterialTheme.appTypography.titleSmall,
             color = MaterialTheme.appColors.textPrimaryVariant,
         )
@@ -331,7 +330,7 @@ private fun NotificationItemView(
             ) {
                 Text(
                     modifier = Modifier.weight(1f),
-                    text = item.content,
+                    text = TextUtils.htmlContentToAnnotatedString(item),
                     style = MaterialTheme.appTypography.bodyMedium,
                     color = MaterialTheme.appColors.textPrimary,
                 )
@@ -348,14 +347,14 @@ private fun NotificationItemView(
             Text(
                 text = TextUtils.dateToRelativeTimeString(LocalContext.current, item.created),
                 style = MaterialTheme.appTypography.bodySmall,
-                color = MaterialTheme.appColors.notificationTimestamp,
+                color = MaterialTheme.appColors.inboxTimeMarkerColor,
             )
         }
     }
 }
 
 @Composable
-fun InboxStateView(
+private fun InboxStateView(
     modifier: Modifier = Modifier,
     uiState: InboxUIState,
     onReloadNotifications: () -> Unit = { },
@@ -448,7 +447,7 @@ private val mockNotificationItem = NotificationItem(
     created = Date(),
     lastRead = null,
     lastSeen = null,
-    content = AnnotatedString("Mock Content"),
+    content = "Mock Content",
     contentContext = NotificationContent(
         paragraph = "",
         strongText = "",
@@ -456,7 +455,7 @@ private val mockNotificationItem = NotificationItem(
         parentId = "",
         threadId = "",
         commentId = "",
-        postTitle = "",
+        postTitle = "Mock",
         courseName = "",
         replierName = "",
         emailContent = "",

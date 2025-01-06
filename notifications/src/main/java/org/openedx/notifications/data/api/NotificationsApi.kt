@@ -1,7 +1,7 @@
 package org.openedx.notifications.data.api
 
-import org.openedx.notifications.data.model.NotificationsCountResponse
 import org.openedx.notifications.data.model.InboxNotificationsResponse
+import org.openedx.notifications.data.model.NotificationsCountResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

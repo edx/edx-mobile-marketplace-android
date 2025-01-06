@@ -5,7 +5,6 @@ import org.openedx.core.utils.TimeUtils
 import org.openedx.notifications.domain.model.InboxNotifications
 import org.openedx.notifications.domain.model.InboxSection
 import org.openedx.notifications.domain.model.Pagination
-import org.openedx.notifications.utils.TextUtils
 import java.util.Date
 import org.openedx.notifications.domain.model.NotificationContent as DomainNotificationContent
 import org.openedx.notifications.domain.model.NotificationItem as DomainNotificationItem
@@ -45,7 +44,7 @@ data class InboxNotificationsResponse(
             },
             InboxSection.THIS_WEEK to notifications.filter {
                 val createdTime = it.created?.time ?: 0L
-                createdTime in (weekThresholdMillis + 1) until recentThresholdMillis
+                createdTime in weekThresholdMillis until recentThresholdMillis
             },
             InboxSection.OLDER to notifications.filter {
                 (it.created?.time ?: 0L) < weekThresholdMillis
@@ -75,7 +74,7 @@ data class NotificationItem(
         appName = appName,
         notificationType = notificationType,
         contentContext = contentContext.mapToDomain(),
-        content = TextUtils.htmlContentToAnnotatedString(content),
+        content = content,
         contentUrl = contentUrl,
         lastRead = TimeUtils.iso8601ToDate(lastRead ?: ""),
         lastSeen = TimeUtils.iso8601ToDate(lastSeen ?: ""),

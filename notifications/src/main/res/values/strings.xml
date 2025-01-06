@@ -7,28 +7,28 @@
     <string name="notification_now">Now</string>
     <string name="notifications_no_notifications_yet">No notifications yet</string>
     <string name="notifications_no_notifications_yet_description">When you receive notifications they’ll show up here</string>
-    <plurals name="notifications_date_format_seconds_ago">
-        <item quantity="one">%1$s second ago</item>
-        <item quantity="other">%1$s seconds ago</item>
+    <plurals name="notifications_date_format_seconds">
+        <item quantity="one">%1$s second</item>
+        <item quantity="other">%1$s seconds</item>
     </plurals>
-    <plurals name="notifications_date_format_minutes_ago">
-        <item quantity="one">%1$s minute ago</item>
-        <item quantity="other">%1$s minutes ago</item>
+    <plurals name="notifications_date_format_minutes">
+        <item quantity="one">%1$s minute</item>
+        <item quantity="other">%1$s minutes</item>
     </plurals>
-    <plurals name="notifications_date_format_hours_ago">
-        <item quantity="one">%1$s hour ago</item>
-        <item quantity="other">%1$s hours ago</item>
+    <plurals name="notifications_date_format_hours">
+        <item quantity="one">%1$s hour</item>
+        <item quantity="other">%1$s hours</item>
     </plurals>
-    <plurals name="notifications_date_format_days_ago">
-        <item quantity="one">%1$s day ago</item>
-        <item quantity="other">%1$s days ago</item>
+    <plurals name="notifications_date_format_days">
+        <item quantity="one">%1$s day</item>
+        <item quantity="other">%1$s days</item>
     </plurals>
-    <plurals name="notifications_date_format_weeks_ago">
-        <item quantity="one">%1$s week ago</item>
-        <item quantity="other">%1$s weeks ago</item>
+    <plurals name="notifications_date_format_weeks">
+        <item quantity="one">%1$s week</item>
+        <item quantity="other">%1$s weeks</item>
     </plurals>
-    <plurals name="notifications_date_format_months_ago">
-        <item quantity="one">%1$s month ago</item>
-        <item quantity="other">%1$s months ago</item>
+    <plurals name="notifications_date_format_months">
+        <item quantity="one">%1$s month</item>
+        <item quantity="other">%1$s months</item>
     </plurals>
 </resources>

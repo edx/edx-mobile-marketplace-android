@@ -128,6 +128,10 @@ class NotificationsInboxViewModel(
                         notifications = notifications.toMap()
                     )
                 }
+
+                // Navigating the user to the related post or response in the Course Discussion Tab
+                // will be implemented in a separate PR.
+
             } catch (e: Exception) {
                 e.printStackTrace()
                 emitErrorMessage(e)

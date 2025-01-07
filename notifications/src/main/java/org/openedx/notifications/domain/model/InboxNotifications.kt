@@ -39,4 +39,6 @@ data class NotificationContent(
     val courseName: String,
     val replierName: String,
     val emailContent: String,
+    val authorName: String,
+    val authorPronoun: String,
 )

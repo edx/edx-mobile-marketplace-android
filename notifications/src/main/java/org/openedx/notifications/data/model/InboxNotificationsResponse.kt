@@ -93,6 +93,8 @@ data class NotificationContent(
     @SerializedName("course_name") val courseName: String,
     @SerializedName("replier_name") val replierName: String,
     @SerializedName("email_content") val emailContent: String,
+    @SerializedName("author_name") val authorName: String?,
+    @SerializedName("author_pronoun") val authorPronoun: String?,
 ) {
     fun mapToDomain(): DomainNotificationContent = DomainNotificationContent(
         paragraph = paragraph,
@@ -105,5 +107,7 @@ data class NotificationContent(
         courseName = courseName,
         replierName = replierName,
         emailContent = emailContent,
+        authorName = authorName.orEmpty(),
+        authorPronoun = authorPronoun.orEmpty(),
     )
 }

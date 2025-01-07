@@ -142,7 +142,7 @@ private fun InboxView(
     val contentWidth by remember(key1 = windowSize) {
         mutableStateOf(
             windowSize.windowSizeValue(
-                expanded = Modifier.widthIn(Dp.Unspecified, 560.dp),
+                expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
                 compact = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 16.dp)
@@ -459,6 +459,8 @@ private val mockNotificationItem = NotificationItem(
         courseName = "",
         replierName = "",
         emailContent = "",
+        authorName = "",
+        authorPronoun = "",
     )
 )
 

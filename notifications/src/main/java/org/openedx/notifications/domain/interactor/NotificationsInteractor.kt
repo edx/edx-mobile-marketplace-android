@@ -13,4 +13,12 @@ class NotificationsInteractor(private val repository: NotificationsRepository) {
     suspend fun getInboxNotifications(page: Int): InboxNotifications {
         return repository.getInboxNotifications(page)
     }
+
+    suspend fun markNotificationsAsSeen(): Boolean {
+        return repository.markNotificationsAsSeen()
+    }
+
+    suspend fun markNotificationAsRead(notificationId: Int): Boolean {
+        return repository.markNotificationAsRead(notificationId = notificationId)
+    }
 }

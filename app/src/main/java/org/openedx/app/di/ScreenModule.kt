@@ -486,7 +486,7 @@ val screenModule = module {
     single { NotificationsRepository(get()) }
     factory { NotificationsInteractor(get()) }
 
-    viewModel { NotificationsInboxViewModel(get()) }
+    viewModel { NotificationsInboxViewModel(get(), get()) }
 
     single { IAPRepository(get()) }
     factory { IAPInteractor(get(), get(), get(), get(), get()) }

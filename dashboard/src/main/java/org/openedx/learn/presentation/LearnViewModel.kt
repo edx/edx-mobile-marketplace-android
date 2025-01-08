@@ -1,5 +1,6 @@
 package org.openedx.learn.presentation
 
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,20 +51,18 @@ class LearnViewModel(
 
     init {
         viewModelScope.launch {
-            launch {
-                _uiState.collect { uiState ->
-                    if (uiState.learnType == LearnType.COURSES) {
-                        logMyCoursesTabClickedEvent()
-                    } else {
-                        logMyProgramsTabClickedEvent()
-                    }
+            _uiState.collect { uiState ->
+                if (uiState.learnType == LearnType.COURSES) {
+                    logMyCoursesTabClickedEvent()
+                } else {
+                    logMyProgramsTabClickedEvent()
                 }
             }
-            launch {
-                pushNotifier.notifier.collect { event ->
-                    if (event is PushEvent.RefreshBadgeCount) {
-                        checkNotificationCount()
-                    }
+        }
+        viewModelScope.launch {
+            pushNotifier.notifier.collect { event ->
+                if (event is PushEvent.RefreshBadgeCount) {
+                    checkNotificationCount()
                 }
             }
         }
@@ -85,7 +84,8 @@ class LearnViewModel(
         }
     }
 
-    fun onNotificationBadgeClick() {
+    fun onNotificationBadgeClick(fm: FragmentManager) {
+        dashboardRouter.navigateToNotificationsInbox(fm)
         _uiState.update { it.copy(hasUnreadNotifications = false) }
     }
 

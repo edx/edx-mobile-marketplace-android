@@ -158,6 +158,7 @@ private fun InboxView(
             )
         )
     }
+    val loadMoreTriggerThreshold = 4
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -229,7 +230,7 @@ private fun InboxView(
                                 }
                             }
 
-                            if (scrollState.shouldLoadMore(4)) {
+                            if (scrollState.shouldLoadMore(loadMoreTriggerThreshold)) {
                                 paginationCallBack()
                             }
                         }

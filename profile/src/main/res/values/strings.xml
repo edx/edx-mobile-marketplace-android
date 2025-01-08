@@ -63,5 +63,5 @@
     <string name="profile_color">Color</string>
     <string name="profile_purchases">Purchases</string>
     <string name="profile_restore_purchaes">Restore Purchases</string>
-
+    <string name="profile_push_notifications">Push Notifications</string>
 </resources>

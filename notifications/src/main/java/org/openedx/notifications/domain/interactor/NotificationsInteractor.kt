@@ -36,4 +36,8 @@ class NotificationsInteractor(
             isDiscussionPushEnabled = isDiscussionPushEnabled,
         )
     }
+
+    suspend fun markAllNotificationsAsRead(): Boolean {
+        return repository.markNotificationAsRead(notificationId = null)
+    }
 }

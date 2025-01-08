@@ -213,7 +213,7 @@ val appModule = module {
 
     factory { AgreementProvider(get(), get()) }
     factory { FacebookAuthHelper() }
-    factory { GoogleAuthHelper(get()) }
+    factory { GoogleAuthHelper(get(), get()) }
     factory { MicrosoftAuthHelper() }
     factory { OAuthHelper(get(), get(), get()) }
 

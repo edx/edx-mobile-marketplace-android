@@ -2,6 +2,7 @@ package org.openedx.auth.presentation.sso
 
 import android.accounts.Account
 import android.app.Activity
+import android.content.Context
 import android.credentials.GetCredentialException
 import android.os.Bundle
 import androidx.annotation.WorkerThread
@@ -11,6 +12,8 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.google.android.gms.auth.GoogleAuthUtil
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -19,7 +22,7 @@ import org.openedx.auth.domain.model.SocialAuthResponse
 import org.openedx.core.config.Config
 import org.openedx.core.utils.Logger
 
-class GoogleAuthHelper(private val config: Config) {
+class GoogleAuthHelper(private val context: Context, private val config: Config) {
 
     private val logger = Logger(TAG)
 
@@ -102,6 +105,9 @@ class GoogleAuthHelper(private val config: Config) {
             }
         }
     }
+
+    fun isGoogleAuthEnabled() =
+        GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
 
     private companion object {
         const val TAG = "GoogleAuthHelper"

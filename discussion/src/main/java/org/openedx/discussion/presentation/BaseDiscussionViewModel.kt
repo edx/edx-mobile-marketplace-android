@@ -9,6 +9,25 @@ open class BaseDiscussionViewModel(
     private val analytics: DiscussionAnalytics,
 ) : BaseViewModel() {
 
+    fun logAllPostsClickedEvent() {
+        logEvent(DiscussionAnalyticsEvent.DISCUSSION_ALL_POSTS_CLICKED)
+    }
+
+    fun logFollowingPostsClickedEvent() {
+        logEvent(DiscussionAnalyticsEvent.DISCUSSION_FOLLOWING_POSTS_CLICKED)
+    }
+
+    fun logTopicClickedEvent(
+        topicId: String,
+    ) {
+        logEvent(
+            event = DiscussionAnalyticsEvent.DISCUSSION_TOPIC_CLICKED,
+            params = buildMap {
+                put(DiscussionAnalyticsKey.TOPIC_ID.key, topicId)
+            }
+        )
+    }
+
     fun logPostCreatedEvent(
         topicId: String,
         postType: String,
@@ -120,7 +139,7 @@ open class BaseDiscussionViewModel(
     }
 
 
-    private fun logEvent(event: DiscussionAnalyticsEvent, params: Map<String, Any?>) {
+    private fun logEvent(event: DiscussionAnalyticsEvent, params: Map<String, Any?> = emptyMap()) {
         analytics.logEvent(
             event = event.eventName,
             params = buildMap {

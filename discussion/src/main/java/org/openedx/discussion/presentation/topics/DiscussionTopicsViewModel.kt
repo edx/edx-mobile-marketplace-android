@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
@@ -16,6 +15,7 @@ import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.RefreshDiscussions
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
+import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionRouter
 
@@ -27,7 +27,7 @@ class DiscussionTopicsViewModel(
     private val analytics: DiscussionAnalytics,
     private val courseNotifier: CourseNotifier,
     val discussionRouter: DiscussionRouter,
-) : BaseViewModel() {
+) : BaseDiscussionViewModel(courseId, "", analytics) {
 
     private val _uiState = MutableLiveData<DiscussionTopicsUIState>()
     val uiState: LiveData<DiscussionTopicsUIState>
@@ -66,14 +66,17 @@ class DiscussionTopicsViewModel(
     fun discussionClickedEvent(action: String, data: String, title: String) {
         when (action) {
             ALL_POSTS -> {
+                logAllPostsClickedEvent()
                 analytics.discussionAllPostsClickedEvent(courseId, courseTitle)
             }
 
             FOLLOWING_POSTS -> {
+                logFollowingPostsClickedEvent()
                 analytics.discussionFollowingClickedEvent(courseId, courseTitle)
             }
 
             TOPIC -> {
+                logTopicClickedEvent(topicId = data)
                 analytics.discussionTopicClickedEvent(courseId, courseTitle, data, title)
             }
         }

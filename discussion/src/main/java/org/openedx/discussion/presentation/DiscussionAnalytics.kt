@@ -40,7 +40,7 @@ enum class DiscussionAnalyticsEvent(val eventName: String, val biValue: String) 
     )
 }
 
-enum class DiscussionAnalyticsParam(val key: String) {
+enum class DiscussionAnalyticsKey(val key: String) {
     NAME("name"),
     COURSE_ID("course_id"),
     TOPIC_ID("topic_id"),

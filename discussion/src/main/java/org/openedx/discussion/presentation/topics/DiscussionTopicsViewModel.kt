@@ -63,21 +63,18 @@ class DiscussionTopicsViewModel(
         }
     }
 
-    fun discussionClickedEvent(action: String, data: String, title: String) {
+    fun discussionClickedEvent(action: String, data: String) {
         when (action) {
             ALL_POSTS -> {
                 logAllPostsClickedEvent()
-                analytics.discussionAllPostsClickedEvent(courseId, courseTitle)
             }
 
             FOLLOWING_POSTS -> {
                 logFollowingPostsClickedEvent()
-                analytics.discussionFollowingClickedEvent(courseId, courseTitle)
             }
 
             TOPIC -> {
                 logTopicClickedEvent(topicId = data)
-                analytics.discussionTopicClickedEvent(courseId, courseTitle, data, title)
             }
         }
     }

@@ -186,11 +186,15 @@ internal fun SettingsScreen(
                                     Spacer(modifier = Modifier.height(24.dp))
 
                                     SettingsSection(
+                                        uiState = uiState,
                                         onVideoSettingsClick = {
                                             onAction(SettingsScreenAction.VideoSettingsClick)
                                         },
                                         onCalendarSettingsClick = {
                                             onAction(SettingsScreenAction.CalendarSettingsClick)
+                                        },
+                                        onPushNotificationsSettingsClick = {
+                                            onAction(SettingsScreenAction.PushNotificationsSettingsClick)
                                         }
                                     )
 
@@ -267,8 +271,10 @@ internal fun SettingsScreen(
 
 @Composable
 private fun SettingsSection(
+    uiState: SettingsUIState.Data,
     onVideoSettingsClick: () -> Unit,
-    onCalendarSettingsClick: () -> Unit
+    onCalendarSettingsClick: () -> Unit,
+    onPushNotificationsSettingsClick: () -> Unit,
 ) {
     Column {
         Text(
@@ -289,11 +295,20 @@ private fun SettingsSection(
                     text = stringResource(id = profileR.string.profile_video),
                     onClick = onVideoSettingsClick
                 )
+
 //                SettingsDivider()
 //                SettingsItem(
 //                    text = stringResource(id = profileR.string.profile_dates_and_calendar),
 //                    onClick = onCalendarSettingsClick
 //                )
+
+                if (uiState.configuration.isPushNotificationsEnabled) {
+                    SettingsDivider()
+                    SettingsItem(
+                        text = stringResource(id = profileR.string.profile_push_notifications),
+                        onClick = onPushNotificationsSettingsClick
+                    )
+                }
             }
         }
     }
@@ -729,6 +744,7 @@ private val mockConfiguration = Configuration(
     feedbackFormUrl = "www.feedback.com",
     versionName = mockAppData.versionName,
     isIAPEnabled = true,
+    isPushNotificationsEnabled = true,
 )
 
 private val mockUiState = SettingsUIState.Data(

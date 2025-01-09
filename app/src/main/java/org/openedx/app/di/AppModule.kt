@@ -47,13 +47,13 @@ import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRouter
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.CalendarManager
 import org.openedx.core.system.PushGlobalManager
-import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.DownloadNotifier
 import org.openedx.core.system.notifier.IAPNotifier
+import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.notifier.VideoNotifier
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.utils.FileUtil
@@ -68,6 +68,8 @@ import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.notifications.PushManager
+import org.openedx.notifications.data.storage.NotificationsPreferences
+import org.openedx.notifications.presentation.NotificationsAnalytics
 import org.openedx.profile.data.storage.ProfilePreferences
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileRouter
@@ -87,6 +89,7 @@ val appModule = module {
     single<WhatsNewPreferences> { get<PreferencesManager>() }
     single<InAppReviewPreferences> { get<PreferencesManager>() }
     single<CoursePreferences> { get<PreferencesManager>() }
+    single<NotificationsPreferences> { get<PreferencesManager>() }
 
     single { ResourceManager(get()) }
     single { AppCookieManager(get(), get()) }
@@ -207,6 +210,7 @@ val appModule = module {
     single<ProfileAnalytics> { get<AnalyticsManager>() }
     single<WhatsNewAnalytics> { get<AnalyticsManager>() }
     single<IAPAnalytics> { get<AnalyticsManager>() }
+    single<NotificationsAnalytics> { get<AnalyticsManager>() }
 
     single { PushManager(get()) }
     single<PushGlobalManager> { get<PushManager>() }

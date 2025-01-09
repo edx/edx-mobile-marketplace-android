@@ -26,6 +26,10 @@ enum class ProfileAnalyticsEvent(val eventName: String, val biValue: String) {
         "Profile:Video Setting Clicked",
         "edx.bi.app.profile.video_setting.clicked"
     ),
+    PUSH_NOTIFICATIONS_CLICKED(
+        "Profile:Push Notifications Setting Clicked",
+        "edx.bi.app.profile.push_notifications_setting.clicked"
+    ),
     CONTACT_SUPPORT_CLICKED(
         "Profile:Contact Support Clicked",
         "edx.bi.app.profile.email_support.clicked"

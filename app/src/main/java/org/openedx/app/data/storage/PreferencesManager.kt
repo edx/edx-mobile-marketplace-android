@@ -13,12 +13,14 @@ import org.openedx.core.domain.model.VideoQuality
 import org.openedx.core.domain.model.VideoSettings
 import org.openedx.core.extension.replaceSpace
 import org.openedx.course.data.storage.CoursePreferences
+import org.openedx.notifications.data.storage.NotificationsPreferences
+import org.openedx.notifications.domain.model.NotificationsConfiguration
 import org.openedx.profile.data.model.Account
 import org.openedx.profile.data.storage.ProfilePreferences
 import org.openedx.whatsnew.data.storage.WhatsNewPreferences
 
 class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences,
-    WhatsNewPreferences, InAppReviewPreferences, CoursePreferences {
+    WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences {
 
     private val sharedPreferences =
         context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE)
@@ -186,6 +188,17 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
     override fun isCalendarSyncEventsDialogShown(courseName: String): Boolean =
         getBoolean(courseName.replaceSpace("_"))
 
+    override var notifications: NotificationsConfiguration
+        set(value) {
+            val notificationsJson = Gson().toJson(value)
+            saveString(NOTIFICATIONS_CONFIGURATION, notificationsJson)
+        }
+        get() {
+            val notificationsString = getString(NOTIFICATIONS_CONFIGURATION)
+            return Gson().fromJson(notificationsString, NotificationsConfiguration::class.java)
+                ?: NotificationsConfiguration.default
+        }
+
     companion object {
         private const val ACCESS_TOKEN = "access_token"
         private const val REFRESH_TOKEN = "refresh_token"
@@ -203,5 +216,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val APP_CONFIG = "app_config"
         private const val RESET_APP_DIRECTORY = "reset_app_directory"
         private const val LAST_SIGN_IN_TYPE = "last_sign_in_type"
+        private const val NOTIFICATIONS_CONFIGURATION = "notifications_configuration"
     }
 }

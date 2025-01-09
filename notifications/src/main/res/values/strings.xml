@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="notifications_notifications">Notifications</string>
     <string name="notifications_accessibility_settings">Settings</string>
@@ -31,4 +32,7 @@
         <item quantity="one">%1$s month</item>
         <item quantity="other">%1$s months</item>
     </plurals>
+    <string name="notification_push_notifications">Push Notifications</string>
+    <string name="notification_discussions_activity">Discussions Activity</string>
+    <string name="notification_discussions_activity_description">Notifications for course discussions you post, comment, or follow.</string>
 </resources>

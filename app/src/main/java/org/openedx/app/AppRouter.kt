@@ -43,6 +43,7 @@ import org.openedx.discussion.presentation.search.DiscussionSearchThreadFragment
 import org.openedx.discussion.presentation.threads.DiscussionAddThreadFragment
 import org.openedx.discussion.presentation.threads.DiscussionThreadsFragment
 import org.openedx.notifications.presentation.inbox.NotificationsInboxFragment
+import org.openedx.notifications.presentation.settings.NotificationsSettingsFragment
 import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.profile.presentation.anothersaccount.AnothersProfileFragment
@@ -423,6 +424,10 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
 
     override fun navigateToVideoSettings(fm: FragmentManager) {
         replaceFragmentWithBackStack(fm, VideoSettingsFragment())
+    }
+
+    override fun navigateToPushNotificationsSettings(fm: FragmentManager) {
+        replaceFragmentWithBackStack(fm, NotificationsSettingsFragment())
     }
 
     override fun navigateToVideoQuality(fm: FragmentManager, videoQualityType: VideoQualityType) {

@@ -16,6 +16,8 @@ interface ProfileRouter {
 
     fun navigateToVideoSettings(fm: FragmentManager)
 
+    fun navigateToPushNotificationsSettings(fm: FragmentManager)
+
     fun navigateToVideoQuality(fm: FragmentManager, videoQualityType: VideoQualityType)
 
     fun navigateToWebContent(fm: FragmentManager, title: String, url: String)

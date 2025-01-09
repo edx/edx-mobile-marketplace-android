@@ -93,6 +93,7 @@ class SettingsViewModel(
             feedbackFormUrl = corePreferences.appConfig.feedbackFormUrl,
             supportEmail = config.getFeedbackEmailAddress(),
             versionName = appData.versionName,
+            isPushNotificationsEnabled = config.isPushNotificationsEnabled()
         )
 
     init {
@@ -151,6 +152,11 @@ class SettingsViewModel(
     fun videoSettingsClicked(fragmentManager: FragmentManager) {
         router.navigateToVideoSettings(fragmentManager)
         logProfileEvent(ProfileAnalyticsEvent.VIDEO_SETTING_CLICKED)
+    }
+
+    fun pushNotificationsSettingsClicked(fragmentManager: FragmentManager) {
+        router.navigateToPushNotificationsSettings(fragmentManager)
+        logProfileEvent((ProfileAnalyticsEvent.PUSH_NOTIFICATIONS_CLICKED))
     }
 
     fun privacyPolicyClicked(fragmentManager: FragmentManager) {

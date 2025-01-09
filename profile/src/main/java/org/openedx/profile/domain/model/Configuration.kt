@@ -9,6 +9,7 @@ import org.openedx.core.domain.model.AgreementUrls
  * @param feedbackFormUrl URL of the learner feedback form
  * @param supportEmail Email address of support
  * @param versionName Version of the application (1.0.0)
+ * @param isPushNotificationsEnabled Push Notifications is enabled or not
  */
 data class Configuration(
     val isIAPEnabled: Boolean,
@@ -17,4 +18,5 @@ data class Configuration(
     val feedbackFormUrl: String,
     val supportEmail: String,
     val versionName: String,
+    val isPushNotificationsEnabled: Boolean,
 )

@@ -21,9 +21,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
@@ -39,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,15 +66,19 @@ import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
+import org.openedx.core.ui.crop
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.statusBarsInset
+import org.openedx.core.ui.theme.AppShapes
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.notifications.R
+import org.openedx.notifications.data.model.NotificationsMenuType
 import org.openedx.notifications.domain.model.InboxSection
 import org.openedx.notifications.domain.model.NotificationContent
 import org.openedx.notifications.domain.model.NotificationItem
@@ -104,8 +111,16 @@ class NotificationsInboxFragment : Fragment() {
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
                     },
-                    onSettingsClick = {
+                    onSettingsClick = { menuType ->
+                        when (menuType) {
+                            NotificationsMenuType.MARK_ALL_READ -> {
+                                viewModel.markAllNotificationsAsRead()
+                            }
 
+                            NotificationsMenuType.NOTIFICATION_SETTINGS -> {
+                                viewModel.navigateToPushNotificationsSettings(requireActivity().supportFragmentManager)
+                            }
+                        }
                     },
                     onReloadNotifications = {
                         viewModel.onReloadNotifications()
@@ -132,7 +147,7 @@ private fun InboxView(
     uiMessage: UIMessage?,
     canLoadMore: Boolean,
     onBackClick: () -> Unit,
-    onSettingsClick: () -> Unit,
+    onSettingsClick: (NotificationsMenuType) -> Unit,
     onReloadNotifications: () -> Unit,
     paginationCallBack: () -> Unit,
     markNotificationAsRead: (notificationItem: NotificationItem, inboxSection: InboxSection) -> Unit,
@@ -267,7 +282,7 @@ private fun InboxView(
 private fun Header(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit,
-    onSettingsClick: () -> Unit,
+    onSettingsClick: (NotificationsMenuType) -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -291,17 +306,14 @@ private fun Header(
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
         )
+        NotificationsDropdownMenu(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 16.dp),
+            onItemClick = onSettingsClick
+        )
 
-        IconButton(
-            modifier = Modifier.align(Alignment.CenterEnd),
-            onClick = { onSettingsClick() }
-        ) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                tint = MaterialTheme.appColors.primary,
-                contentDescription = stringResource(id = R.string.notifications_accessibility_settings)
-            )
-        }
+
     }
 }
 
@@ -321,6 +333,63 @@ private fun SectionHeader(
             style = MaterialTheme.appTypography.titleSmall,
             color = MaterialTheme.appColors.textPrimaryVariant,
         )
+    }
+}
+
+@Composable
+private fun NotificationsDropdownMenu(
+    modifier: Modifier = Modifier,
+    onItemClick: (NotificationsMenuType) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier.padding(vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .clickable {
+                    expanded = true
+                },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                tint = MaterialTheme.appColors.primary,
+                contentDescription = stringResource(id = R.string.notifications_accessibility_settings)
+            )
+        }
+
+        MaterialTheme(
+            colors = MaterialTheme.colors.copy(surface = MaterialTheme.appColors.background),
+            shapes = MaterialTheme.shapes.copy(MaterialTheme.appShapes.material.medium)
+        ) {
+            DropdownMenu(
+                modifier = Modifier
+                    .crop(vertical = 8.dp)
+                    .widthIn(min = 182.dp)
+                    .background(MaterialTheme.appColors.surface),
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                for (menuItem in NotificationsMenuType.entries) {
+                    DropdownMenuItem(
+                        modifier = Modifier
+                            .background(MaterialTheme.appColors.surface),
+                        onClick = {
+                            onItemClick(menuItem)
+                            expanded = false
+                        }
+                    ) {
+                        Text(
+                            text = stringResource(id = menuItem.title),
+                            style = MaterialTheme.appTypography.titleSmall,
+                            color = MaterialTheme.appColors.textPrimary
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

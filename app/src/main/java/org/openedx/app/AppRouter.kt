@@ -42,6 +42,7 @@ import org.openedx.discussion.presentation.responses.DiscussionResponsesFragment
 import org.openedx.discussion.presentation.search.DiscussionSearchThreadFragment
 import org.openedx.discussion.presentation.threads.DiscussionAddThreadFragment
 import org.openedx.discussion.presentation.threads.DiscussionThreadsFragment
+import org.openedx.notifications.presentation.NotificationsRouter
 import org.openedx.notifications.presentation.inbox.NotificationsInboxFragment
 import org.openedx.notifications.presentation.settings.NotificationsSettingsFragment
 import org.openedx.profile.domain.model.Account
@@ -58,7 +59,7 @@ import org.openedx.whatsnew.WhatsNewRouter
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
 
 class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, DiscussionRouter,
-    ProfileRouter, AppUpgradeRouter, WhatsNewRouter {
+    ProfileRouter, AppUpgradeRouter, WhatsNewRouter, NotificationsRouter {
 
     //region AuthRouter
     override fun navigateToMain(

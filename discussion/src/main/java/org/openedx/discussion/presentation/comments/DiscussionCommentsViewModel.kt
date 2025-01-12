@@ -100,6 +100,10 @@ class DiscussionCommentsViewModel(
     init {
         this.thread = thread
         getThreadComments()
+        logPostScreenEvent(
+            topicId = thread.topicId,
+            threadId = thread.id,
+        )
     }
 
     private fun sendThreadUpdated() {

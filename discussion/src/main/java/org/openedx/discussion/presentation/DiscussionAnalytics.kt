@@ -2,6 +2,7 @@ package org.openedx.discussion.presentation
 
 interface DiscussionAnalytics {
     fun logEvent(event: String, params: Map<String, Any?>)
+    fun logScreenEvent(screenName: String, params: Map<String, Any?>)
 }
 
 enum class DiscussionAnalyticsEvent(val eventName: String, val biValue: String) {
@@ -16,6 +17,18 @@ enum class DiscussionAnalyticsEvent(val eventName: String, val biValue: String) 
     DISCUSSION_TOPIC_CLICKED(
         "Discussion:Topic Clicked",
         "edx.bi.app.discussion.topic_clicked"
+    ),
+    DISCUSSION_TOPIC_VIEWED(
+        "Discussion:Topic Viewed",
+        "edx.bi.app.discussion.topic.viewed"
+    ),
+    DISCUSSION_POST_VIEWED(
+        "Discussion:Post Viewed",
+        "edx.bi.app.discussion.post.viewed"
+    ),
+    DISCUSSION_RESPONSE_VIEWED(
+        "Discussion:Response Viewed ",
+        "edx.bi.app.discussion.response.viewed"
     ),
     DISCUSSION_POST_CREATED(
         "Discussion:Post Created",

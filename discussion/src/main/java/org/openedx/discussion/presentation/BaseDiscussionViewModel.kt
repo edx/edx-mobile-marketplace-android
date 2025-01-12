@@ -9,6 +9,44 @@ open class BaseDiscussionViewModel(
     private val analytics: DiscussionAnalytics,
 ) : BaseViewModel() {
 
+    fun logTopicScreenEvent(
+        topicId: String,
+    ) {
+        if (topicId.isEmpty()) return
+        logScreenEvent(
+            event = DiscussionAnalyticsEvent.DISCUSSION_TOPIC_VIEWED,
+            params = buildMap {
+                put(DiscussionAnalyticsKey.TOPIC_ID.key, topicId)
+            }
+        )
+    }
+
+    fun logPostScreenEvent(
+        topicId: String,
+        threadId: String,
+    ) {
+        logScreenEvent(
+            event = DiscussionAnalyticsEvent.DISCUSSION_POST_VIEWED,
+            params = buildMap {
+                put(DiscussionAnalyticsKey.TOPIC_ID.key, topicId)
+                put(DiscussionAnalyticsKey.THREAD_ID.key, threadId)
+            }
+        )
+    }
+
+    fun logResponseScreenEvent(
+        threadId: String,
+        responseId: String,
+    ) {
+        logScreenEvent(
+            event = DiscussionAnalyticsEvent.DISCUSSION_RESPONSE_VIEWED,
+            params = buildMap {
+                put(DiscussionAnalyticsKey.THREAD_ID.key, threadId)
+                put(DiscussionAnalyticsKey.RESPONSE_ID.key, responseId)
+            }
+        )
+    }
+
     fun logAllPostsClickedEvent() {
         logEvent(DiscussionAnalyticsEvent.DISCUSSION_ALL_POSTS_CLICKED)
     }
@@ -138,8 +176,24 @@ open class BaseDiscussionViewModel(
         )
     }
 
+    private fun logScreenEvent(
+        event: DiscussionAnalyticsEvent,
+        params: Map<String, Any?> = emptyMap(),
+    ) {
+        analytics.logScreenEvent(
+            screenName = event.eventName,
+            params = buildMap {
+                put(DiscussionAnalyticsKey.NAME.key, event.biValue)
+                put(DiscussionAnalyticsKey.COURSE_ID.key, courseId)
+                putAll(params)
+            }
+        )
+    }
 
-    private fun logEvent(event: DiscussionAnalyticsEvent, params: Map<String, Any?> = emptyMap()) {
+    private fun logEvent(
+        event: DiscussionAnalyticsEvent,
+        params: Map<String, Any?> = emptyMap(),
+    ) {
         analytics.logEvent(
             event = event.eventName,
             params = buildMap {

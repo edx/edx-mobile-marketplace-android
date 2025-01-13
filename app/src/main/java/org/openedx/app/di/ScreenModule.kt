@@ -173,6 +173,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
             windowSize,
             get(),
         )

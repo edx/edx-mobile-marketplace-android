@@ -45,6 +45,8 @@ import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
+import org.openedx.core.system.notifier.app.EnrolledCourseEvent
+import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
 import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 
@@ -125,7 +127,7 @@ class DashboardListViewModel(
 
     init {
         getCourses()
-        collectAppUpgradeEvent()
+        collectAppEvent()
     }
 
     fun getCourses() {
@@ -293,14 +295,20 @@ class DashboardListViewModel(
         }
     }
 
-    private fun collectAppUpgradeEvent() {
-        viewModelScope.launch {
-            appNotifier.notifier.collect { event ->
-                if (event is AppUpgradeEvent) {
-                    _appUpgradeEvent.value = event
+    private fun collectAppEvent() {
+        appNotifier.notifier
+            .onEach {
+                if (it is AppUpgradeEvent) {
+                    _appUpgradeEvent.value = it
+                }
+                if (it is RequestEnrolledCourseEvent) {
+                    val enrolledCourses =
+                        interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
+                    appNotifier.send(EnrolledCourseEvent(enrolledCourses))
                 }
             }
-        }
+            .distinctUntilChanged()
+            .launchIn(viewModelScope)
     }
 
     fun dashboardCourseClickedEvent(courseId: String, courseName: String) {

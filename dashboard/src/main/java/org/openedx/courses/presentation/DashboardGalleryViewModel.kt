@@ -43,6 +43,9 @@ import org.openedx.core.system.notifier.NavigationToDiscovery
 import org.openedx.core.system.notifier.PushEvent
 import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
+import org.openedx.core.system.notifier.app.AppNotifier
+import org.openedx.core.system.notifier.app.EnrolledCourseEvent
+import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.utils.FileUtil
 import org.openedx.dashboard.domain.CourseStatusFilter
@@ -61,6 +64,7 @@ class DashboardGalleryViewModel(
     private val dashboardRouter: DashboardRouter,
     private val iapNotifier: IAPNotifier,
     private val pushNotifier: PushNotifier,
+    private val appNotifier: AppNotifier,
     private val iapInteractor: IAPInteractor,
     private val windowSize: WindowSize,
     iapAnalytics: IAPAnalytics,
@@ -97,9 +101,23 @@ class DashboardGalleryViewModel(
     private var isLoading = false
 
     init {
+        collectAppEvent()
         collectDiscoveryNotifier()
         collectIapNotifier()
         getCourses()
+    }
+
+    private fun collectAppEvent() {
+        appNotifier.notifier
+            .onEach {
+                if (it is RequestEnrolledCourseEvent) {
+                    val enrolledCourses =
+                        interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
+                    appNotifier.send(EnrolledCourseEvent(enrolledCourses))
+                }
+            }
+            .distinctUntilChanged()
+            .launchIn(viewModelScope)
     }
 
     fun getCourses(isIAPFlow: Boolean = false) {

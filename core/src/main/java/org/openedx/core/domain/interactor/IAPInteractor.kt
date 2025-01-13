@@ -114,7 +114,7 @@ class IAPInteractor(
 
     suspend fun processUnfulfilledPurchase(
         userId: Long,
-        enrolledCourses: List<EnrolledCourse> = arrayListOf(),
+        enrolledCourses: List<EnrolledCourse>,
         purchaseVerified: (PurchaseFlowData) -> Unit = {},
     ): Boolean {
         val purchases = billingProcessor.queryPurchases()

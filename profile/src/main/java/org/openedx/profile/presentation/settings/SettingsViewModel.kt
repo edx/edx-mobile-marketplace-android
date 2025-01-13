@@ -21,6 +21,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
+import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.module.DownloadWorkerController
@@ -34,7 +35,9 @@ import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
+import org.openedx.core.system.notifier.app.EnrolledCourseEvent
 import org.openedx.core.system.notifier.app.LogoutEvent
+import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
 import org.openedx.core.utils.EmailUtil
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Configuration
@@ -96,7 +99,7 @@ class SettingsViewModel(
         )
 
     init {
-        collectAppUpgradeEvent()
+        collectAppEvent()
         collectProfileEvent()
     }
 
@@ -128,11 +131,14 @@ class SettingsViewModel(
         }
     }
 
-    private fun collectAppUpgradeEvent() {
+    private fun collectAppEvent() {
         viewModelScope.launch {
             appNotifier.notifier.collect { event ->
                 if (event is AppUpgradeEvent) {
                     _appUpgradeEvent.value = event
+                }
+                if (event is EnrolledCourseEvent) {
+                    restorePurchase(event.enrolledCourses)
                 }
             }
         }
@@ -239,8 +245,14 @@ class SettingsViewModel(
         )
     }
 
-    fun restorePurchase() {
+    fun restorePurchasesClicked() {
         eventLogger.logRestorePurchasesClickedEvent()
+        viewModelScope.launch {
+            appNotifier.send(RequestEnrolledCourseEvent)
+        }
+    }
+
+    private fun restorePurchase(enrolledCourses: List<EnrolledCourse>) {
         viewModelScope.launch(Dispatchers.IO) {
             val userId = corePreferences.user?.id ?: return@launch
 
@@ -249,10 +261,17 @@ class SettingsViewModel(
             delay(2000)
 
             runCatching {
-                iapInteractor.processUnfulfilledPurchase(userId)
+                iapInteractor.processUnfulfilledPurchase(
+                    userId,
+                    enrolledCourses,
+                    purchaseVerified = { purchaseFlowData ->
+                        eventLogger.apply {
+                            this.purchaseFlowData = purchaseFlowData
+                            this.logUnfulfilledPurchaseInitiatedEvent()
+                        }
+                    })
             }.onSuccess {
                 if (it) {
-                    eventLogger.logUnfulfilledPurchaseInitiatedEvent()
                     _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
                 } else {
                     _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)

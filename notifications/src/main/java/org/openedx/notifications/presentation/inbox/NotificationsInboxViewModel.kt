@@ -1,5 +1,6 @@
 package org.openedx.notifications.presentation.inbox
 
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,11 +14,13 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.InboxSection
 import org.openedx.notifications.domain.model.NotificationItem
+import org.openedx.notifications.presentation.NotificationsRouter
 import java.util.Date
 import org.openedx.core.R as coreR
 
 class NotificationsInboxViewModel(
     private val interactor: NotificationsInteractor,
+    private val notificationsRouter: NotificationsRouter,
     private val resourceManager: ResourceManager,
 ) : BaseViewModel() {
 
@@ -137,6 +140,30 @@ class NotificationsInboxViewModel(
                 emitErrorMessage(e)
             }
         }
+    }
+
+    fun markAllNotificationsAsRead() {
+        viewModelScope.launch {
+            try {
+                if (_uiState.value is InboxUIState.Data) {
+                    interactor.markAllNotificationsAsRead()
+
+                    notifications.forEach { (section, notificationItems) ->
+                        notifications[section] = notificationItems
+                            .map { it.copy(lastRead = Date()) }
+                            .toMutableList()
+                    }
+                    _uiState.value = InboxUIState.Data(notifications = notifications.toMap())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emitErrorMessage(e)
+            }
+        }
+    }
+
+    fun navigateToPushNotificationsSettings(fm: FragmentManager) {
+        notificationsRouter.navigateToPushNotificationsSettings(fm)
     }
 
     private suspend fun emitErrorMessage(e: Exception) {

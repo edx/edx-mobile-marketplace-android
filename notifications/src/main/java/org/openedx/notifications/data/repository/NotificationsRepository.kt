@@ -30,9 +30,10 @@ class NotificationsRepository(
         ).message.isNotNull()
     }
 
-    suspend fun markNotificationAsRead(notificationId: Int): Boolean {
+    suspend fun markNotificationAsRead(notificationId: Int?): Boolean {
         return api.markNotificationAsRead(
             MarkNotificationReadBody(
+                appName = APIConstants.APP_NAME_DISCUSSION,
                 notificationId = notificationId,
             )
         ).message.isNotNull()

@@ -8,6 +8,9 @@
     <string name="notification_now">Now</string>
     <string name="notifications_no_notifications_yet">No notifications yet</string>
     <string name="notifications_no_notifications_yet_description">When you receive notifications they’ll show up here</string>
+
+    <string name="notifications_menu_settings">Notification settings</string>
+    <string name="notifications_menu_mark_all_read">Mark all as read</string>
     <plurals name="notifications_date_format_seconds">
         <item quantity="one">%1$s second</item>
         <item quantity="other">%1$s seconds</item>

@@ -133,12 +133,15 @@ data class VideoInfo(
     @SerializedName("url")
     var url: String?,
     @SerializedName("file_size")
-    var fileSize: Int?
+    var fileSize: Long?,
+    @SerializedName("stream_priority")
+    var streamPriority: Int?,
 ) {
     fun mapToDomain(): DomainVideoInfo {
         return DomainVideoInfo(
             url = url ?: "",
-            fileSize = fileSize ?: 0
+            fileSize = fileSize ?: 0,
+            streamPriority = streamPriority ?: 0,
         )
     }
 }

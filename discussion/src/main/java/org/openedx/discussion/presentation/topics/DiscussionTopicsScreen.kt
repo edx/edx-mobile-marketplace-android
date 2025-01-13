@@ -80,7 +80,6 @@ fun DiscussionTopicsScreen(
             discussionTopicsViewModel.discussionClickedEvent(
                 action,
                 data,
-                title
             )
             discussionTopicsViewModel.discussionRouter.navigateToDiscussionThread(
                 fragmentManager,

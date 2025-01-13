@@ -55,6 +55,10 @@ class DiscussionResponsesViewModel(
 
     init {
         loadCommentResponses()
+        logResponseScreenEvent(
+            threadId = threadId,
+            responseId = comment.id,
+        )
     }
 
     private fun loadCommentResponses() {

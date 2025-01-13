@@ -1,19 +1,35 @@
 package org.openedx.discussion.presentation
 
 interface DiscussionAnalytics {
-    fun discussionAllPostsClickedEvent(courseId: String, courseName: String)
-    fun discussionFollowingClickedEvent(courseId: String, courseName: String)
-    fun discussionTopicClickedEvent(
-        courseId: String,
-        courseName: String,
-        topicId: String,
-        topicName: String
-    )
-
     fun logEvent(event: String, params: Map<String, Any?>)
+    fun logScreenEvent(screenName: String, params: Map<String, Any?>)
 }
 
 enum class DiscussionAnalyticsEvent(val eventName: String, val biValue: String) {
+    DISCUSSION_ALL_POSTS_CLICKED(
+        "Discussion:All Posts Clicked",
+        "edx.bi.app.discussion.all_posts_clicked"
+    ),
+    DISCUSSION_FOLLOWING_POSTS_CLICKED(
+        "Discussion:Following Posts Clicked",
+        "edx.bi.app.discussion.following_posts_clicked"
+    ),
+    DISCUSSION_TOPIC_CLICKED(
+        "Discussion:Topic Clicked",
+        "edx.bi.app.discussion.topic_clicked"
+    ),
+    DISCUSSION_TOPIC_VIEWED(
+        "Discussion:Topic Viewed",
+        "edx.bi.app.discussion.topic.viewed"
+    ),
+    DISCUSSION_POST_VIEWED(
+        "Discussion:Post Viewed",
+        "edx.bi.app.discussion.post.viewed"
+    ),
+    DISCUSSION_RESPONSE_VIEWED(
+        "Discussion:Response Viewed",
+        "edx.bi.app.discussion.response.viewed"
+    ),
     DISCUSSION_POST_CREATED(
         "Discussion:Post Created",
         "edx.bi.app.discussion.post_created"
@@ -40,7 +56,7 @@ enum class DiscussionAnalyticsEvent(val eventName: String, val biValue: String) 
     )
 }
 
-enum class DiscussionAnalyticsParam(val key: String) {
+enum class DiscussionAnalyticsKey(val key: String) {
     NAME("name"),
     COURSE_ID("course_id"),
     TOPIC_ID("topic_id"),

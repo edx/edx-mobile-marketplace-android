@@ -117,7 +117,7 @@ class NotificationsInboxViewModel(
     ) {
         viewModelScope.launch {
             try {
-                if (interactor.markNotificationAsRead(notification.id)) {
+                if (notification.isUnread() && interactor.markNotificationAsRead(notification.id)) {
                     val currentSection = notifications[inboxSection] ?: return@launch
 
                     val index = currentSection.indexOfFirst { it.id == notification.id }
@@ -142,6 +142,30 @@ class NotificationsInboxViewModel(
         }
     }
 
+    fun markAllNotificationsAsRead() {
+        viewModelScope.launch {
+            try {
+                if (_uiState.value is InboxUIState.Data) {
+                    interactor.markAllNotificationsAsRead()
+
+                    notifications.forEach { (section, notificationItems) ->
+                        notifications[section] = notificationItems
+                            .map { it.copy(lastRead = Date()) }
+                            .toMutableList()
+                    }
+                    _uiState.value = InboxUIState.Data(notifications = notifications.toMap())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emitErrorMessage(e)
+            }
+        }
+    }
+
+    fun navigateToPushNotificationsSettings(fm: FragmentManager) {
+        notificationsRouter.navigateToPushNotificationsSettings(fm)
+    }
+
     private suspend fun emitErrorMessage(e: Exception) {
         if (e.isInternetError()) {
             _uiMessage.emit(
@@ -151,28 +175,6 @@ class NotificationsInboxViewModel(
             _uiMessage.emit(
                 UIMessage.SnackBarMessage(resourceManager.getString(coreR.string.core_error_unknown_error))
             )
-        }
-    }
-
-    fun navigateToPushNotificationsSettings(fm: FragmentManager) {
-        notificationsRouter.navigateToPushNotificationsSettings(fm)
-    }
-
-    fun markAllNotificationsAsRead() {
-        viewModelScope.launch {
-            try {
-                interactor.markAllNotificationsAsRead()
-
-                notifications.forEach { (section, notificationItems) ->
-                    notifications[section] =
-                        notificationItems.map { it.copy(lastRead = Date()) }.toMutableList()
-                }
-
-                _uiState.value = InboxUIState.Data(notifications = notifications.toMap())
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emitErrorMessage(e)
-            }
         }
     }
 }

@@ -1,4 +1,4 @@
-package org.openedx.notifications.data.model
+package org.openedx.notifications.presentation.inbox
 
 import androidx.annotation.StringRes
 import org.openedx.notifications.R

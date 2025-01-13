@@ -27,7 +27,7 @@ enum class DiscussionAnalyticsEvent(val eventName: String, val biValue: String) 
         "edx.bi.app.discussion.post.viewed"
     ),
     DISCUSSION_RESPONSE_VIEWED(
-        "Discussion:Response Viewed ",
+        "Discussion:Response Viewed",
         "edx.bi.app.discussion.response.viewed"
     ),
     DISCUSSION_POST_CREATED(

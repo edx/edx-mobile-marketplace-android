@@ -45,6 +45,7 @@ import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.utils.FileUtil
+import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 import org.openedx.dashboard.presentation.DashboardRouter
 
@@ -76,7 +77,7 @@ class DashboardGalleryViewModel(
     val uiMessage: SharedFlow<UIMessage?>
         get() = _uiMessage.asSharedFlow()
 
-    private val _updating = MutableStateFlow<Boolean>(false)
+    private val _updating = MutableStateFlow(false)
     val updating: StateFlow<Boolean>
         get() = _updating.asStateFlow()
 
@@ -258,9 +259,17 @@ class DashboardGalleryViewModel(
 
     private fun detectUnfulfilledPurchase() {
         viewModelScope.launch(Dispatchers.IO) {
+            val enrolledCourses =
+                interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
             iapInteractor.detectUnfulfilledPurchase(
+                enrolledCourses = enrolledCourses,
+                purchaseVerified = { purchaseFlowData ->
+                    eventLogger.apply {
+                        this.purchaseFlowData = purchaseFlowData
+                        this.logUnfulfilledPurchaseInitiatedEvent()
+                    }
+                },
                 onSuccess = {
-                    eventLogger.logUnfulfilledPurchaseInitiatedEvent()
                     _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
                 },
                 onFailure = {

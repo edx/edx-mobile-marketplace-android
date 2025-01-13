@@ -15,8 +15,8 @@ import org.openedx.core.utils.TimeUtils
 
 class IAPEventLogger(
     private val analytics: IAPAnalytics,
-    private val purchaseFlowData: PurchaseFlowData? = null,
     private val isSilentIAPFlow: Boolean? = null,
+    var purchaseFlowData: PurchaseFlowData? = null,
 ) {
     fun upgradeNowClickedEvent() {
         logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED)
@@ -64,7 +64,7 @@ class IAPEventLogger(
 
             IAPRequestType.PRICE_CODE,
             IAPRequestType.NO_SKU_CODE,
-            -> {
+                -> {
                 priceLoadErrorEvent(feedbackErrorMessage)
             }
 
@@ -186,7 +186,7 @@ class IAPEventLogger(
                 putAll(params)
                 putAll(getIAPEventParams())
                 putAll(getUnfulfilledIAPEventParams())
-            },
+            }
         )
     }
 }

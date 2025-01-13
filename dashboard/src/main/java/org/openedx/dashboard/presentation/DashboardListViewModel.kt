@@ -45,6 +45,7 @@ import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
+import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 
 @SuppressLint("StaticFieldLeak")
@@ -308,9 +309,17 @@ class DashboardListViewModel(
 
     private fun detectUnfulfilledPurchase() {
         viewModelScope.launch(Dispatchers.IO) {
+            val enrolledCourses =
+                interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
             iapInteractor.detectUnfulfilledPurchase(
+                enrolledCourses = enrolledCourses,
+                purchaseVerified = { purchaseFlowData ->
+                    eventLogger.apply {
+                        this.purchaseFlowData = purchaseFlowData
+                        this.logUnfulfilledPurchaseInitiatedEvent()
+                    }
+                },
                 onSuccess = {
-                    eventLogger.logUnfulfilledPurchaseInitiatedEvent()
                     _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
                 },
                 onFailure = {

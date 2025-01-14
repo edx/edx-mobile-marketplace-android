@@ -42,7 +42,7 @@ open class VideoUnitViewModel(
     val currentVideoTime: LiveData<Long>
         get() = _currentVideoTime
 
-    private val _isUpdated = MutableLiveData(true)
+    protected val _isUpdated = MutableLiveData(true)
     val isUpdated: LiveData<Boolean>
         get() = _isUpdated
 

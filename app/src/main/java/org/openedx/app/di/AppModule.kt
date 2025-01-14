@@ -132,8 +132,9 @@ val appModule = module {
     single<ProfileRouter> { get<AppRouter>() }
     single<WhatsNewRouter> { get<AppRouter>() }
     single<AppUpgradeRouter> { get<AppRouter>() }
-    single { DeepLinkRouter(get(), get(), get(), get(), get(), get()) }
     single<NotificationsRouter> { get<AppRouter>() }
+    
+    single { DeepLinkRouter(get(), get(), get(), get(), get(), get()) }
 
     single { NetworkConnection(get()) }
 

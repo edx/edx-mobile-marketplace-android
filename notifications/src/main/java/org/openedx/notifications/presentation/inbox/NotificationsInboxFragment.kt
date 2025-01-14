@@ -114,7 +114,7 @@ class NotificationsInboxFragment : Fragment() {
                                 viewModel.markAllNotificationsAsRead()
                             }
 
-                            NotificationsMenuType.NOTIFICATION_SETTINGS -> {
+                            NotificationsMenuType.SETTINGS -> {
                                 viewModel.navigateToPushNotificationsSettings(requireActivity().supportFragmentManager)
                             }
                         }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
+import org.openedx.core.FragmentViewType
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
@@ -128,16 +129,18 @@ class NotificationsInboxViewModel(
     }
 
     fun markNotificationAsRead(
+        fm: FragmentManager,
         notification: NotificationItem,
         inboxSection: InboxSection,
     ) {
         viewModelScope.launch {
             try {
-                if (notification.isUnread() && interactor.markNotificationAsRead(notification.id)) {
-                    val currentSection = notifications[inboxSection] ?: return@launch
+                val currentSection = notifications[inboxSection] ?: return@launch
 
-                    val index = currentSection.indexOfFirst { it.id == notification.id }
-                    if (index == -1) return@launch
+                val index = currentSection.indexOfFirst { it.id == notification.id }
+                if (index == -1) return@launch
+
+                if (notification.isUnread() && interactor.markNotificationAsRead(notification.id)) {
 
                     // Locally update the lastRead timestamp to avoid refreshing the entire list.
                     currentSection[index] = currentSection[index].copy(lastRead = Date())
@@ -149,7 +152,19 @@ class NotificationsInboxViewModel(
                 }
 
                 // Navigating the user to the related post or response in the Course Discussion Tab
-                // will be implemented in a separate PR.
+                if(notification.courseId.isNotEmpty()) {
+                    notificationsRouter.navigateToDiscussionThread(
+                        fm = fm,
+                        action = "Topic",
+                        courseId = notification.courseId,
+                        topicId = notification.contentContext.topicId,
+                        threadId = notification.contentContext.threadId,
+                        responseId = notification.contentContext.responseId,
+                        commentId = notification.contentContext.responseCommentId,
+                        title = notification.contentContext.courseName,
+                        viewType = FragmentViewType.FULL_CONTENT
+                    )
+                }
 
             } catch (e: Exception) {
                 e.printStackTrace()

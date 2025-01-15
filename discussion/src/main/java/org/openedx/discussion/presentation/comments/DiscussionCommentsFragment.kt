@@ -100,7 +100,8 @@ class DiscussionCommentsFragment : Fragment() {
     private val viewModel by viewModel<DiscussionCommentsViewModel> {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
-            requireArguments().parcelable(ARG_THREAD)!!
+            requireArguments().parcelable(ARG_THREAD)!!,
+            requireArguments().getString(ARG_RESPONSE_ID, ""),
         )
     }
     private val router by inject<DiscussionRouter>()
@@ -132,6 +133,8 @@ class DiscussionCommentsFragment : Fragment() {
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
+                    responseId = viewModel.responseId,
+                    commentId = viewModel.commentId,
                     onSwipeRefresh = {
                         viewModel.updateThreadComments()
                     },
@@ -177,6 +180,8 @@ class DiscussionCommentsFragment : Fragment() {
                 )
             }
         }
+        requireArguments().putString(ARG_RESPONSE_ID, "")
+        requireArguments().putString(ARG_COMMENT_ID, "")
     }
 
     companion object {
@@ -188,15 +193,21 @@ class DiscussionCommentsFragment : Fragment() {
 
         private const val ARG_COURSE_ID = "argCourseId"
         private const val ARG_THREAD = "argThread"
+        private const val ARG_RESPONSE_ID = "argResponseId"
+        private const val ARG_COMMENT_ID = "argCommentId"
 
         fun newInstance(
             courseId: String,
             thread: Thread,
+            responseId: String,
+            commentId: String,
         ): DiscussionCommentsFragment {
             val fragment = DiscussionCommentsFragment()
             fragment.arguments = bundleOf(
                 ARG_COURSE_ID to courseId,
-                ARG_THREAD to thread
+                ARG_THREAD to thread,
+                ARG_RESPONSE_ID to responseId,
+                ARG_COMMENT_ID to commentId,
             )
             return fragment
         }
@@ -213,13 +224,15 @@ private fun DiscussionCommentsScreen(
     title: String,
     canLoadMore: Boolean,
     refreshing: Boolean,
+    responseId: String,
+    commentId: String,
     onSwipeRefresh: () -> Unit,
     paginationCallBack: () -> Unit,
     onItemClick: (String, String, Boolean) -> Unit,
     onCommentClick: (DiscussionComment) -> Unit,
     onAddResponseClick: (String) -> Unit,
     onBackClick: () -> Unit,
-    onUserPhotoClick: (String) -> Unit
+    onUserPhotoClick: (String) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
@@ -231,6 +244,10 @@ private fun DiscussionCommentsScreen(
 
     var responseValue by rememberSaveable {
         mutableStateOf("")
+    }
+
+    var fromNotificationNavigation by rememberSaveable {
+        mutableStateOf(responseId.isNotEmpty() && commentId.isNotEmpty())
     }
 
     val sendButtonAlpha = if (responseValue.isEmpty()) 0.3f else 1f
@@ -374,6 +391,10 @@ private fun DiscussionCommentsScreen(
                                             onUserPhotoClick = {
                                                 onUserPhotoClick(comment.author)
                                             })
+                                        if (fromNotificationNavigation && commentId.isNotEmpty() && responseId == comment.id) {
+                                            onCommentClick(comment)
+                                            fromNotificationNavigation = false
+                                        }
                                     }
                                     item {
                                         if (canLoadMore) {
@@ -508,7 +529,9 @@ private fun DiscussionCommentsScreenPreview() {
             onBackClick = {},
             refreshing = false,
             onSwipeRefresh = {},
-            onUserPhotoClick = {}
+            onUserPhotoClick = {},
+            responseId = "",
+            commentId = "",
         )
     }
 }
@@ -538,7 +561,9 @@ private fun DiscussionCommentsScreenTabletPreview() {
             onBackClick = {},
             refreshing = false,
             onSwipeRefresh = {},
-            onUserPhotoClick = {}
+            onUserPhotoClick = {},
+            responseId = "",
+            commentId = "",
         )
     }
 }

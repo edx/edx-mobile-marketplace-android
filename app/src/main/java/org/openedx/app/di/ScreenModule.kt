@@ -436,10 +436,12 @@ val screenModule = module {
             get(),
         )
     }
-    viewModel { (courseId: String, thread: Thread) ->
+    viewModel { (courseId: String, thread: Thread, responseId: String, commentId: String) ->
         DiscussionCommentsViewModel(
             courseId,
             thread,
+            responseId,
+            commentId,
             get(),
             get(),
             get(),

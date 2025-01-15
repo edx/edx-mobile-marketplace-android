@@ -24,6 +24,7 @@ data class NotificationItem(
     val contentContext: NotificationContent,
     val content: String,
     val contentUrl: String,
+    val courseId: String,
     val lastRead: Date?,
     val lastSeen: Date?,
     val created: Date?,
@@ -46,4 +47,8 @@ data class NotificationContent(
     val emailContent: String,
     val authorName: String,
     val authorPronoun: String,
-)
+){
+    val responseId = parentId.ifEmpty { commentId }
+
+    val responseCommentId = if(responseId == commentId) "" else commentId
+}

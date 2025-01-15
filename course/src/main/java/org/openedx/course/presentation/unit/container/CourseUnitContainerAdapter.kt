@@ -61,6 +61,8 @@ class CourseUnitContainerAdapter(
                     DiscussionTopicsViewModel.TOPIC,
                     viewModel.courseId,
                     block.studentViewData?.topicId ?: "",
+                    "",
+                    "",
                     block.displayName,
                     FragmentViewType.MAIN_CONTENT.name,
                     block.id

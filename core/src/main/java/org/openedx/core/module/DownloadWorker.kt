@@ -147,7 +147,7 @@ class DownloadWorker(
                     DownloadModelEntity.createFrom(
                         downloadTask.copy(
                             downloadedState = DownloadedState.DOWNLOADED,
-                            size = File(downloadTask.path).length().toInt(),
+                            size = File(downloadTask.path).length(),
                             transcriptDownloadedStatus = if (isTranscriptsDownloaded) {
                                 TranscriptsDownloadedState.DOWNLOADED
                             } else {

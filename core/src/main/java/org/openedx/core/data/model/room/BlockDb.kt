@@ -193,16 +193,19 @@ data class VideoInfoDb(
     @ColumnInfo("url")
     val url: String,
     @ColumnInfo("fileSize")
-    val fileSize: Int
+    val fileSize: Long,
+    @ColumnInfo("streamPriority")
+    val streamPriority: Int,
 ) {
-    fun mapToDomain() = DomainVideoInfo(url, fileSize)
+    fun mapToDomain() = DomainVideoInfo(url, fileSize, streamPriority)
 
     companion object {
         fun createFrom(videoInfo: VideoInfo?): VideoInfoDb? {
             if (videoInfo == null) return null
             return VideoInfoDb(
-                videoInfo.url ?: "",
-                videoInfo.fileSize ?: 0,
+                url = videoInfo.url ?: "",
+                fileSize = videoInfo.fileSize ?: 0,
+                streamPriority = videoInfo.streamPriority ?: 0,
             )
         }
     }

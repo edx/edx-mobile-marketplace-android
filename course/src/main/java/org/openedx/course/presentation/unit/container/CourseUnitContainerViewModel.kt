@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import org.openedx.core.BaseViewModel
 import org.openedx.core.BlockType
 import org.openedx.core.config.Config
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
 import org.openedx.core.extension.clearAndAddAll
 import org.openedx.core.extension.indexOfFirstFromIndex
@@ -33,6 +34,7 @@ class CourseUnitContainerViewModel(
     private val interactor: CourseInteractor,
     private val notifier: CourseNotifier,
     private val analytics: CourseAnalytics,
+    private val corePreferences: CorePreferences,
 ) : BaseViewModel() {
 
     private val blocks = ArrayList<Block>()
@@ -81,6 +83,9 @@ class CourseUnitContainerViewModel(
 
     private val _descendantsBlocks = MutableStateFlow<List<Block>>(listOf())
     val descendantsBlocks = _descendantsBlocks.asStateFlow()
+
+    val videoQuality
+        get() = corePreferences.videoSettings.videoStreamingQuality
 
     fun loadBlocks(mode: CourseViewMode, componentId: String = "") {
         currentMode = mode

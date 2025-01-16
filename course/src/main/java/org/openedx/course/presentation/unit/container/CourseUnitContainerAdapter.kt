@@ -31,11 +31,11 @@ class CourseUnitContainerAdapter(
                     val downloadModel = viewModel.getDownloadModelById(block.id)
                     val isDownloaded = downloadModel != null
 
-                    val videoUrl = downloadModel?.path ?: videoUrl
+                    val videoUrl = downloadModel?.path ?: getPreferredVideoInfoForStreaming(viewModel.videoQuality).url
                     val transcripts =
                         downloadModel?.transcriptPaths ?: block.studentViewData?.transcripts
 
-                    if (videoUrl.isNotEmpty()) {
+                    if (videoUrl.isNotEmpty() && videoUrl != youtube?.url) {
                         VideoUnitFragment.newInstance(
                             block.id,
                             viewModel.courseId,

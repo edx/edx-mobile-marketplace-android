@@ -161,6 +161,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread,
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -187,6 +189,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread.copy(type = DiscussionType.QUESTION),
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -220,6 +224,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread.copy(type = DiscussionType.QUESTION),
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -252,6 +258,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread,
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -288,6 +296,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread,
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -325,6 +335,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -363,6 +375,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -399,6 +413,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -432,6 +448,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread,
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -465,6 +483,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread,
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -496,6 +516,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread,
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -529,6 +551,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread,
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -562,6 +586,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -594,6 +620,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -625,6 +653,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -657,6 +687,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -687,6 +719,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -718,6 +752,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -749,6 +785,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -783,6 +821,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -812,6 +852,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -845,6 +887,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -875,6 +919,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -912,6 +958,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -949,6 +997,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -985,6 +1035,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -1015,6 +1067,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -1046,6 +1100,8 @@ class DiscussionCommentsViewModelTest {
             DiscussionCommentsViewModel(
                 "",
                 mockThread,
+                "",
+                "",
                 interactor,
                 resourceManager,
                 notifier,
@@ -1075,6 +1131,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -1101,6 +1159,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,
@@ -1128,6 +1188,8 @@ class DiscussionCommentsViewModelTest {
         val viewModel = DiscussionCommentsViewModel(
             "",
             mockThread,
+            "",
+            "",
             interactor,
             resourceManager,
             notifier,

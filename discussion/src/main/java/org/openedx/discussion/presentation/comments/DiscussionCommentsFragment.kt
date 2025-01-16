@@ -102,6 +102,7 @@ class DiscussionCommentsFragment : Fragment() {
             requireArguments().getString(ARG_COURSE_ID, ""),
             requireArguments().parcelable(ARG_THREAD)!!,
             requireArguments().getString(ARG_RESPONSE_ID, ""),
+            requireArguments().getString(ARG_COMMENT_ID, ""),
         )
     }
     private val router by inject<DiscussionRouter>()

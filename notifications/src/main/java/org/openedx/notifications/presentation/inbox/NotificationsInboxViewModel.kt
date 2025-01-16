@@ -15,6 +15,9 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.InboxSection
 import org.openedx.notifications.domain.model.NotificationItem
+import org.openedx.notifications.presentation.NotificationsAnalytics
+import org.openedx.notifications.presentation.NotificationsAnalyticsEvent
+import org.openedx.notifications.presentation.NotificationsAnalyticsKey
 import org.openedx.notifications.presentation.NotificationsRouter
 import java.util.Date
 import org.openedx.core.R as coreR
@@ -23,6 +26,7 @@ class NotificationsInboxViewModel(
     private val interactor: NotificationsInteractor,
     private val notificationsRouter: NotificationsRouter,
     private val resourceManager: ResourceManager,
+    private val analytics: NotificationsAnalytics,
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow<InboxUIState>(InboxUIState.Loading)
@@ -48,8 +52,21 @@ class NotificationsInboxViewModel(
     private var nextPage = 1
 
     init {
+        logScreenViewEvent()
         getInboxNotifications()
         markNotificationsAsSeen()
+    }
+
+    private fun logScreenViewEvent() {
+        analytics.logScreenEvent(
+            screenName = NotificationsAnalyticsEvent.NOTIFICATION_INBOX_VIEW.eventName,
+            params = buildMap {
+                put(
+                    NotificationsAnalyticsKey.NAME.key,
+                    NotificationsAnalyticsEvent.NOTIFICATION_INBOX_VIEW.biValue
+                )
+            }
+        )
     }
 
     private fun getInboxNotifications() {
@@ -150,6 +167,15 @@ class NotificationsInboxViewModel(
                         notifications = notifications.toMap()
                     )
                 }
+                logEvent(
+                    event = NotificationsAnalyticsEvent.NOTIFICATION_ITEM_TAPPED,
+                    params = buildMap {
+                        put(
+                            NotificationsAnalyticsKey.NOTIFICATION_TYPE.key,
+                            notification.notificationType
+                        )
+                    }
+                )
 
                 // Navigating the user to the related post or response in the Course Discussion Tab
                 if(notification.courseId.isNotEmpty()) {
@@ -207,5 +233,23 @@ class NotificationsInboxViewModel(
                 UIMessage.SnackBarMessage(resourceManager.getString(coreR.string.core_error_unknown_error))
             )
         }
+    }
+
+    private fun logEvent(event: NotificationsAnalyticsEvent, params: Map<String, Any?>) {
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.NAME.key, event.biValue)
+                put(
+                    NotificationsAnalyticsKey.CATEGORY.key,
+                    NotificationsAnalyticsKey.NOTIFICATIONS.key
+                )
+                put(
+                    NotificationsAnalyticsKey.NOTIFICATION_CATEGORY.key,
+                    NotificationsAnalyticsKey.DISCUSSION.key
+                )
+                putAll(params)
+            }
+        )
     }
 }

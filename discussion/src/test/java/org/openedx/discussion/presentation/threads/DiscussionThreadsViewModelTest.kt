@@ -32,6 +32,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.ThreadsData
+import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
@@ -49,6 +50,7 @@ class DiscussionThreadsViewModelTest {
     private val resourceManager = mockk<ResourceManager>()
     private val interactor = mockk<DiscussionInteractor>()
     private val notifier = mockk<DiscussionNotifier>()
+    private val analytics = mockk<DiscussionAnalytics>()
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
@@ -128,6 +130,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         advanceUntilIdle()
 
@@ -148,6 +151,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         coEvery { interactor.getAllThreads(any(), any(), any(), any()) } throws Exception()
         advanceUntilIdle()
@@ -179,6 +183,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         advanceUntilIdle()
 
@@ -207,6 +212,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         advanceUntilIdle()
 
@@ -227,6 +233,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         coEvery {
             interactor.getFollowingThreads(
@@ -282,6 +289,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         advanceUntilIdle()
 
@@ -310,6 +318,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         advanceUntilIdle()
 
@@ -330,6 +339,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } throws Exception()
         advanceUntilIdle()
@@ -361,6 +371,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         advanceUntilIdle()
 
@@ -380,6 +391,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
             threads,
@@ -400,6 +412,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
             threads,
@@ -420,6 +433,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
             threads,
@@ -450,6 +464,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
         viewModel.updateThread("")
         advanceUntilIdle()
@@ -486,6 +501,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
 
 
@@ -525,6 +541,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            analytics,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()

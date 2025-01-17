@@ -5,13 +5,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
+import org.openedx.discussion.presentation.BaseDiscussionViewModel
+import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
@@ -24,7 +25,8 @@ class DiscussionThreadsViewModel(
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
-) : BaseViewModel() {
+    analytics: DiscussionAnalytics,
+) : BaseDiscussionViewModel(courseId, "", analytics) {
 
     private val _uiState = MutableLiveData<DiscussionThreadsUIState>()
     val uiState: LiveData<DiscussionThreadsUIState>
@@ -73,6 +75,7 @@ class DiscussionThreadsViewModel(
 
     init {
         getThreadByType(SortType.LAST_ACTIVITY_AT.queryParam)
+        logTopicScreenEvent(topicId)
     }
 
     fun getThreadByType(orderBy: String) {

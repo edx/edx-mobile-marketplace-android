@@ -8,15 +8,15 @@ interface DiscussionAnalytics {
 enum class DiscussionAnalyticsEvent(val eventName: String, val biValue: String) {
     DISCUSSION_ALL_POSTS_CLICKED(
         "Discussion:All Posts Clicked",
-        "edx.bi.app.discussion.all_posts_clicked"
+        "edx.bi.app.discussion.all_posts.clicked"
     ),
     DISCUSSION_FOLLOWING_POSTS_CLICKED(
         "Discussion:Following Posts Clicked",
-        "edx.bi.app.discussion.following_posts_clicked"
+        "edx.bi.app.discussion.following_posts.clicked"
     ),
     DISCUSSION_TOPIC_CLICKED(
         "Discussion:Topic Clicked",
-        "edx.bi.app.discussion.topic_clicked"
+        "edx.bi.app.discussion.topic.clicked"
     ),
     DISCUSSION_TOPIC_VIEWED(
         "Discussion:Topic Viewed",
@@ -32,27 +32,27 @@ enum class DiscussionAnalyticsEvent(val eventName: String, val biValue: String) 
     ),
     DISCUSSION_POST_CREATED(
         "Discussion:Post Created",
-        "edx.bi.app.discussion.post_created"
+        "edx.bi.app.discussion.post.created"
     ),
     DISCUSSION_RESPONSE_ADDED(
         "Discussion:Response Added",
-        "edx.bi.app.discussion.response_added"
+        "edx.bi.app.discussion.response.added"
     ),
     DISCUSSION_COMMENT_ADDED(
         "Discussion:Comment Added",
-        "edx.bi.app.discussion.comment_added"
+        "edx.bi.app.discussion.comment.added"
     ),
     DISCUSSION_POST_FOLLOW_TOGGLE(
         "Discussion:Post Follow Toggle",
-        "edx.bi.app.discussion.follow_toggle"
+        "edx.bi.app.discussion.follow.toggle"
     ),
     DISCUSSION_LIKE_TOGGLE(
         "Discussion:Like Toggle",
-        "edx.bi.app.discussion.like_toggle"
+        "edx.bi.app.discussion.like.toggle"
     ),
     DISCUSSION_REPORT_TOGGLE(
         "Discussion:Report Toggle",
-        "edx.bi.app.discussion.report_toggle"
+        "edx.bi.app.discussion.report.toggle"
     )
 }
 

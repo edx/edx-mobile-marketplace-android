@@ -120,6 +120,7 @@ class EncodedVideoUnitViewModel(
         val executor = Executors.newSingleThreadExecutor()
         CastContext.getSharedInstance(context, executor).addOnSuccessListener { castContext ->
             castPlayer = CastPlayer(castContext)
+            _isUpdated.value = true
         }.addOnFailureListener {
             logger.e(it, true)
         }

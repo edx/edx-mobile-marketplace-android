@@ -4,4 +4,8 @@ data class CourseEnrollments(
     val enrollments: DashboardCourseList,
     val configs: AppConfig,
     val primary: EnrolledCourse?,
-)
+) {
+    fun hasEnrolledCourses(): Boolean {
+        return primary != null || enrollments.courses.isNotEmpty()
+    }
+}

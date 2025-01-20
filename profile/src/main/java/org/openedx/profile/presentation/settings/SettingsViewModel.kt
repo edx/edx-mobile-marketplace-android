@@ -264,16 +264,16 @@ class SettingsViewModel(
                 iapInteractor.processUnfulfilledPurchase(
                     userId,
                     enrolledCourses,
-                    purchaseVerified = { purchaseFlowData ->
+                    verificationInitiated = { purchaseFlowData ->
                         eventLogger.apply {
                             this.purchaseFlowData = purchaseFlowData
                             this.logUnfulfilledPurchaseInitiatedEvent()
                         }
                     })
-            }.onSuccess {
-                if (it) {
+            }.onSuccess { purchaseFlowData ->
+                purchaseFlowData?.let {
                     _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
-                } else {
+                } ?: run {
                     _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
                 }
             }.onFailure {

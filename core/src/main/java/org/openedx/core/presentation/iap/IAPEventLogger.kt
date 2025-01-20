@@ -15,7 +15,7 @@ import org.openedx.core.utils.TimeUtils
 
 class IAPEventLogger(
     private val analytics: IAPAnalytics,
-    private val isSilentIAPFlow: Boolean? = null,
+    val isSilentIAPFlow: Boolean? = null,
     var purchaseFlowData: PurchaseFlowData? = null,
 ) {
     fun upgradeNowClickedEvent() {

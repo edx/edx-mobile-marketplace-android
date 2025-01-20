@@ -281,13 +281,17 @@ class DashboardGalleryViewModel(
                 interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
             iapInteractor.detectUnfulfilledPurchase(
                 enrolledCourses = enrolledCourses,
-                purchaseVerified = { purchaseFlowData ->
+                verificationInitiated = { purchaseFlowData ->
                     eventLogger.apply {
                         this.purchaseFlowData = purchaseFlowData
                         this.logUnfulfilledPurchaseInitiatedEvent()
                     }
                 },
-                onSuccess = {
+                onSuccess = { purchaseFlowData ->
+                    eventLogger.apply {
+                        this.purchaseFlowData = purchaseFlowData
+                        eventLogger.upgradeSuccessEvent()
+                    }
                     _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
                 },
                 onFailure = {

@@ -14,14 +14,14 @@ import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.extension.decodeToLong
-import org.openedx.core.extension.decodeToString
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseSku
 import org.openedx.core.module.billing.getPriceAmount
+import org.openedx.core.module.billing.getUserId
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.utils.EmailUtil
+import org.openedx.core.utils.TimeUtils
 
 class IAPInteractor(
     private val appData: AppData,
@@ -115,19 +115,19 @@ class IAPInteractor(
     suspend fun processUnfulfilledPurchase(
         userId: Long,
         enrolledCourses: List<EnrolledCourse>,
-        purchaseVerified: (PurchaseFlowData) -> Unit = {},
-    ): Boolean {
+        verificationInitiated: (PurchaseFlowData) -> Unit = {},
+    ): PurchaseFlowData? {
         val purchases = billingProcessor.queryPurchases()
         val userPurchases = purchases.filter { purchase ->
-            val userAccountId = purchase.accountIdentifiers?.obfuscatedAccountId?.decodeToLong()
-            val storeSku = purchase.accountIdentifiers?.obfuscatedProfileId?.decodeToString()
+            val userAccountId = purchase.getUserId()
+            val courseSku = purchase.getCourseSku()
 
             userAccountId == userId && enrolledCourses.any { enrolledCourse ->
-                storeSku == enrolledCourse.productInfo?.courseSku
+                courseSku == enrolledCourse.productInfo?.courseSku
             }
         }
         if (userPurchases.isNotEmpty()) {
-            userPurchases.forEach { purchase ->
+            userPurchases[0].let { purchase ->
                 val courseVerified = enrolledCourses.find { enrolledCourse ->
                     enrolledCourse.productInfo?.courseSku == purchase.getCourseSku()
                 }
@@ -143,18 +143,19 @@ class IAPInteractor(
                             this.price = it.getPriceAmount()
                             this.currencyCode = it.priceCurrencyCode
                         }
+                        this.flowStartTime = TimeUtils.getCurrentTime()
                     }
+                    verificationInitiated(purchaseProductFlow)
                     startUnfulfilledVerification(purchase)
-                    purchaseVerified(purchaseProductFlow)
+                    return purchaseProductFlow
                 }
             }
-            return true
         } else {
-            purchases.forEach {
+            purchases.subtract(userPurchases.toSet()).forEach {
                 billingProcessor.consumePurchase(it.purchaseToken)
             }
         }
-        return false
+        return null
     }
 
     private suspend fun startUnfulfilledVerification(userPurchase: Purchase) {
@@ -177,17 +178,17 @@ class IAPInteractor(
 
     suspend fun detectUnfulfilledPurchase(
         enrolledCourses: List<EnrolledCourse>,
-        purchaseVerified: (PurchaseFlowData) -> Unit,
-        onSuccess: () -> Unit,
+        verificationInitiated: (PurchaseFlowData) -> Unit,
+        onSuccess: (PurchaseFlowData) -> Unit,
         onFailure: (IAPException) -> Unit,
     ) {
         if (isIAPEnabled) {
             preferencesManager.user?.id?.let { userId ->
                 runCatching {
-                    processUnfulfilledPurchase(userId, enrolledCourses, purchaseVerified)
-                }.onSuccess {
-                    if (it) {
-                        onSuccess()
+                    processUnfulfilledPurchase(userId, enrolledCourses, verificationInitiated)
+                }.onSuccess { purchaseFlowData ->
+                    purchaseFlowData?.let {
+                        onSuccess(purchaseFlowData)
                     }
                 }.onFailure {
                     if (it is IAPException) {

@@ -84,7 +84,9 @@ class IAPViewModel(
             iapNotifier.notifier.onEach { event ->
                 when (event) {
                     is CourseDataUpdated -> {
-                        eventLogger.upgradeSuccessEvent()
+                        if (eventLogger.isSilentIAPFlow == null) {
+                            eventLogger.upgradeSuccessEvent()
+                        }
                         _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                         _uiState.value = IAPUIState.CourseDataUpdated
                     }

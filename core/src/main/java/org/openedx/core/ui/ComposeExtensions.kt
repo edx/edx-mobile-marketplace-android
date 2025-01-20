@@ -88,9 +88,39 @@ fun LazyGridState.shouldLoadMore(rememberedIndex: MutableState<Int>, threshold: 
     return false
 }
 
-fun LazyListState.shouldLoadMore(threshold: Int): Boolean {
-    val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return false
-    return lastVisibleIndex >= layoutInfo.totalItemsCount - 1 - threshold
+/**
+ * Tracks changes to both the first and last visible item indices and accounts for
+ * edge cases where all items on the current page might fit within the viewport (e.g., due to
+ * dynamic item sizes).
+ *
+ * Triggers a load when:
+ * - The first or last visible item index changes.
+ * - All items fit on the screen (e.g., due to dynamic sizes).
+ *
+ * @param rememberedFirstIndex Tracks the previous first visible item index.
+ * @param rememberedLastIndex Tracks the previous last visible item index.
+ * @param threshold Number of items from the end of the list to trigger loading.
+ * @return `true` if more items should be loaded; `false` otherwise.
+ */
+fun LazyListState.shouldLoadMore(
+    rememberedFirstIndex: MutableState<Int>,
+    rememberedLastIndex: MutableState<Int>,
+    threshold: Int
+): Boolean {
+    val firstVisibleIndex = this.firstVisibleItemIndex
+    val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+    val totalItemsCount = layoutInfo.totalItemsCount
+
+    if (
+        rememberedFirstIndex.value != firstVisibleIndex ||
+        rememberedLastIndex.value != lastVisibleIndex ||
+        (firstVisibleIndex == 0 && lastVisibleIndex == totalItemsCount - 1)
+    ) {
+        rememberedFirstIndex.value = firstVisibleIndex
+        rememberedLastIndex.value = lastVisibleIndex
+        return lastVisibleIndex >= totalItemsCount - 1 - threshold
+    }
+    return false
 }
 
 fun Modifier.statusBarsInset(): Modifier = composed {

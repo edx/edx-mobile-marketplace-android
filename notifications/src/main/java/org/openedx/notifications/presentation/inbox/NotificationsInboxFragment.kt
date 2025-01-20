@@ -186,6 +186,12 @@ private fun InboxView(
         refreshing = refreshing,
         onRefresh = { onSwipeRefresh() },
     )
+    val firstVisibleIndex = remember {
+        mutableStateOf(scrollState.firstVisibleItemIndex)
+    }
+    val lastVisibleIndex = remember {
+        mutableStateOf(scrollState.firstVisibleItemIndex)
+    }
     val loadMoreTriggerThreshold = 4
 
     Scaffold(
@@ -253,7 +259,9 @@ private fun InboxView(
                                 if (canLoadMore) {
                                     item {
                                         Box(
-                                            modifier = Modifier.fillMaxWidth(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 8.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             CircularProgressIndicator(color = MaterialTheme.appColors.primary)
@@ -261,7 +269,12 @@ private fun InboxView(
                                     }
                                 }
 
-                                if (scrollState.shouldLoadMore(loadMoreTriggerThreshold)) {
+                                if (scrollState.shouldLoadMore(
+                                        rememberedFirstIndex = firstVisibleIndex,
+                                        rememberedLastIndex = lastVisibleIndex,
+                                        threshold = loadMoreTriggerThreshold
+                                    )
+                                ) {
                                     paginationCallBack()
                                 }
                             }

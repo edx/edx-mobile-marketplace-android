@@ -78,8 +78,12 @@ class LearnViewModel(
     private fun checkNotificationCount() {
         if (config.isPushNotificationsEnabled()) {
             viewModelScope.launch(Dispatchers.IO) {
-                val unreadNotifications = pushManager.getUnreadNotificationsCount()
-                _uiState.update { it.copy(hasUnreadNotifications = unreadNotifications > 0) }
+                try {
+                    val unreadNotifications = pushManager.getUnreadNotificationsCount()
+                    _uiState.update { it.copy(hasUnreadNotifications = unreadNotifications > 0) }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }

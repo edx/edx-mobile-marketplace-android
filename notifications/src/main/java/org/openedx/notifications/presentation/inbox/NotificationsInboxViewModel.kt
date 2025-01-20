@@ -97,10 +97,8 @@ class NotificationsInboxViewModel(
                     InboxUIState.Empty
                 }
             } catch (e: Exception) {
-                if (_isRefreshing.value) {
+                if (uiState.value is InboxUIState.Data || _isRefreshing.value) {
                     emitErrorMessage(e)
-                } else if (nextPage > 1) {
-                    _canLoadMore.value = true
                 } else {
                     _uiState.value = InboxUIState.Error
                 }

@@ -18,6 +18,7 @@ import android.provider.MediaStore
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,6 +44,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
@@ -163,6 +165,17 @@ class EditProfileFragment : Fragment() {
             }
         }
 
+    private val onBackPressedCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            if (viewModel.profileDataChanged) {
+                viewModel.setShowLeaveDialog(true)
+            } else {
+                viewModel.setShowLeaveDialog(false)
+                requireActivity().supportFragmentManager.popBackStackImmediate()
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -239,6 +252,16 @@ class EditProfileFragment : Fragment() {
                 )
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        activity?.onBackPressedDispatcher?.addCallback(onBackPressedCallback)
+    }
+
+    override fun onPause() {
+        onBackPressedCallback.remove()
+        super.onPause()
     }
 
     @Suppress("DEPRECATION")
@@ -360,7 +383,7 @@ private fun EditProfileScreen(
         mutableStateMapOf(
             Pair(
                 YEAR_OF_BIRTH,
-                if (uiState.account.yearOfBirth != null) uiState.account.yearOfBirth.toString() else ""
+                if (uiState.account.yearOfBirth != null) uiState.account.yearOfBirth.toString() else null
             ),
             Pair(LANGUAGE, uiState.account.languageProficiencies),
             Pair(COUNTRY, uiState.account.country),
@@ -598,7 +621,7 @@ private fun EditProfileScreen(
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.BottomCenter
+                        contentAlignment = Alignment.Center
                     ) {
                         Column(
                             Modifier
@@ -776,6 +799,13 @@ private fun EditProfileScreen(
                                 onDoneClick = { onSaveClick(mapFields.toMap()) }
                             )
                             Spacer(Modifier.height(52.dp))
+                        }
+                        if (uiState.isUpdating) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(42.dp),
+                                color = MaterialTheme.appColors.primary,
+                            )
                         }
                         if (openWarningMessageDialog) {
                             LimitedProfileDialog(
@@ -1003,7 +1033,7 @@ private fun SelectableField(
             unfocusedBorderColor = MaterialTheme.appColors.textFieldBorder,
             cursorColor = MaterialTheme.appColors.textFieldText,
             disabledBorderColor = MaterialTheme.appColors.textFieldBorder,
-            disabledTextColor = MaterialTheme.appColors.textFieldHint,
+            disabledTextColor = MaterialTheme.appColors.textPrimary,
             disabledPlaceholderColor = MaterialTheme.appColors.textFieldHint
         )
     }

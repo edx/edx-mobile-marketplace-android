@@ -89,7 +89,8 @@ class DiscussionThreadsViewModelTest {
         mapOf(),
         0,
         false,
-        false
+        false,
+        false,
     )
 
     //endregion

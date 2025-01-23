@@ -87,7 +87,8 @@ class DiscussionAddThreadViewModelTest {
         mapOf(),
         0,
         false,
-        false
+        false,
+        false,
     )
 
     //endregion
@@ -117,7 +118,8 @@ class DiscussionAddThreadViewModelTest {
         21,
         emptyList(),
         null,
-        emptyMap()
+        emptyMap(),
+        false,
     )
 
     private val mockCommentAdded = DiscussionComment(
@@ -143,7 +145,8 @@ class DiscussionAddThreadViewModelTest {
         21,
         emptyList(),
         null,
-        mapOf("" to DiscussionProfile(ProfileImage("", "", "", "", false)))
+        mapOf("" to DiscussionProfile(ProfileImage("", "", "", "", false))),
+        false,
     )
 
     //endregion

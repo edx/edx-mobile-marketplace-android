@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalComposeUiApi::class)
-
 package org.openedx.discussion.presentation.comments
 
 import android.content.res.Configuration
@@ -49,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -352,7 +349,7 @@ private fun DiscussionCommentsScreen(
                                                     .padding(horizontal = paddingContent)
                                                     .padding(top = 24.dp, bottom = 4.dp),
                                                 text = pluralStringResource(
-                                                    id = org.openedx.discussion.R.plurals.discussion_responses_capitalized,
+                                                    id = R.plurals.discussion_responses_capitalized,
                                                     uiState.count,
                                                     uiState.count
                                                 ),
@@ -493,7 +490,7 @@ private fun DiscussionCommentsScreen(
 @Preview(name = "NEXUS_5_Dark", device = Devices.NEXUS_5, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun DiscussionCommentsScreenPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         DiscussionCommentsScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             uiState = DiscussionCommentsUIState.Success(
@@ -524,7 +521,7 @@ private fun DiscussionCommentsScreenPreview() {
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun DiscussionCommentsScreenTabletPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         DiscussionCommentsScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             uiState = DiscussionCommentsUIState.Success(
@@ -550,63 +547,65 @@ private fun DiscussionCommentsScreenTabletPreview() {
     }
 }
 
-private val mockThread = org.openedx.discussion.domain.model.Thread(
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    TextConverter.textToLinkedImageText(""),
-    false,
-    true,
-    20,
-    emptyList(),
-    false,
-    "",
-    "",
-    "",
-    "",
-    DiscussionType.DISCUSSION,
-    "",
-    "",
-    "Discussion title long Discussion title long good item",
-    true,
-    false,
-    true,
-    21,
-    4,
-    false,
-    false,
-    mapOf(),
-    10,
-    false,
-    false
+private val mockThread = Thread(
+    id = "",
+    author = "",
+    authorLabel = "",
+    createdAt = "",
+    updatedAt = "",
+    rawBody = "",
+    renderedBody = "",
+    parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+    abuseFlagged = false,
+    voted = true,
+    voteCount = 20,
+    editableFields = emptyList(),
+    canDelete = false,
+    courseId = "",
+    topicId = "",
+    groupId = "",
+    groupName = "",
+    type = DiscussionType.DISCUSSION,
+    previewBody = "",
+    abuseFlaggedCount = "",
+    title = "Discussion title long Discussion title long good item",
+    pinned = true,
+    closed = false,
+    following = true,
+    commentCount = 21,
+    unreadCommentCount = 4,
+    read = false,
+    hasEndorsed = false,
+    users = mapOf(),
+    responseCount = 10,
+    anonymous = false,
+    anonymousToPeers = false,
+    isAuthor = false,
 )
 
 private val mockComment = DiscussionComment(
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    TextConverter.textToLinkedImageText(""),
-    false,
-    true,
-    20,
-    emptyList(),
-    false,
-    "",
-    "",
-    false,
-    "",
-    "",
-    "",
-    21,
-    emptyList(),
+    id = "",
+    author = "",
+    authorLabel = "",
+    createdAt = "",
+    updatedAt = "",
+    rawBody = "",
+    renderedBody = "",
+    parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+    abuseFlagged = false,
+    voted = true,
+    voteCount = 20,
+    editableFields = emptyList(),
+    canDelete = false,
+    threadId = "",
+    parentId = "",
+    endorsed = false,
+    endorsedBy = "",
+    endorsedByLabel = "",
+    endorsedAt = "",
+    childCount = 21,
+    children = emptyList(),
     profileImage = ProfileImage("", "", "", "", false),
-    mapOf()
+    users = mapOf(),
+    isAuthor = false,
 )

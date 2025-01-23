@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalComposeUiApi::class)
-
 package org.openedx.discussion.presentation.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
@@ -33,8 +31,8 @@ import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
@@ -170,11 +168,14 @@ fun ThreadMainItem(
                     thread.voteCount,
                     thread.voteCount
                 ),
+                modifier = Modifier.alpha(if (thread.isAuthor) 0.4f else 1f),
                 icon = voteIcon,
                 color = MaterialTheme.appColors.textPrimary,
                 textStyle = MaterialTheme.appTypography.labelLarge,
                 onClick = {
-                    onClick(DiscussionCommentsFragment.ACTION_UPVOTE_THREAD, !thread.voted)
+                    if (thread.isAuthor.not()) {
+                        onClick(DiscussionCommentsFragment.ACTION_UPVOTE_THREAD, !thread.voted)
+                    }
                 }
             )
             IconText(
@@ -320,14 +321,17 @@ fun CommentItem(
                         comment.voteCount
                     ),
                     icon = voteIcon,
+                    modifier = Modifier.alpha(if (comment.isAuthor) 0.4f else 1f),
                     color = MaterialTheme.appColors.textPrimary,
                     textStyle = MaterialTheme.appTypography.labelLarge,
                     onClick = {
-                        onClick(
-                            DiscussionCommentsFragment.ACTION_UPVOTE_COMMENT,
-                            comment.id,
-                            !comment.voted
-                        )
+                        if (comment.isAuthor.not()) {
+                            onClick(
+                                DiscussionCommentsFragment.ACTION_UPVOTE_COMMENT,
+                                comment.id,
+                                !comment.voted
+                            )
+                        }
                     }
                 )
                 IconText(
@@ -455,14 +459,17 @@ fun CommentMainItem(
                         comment.voteCount
                     ),
                     icon = voteIcon,
+                    modifier = Modifier.alpha(if (comment.isAuthor) 0.4f else 1f),
                     color = MaterialTheme.appColors.textPrimary,
                     textStyle = MaterialTheme.appTypography.labelLarge,
                     onClick = {
-                        onClick(
-                            DiscussionCommentsFragment.ACTION_UPVOTE_COMMENT,
-                            comment.id,
-                            !comment.voted
-                        )
+                        if (comment.isAuthor.not()) {
+                            onClick(
+                                DiscussionCommentsFragment.ACTION_UPVOTE_COMMENT,
+                                comment.id,
+                                !comment.voted
+                            )
+                        }
                     }
                 )
                 IconText(
@@ -653,7 +660,7 @@ fun TopicItem(
 @Preview
 @Composable
 private fun TopicItemPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         TopicItem(topic = mockTopic,
             onClick = { _, _ ->
 
@@ -665,7 +672,7 @@ private fun TopicItemPreview() {
 @Preview(uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun ThreadItemPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         ThreadItem(
             thread = mockThread,
             onClick = {})
@@ -675,7 +682,7 @@ private fun ThreadItemPreview() {
 @Preview
 @Composable
 private fun CommentItemPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         CommentItem(
             modifier = Modifier.fillMaxWidth(),
             comment = mockComment,
@@ -697,64 +704,66 @@ private fun ThreadMainItemPreview() {
 }
 
 private val mockComment = DiscussionComment(
-    "",
-    "ABC",
-    "",
-    "",
-    "",
-    "",
-    "",
-    TextConverter.textToLinkedImageText("mock Comment"),
-    false,
-    true,
-    20,
-    emptyList(),
-    false,
-    "",
-    "",
-    false,
-    "",
-    "",
-    "",
-    21,
-    emptyList(),
-    ProfileImage("", "", "", "", false),
-    mapOf()
+    id = "",
+    author = "ABC",
+    authorLabel = "",
+    createdAt = "",
+    updatedAt = "",
+    rawBody = "",
+    renderedBody = "",
+    parsedRenderedBody = TextConverter.textToLinkedImageText("mock Comment"),
+    abuseFlagged = false,
+    voted = true,
+    voteCount = 20,
+    editableFields = emptyList(),
+    canDelete = false,
+    threadId = "",
+    parentId = "",
+    endorsed = false,
+    endorsedBy = "",
+    endorsedByLabel = "",
+    endorsedAt = "",
+    childCount = 21,
+    children = emptyList(),
+    profileImage = ProfileImage("", "", "", "", false),
+    users = mapOf(),
+    isAuthor = false,
 )
 
 private val mockThread = org.openedx.discussion.domain.model.Thread(
-    "",
-    "ABC",
-    "",
-    "",
-    "",
-    "",
-    "",
-    TextConverter.textToLinkedImageText(""),
-    false,
-    true,
-    20,
-    emptyList(),
-    false,
-    "",
-    "",
-    "",
-    "",
-    DiscussionType.DISCUSSION,
-    "",
-    "",
-    "Discussion title long Discussion title long good item",
-    true,
-    false,
-    true,
-    21,
-    4,
-    false,
-    false,
-    mapOf(),
-    10,
-    false,
-    false
+    id = "",
+    author = "ABC",
+    authorLabel = "",
+    createdAt = "",
+    updatedAt = "",
+    rawBody = "",
+    renderedBody = "",
+    parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+    abuseFlagged = false,
+    voted = true,
+    voteCount = 20,
+    editableFields = emptyList(),
+    canDelete = false,
+    courseId = "",
+    topicId = "",
+    groupId = "",
+    groupName = "",
+    type = DiscussionType.DISCUSSION,
+    previewBody = "",
+    abuseFlaggedCount = "",
+    title = "Discussion title long Discussion title long good item",
+    pinned = true,
+    closed = false,
+    following = true,
+    commentCount = 21,
+    unreadCommentCount = 4,
+    read = false,
+    hasEndorsed = false,
+    users = mapOf(),
+    responseCount = 10,
+    anonymous = false,
+    anonymousToPeers = false,
+    isAuthor = false,
 )
 
 private val mockTopic = Topic(

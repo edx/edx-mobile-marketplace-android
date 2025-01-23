@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
@@ -29,6 +30,7 @@ class DiscussionCommentsViewModel(
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
     private val analytics: DiscussionAnalytics,
+    private val corePreferences: CorePreferences,
 ) : BaseDiscussionViewModel(courseId, thread.id, analytics) {
 
     val title = resourceManager.getString(thread.type.resId)
@@ -98,7 +100,7 @@ class DiscussionCommentsViewModel(
     }
 
     init {
-        this.thread = thread
+        this.thread = thread.copy(isAuthor = thread.author == corePreferences.user?.username)
         getThreadComments()
         logPostScreenEvent(topicId = thread.topicId, threadId = thread.id)
     }
@@ -126,7 +128,9 @@ class DiscussionCommentsViewModel(
                     page = -1
                 }
                 commentCount = response.pagination.count
-                comments.addAll(response.results)
+                comments.addAll(response.results.map {
+                    it.copy(isAuthor = it.author == corePreferences.user?.username)
+                })
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
 
@@ -313,6 +317,8 @@ class DiscussionCommentsViewModel(
         viewModelScope.launch {
             try {
                 val response = interactor.createComment(thread.id, rawBody, null)
+                response.isAuthor = response.author == corePreferences.user?.username
+
                 thread = thread.copy(commentCount = thread.commentCount + 1)
                 sendThreadUpdated()
                 if (page == -1) {

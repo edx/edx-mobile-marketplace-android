@@ -7,6 +7,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
@@ -25,6 +26,7 @@ class DiscussionResponsesViewModel(
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
     private val analytics: DiscussionAnalytics,
+    private val corePreferences: CorePreferences,
 ) : BaseDiscussionViewModel(courseId, threadId, analytics) {
 
     private val _uiState = MutableLiveData<DiscussionResponsesUIState>()
@@ -88,7 +90,9 @@ class DiscussionResponsesViewModel(
                     _canLoadMore.value = false
                     page = -1
                 }
-                comments.addAll(response.results)
+                comments.addAll(response.results.map {
+                    it.copy(isAuthor = it.author == corePreferences.user?.username)
+                })
                 _uiState.value = DiscussionResponsesUIState.Success(comment, comments.toList())
             } catch (e: Exception) {
                 if (e.isInternetError()) {
@@ -188,6 +192,8 @@ class DiscussionResponsesViewModel(
         viewModelScope.launch {
             try {
                 val response = interactor.createComment(comment.threadId, rawBody, comment.id)
+                response.isAuthor = response.author == corePreferences.user?.username
+
                 comment = comment.copy(childCount = comment.childCount + 1)
                 sendUpdatedComment()
                 if (page == -1) {

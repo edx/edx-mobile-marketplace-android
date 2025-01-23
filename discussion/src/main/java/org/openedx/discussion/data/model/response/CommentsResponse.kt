@@ -76,8 +76,8 @@ data class CommentResult(
             authorLabel ?: "",
             createdAt,
             updatedAt,
-            rawBody ?: "",
-            renderedBody ?: "",
+            rawBody,
+            renderedBody,
             TextConverter.textToLinkedImageText(renderedBody ?: ""),
             abuseFlagged,
             voted,
@@ -93,7 +93,8 @@ data class CommentResult(
             childCount,
             children,
             profileImage?.mapToDomain(),
-            users?.entries?.associate { it.key to it.value.mapToDomain() }
+            users?.entries?.associate { it.key to it.value.mapToDomain() },
+            false,
         )
     }
 }

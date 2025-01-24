@@ -128,7 +128,7 @@ class NotificationsInboxFragment : Fragment() {
                         }
                     },
                     onSwipeRefresh = {
-                        viewModel.updateNotifications()
+                        viewModel.onRefreshNotifications()
                     },
                     onReloadNotifications = {
                         viewModel.onReloadNotifications()
@@ -515,7 +515,7 @@ private fun InboxStateView(
     }
 
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

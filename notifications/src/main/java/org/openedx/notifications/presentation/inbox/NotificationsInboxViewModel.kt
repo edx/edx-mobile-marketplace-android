@@ -67,7 +67,7 @@ class NotificationsInboxViewModel(
     }
 
     fun fetchMore() {
-        if (!isLoading && nextPage != -1) {
+        if (!isLoading && _canLoadMore.value) {
             internalLoadNotifications()
         }
     }
@@ -117,7 +117,7 @@ class NotificationsInboxViewModel(
         internalLoadNotifications()
     }
 
-    fun updateNotifications() {
+    fun onRefreshNotifications() {
         _isRefreshing.value = true
         nextPage = 1
         InboxSection.entries.forEach { section ->

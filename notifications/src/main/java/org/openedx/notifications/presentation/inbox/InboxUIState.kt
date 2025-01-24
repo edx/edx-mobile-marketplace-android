@@ -10,6 +10,7 @@ sealed class InboxUIState {
     ) : InboxUIState()
 
     data object Empty : InboxUIState()
-    data object Error : InboxUIState()
     data object Loading : InboxUIState()
+    data object NetworkError : InboxUIState()
+    data object ServerError : InboxUIState()
 }

@@ -99,8 +99,10 @@ class NotificationsInboxViewModel(
             } catch (e: Exception) {
                 if (uiState.value is InboxUIState.Data || _isRefreshing.value) {
                     emitErrorMessage(e)
+                } else if (e.isInternetError()) {
+                    _uiState.value = InboxUIState.NetworkError
                 } else {
-                    _uiState.value = InboxUIState.Error
+                    _uiState.value = InboxUIState.ServerError
                 }
             } finally {
                 isLoading = false

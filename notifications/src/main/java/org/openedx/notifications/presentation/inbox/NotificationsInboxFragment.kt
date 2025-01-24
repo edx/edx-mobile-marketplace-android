@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.PriorityHigh
 import androidx.compose.material.icons.outlined.SignalWifiStatusbarConnectedNoInternet4
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -42,6 +43,7 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -187,10 +189,10 @@ private fun InboxView(
         onRefresh = { onSwipeRefresh() },
     )
     val firstVisibleIndex = remember {
-        mutableStateOf(scrollState.firstVisibleItemIndex)
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val lastVisibleIndex = remember {
-        mutableStateOf(scrollState.firstVisibleItemIndex)
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val loadMoreTriggerThreshold = 4
 
@@ -295,9 +297,16 @@ private fun InboxView(
                             )
                         }
 
-                        is InboxUIState.Error -> {
+                        is InboxUIState.NetworkError -> {
                             InboxStateView(
-                                uiState = InboxUIState.Error,
+                                uiState = InboxUIState.NetworkError,
+                                onReloadNotifications = onReloadNotifications
+                            )
+                        }
+
+                        is InboxUIState.ServerError -> {
+                            InboxStateView(
+                                uiState = InboxUIState.ServerError,
                                 onReloadNotifications = onReloadNotifications
                             )
                         }
@@ -484,15 +493,26 @@ private fun InboxStateView(
     uiState: InboxUIState,
     onReloadNotifications: () -> Unit = { },
 ) {
-    val iconResId = if (uiState is InboxUIState.Empty) Icons.Outlined.Notifications
-    else Icons.Outlined.SignalWifiStatusbarConnectedNoInternet4
+    val iconResId = when (uiState) {
+        InboxUIState.Empty -> Icons.Outlined.Notifications
+        InboxUIState.NetworkError -> Icons.Outlined.SignalWifiStatusbarConnectedNoInternet4
+        InboxUIState.ServerError -> Icons.Outlined.PriorityHigh
+        else -> return
+    }
 
-    val titleResId = if (uiState is InboxUIState.Empty) R.string.notifications_no_notifications_yet
-    else coreR.string.core_no_internet_connection
+    val titleResId = when (uiState) {
+        InboxUIState.Empty -> R.string.notifications_no_notifications_yet
+        InboxUIState.NetworkError -> coreR.string.core_no_internet_connection
+        InboxUIState.ServerError -> coreR.string.core_server_error
+        else -> return
+    }
 
-    val descriptionResId =
-        if (uiState is InboxUIState.Empty) R.string.notifications_no_notifications_yet_description
-        else coreR.string.core_no_internet_connection_description
+    val descriptionResId = when (uiState) {
+        InboxUIState.Empty -> R.string.notifications_no_notifications_yet_description
+        InboxUIState.NetworkError -> coreR.string.core_no_internet_connection_description
+        InboxUIState.ServerError -> coreR.string.core_server_error_description
+        else -> return
+    }
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -533,7 +553,7 @@ private fun InboxStateView(
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (uiState is InboxUIState.Error) {
+        if (uiState is InboxUIState.NetworkError || uiState is InboxUIState.ServerError) {
             OpenEdXPrimaryButton(
                 modifier = Modifier
                     .widthIn(Dp.Unspecified, 162.dp),
@@ -608,6 +628,7 @@ private class InboxUiStatePreviewParameterProvider : PreviewParameterProvider<In
             )
         ),
         InboxUIState.Empty,
-        InboxUIState.Error
+        InboxUIState.NetworkError,
+        InboxUIState.ServerError,
     )
 }

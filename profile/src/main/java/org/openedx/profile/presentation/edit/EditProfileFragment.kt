@@ -19,6 +19,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -66,6 +67,7 @@ import androidx.compose.material.icons.outlined.Report
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -165,17 +167,6 @@ class EditProfileFragment : Fragment() {
             }
         }
 
-    private val onBackPressedCallback = object : OnBackPressedCallback(true) {
-        override fun handleOnBackPressed() {
-            if (viewModel.profileDataChanged) {
-                viewModel.setShowLeaveDialog(true)
-            } else {
-                viewModel.setShowLeaveDialog(false)
-                requireActivity().supportFragmentManager.popBackStackImmediate()
-            }
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -250,18 +241,35 @@ class EditProfileFragment : Fragment() {
                         viewModel.isLimitedProfile = it
                     }
                 )
+
+                HandleBackNavigation()
             }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        activity?.onBackPressedDispatcher?.addCallback(onBackPressedCallback)
-    }
+    @Composable
+    private fun HandleBackNavigation() {
+        val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    override fun onPause() {
-        onBackPressedCallback.remove()
-        super.onPause()
+        val onBackPressedCallback = remember {
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (viewModel.profileDataChanged) {
+                        viewModel.setShowLeaveDialog(true)
+                    } else {
+                        viewModel.setShowLeaveDialog(false)
+                        requireActivity().supportFragmentManager.popBackStackImmediate()
+                    }
+                }
+            }
+        }
+
+        DisposableEffect(backDispatcher) {
+            backDispatcher?.addCallback(onBackPressedCallback)
+            onDispose {
+                onBackPressedCallback.remove()
+            }
+        }
     }
 
     @Suppress("DEPRECATION")
@@ -381,10 +389,7 @@ private fun EditProfileScreen(
 
     val mapFields = rememberSaveableMap {
         mutableStateMapOf(
-            Pair(
-                YEAR_OF_BIRTH,
-                if (uiState.account.yearOfBirth != null) uiState.account.yearOfBirth.toString() else null
-            ),
+            Pair(YEAR_OF_BIRTH, uiState.account.yearOfBirth?.toString()),
             Pair(LANGUAGE, uiState.account.languageProficiencies),
             Pair(COUNTRY, uiState.account.country),
             Pair(BIO, uiState.account.bio),
@@ -392,7 +397,7 @@ private fun EditProfileScreen(
         )
     }
 
-    val saveButtonEnabled = !(uiState.account.yearOfBirth.toString() == mapFields[YEAR_OF_BIRTH]
+    val saveButtonEnabled = !(uiState.account.yearOfBirth?.toString() == mapFields[YEAR_OF_BIRTH]
             && uiState.account.languageProficiencies == mapFields[LANGUAGE]
             && uiState.account.country == mapFields[COUNTRY]
             && uiState.account.bio == mapFields[BIO]
@@ -1021,6 +1026,8 @@ private fun SelectableField(
     disabled: Boolean = false,
     onClick: () -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
+
     val colors = if (disabled) {
         TextFieldDefaults.outlinedTextFieldColors(
             unfocusedBorderColor = MaterialTheme.appColors.textFieldBorder,
@@ -1069,14 +1076,18 @@ private fun SelectableField(
                 .testTag("tf_select_${name.tagId()}")
                 .fillMaxWidth()
                 .noRippleClickable {
-                    if (!disabled)
+                    if (!disabled) {
                         onClick()
+                        focusManager.clearFocus()
+                    }
                 },
             placeholder = {
                 Text(
-                    modifier = Modifier.testTag("txt_placeholder_${name.tagId()}"),
+                    modifier = Modifier
+                        .alpha(if (disabled) ContentAlpha.disabled else ContentAlpha.high)
+                        .testTag("txt_placeholder_${name.tagId()}"),
                     text = name,
-                    color = MaterialTheme.appColors.textFieldText,
+                    color = MaterialTheme.appColors.textFieldHint,
                     style = MaterialTheme.appTypography.bodyMedium
                 )
             }

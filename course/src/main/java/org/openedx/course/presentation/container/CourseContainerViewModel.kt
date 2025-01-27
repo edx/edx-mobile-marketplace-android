@@ -289,14 +289,14 @@ class CourseContainerViewModel(
                             if (isExpiredCoursePurchase) {
                                 if (eventLogger.isSilentIAPFlow.isNull()) {
                                     eventLogger.upgradeSuccessEvent()
-                                    _uiMessage.emit(
-                                        UIMessage.ToastMessage(
-                                            resourceManager.getString(
-                                                CoreR.string.iap_success_message
-                                            )
+                                }
+                                _uiMessage.emit(
+                                    UIMessage.ToastMessage(
+                                        resourceManager.getString(
+                                            CoreR.string.iap_success_message
                                         )
                                     )
-                                }
+                                )
                             } else {
                                 iapNotifier.send(CourseDataUpdated())
                             }

@@ -127,7 +127,7 @@ class IAPInteractor(
             }
         }
         if (userPurchases.isNotEmpty()) {
-            userPurchases[0].let { purchase ->
+            userPurchases.first().let { purchase ->
                 val courseVerified = enrolledCourses.find { enrolledCourse ->
                     enrolledCourse.productInfo?.courseSku == purchase.getCourseSku()
                 }
@@ -151,7 +151,7 @@ class IAPInteractor(
                 }
             }
         } else {
-            purchases.subtract(userPurchases.toSet()).forEach {
+            purchases.forEach {
                 billingProcessor.consumePurchase(it.purchaseToken)
             }
         }

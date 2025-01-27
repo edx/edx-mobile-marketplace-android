@@ -290,7 +290,7 @@ class DashboardGalleryViewModel(
                 onSuccess = { purchaseFlowData ->
                     eventLogger.apply {
                         this.purchaseFlowData = purchaseFlowData
-                        eventLogger.upgradeSuccessEvent()
+                        this.upgradeSuccessEvent()
                     }
                     _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
                 },

@@ -37,6 +37,20 @@ data class PurchaseFlowData(
         basketId = -1
         flowStartTime = 0
     }
+
+    fun isSilentIAPFlow(): Boolean? {
+        return when (iapFlow) {
+            IAPFlow.SILENT -> {
+                true
+            }
+            IAPFlow.RESTORE -> {
+                false
+            }
+            else -> {
+                null
+            }
+        }
+    }
 }
 
 enum class IAPFlow(val value: String) {

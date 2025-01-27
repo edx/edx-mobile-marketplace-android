@@ -272,6 +272,10 @@ class SettingsViewModel(
                     })
             }.onSuccess { purchaseFlowData ->
                 purchaseFlowData?.let {
+                    eventLogger.apply {
+                        this.purchaseFlowData = purchaseFlowData
+                        this.upgradeSuccessEvent()
+                    }
                     _iapUiState.emit(IAPUIState.PurchasesFulfillmentCompleted)
                 } ?: run {
                     _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)

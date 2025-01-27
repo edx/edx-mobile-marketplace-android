@@ -24,6 +24,7 @@ import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.extension.isNull
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseSku
 import org.openedx.core.module.billing.getPriceAmount
@@ -55,6 +56,7 @@ class IAPViewModel(
 
     val eventLogger = IAPEventLogger(
         analytics = analytics,
+        isSilentIAPFlow = purchaseData.isSilentIAPFlow(),
         purchaseFlowData = purchaseData
     )
 
@@ -84,10 +86,10 @@ class IAPViewModel(
             iapNotifier.notifier.onEach { event ->
                 when (event) {
                     is CourseDataUpdated -> {
-                        if (eventLogger.isSilentIAPFlow == null) {
+                        if (eventLogger.isSilentIAPFlow.isNull()) {
                             eventLogger.upgradeSuccessEvent()
+                            _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                         }
-                        _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                         _uiState.value = IAPUIState.CourseDataUpdated
                     }
                 }

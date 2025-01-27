@@ -102,7 +102,7 @@ class SettingsFragment : Fragment() {
                             }
 
                             SettingsScreenAction.RestorePurchaseClick -> {
-                                viewModel.restorePurchase()
+                                viewModel.restorePurchasesClicked()
                             }
 
                             SettingsScreenAction.FeedbackFormClick -> {

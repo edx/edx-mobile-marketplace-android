@@ -10,15 +10,18 @@ import org.openedx.core.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.repository.iap.IAPRepository
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.iap.ProductInfo
+import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.extension.decodeToLong
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseSku
 import org.openedx.core.module.billing.getPriceAmount
+import org.openedx.core.module.billing.getUserId
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.utils.EmailUtil
+import org.openedx.core.utils.TimeUtils
 
 class IAPInteractor(
     private val appData: AppData,
@@ -109,52 +112,83 @@ class IAPInteractor(
         }
     }
 
-    suspend fun processUnfulfilledPurchase(userId: Long): Boolean {
+    suspend fun processUnfulfilledPurchase(
+        userId: Long,
+        enrolledCourses: List<EnrolledCourse>,
+        verificationInitiated: (PurchaseFlowData) -> Unit = {},
+    ): PurchaseFlowData? {
         val purchases = billingProcessor.queryPurchases()
-        val userPurchases =
-            purchases.filter { it.accountIdentifiers?.obfuscatedAccountId?.decodeToLong() == userId }
+        val userPurchases = purchases.filter { purchase ->
+            val userAccountId = purchase.getUserId()
+            val courseSku = purchase.getCourseSku()
+
+            userAccountId == userId && enrolledCourses.any { enrolledCourse ->
+                courseSku == enrolledCourse.productInfo?.courseSku
+            }
+        }
         if (userPurchases.isNotEmpty()) {
-            startUnfulfilledVerification(userPurchases)
-            return true
+            userPurchases.first().let { purchase ->
+                val courseVerified = enrolledCourses.find { enrolledCourse ->
+                    enrolledCourse.productInfo?.courseSku == purchase.getCourseSku()
+                }
+                courseVerified?.let {
+                    val productDetails =
+                        billingProcessor.querySyncDetails(purchase.products[0]).productDetailsList?.firstOrNull()
+                    val purchaseProductFlow = PurchaseFlowData(
+                        courseId = courseVerified.course.id,
+                        isSelfPaced = courseVerified.course.isSelfPaced,
+                        productInfo = courseVerified.productInfo
+                    ).apply {
+                        productDetails?.oneTimePurchaseOfferDetails?.let {
+                            this.price = it.getPriceAmount()
+                            this.currencyCode = it.priceCurrencyCode
+                        }
+                        this.flowStartTime = TimeUtils.getCurrentTime()
+                    }
+                    verificationInitiated(purchaseProductFlow)
+                    startUnfulfilledVerification(purchase)
+                    return purchaseProductFlow
+                }
+            }
         } else {
             purchases.forEach {
                 billingProcessor.consumePurchase(it.purchaseToken)
             }
         }
-        return false
+        return null
     }
 
-    private suspend fun startUnfulfilledVerification(userPurchases: List<Purchase>) {
-        userPurchases.forEach { purchase ->
-            val productDetail =
-                billingProcessor.querySyncDetails(purchase.products.first()).productDetailsList?.firstOrNull()
-            productDetail?.oneTimePurchaseOfferDetails?.takeIf {
-                purchase.getCourseSku().isNullOrEmpty().not()
-            }?.let { oneTimeProductDetails ->
-                val courseSku = purchase.getCourseSku() ?: return@let
-                val basketId = addToBasket(courseSku)
-                executeOrder(
-                    basketId = basketId,
-                    purchaseToken = purchase.purchaseToken,
-                    price = oneTimeProductDetails.getPriceAmount(),
-                    currencyCode = oneTimeProductDetails.priceCurrencyCode,
-                )
-                consumePurchase(purchase.purchaseToken)
-            }
+    private suspend fun startUnfulfilledVerification(userPurchase: Purchase) {
+        val productDetail =
+            billingProcessor.querySyncDetails(userPurchase.products.first()).productDetailsList?.firstOrNull()
+        productDetail?.oneTimePurchaseOfferDetails?.takeIf {
+            userPurchase.getCourseSku().isNullOrEmpty().not()
+        }?.let { oneTimeProductDetails ->
+            val courseSku = userPurchase.getCourseSku() ?: return@let
+            val basketId = addToBasket(courseSku)
+            executeOrder(
+                basketId = basketId,
+                purchaseToken = userPurchase.purchaseToken,
+                price = oneTimeProductDetails.getPriceAmount(),
+                currencyCode = oneTimeProductDetails.priceCurrencyCode,
+            )
+            consumePurchase(userPurchase.purchaseToken)
         }
     }
 
     suspend fun detectUnfulfilledPurchase(
-        onSuccess: () -> Unit,
+        enrolledCourses: List<EnrolledCourse>,
+        verificationInitiated: (PurchaseFlowData) -> Unit,
+        onSuccess: (PurchaseFlowData) -> Unit,
         onFailure: (IAPException) -> Unit,
     ) {
         if (isIAPEnabled) {
             preferencesManager.user?.id?.let { userId ->
                 runCatching {
-                    processUnfulfilledPurchase(userId)
-                }.onSuccess {
-                    if (it) {
-                        onSuccess()
+                    processUnfulfilledPurchase(userId, enrolledCourses, verificationInitiated)
+                }.onSuccess { purchaseFlowData ->
+                    purchaseFlowData?.let {
+                        onSuccess(purchaseFlowData)
                     }
                 }.onFailure {
                     if (it is IAPException) {

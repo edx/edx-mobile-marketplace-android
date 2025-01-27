@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.openedx.core.domain.model.iap.ProductInfo
+import org.openedx.core.extension.decodeToLong
 import org.openedx.core.extension.decodeToString
 import org.openedx.core.extension.encodeToString
 import org.openedx.core.extension.safeResume
@@ -202,4 +203,8 @@ fun ProductDetails.OneTimePurchaseOfferDetails.getPriceAmount(): Double =
 
 fun Purchase.getCourseSku(): String? {
     return this.accountIdentifiers?.obfuscatedProfileId?.decodeToString()
+}
+
+fun Purchase.getUserId(): Long? {
+    return this.accountIdentifiers?.obfuscatedAccountId?.decodeToLong()
 }

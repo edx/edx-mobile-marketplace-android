@@ -41,8 +41,12 @@ import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.NavigationToDiscovery
 import org.openedx.core.system.notifier.UpdateCourseData
+import org.openedx.core.system.notifier.app.AppNotifier
+import org.openedx.core.system.notifier.app.EnrolledCourseEvent
+import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.utils.FileUtil
+import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 import org.openedx.dashboard.presentation.DashboardRouter
 
@@ -57,6 +61,7 @@ class DashboardGalleryViewModel(
     private val fileUtil: FileUtil,
     private val dashboardRouter: DashboardRouter,
     private val iapNotifier: IAPNotifier,
+    private val appNotifier: AppNotifier,
     private val iapInteractor: IAPInteractor,
     private val iapAnalytics: IAPAnalytics,
     private val windowSize: WindowSize,
@@ -73,7 +78,7 @@ class DashboardGalleryViewModel(
     val uiMessage: SharedFlow<UIMessage?>
         get() = _uiMessage.asSharedFlow()
 
-    private val _updating = MutableStateFlow<Boolean>(false)
+    private val _updating = MutableStateFlow(false)
     val updating: StateFlow<Boolean>
         get() = _updating.asStateFlow()
 
@@ -93,9 +98,23 @@ class DashboardGalleryViewModel(
     private var isLoading = false
 
     init {
+        collectAppEvent()
         collectDiscoveryNotifier()
         collectIapNotifier()
         getCourses()
+    }
+
+    private fun collectAppEvent() {
+        appNotifier.notifier
+            .onEach {
+                if (it is RequestEnrolledCourseEvent) {
+                    val enrolledCourses =
+                        interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
+                    appNotifier.send(EnrolledCourseEvent(enrolledCourses))
+                }
+            }
+            .distinctUntilChanged()
+            .launchIn(viewModelScope)
     }
 
     fun getCourses(isIAPFlow: Boolean = false) {
@@ -251,9 +270,21 @@ class DashboardGalleryViewModel(
 
     private fun detectUnfulfilledPurchase() {
         viewModelScope.launch(Dispatchers.IO) {
+            val enrolledCourses =
+                interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
             iapInteractor.detectUnfulfilledPurchase(
-                onSuccess = {
-                    eventLogger.logUnfulfilledPurchaseInitiatedEvent()
+                enrolledCourses = enrolledCourses,
+                verificationInitiated = { purchaseFlowData ->
+                    eventLogger.apply {
+                        this.purchaseFlowData = purchaseFlowData
+                        this.logUnfulfilledPurchaseInitiatedEvent()
+                    }
+                },
+                onSuccess = { purchaseFlowData ->
+                    eventLogger.apply {
+                        this.purchaseFlowData = purchaseFlowData
+                        this.upgradeSuccessEvent()
+                    }
                     _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
                 },
                 onFailure = {

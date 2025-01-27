@@ -39,6 +39,7 @@ import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isFalse
 import org.openedx.core.extension.isNotNull
+import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseSku
@@ -286,10 +287,14 @@ class CourseContainerViewModel(
                         }
                         if (isIAPFlow) {
                             if (isExpiredCoursePurchase) {
-                                eventLogger.upgradeSuccessEvent()
+                                if (eventLogger.isSilentIAPFlow.isNull()) {
+                                    eventLogger.upgradeSuccessEvent()
+                                }
                                 _uiMessage.emit(
                                     UIMessage.ToastMessage(
-                                        resourceManager.getString(CoreR.string.iap_success_message)
+                                        resourceManager.getString(
+                                            CoreR.string.iap_success_message
+                                        )
                                     )
                                 )
                             } else {

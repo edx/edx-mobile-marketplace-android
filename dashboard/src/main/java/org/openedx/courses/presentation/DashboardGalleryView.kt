@@ -263,8 +263,8 @@ private fun DashboardGalleryView(
                                 },
                                 onIAPAction = onIAPAction,
                             )
-                            LaunchedEffect(uiState.userCourses.enrollments.courses) {
-                                if (uiState.userCourses.enrollments.courses.isNotEmpty()) {
+                            LaunchedEffect(uiState.userCourses.hasEnrolledCourses()) {
+                                if (uiState.userCourses.hasEnrolledCourses()) {
                                     onIAPAction(IAPAction.ACTION_UNFULFILLED, null, null)
                                 }
                             }

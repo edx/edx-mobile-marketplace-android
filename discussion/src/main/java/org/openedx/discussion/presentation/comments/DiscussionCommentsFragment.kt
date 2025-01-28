@@ -40,6 +40,7 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -134,8 +135,6 @@ class DiscussionCommentsFragment : Fragment() {
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
-                    responseId = viewModel.responseId,
-                    commentId = viewModel.commentId,
                     onSwipeRefresh = {
                         viewModel.updateThreadComments()
                     },
@@ -179,6 +178,25 @@ class DiscussionCommentsFragment : Fragment() {
                         requireActivity().supportFragmentManager.popBackStack()
                     }
                 )
+                var fromNotificationNavigation by rememberSaveable {
+                    mutableStateOf(viewModel.responseId.isNotEmpty() && viewModel.commentId.isNotEmpty())
+                }
+                LaunchedEffect(uiState is DiscussionCommentsUIState.Success) {
+                    if (uiState is DiscussionCommentsUIState.Success && fromNotificationNavigation) {
+                        val commentsData =
+                            (uiState as DiscussionCommentsUIState.Success).commentsData
+                        commentsData.find { it.id == viewModel.responseId }?.let {
+                            router.navigateToDiscussionResponses(
+                                requireActivity().supportFragmentManager,
+                                viewModel.courseId,
+                                viewModel.thread.id,
+                                it,
+                                viewModel.thread.closed
+                            )
+                            fromNotificationNavigation = false
+                        }
+                    }
+                }
             }
         }
         requireArguments().putString(ARG_RESPONSE_ID, "")
@@ -225,8 +243,6 @@ private fun DiscussionCommentsScreen(
     title: String,
     canLoadMore: Boolean,
     refreshing: Boolean,
-    responseId: String,
-    commentId: String,
     onSwipeRefresh: () -> Unit,
     paginationCallBack: () -> Unit,
     onItemClick: (String, String, Boolean) -> Unit,
@@ -245,10 +261,6 @@ private fun DiscussionCommentsScreen(
 
     var responseValue by rememberSaveable {
         mutableStateOf("")
-    }
-
-    var fromNotificationNavigation by rememberSaveable {
-        mutableStateOf(responseId.isNotEmpty() && commentId.isNotEmpty())
     }
 
     val sendButtonAlpha = if (responseValue.isEmpty()) 0.3f else 1f
@@ -392,10 +404,6 @@ private fun DiscussionCommentsScreen(
                                             onUserPhotoClick = {
                                                 onUserPhotoClick(comment.author)
                                             })
-                                        if (fromNotificationNavigation && commentId.isNotEmpty() && responseId == comment.id) {
-                                            onCommentClick(comment)
-                                            fromNotificationNavigation = false
-                                        }
                                     }
                                     item {
                                         if (canLoadMore) {
@@ -531,8 +539,6 @@ private fun DiscussionCommentsScreenPreview() {
             refreshing = false,
             onSwipeRefresh = {},
             onUserPhotoClick = {},
-            responseId = "",
-            commentId = "",
         )
     }
 }
@@ -563,8 +569,6 @@ private fun DiscussionCommentsScreenTabletPreview() {
             refreshing = false,
             onSwipeRefresh = {},
             onUserPhotoClick = {},
-            responseId = "",
-            commentId = "",
         )
     }
 }

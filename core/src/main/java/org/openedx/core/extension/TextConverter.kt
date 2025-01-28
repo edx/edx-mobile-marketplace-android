@@ -82,10 +82,14 @@ object TextConverter : KoinComponent {
 
     private fun setSpacesForHeaders(text: String, headers: List<String>): String {
         var result = text
-        headers.forEach {
-            val startIndex = text.indexOf(it)
-            val endIndex = startIndex + it.length + 1
-            result = text.replaceRange(startIndex, endIndex, it + "\n")
+        try {
+            headers.forEach {
+                val startIndex = text.indexOf(it)
+                val endIndex = startIndex + it.length + 1
+                result = text.replaceRange(startIndex, endIndex, it + "\n")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return result
     }

@@ -181,6 +181,25 @@ class DiscussionThreadsFragment : Fragment() {
                         requireActivity().supportFragmentManager.popBackStack()
                     }
                 )
+                var fromNotificationNavigation by rememberSaveable {
+                    mutableStateOf(threadId.isNotEmpty())
+                }
+
+                LaunchedEffect(uiState is DiscussionThreadsUIState.Threads) {
+                    if (uiState is DiscussionThreadsUIState.Threads && fromNotificationNavigation) {
+                        val data = (uiState as DiscussionThreadsUIState.Threads).data
+                        data.find { it.id == threadId }?.let {
+                            router.navigateToDiscussionComments(
+                                requireActivity().supportFragmentManager,
+                                viewModel.courseId,
+                                it,
+                                responseId,
+                                commentId,
+                            )
+                        }
+                        fromNotificationNavigation = false
+                    }
+                }
             }
         }
         requireArguments().putString(ARG_THREAD_ID, "")
@@ -289,10 +308,6 @@ private fun DiscussionThreadsScreen(
     }
 
     val isImeVisible by isImeVisibleState()
-
-    var fromNotificationNavigation by rememberSaveable {
-        mutableStateOf(threadId.isNotEmpty())
-    }
 
     val scaffoldModifier = if (viewType == FragmentViewType.FULL_CONTENT) {
         Modifier
@@ -587,14 +602,7 @@ private fun DiscussionThreadsScreen(
                                                     ) {
                                                         paginationCallback()
                                                     }
-                                                    if (fromNotificationNavigation && threadId.isNotEmpty() && uiState.data.isNotEmpty()) {
-                                                        val index =
-                                                            uiState.data.indexOfFirst { it.id == threadId }
-                                                        if (index != -1) {
-                                                            onItemClick(uiState.data[index])
-                                                        }
-                                                        fromNotificationNavigation = false
-                                                    }
+
                                                 }
                                             } else {
                                                 val noDiscussionsScrollState = rememberScrollState()

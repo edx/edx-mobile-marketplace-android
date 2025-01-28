@@ -129,14 +129,14 @@ class DiscussionCommentsViewModel(
                     it.copy(isAuthor = it.author == corePreferences.user?.username)
                 })
                 if (responseId.isNotEmpty()) {
-                    if(comments.find { it.id == responseId } == null) {
-                        val comment = interactor.getResponse(responseId)
-                        comments.add(0, comment)
+                    val comment = comments.find { it.id == responseId }
+                    if (comment == null) {
+                        val newComment = interactor.getResponse(responseId)
+                        comments.add(0, newComment)
                         commentCount.inc()
-                    }else{
-                        val comment = comments.find { it.id == responseId }
+                    } else {
                         comments.remove(comment)
-                        comments.add(0, comment!!)
+                        comments.add(0, comment)
                     }
                 }
                 _uiState.value =

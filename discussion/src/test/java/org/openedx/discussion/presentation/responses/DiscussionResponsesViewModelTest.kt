@@ -29,7 +29,6 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.CommentsData
 import org.openedx.discussion.domain.model.DiscussionComment
-import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import java.net.UnknownHostException
@@ -52,73 +51,33 @@ class DiscussionResponsesViewModelTest {
     private val somethingWrong = "Something went wrong"
     private val commentAddedSuccessfully = "Comment Successfully added"
 
-    //region mockThread
-
-    val mockThread = org.openedx.discussion.domain.model.Thread(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        LinkedImageText("", emptyMap(), emptyMap(), emptyList()),
-        false,
-        true,
-        20,
-        emptyList(),
-        false,
-        "",
-        "",
-        "",
-        "",
-        DiscussionType.DISCUSSION,
-        "",
-        "",
-        "Discussion title long Discussion title long good item",
-        true,
-        false,
-        true,
-        21,
-        4,
-        false,
-        false,
-        mapOf(),
-        0,
-        false,
-        false,
-        false,
-    )
-
-    //endregion
-
     //region mockComment
 
     private val mockComment = DiscussionComment(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        LinkedImageText("", emptyMap(), emptyMap(), emptyList()),
-        false,
-        true,
-        20,
-        emptyList(),
-        false,
-        "",
-        "",
-        false,
-        "",
-        "",
-        "",
-        21,
-        emptyList(),
-        null,
-        emptyMap(),
-        false,
+        id = "",
+        author = "",
+        authorLabel = "",
+        createdAt = "",
+        updatedAt = "",
+        rawBody = "",
+        renderedBody = "",
+        parsedRenderedBody = LinkedImageText("", emptyMap(), emptyMap(), emptyList()),
+        abuseFlagged = false,
+        voted = true,
+        voteCount = 20,
+        editableFields = emptyList(),
+        canDelete = false,
+        threadId = "",
+        parentId = "",
+        endorsed = false,
+        endorsedBy = "",
+        endorsedByLabel = "",
+        endorsedAt = "",
+        childCount = 21,
+        children = emptyList(),
+        profileImage = null,
+        users = emptyMap(),
+        isAuthor = false,
     )
 
     //endregion
@@ -155,8 +114,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         advanceUntilIdle()
 
@@ -179,8 +138,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
 
         advanceUntilIdle()
@@ -206,8 +165,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
 
         advanceUntilIdle()
@@ -233,8 +192,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         advanceUntilIdle()
 
@@ -259,8 +218,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         viewModel.fetchMore()
         advanceUntilIdle()
@@ -286,8 +245,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.getCommentsResponses(any(), eq(2)) } returns CommentsData(
             comments,
@@ -317,8 +276,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.setCommentVoted(any(), any()) } throws UnknownHostException()
         viewModel.setCommentUpvoted("", false)
@@ -343,8 +302,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.setCommentVoted(any(), any()) } throws Exception()
         viewModel.setCommentUpvoted("", false)
@@ -369,8 +328,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.setCommentVoted(any(), any()) } returns mockComment.copy(id = "0")
         every { analytics.logEvent(any(), any()) } returns Unit
@@ -397,8 +356,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.setCommentVoted(any(), any()) } returns mockComment.copy(id = "2")
         every { analytics.logEvent(any(), any()) } returns Unit
@@ -425,8 +384,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } throws UnknownHostException()
         viewModel.setCommentReported("", false)
@@ -451,8 +410,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } throws Exception()
         viewModel.setCommentReported("", false)
@@ -477,8 +436,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } returns mockComment.copy(id = "0")
         every { analytics.logEvent(any(), any()) } returns Unit
@@ -504,8 +463,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } returns mockComment.copy(id = "0")
         every { analytics.logEvent(any(), any()) } returns Unit
@@ -533,8 +492,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } throws UnknownHostException()
 
@@ -561,8 +520,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } throws Exception()
 
@@ -589,8 +548,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
 
@@ -617,8 +576,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
         every { preferencesManager.user?.username } returns ""
@@ -642,8 +601,8 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics,
             preferencesManager,
+            analytics,
         )
         coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
         every { preferencesManager.user?.username } returns ""

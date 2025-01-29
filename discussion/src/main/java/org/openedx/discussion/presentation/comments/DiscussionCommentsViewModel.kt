@@ -29,8 +29,8 @@ class DiscussionCommentsViewModel(
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
-    private val analytics: DiscussionAnalytics,
     private val corePreferences: CorePreferences,
+    analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, thread.id, analytics) {
 
     val title = resourceManager.getString(thread.type.resId)
@@ -55,10 +55,6 @@ class DiscussionCommentsViewModel(
     val isUpdating: LiveData<Boolean>
         get() = _isUpdating
 
-    private val _scrollToBottom = MutableLiveData<Boolean>()
-    val scrollToBottom: LiveData<Boolean>
-        get() = _scrollToBottom
-
     private val comments = mutableListOf<DiscussionComment>()
     private var page = 1
     private var isLoading = false
@@ -75,7 +71,6 @@ class DiscussionCommentsViewModel(
                             comments.toList(),
                             commentCount
                         )
-                        _scrollToBottom.value = true
                     } else {
                         _uiMessage.value =
                             UIMessage.ToastMessage(resourceManager.getString(org.openedx.discussion.R.string.discussion_comment_added))

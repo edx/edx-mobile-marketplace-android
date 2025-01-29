@@ -78,7 +78,7 @@ data class CommentResult(
             updatedAt,
             rawBody,
             renderedBody,
-            TextConverter.textToLinkedImageText(renderedBody ?: ""),
+            TextConverter.textToLinkedImageText(renderedBody),
             abuseFlagged,
             voted,
             voteCount,

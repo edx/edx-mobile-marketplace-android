@@ -42,6 +42,7 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -122,7 +123,6 @@ class DiscussionCommentsFragment : Fragment() {
                 val uiState by viewModel.uiState.observeAsState(DiscussionCommentsUIState.Loading)
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
-                val scrollToBottom by viewModel.scrollToBottom.observeAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
 
                 DiscussionCommentsScreen(
@@ -131,7 +131,6 @@ class DiscussionCommentsFragment : Fragment() {
                     uiMessage = uiMessage,
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
-                    scrollToBottom = scrollToBottom,
                     refreshing = refreshing,
                     onSwipeRefresh = {
                         viewModel.updateThreadComments()
@@ -213,7 +212,6 @@ private fun DiscussionCommentsScreen(
     uiMessage: UIMessage?,
     title: String,
     canLoadMore: Boolean,
-    scrollToBottom: Boolean,
     refreshing: Boolean,
     onSwipeRefresh: () -> Unit,
     paginationCallBack: () -> Unit,
@@ -226,7 +224,7 @@ private fun DiscussionCommentsScreen(
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
     val firstVisibleIndex = remember {
-        mutableStateOf(scrollState.firstVisibleItemIndex)
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val pullRefreshState =
         rememberPullRefreshState(refreshing = refreshing, onRefresh = { onSwipeRefresh() })
@@ -508,7 +506,6 @@ private fun DiscussionCommentsScreenPreview() {
             onCommentClick = {},
             onAddResponseClick = {},
             onBackClick = {},
-            scrollToBottom = false,
             refreshing = false,
             onSwipeRefresh = {},
             onUserPhotoClick = {}
@@ -539,7 +536,6 @@ private fun DiscussionCommentsScreenTabletPreview() {
             onCommentClick = {},
             onAddResponseClick = {},
             onBackClick = {},
-            scrollToBottom = false,
             refreshing = false,
             onSwipeRefresh = {},
             onUserPhotoClick = {}

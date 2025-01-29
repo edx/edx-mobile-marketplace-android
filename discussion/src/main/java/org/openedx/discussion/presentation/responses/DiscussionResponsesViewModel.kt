@@ -25,8 +25,8 @@ class DiscussionResponsesViewModel(
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
-    private val analytics: DiscussionAnalytics,
     private val corePreferences: CorePreferences,
+    analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, threadId, analytics) {
 
     private val _uiState = MutableLiveData<DiscussionResponsesUIState>()

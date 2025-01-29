@@ -77,7 +77,7 @@ open class BaseDiscussionViewModel(
             params = buildMap {
                 put(DiscussionAnalyticsKey.TOPIC_ID.key, topicId)
                 put(DiscussionAnalyticsKey.POST_TYPE.key, postType)
-                put(DiscussionAnalyticsKey.FOLLOW_POST.key, followPost.toString())
+                put(DiscussionAnalyticsKey.FOLLOW_POST.key, followPost)
                 put(DiscussionAnalyticsKey.AUTHOR.key, author)
             }
         )
@@ -124,7 +124,7 @@ open class BaseDiscussionViewModel(
         logEvent(
             event = DiscussionAnalyticsEvent.DISCUSSION_POST_FOLLOW_TOGGLE,
             params = buildMap {
-                put(DiscussionAnalyticsKey.FOLLOW.key, followPost.toString())
+                put(DiscussionAnalyticsKey.FOLLOW.key, followPost)
                 put(DiscussionAnalyticsKey.AUTHOR.key, author)
             }
         )
@@ -147,7 +147,7 @@ open class BaseDiscussionViewModel(
                     put(DiscussionAnalyticsKey.COMMENT_ID.key, commentId)
                 }
                 put(DiscussionAnalyticsKey.DISCUSSION_TYPE.key, discussionType)
-                put(DiscussionAnalyticsKey.LIKE.key, likePost.toString())
+                put(DiscussionAnalyticsKey.LIKE.key, likePost)
                 put(DiscussionAnalyticsKey.AUTHOR.key, author)
             }
         )
@@ -170,7 +170,7 @@ open class BaseDiscussionViewModel(
                     put(DiscussionAnalyticsKey.COMMENT_ID.key, commentId)
                 }
                 put(DiscussionAnalyticsKey.DISCUSSION_TYPE.key, discussionType)
-                put(DiscussionAnalyticsKey.REPORT.key, reportPost.toString())
+                put(DiscussionAnalyticsKey.REPORT.key, reportPost)
                 put(DiscussionAnalyticsKey.AUTHOR.key, author)
             }
         )

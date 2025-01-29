@@ -1,10 +1,10 @@
 package org.openedx.discussion.domain.model
 
 import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.LinkedImageText
 import org.openedx.discussion.R
-import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Thread(
@@ -39,7 +39,8 @@ data class Thread(
     val users: Map<String, DiscussionProfile>?,
     val responseCount: Int,
     val anonymous: Boolean,
-    val anonymousToPeers: Boolean
+    val anonymousToPeers: Boolean,
+    var isAuthor: Boolean,
 ) : Parcelable
 
 @Parcelize

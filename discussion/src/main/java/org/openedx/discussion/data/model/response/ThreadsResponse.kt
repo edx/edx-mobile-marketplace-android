@@ -128,7 +128,8 @@ data class ThreadsResponse(
                 users?.entries?.associate { it.key to it.value.mapToDomain() },
                 responseCount,
                 anonymous,
-                anonymousToPeers
+                anonymousToPeers,
+                false,
             )
         }
 

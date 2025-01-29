@@ -1,9 +1,9 @@
 package org.openedx.discussion.domain.model
 
 import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.LinkedImageText
-import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class DiscussionComment(
@@ -29,5 +29,6 @@ data class DiscussionComment(
     val childCount: Int,
     val children: List<String>,
     val profileImage: ProfileImage?,
-    val users: Map<String, DiscussionProfile>?
+    val users: Map<String, DiscussionProfile>?,
+    var isAuthor: Boolean,
 ) : Parcelable

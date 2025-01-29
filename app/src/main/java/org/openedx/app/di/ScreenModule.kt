@@ -444,6 +444,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
         )
     }
     viewModel { (courseId: String, threadId: String, comment: DiscussionComment) ->
@@ -451,6 +452,7 @@ val screenModule = module {
             courseId,
             threadId,
             comment,
+            get(),
             get(),
             get(),
             get(),

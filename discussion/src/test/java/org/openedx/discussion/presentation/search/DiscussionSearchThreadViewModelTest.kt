@@ -80,7 +80,8 @@ class DiscussionSearchThreadViewModelTest {
         mapOf(),
         0,
         false,
-        false
+        false,
+        false,
     )
 
     //endregion

@@ -44,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -238,7 +239,7 @@ private fun DiscussionThreadsScreen(
     val coroutine = rememberCoroutineScope()
     val scrollState = rememberLazyListState()
     val firstVisibleIndex = remember {
-        mutableStateOf(scrollState.firstVisibleItemIndex)
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val context = LocalContext.current
     var sortType by rememberSaveable {
@@ -722,36 +723,37 @@ private fun DiscussionThreadsScreenTabletPreview() {
 }
 
 private val mockThread = org.openedx.discussion.domain.model.Thread(
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    TextConverter.textToLinkedImageText(""),
-    false,
-    true,
-    20,
-    emptyList(),
-    false,
-    "",
-    "",
-    "",
-    "",
-    DiscussionType.DISCUSSION,
-    "",
-    "",
-    "Discussion title long Discussion title long good item",
-    true,
-    false,
-    true,
-    21,
-    4,
-    false,
-    false,
-    mapOf(),
-    10,
-    false,
-    false
+    id = "",
+    author = "",
+    authorLabel = "",
+    createdAt = "",
+    updatedAt = "",
+    rawBody = "",
+    renderedBody = "",
+    parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+    abuseFlagged = false,
+    voted = true,
+    voteCount = 20,
+    editableFields = emptyList(),
+    canDelete = false,
+    courseId = "",
+    topicId = "",
+    groupId = "",
+    groupName = "",
+    type = DiscussionType.DISCUSSION,
+    previewBody = "",
+    abuseFlaggedCount = "",
+    title = "Discussion title long Discussion title long good item",
+    pinned = true,
+    closed = false,
+    following = true,
+    commentCount = 21,
+    unreadCommentCount = 4,
+    read = false,
+    hasEndorsed = false,
+    users = mapOf(),
+    responseCount = 10,
+    anonymous = false,
+    anonymousToPeers = false,
+    isAuthor = false,
 )

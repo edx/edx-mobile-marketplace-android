@@ -197,12 +197,7 @@ class EditProfileFragment : Fragment() {
                     isImageDeleted = isImageDeleted,
                     leaveDialog = leaveDialog,
                     onBackClick = {
-                        if (it) {
-                            viewModel.setShowLeaveDialog(true)
-                        } else {
-                            viewModel.setShowLeaveDialog(false)
-                            requireActivity().supportFragmentManager.popBackStackImmediate()
-                        }
+                        onBackPressed(it)
                     },
                     onSaveClick = { fields ->
                         viewModel.profileEditDoneClickedEvent()
@@ -254,12 +249,7 @@ class EditProfileFragment : Fragment() {
         val onBackPressedCallback = remember {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    if (viewModel.profileDataChanged) {
-                        viewModel.setShowLeaveDialog(true)
-                    } else {
-                        viewModel.setShowLeaveDialog(false)
-                        requireActivity().supportFragmentManager.popBackStackImmediate()
-                    }
+                    onBackPressed(viewModel.profileDataChanged)
                 }
             }
         }
@@ -269,6 +259,15 @@ class EditProfileFragment : Fragment() {
             onDispose {
                 onBackPressedCallback.remove()
             }
+        }
+    }
+
+    private fun onBackPressed(showDialog: Boolean) {
+        if (showDialog) {
+            viewModel.setShowLeaveDialog(true)
+        } else {
+            viewModel.setShowLeaveDialog(false)
+            requireActivity().supportFragmentManager.popBackStackImmediate()
         }
     }
 

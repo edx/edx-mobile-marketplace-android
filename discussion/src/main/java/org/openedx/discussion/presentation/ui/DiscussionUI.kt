@@ -168,7 +168,7 @@ fun ThreadMainItem(
                     thread.voteCount,
                     thread.voteCount
                 ),
-                modifier = Modifier.alpha(if (thread.isAuthor) 0.4f else 1f),
+                modifier = Modifier.alpha(if (thread.isAuthor) 0.3f else 1f),
                 icon = voteIcon,
                 color = MaterialTheme.appColors.textPrimary,
                 textStyle = MaterialTheme.appTypography.labelLarge,
@@ -321,7 +321,7 @@ fun CommentItem(
                         comment.voteCount
                     ),
                     icon = voteIcon,
-                    modifier = Modifier.alpha(if (comment.isAuthor) 0.4f else 1f),
+                    modifier = Modifier.alpha(if (comment.isAuthor) 0.3f else 1f),
                     color = MaterialTheme.appColors.textPrimary,
                     textStyle = MaterialTheme.appTypography.labelLarge,
                     onClick = {
@@ -459,7 +459,7 @@ fun CommentMainItem(
                         comment.voteCount
                     ),
                     icon = voteIcon,
-                    modifier = Modifier.alpha(if (comment.isAuthor) 0.4f else 1f),
+                    modifier = Modifier.alpha(if (comment.isAuthor) 0.3f else 1f),
                     color = MaterialTheme.appColors.textPrimary,
                     textStyle = MaterialTheme.appTypography.labelLarge,
                     onClick = {

@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.presentation.global.FullScreenState
 import org.openedx.core.system.ResourceManager
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.InboxSection
@@ -94,15 +95,15 @@ class NotificationsInboxViewModel(
                 _uiState.value = if (notifications.values.any { it.isNotEmpty() }) {
                     InboxUIState.Data(notifications = notifications.toMap())
                 } else {
-                    InboxUIState.Empty
+                    InboxUIState.Fallback(state = InboxFullScreenState.Empty)
                 }
             } catch (e: Exception) {
                 if (uiState.value is InboxUIState.Data || _isRefreshing.value) {
                     emitErrorMessage(e)
                 } else if (e.isInternetError()) {
-                    _uiState.value = InboxUIState.NetworkError
+                    _uiState.value = InboxUIState.Fallback(state = FullScreenState.NetworkError)
                 } else {
-                    _uiState.value = InboxUIState.ServerError
+                    _uiState.value = InboxUIState.Fallback(state = FullScreenState.ServerError)
                 }
             } finally {
                 isLoading = false

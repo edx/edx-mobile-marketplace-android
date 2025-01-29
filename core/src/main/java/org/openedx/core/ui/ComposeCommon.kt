@@ -68,7 +68,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
@@ -102,6 +101,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -120,6 +122,7 @@ import org.openedx.core.extension.tagId
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.extension.toastMessage
 import org.openedx.core.presentation.global.ErrorType
+import org.openedx.core.presentation.global.FullScreenState
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -221,7 +224,6 @@ fun Toolbar(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchBar(
     modifier: Modifier,
@@ -321,7 +323,6 @@ fun SearchBar(
     )
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchBarStateless(
     modifier: Modifier,
@@ -1464,6 +1465,67 @@ private fun RoundTab(
     }
 }
 
+@Composable
+fun FullScreenStateView(
+    modifier: Modifier = Modifier,
+    state: FullScreenState,
+    onAction: () -> Unit = { },
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.appColors.background)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .size(62.dp)
+                .background(MaterialTheme.appColors.primaryCardCautionBackground)
+                .padding(4.dp),
+        ) {
+            Icon(
+                modifier = Modifier
+                    .size(42.dp)
+                    .align(Alignment.Center),
+                imageVector = state.imageVector,
+                contentDescription = null,
+                tint = MaterialTheme.appColors.onSurface
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = stringResource(id = state.titleResId),
+            style = MaterialTheme.appTypography.titleLarge,
+            color = MaterialTheme.appColors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = stringResource(id = state.descriptionResId),
+            style = MaterialTheme.appTypography.bodyLarge,
+            color = MaterialTheme.appColors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        state.actionButtonResId?.let {
+            OpenEdXPrimaryButton(
+                modifier = Modifier
+                    .widthIn(Dp.Unspecified, 162.dp),
+                text = stringResource(id = it),
+                textColor = MaterialTheme.appColors.secondaryButtonText,
+                backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
+                onClick = onAction,
+            )
+        }
+    }
+}
+
 @Preview
 @Composable
 private fun StaticSearchBarPreview() {
@@ -1610,5 +1672,22 @@ private fun PreviewNoContentScreen() {
             "No Content available",
             rememberVectorPainter(image = Icons.Filled.Info)
         )
+    }
+}
+
+private class FullScreenStatePreviewParameterProvider : PreviewParameterProvider<FullScreenState> {
+    override val values = sequenceOf(
+        FullScreenState.NetworkError,
+        FullScreenState.ServerError,
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun FullScreenStatePreview(
+    @PreviewParameter(FullScreenStatePreviewParameterProvider::class) state: FullScreenState,
+) {
+    OpenEdXTheme {
+        FullScreenStateView(state = state)
     }
 }

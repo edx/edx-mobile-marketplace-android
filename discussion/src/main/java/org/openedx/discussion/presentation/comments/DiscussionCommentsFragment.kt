@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalComposeUiApi::class)
-
 package org.openedx.discussion.presentation.comments
 
 import android.content.res.Configuration
@@ -44,12 +42,12 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -125,7 +123,6 @@ class DiscussionCommentsFragment : Fragment() {
                 val uiState by viewModel.uiState.observeAsState(DiscussionCommentsUIState.Loading)
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
-                val scrollToBottom by viewModel.scrollToBottom.observeAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
 
                 DiscussionCommentsScreen(
@@ -134,7 +131,6 @@ class DiscussionCommentsFragment : Fragment() {
                     uiMessage = uiMessage,
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
-                    scrollToBottom = scrollToBottom,
                     refreshing = refreshing,
                     onSwipeRefresh = {
                         viewModel.updateThreadComments()
@@ -216,7 +212,6 @@ private fun DiscussionCommentsScreen(
     uiMessage: UIMessage?,
     title: String,
     canLoadMore: Boolean,
-    scrollToBottom: Boolean,
     refreshing: Boolean,
     onSwipeRefresh: () -> Unit,
     paginationCallBack: () -> Unit,
@@ -229,7 +224,7 @@ private fun DiscussionCommentsScreen(
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
     val firstVisibleIndex = remember {
-        mutableStateOf(scrollState.firstVisibleItemIndex)
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val pullRefreshState =
         rememberPullRefreshState(refreshing = refreshing, onRefresh = { onSwipeRefresh() })
@@ -352,7 +347,7 @@ private fun DiscussionCommentsScreen(
                                                     .padding(horizontal = paddingContent)
                                                     .padding(top = 24.dp, bottom = 4.dp),
                                                 text = pluralStringResource(
-                                                    id = org.openedx.discussion.R.plurals.discussion_responses_capitalized,
+                                                    id = R.plurals.discussion_responses_capitalized,
                                                     uiState.count,
                                                     uiState.count
                                                 ),
@@ -493,7 +488,7 @@ private fun DiscussionCommentsScreen(
 @Preview(name = "NEXUS_5_Dark", device = Devices.NEXUS_5, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun DiscussionCommentsScreenPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         DiscussionCommentsScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             uiState = DiscussionCommentsUIState.Success(
@@ -511,7 +506,6 @@ private fun DiscussionCommentsScreenPreview() {
             onCommentClick = {},
             onAddResponseClick = {},
             onBackClick = {},
-            scrollToBottom = false,
             refreshing = false,
             onSwipeRefresh = {},
             onUserPhotoClick = {}
@@ -524,7 +518,7 @@ private fun DiscussionCommentsScreenPreview() {
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun DiscussionCommentsScreenTabletPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         DiscussionCommentsScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             uiState = DiscussionCommentsUIState.Success(
@@ -542,7 +536,6 @@ private fun DiscussionCommentsScreenTabletPreview() {
             onCommentClick = {},
             onAddResponseClick = {},
             onBackClick = {},
-            scrollToBottom = false,
             refreshing = false,
             onSwipeRefresh = {},
             onUserPhotoClick = {}
@@ -550,63 +543,65 @@ private fun DiscussionCommentsScreenTabletPreview() {
     }
 }
 
-private val mockThread = org.openedx.discussion.domain.model.Thread(
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    TextConverter.textToLinkedImageText(""),
-    false,
-    true,
-    20,
-    emptyList(),
-    false,
-    "",
-    "",
-    "",
-    "",
-    DiscussionType.DISCUSSION,
-    "",
-    "",
-    "Discussion title long Discussion title long good item",
-    true,
-    false,
-    true,
-    21,
-    4,
-    false,
-    false,
-    mapOf(),
-    10,
-    false,
-    false
+private val mockThread = Thread(
+    id = "",
+    author = "",
+    authorLabel = "",
+    createdAt = "",
+    updatedAt = "",
+    rawBody = "",
+    renderedBody = "",
+    parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+    abuseFlagged = false,
+    voted = true,
+    voteCount = 20,
+    editableFields = emptyList(),
+    canDelete = false,
+    courseId = "",
+    topicId = "",
+    groupId = "",
+    groupName = "",
+    type = DiscussionType.DISCUSSION,
+    previewBody = "",
+    abuseFlaggedCount = "",
+    title = "Discussion title long Discussion title long good item",
+    pinned = true,
+    closed = false,
+    following = true,
+    commentCount = 21,
+    unreadCommentCount = 4,
+    read = false,
+    hasEndorsed = false,
+    users = mapOf(),
+    responseCount = 10,
+    anonymous = false,
+    anonymousToPeers = false,
+    isAuthor = false,
 )
 
 private val mockComment = DiscussionComment(
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    TextConverter.textToLinkedImageText(""),
-    false,
-    true,
-    20,
-    emptyList(),
-    false,
-    "",
-    "",
-    false,
-    "",
-    "",
-    "",
-    21,
-    emptyList(),
+    id = "",
+    author = "",
+    authorLabel = "",
+    createdAt = "",
+    updatedAt = "",
+    rawBody = "",
+    renderedBody = "",
+    parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+    abuseFlagged = false,
+    voted = true,
+    voteCount = 20,
+    editableFields = emptyList(),
+    canDelete = false,
+    threadId = "",
+    parentId = "",
+    endorsed = false,
+    endorsedBy = "",
+    endorsedByLabel = "",
+    endorsedAt = "",
+    childCount = 21,
+    children = emptyList(),
     profileImage = ProfileImage("", "", "", "", false),
-    mapOf()
+    users = mapOf(),
+    isAuthor = false,
 )

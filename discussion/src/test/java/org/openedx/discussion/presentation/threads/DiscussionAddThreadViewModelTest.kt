@@ -21,14 +21,11 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.R
 import org.openedx.core.UIMessage
-import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
-import org.openedx.discussion.domain.model.DiscussionComment
-import org.openedx.discussion.domain.model.DiscussionProfile
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.Topic
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.system.notifier.DiscussionNotifier
@@ -45,105 +42,48 @@ class DiscussionAddThreadViewModelTest {
 
     private val resourceManager = mockk<ResourceManager>()
     private val interactor = mockk<DiscussionInteractor>()
-    private val preferencesManager = mockk<CorePreferences>()
     private val analytics = mockk<DiscussionAnalytics>()
     private val notifier = mockk<DiscussionNotifier>(relaxed = true)
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
-    private val commentAddedSuccessfully = "Comment Successfully added"
 
     //region mockThread
 
-    val mockThread = org.openedx.discussion.domain.model.Thread(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        TextConverter.textToLinkedImageText(""),
-        false,
-        true,
-        20,
-        emptyList(),
-        false,
-        "",
-        "",
-        "",
-        "",
-        DiscussionType.DISCUSSION,
-        "",
-        "",
-        "Discussion title long Discussion title long good item",
-        true,
-        false,
-        true,
-        21,
-        4,
-        false,
-        false,
-        mapOf(),
-        0,
-        false,
-        false
-    )
-
-    //endregion
-
-    //region mockComment
-
-    private val mockComment = DiscussionComment(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        TextConverter.textToLinkedImageText(""),
-        false,
-        true,
-        20,
-        emptyList(),
-        false,
-        "",
-        "",
-        false,
-        "",
-        "",
-        "",
-        21,
-        emptyList(),
-        null,
-        emptyMap()
-    )
-
-    private val mockCommentAdded = DiscussionComment(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        TextConverter.textToLinkedImageText(""),
-        false,
-        true,
-        20,
-        emptyList(),
-        false,
-        "",
-        "",
-        false,
-        "",
-        "",
-        "",
-        21,
-        emptyList(),
-        null,
-        mapOf("" to DiscussionProfile(ProfileImage("", "", "", "", false)))
+    private val mockThread = Thread(
+        id = "",
+        author = "",
+        authorLabel = "",
+        createdAt = "",
+        updatedAt = "",
+        rawBody = "",
+        renderedBody = "",
+        parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+        abuseFlagged = false,
+        voted = true,
+        voteCount = 20,
+        editableFields = emptyList(),
+        canDelete = false,
+        courseId = "",
+        topicId = "",
+        groupId = "",
+        groupName = "",
+        type = DiscussionType.DISCUSSION,
+        previewBody = "",
+        abuseFlaggedCount = "",
+        title = "Discussion title long Discussion title long good item",
+        pinned = true,
+        closed = false,
+        following = true,
+        commentCount = 21,
+        unreadCommentCount = 4,
+        read = false,
+        hasEndorsed = false,
+        users = mapOf(),
+        responseCount = 0,
+        anonymous = false,
+        anonymousToPeers = false,
+        isAuthor = false,
     )
 
     //endregion
@@ -157,17 +97,13 @@ class DiscussionAddThreadViewModelTest {
         children = emptyList()
     )
 
-    val topics = listOf(
+    private val topics = listOf(
         mockTopic.copy(id = "0"),
         mockTopic.copy(id = "1"),
         mockTopic.copy(id = "2")
     )
 
     //endregion
-
-    private val comments = listOf(
-        mockComment.copy(id = "0"), mockComment.copy(id = "1")
-    )
 
     @Before
     fun setUp() {

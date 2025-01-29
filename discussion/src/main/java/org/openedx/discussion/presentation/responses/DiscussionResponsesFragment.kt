@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalComposeUiApi::class)
-
 package org.openedx.discussion.presentation.responses
 
 import android.content.res.Configuration
@@ -52,7 +50,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -153,6 +150,7 @@ class DiscussionResponsesFragment : Fragment() {
                                     )
                                 }
                             }
+
                             DiscussionCommentsFragment.ACTION_REPORT_COMMENT -> {
                                 viewModel.setCommentReported(
                                     id,
@@ -356,7 +354,7 @@ private fun DiscussionResponsesScreen(
                                                         bool
                                                     )
                                                 },
-                                                onUserPhotoClick = {username ->
+                                                onUserPhotoClick = { username ->
                                                     onUserPhotoClick(username)
                                                 }
                                             )
@@ -402,7 +400,7 @@ private fun DiscussionResponsesScreen(
                                                     onClick = { action, commentId, bool ->
                                                         onItemClick(action, commentId, bool)
                                                     },
-                                                    onUserPhotoClick = {username ->
+                                                    onUserPhotoClick = { username ->
                                                         onUserPhotoClick(username)
                                                     }
                                                 )
@@ -493,6 +491,7 @@ private fun DiscussionResponsesScreen(
                                 }
                             }
                         }
+
                         is DiscussionResponsesUIState.Loading -> {
                             Box(
                                 Modifier
@@ -519,7 +518,7 @@ private fun DiscussionResponsesScreen(
 @Preview(name = "NEXUS_5_Dark", device = Devices.NEXUS_5, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun DiscussionResponsesScreenPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         DiscussionResponsesScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             uiState = DiscussionResponsesUIState.Success(
@@ -550,7 +549,7 @@ private fun DiscussionResponsesScreenPreview() {
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun DiscussionResponsesScreenTabletPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         DiscussionResponsesScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             uiState = DiscussionResponsesUIState.Success(
@@ -578,29 +577,30 @@ private fun DiscussionResponsesScreenTabletPreview() {
 }
 
 private val mockComment = DiscussionComment(
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    TextConverter.textToLinkedImageText(""),
-    false,
-    true,
-    20,
-    emptyList(),
-    false,
-    "",
-    "",
-    false,
-    "",
-    "",
-    "",
-    21,
-    emptyList(),
-    ProfileImage("", "", "", "", false),
-    mapOf()
+    id = "",
+    author = "",
+    authorLabel = "",
+    createdAt = "",
+    updatedAt = "",
+    rawBody = "",
+    renderedBody = "",
+    parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+    abuseFlagged = false,
+    voted = true,
+    voteCount = 20,
+    editableFields = emptyList(),
+    canDelete = false,
+    threadId = "",
+    parentId = "",
+    endorsed = false,
+    endorsedBy = "",
+    endorsedByLabel = "",
+    endorsedAt = "",
+    childCount = 21,
+    children = emptyList(),
+    profileImage = ProfileImage("", "", "", "", false),
+    users = mapOf(),
+    isAuthor = false,
 )
 
 

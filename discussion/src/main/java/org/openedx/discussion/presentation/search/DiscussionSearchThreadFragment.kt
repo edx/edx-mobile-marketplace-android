@@ -4,19 +4,42 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.*
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
@@ -34,20 +57,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import org.openedx.core.R
-import org.openedx.core.UIMessage
-import org.openedx.core.extension.TextConverter
-import org.openedx.core.ui.*
-import org.openedx.core.ui.theme.OpenEdXTheme
-import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appTypography
-import org.openedx.discussion.domain.model.DiscussionType
-import org.openedx.discussion.presentation.DiscussionRouter
-import org.openedx.discussion.presentation.ui.ThreadItem
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-
+import org.openedx.core.R
+import org.openedx.core.UIMessage
+import org.openedx.core.extension.TextConverter
+import org.openedx.core.ui.BackBtn
+import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.SearchBar
+import org.openedx.core.ui.WindowSize
+import org.openedx.core.ui.WindowType
+import org.openedx.core.ui.rememberWindowSize
+import org.openedx.core.ui.shouldLoadMore
+import org.openedx.core.ui.statusBarsInset
+import org.openedx.core.ui.theme.OpenEdXTheme
+import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.windowSizeValue
+import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.presentation.DiscussionRouter
+import org.openedx.discussion.presentation.ui.ThreadItem
 import org.openedx.discussion.R as discussionR
 
 class DiscussionSearchThreadFragment : Fragment() {
@@ -122,7 +152,7 @@ class DiscussionSearchThreadFragment : Fragment() {
 
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun DiscussionSearchThreadScreen(
     windowSize: WindowSize,
@@ -139,7 +169,7 @@ private fun DiscussionSearchThreadScreen(
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
     val firstVisibleIndex = remember {
-        mutableStateOf(scrollState.firstVisibleItemIndex)
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val pullRefreshState =
         rememberPullRefreshState(refreshing = refreshing, onRefresh = { onSwipeRefresh() })
@@ -303,6 +333,7 @@ private fun DiscussionSearchThreadScreen(
                                         }
                                     }
                                 }
+
                                 is DiscussionSearchThreadUIState.Threads -> {
                                     items(uiState.data) { thread ->
                                         ThreadItem(thread = thread, onClick = onItemClick)
@@ -382,36 +413,37 @@ fun DiscussionSearchThreadScreenTabletPreview() {
 }
 
 private val mockThread = org.openedx.discussion.domain.model.Thread(
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    TextConverter.textToLinkedImageText(""),
-    false,
-    true,
-    20,
-    emptyList(),
-    false,
-    "",
-    "",
-    "",
-    "",
-    DiscussionType.DISCUSSION,
-    "",
-    "",
-    "Discussion title long Discussion title long good item",
-    true,
-    false,
-    true,
-    21,
-    4,
-    false,
-    false,
-    mapOf(),
-    10,
-    false,
-    false
+    id = "",
+    author = "",
+    authorLabel = "",
+    createdAt = "",
+    updatedAt = "",
+    rawBody = "",
+    renderedBody = "",
+    parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+    abuseFlagged = false,
+    voted = true,
+    voteCount = 20,
+    editableFields = emptyList(),
+    canDelete = false,
+    courseId = "",
+    topicId = "",
+    groupId = "",
+    groupName = "",
+    type = DiscussionType.DISCUSSION,
+    previewBody = "",
+    abuseFlaggedCount = "",
+    title = "Discussion title long Discussion title long good item",
+    pinned = true,
+    closed = false,
+    following = true,
+    commentCount = 21,
+    unreadCommentCount = 4,
+    read = false,
+    hasEndorsed = false,
+    users = mapOf(),
+    responseCount = 10,
+    anonymous = false,
+    anonymousToPeers = false,
+    isAuthor = false,
 )

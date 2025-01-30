@@ -3,6 +3,7 @@ package org.openedx.notifications
 import androidx.fragment.app.FragmentManager
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
+import org.openedx.notifications.presentation.primer.NotificationsPrimerDialogFragment
 
 class PushManager(private val interactor: NotificationsInteractor) : PushGlobalManager {
 
@@ -12,7 +13,10 @@ class PushManager(private val interactor: NotificationsInteractor) : PushGlobalM
 
     override fun showNotificationsPrimer(fragmentManager: FragmentManager) {
         if (interactor.shouldShowNotificationsPrimer()) {
-
+            NotificationsPrimerDialogFragment().show(
+                fragmentManager,
+                NotificationsPrimerDialogFragment::class.simpleName
+            )
         }
     }
 }

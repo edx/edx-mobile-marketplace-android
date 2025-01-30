@@ -85,6 +85,7 @@ data class AppColors(
     val primaryCardInfoBackground: Color,
 
     val inboxTimeMarkerColor: Color,
+    val notificationPrimerBadge: Color,
 ) {
     val primary: Color get() = material.primary
     val primaryVariant: Color get() = material.primaryVariant

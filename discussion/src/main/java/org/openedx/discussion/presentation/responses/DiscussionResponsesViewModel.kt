@@ -17,6 +17,7 @@ import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionAnalyticsType
 import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
+import org.openedx.discussion.system.notifier.DiscussionResponseAdded
 
 class DiscussionResponsesViewModel(
     val courseId: String,
@@ -209,6 +210,8 @@ class DiscussionResponsesViewModel(
                     commentId = comment.id,
                     author = response.author,
                 )
+
+                notifier.send(DiscussionResponseAdded())
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =

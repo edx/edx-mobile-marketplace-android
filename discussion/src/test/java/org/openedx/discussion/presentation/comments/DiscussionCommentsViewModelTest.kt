@@ -930,7 +930,7 @@ class DiscussionCommentsViewModelTest {
 
         coEvery { notifier.notifier } returns flow {
             delay(100)
-            emit(DiscussionCommentAdded(mockComment))
+            emit(DiscussionCommentAdded())
         }
         coEvery { notifier.send(DiscussionThreadDataChanged(mockThread)) } returns Unit
 

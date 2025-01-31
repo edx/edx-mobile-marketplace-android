@@ -22,6 +22,7 @@ import org.openedx.discussion.system.notifier.DiscussionCommentAdded
 import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
+import org.openedx.discussion.system.notifier.DiscussionThreadFollowed
 
 class DiscussionCommentsViewModel(
     val courseId: String,
@@ -213,6 +214,10 @@ class DiscussionCommentsViewModel(
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
                 sendThreadUpdated()
                 logFollowToggleEvent(followed, thread.author)
+
+                if (followed) {
+                    notifier.send(DiscussionThreadFollowed())
+                }
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -327,6 +332,8 @@ class DiscussionCommentsViewModel(
                     responseId = response.id,
                     author = response.author
                 )
+
+                notifier.send(DiscussionCommentAdded())
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =

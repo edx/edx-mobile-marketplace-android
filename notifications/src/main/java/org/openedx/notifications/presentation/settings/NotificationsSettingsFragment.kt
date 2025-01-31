@@ -1,10 +1,16 @@
 package org.openedx.notifications.presentation.settings
 
+import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,8 +47,12 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.core.UIMessage
+import org.openedx.core.ui.AlertDialog
+import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -58,10 +68,22 @@ import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.notifications.R
 import org.openedx.notifications.domain.model.NotificationsConfiguration
+import org.openedx.core.R as CoreR
 
 class NotificationsSettingsFragment : Fragment() {
 
     private val viewModel by viewModel<NotificationsSettingsViewModel>()
+
+    private val pushNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            viewModel.fetchAndUpdateNotificationsSettings()
+        } else {
+            viewModel.updateDiscussionPreference(false)
+        }
+        Log.d(NotificationsSettingsFragment::class.java.simpleName, "Permission granted: $granted")
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,19 +96,57 @@ class NotificationsSettingsFragment : Fragment() {
                 val windowSize = rememberWindowSize()
 
                 val notificationsConfiguration by viewModel.notificationsConfiguration.collectAsState()
+                val showPermissionRequestDialog by viewModel.showPermissionRequestDialog.collectAsState()
+                val uiMessage by viewModel.uiMessage.collectAsState(null)
 
                 NotificationsSettingsScreen(
                     windowSize = windowSize,
                     notificationsConfiguration = notificationsConfiguration,
+                    showPermissionRequestDialog = showPermissionRequestDialog,
+                    uiMessage = uiMessage,
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
                     },
                     discussionPreferenceChanged = {
                         viewModel.setDiscussionNotificationPreference(it)
                     },
+                    onPositiveButtonClick = {
+                        viewModel.dismissPermissionDialog()
+                        requestNotificationPermissionOrNavigate()
+                    },
+                    onNegativeButtonClick = {
+                        viewModel.dismissPermissionDialog()
+                    }
                 )
             }
         }
+    }
+
+    private fun requestNotificationPermissionOrNavigate() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    requireActivity(),
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                )
+            ) {
+                navigateToAppSettings()
+            } else {
+                pushNotificationPermissionLauncher.launch(
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                )
+            }
+        } else {
+            navigateToAppSettings()
+        }
+    }
+
+    private fun navigateToAppSettings() {
+        val intent = Intent().apply {
+            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            data = Uri.parse("package:${requireContext().packageName}")
+        }
+        requireContext().startActivity(intent)
     }
 }
 
@@ -95,7 +155,11 @@ class NotificationsSettingsFragment : Fragment() {
 private fun NotificationsSettingsScreen(
     windowSize: WindowSize,
     notificationsConfiguration: NotificationsConfiguration,
+    showPermissionRequestDialog: Boolean,
+    uiMessage: UIMessage? = null,
     discussionPreferenceChanged: (Boolean) -> Unit,
+    onPositiveButtonClick: () -> Unit = {},
+    onNegativeButtonClick: () -> Unit = {},
     onBackClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -127,6 +191,21 @@ private fun NotificationsSettingsScreen(
                     compact = Modifier
                         .fillMaxWidth()
                 )
+            )
+        }
+        HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
+
+        if (showPermissionRequestDialog) {
+            AlertDialog(
+                title = stringResource(id = CoreR.string.core_permission_dialog_title),
+                message = stringResource(
+                    id = CoreR.string.core_permission_dialog_message,
+                    stringResource(id = R.string.notifications_notifications).lowercase()
+                ),
+                positiveBtnText = stringResource(id = CoreR.string.core_continue),
+                negativeBtnText = stringResource(id = CoreR.string.core_cancel),
+                positiveBtnAction = onPositiveButtonClick,
+                negativeBtnAction = onNegativeButtonClick,
             )
         }
 
@@ -226,7 +305,8 @@ private fun NotificationsSettingsScreenPreview() {
             onBackClick = {},
             notificationsConfiguration = NotificationsConfiguration(
                 discussionsPushEnabled = false,
-            )
+            ),
+            showPermissionRequestDialog = false,
         )
     }
 }

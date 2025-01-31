@@ -65,21 +65,7 @@ class DiscussionCommentsViewModel(
         super.onCreate(owner)
         viewModelScope.launch {
             notifier.notifier.collect {
-                if (it is DiscussionCommentAdded) {
-                    if (page == -1) {
-                        comments.add(it.comment)
-                        _uiState.value = DiscussionCommentsUIState.Success(
-                            thread,
-                            comments.toList(),
-                            commentCount
-                        )
-                    } else {
-                        _uiMessage.value =
-                            UIMessage.ToastMessage(resourceManager.getString(org.openedx.discussion.R.string.discussion_comment_added))
-                    }
-                    thread = thread.copy(commentCount = thread.commentCount + 1)
-                    sendThreadUpdated()
-                } else if (it is DiscussionCommentDataChanged) {
+                if (it is DiscussionCommentDataChanged) {
                     val index = comments.indexOfFirst { innerComment ->
                         innerComment.id == it.discussionComment.id
                     }

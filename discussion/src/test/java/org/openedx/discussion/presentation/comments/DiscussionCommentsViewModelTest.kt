@@ -945,46 +945,6 @@ class DiscussionCommentsViewModelTest {
         assert(viewModel.uiState.value is DiscussionCommentsUIState.Success)
     }
 
-
-    @Test
-    fun `DiscussionCommentAdded notifier test all comments not loaded`() = runTest {
-        coEvery { interactor.getThreadComments(any(), any()) } returns CommentsData(
-            comments,
-            Pagination(10, "2", 4, "1")
-        )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
-
-        val viewModel = DiscussionCommentsViewModel(
-            "",
-            mockThread,
-            "",
-            "",
-            interactor,
-            resourceManager,
-            notifier,
-            preferencesManager,
-            analytics,
-        )
-
-        coEvery { notifier.notifier } returns flow {
-            delay(100)
-            emit(DiscussionCommentAdded(mockComment))
-        }
-        coEvery { notifier.send(DiscussionThreadDataChanged(mockk())) } returns Unit
-
-        val mockLifeCycleOwner: LifecycleOwner = mockk()
-        val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
-        lifecycleRegistry.addObserver(viewModel)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
-
-        advanceUntilIdle()
-
-        val message = viewModel.uiMessage.value as? UIMessage.ToastMessage
-        assert(commentAddedSuccessfully == message?.message)
-        assert(viewModel.uiState.value is DiscussionCommentsUIState.Success)
-    }
-
     @Test
     fun `DiscussionCommentDataChanged notifier test `() = runTest {
         coEvery { interactor.getThreadComments(any(), any()) } returns CommentsData(

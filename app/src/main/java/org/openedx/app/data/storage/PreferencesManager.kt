@@ -15,6 +15,7 @@ import org.openedx.core.extension.replaceSpace
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.model.NotificationsConfiguration
+import org.openedx.notifications.domain.model.NotificationsPrimerConfiguration
 import org.openedx.profile.data.model.Account
 import org.openedx.profile.data.storage.ProfilePreferences
 import org.openedx.whatsnew.data.storage.WhatsNewPreferences
@@ -199,6 +200,17 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
                 ?: NotificationsConfiguration.default
         }
 
+    override var primer: NotificationsPrimerConfiguration
+        set(value) {
+            val primerJson = Gson().toJson(value)
+            saveString(PRIMER_CONFIGURATION, primerJson)
+        }
+        get() {
+            val primerString = getString(PRIMER_CONFIGURATION)
+            return Gson().fromJson(primerString, NotificationsPrimerConfiguration::class.java)
+                ?: NotificationsPrimerConfiguration()
+        }
+
     companion object {
         private const val ACCESS_TOKEN = "access_token"
         private const val REFRESH_TOKEN = "refresh_token"
@@ -217,5 +229,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val RESET_APP_DIRECTORY = "reset_app_directory"
         private const val LAST_SIGN_IN_TYPE = "last_sign_in_type"
         private const val NOTIFICATIONS_CONFIGURATION = "notifications_configuration"
+        private const val PRIMER_CONFIGURATION = "primer_configuration"
     }
 }

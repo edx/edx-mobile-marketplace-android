@@ -434,6 +434,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
         )
     }
     viewModel { (courseId: String, thread: Thread, responseId: String, commentId: String) ->
@@ -492,7 +493,7 @@ val screenModule = module {
     }
 
     single { NotificationsRepository(get()) }
-    factory { NotificationsInteractor(get()) }
+    factory { NotificationsInteractor(get(), get(), get()) }
 
     viewModel { NotificationsInboxViewModel(get(), get(), get(), get()) }
     viewModel { NotificationsSettingsViewModel(get(), get(), get(), get()) }

@@ -33,6 +33,9 @@ class NotificationsInboxViewModel(
     private val _canLoadMore = MutableStateFlow(true)
     val canLoadMore = _canLoadMore.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
     private val notifications: MutableMap<InboxSection, MutableList<NotificationItem>> =
         mutableMapOf(
             InboxSection.RECENT to mutableListOf(),
@@ -64,7 +67,7 @@ class NotificationsInboxViewModel(
     }
 
     fun fetchMore() {
-        if (!isLoading && nextPage != -1) {
+        if (!isLoading && _canLoadMore.value) {
             internalLoadNotifications()
         }
     }
@@ -89,18 +92,22 @@ class NotificationsInboxViewModel(
 
                 // Update the UI state based on whether any notifications exist
                 _uiState.value = if (notifications.values.any { it.isNotEmpty() }) {
-                    InboxUIState.Data(notifications = notifications)
+                    InboxUIState.Data(notifications = notifications.toMap())
                 } else {
-                    InboxUIState.Empty
+                    InboxUIState.Fallback(state = InboxFullScreenState.Empty)
                 }
             } catch (e: Exception) {
-                if (nextPage == 1) {
-                    _uiState.value = InboxUIState.Error
+                if (uiState.value is InboxUIState.Data || _isRefreshing.value) {
+                    emitErrorMessage(e)
+                } else if (e.isInternetError()) {
+                    _uiState.value =
+                        InboxUIState.Fallback(state = InboxFullScreenState.NetworkError)
                 } else {
-                    _canLoadMore.value = true
+                    _uiState.value = InboxUIState.Fallback(state = InboxFullScreenState.ServerError)
                 }
             } finally {
                 isLoading = false
+                _isRefreshing.value = false
             }
         }
     }
@@ -108,6 +115,15 @@ class NotificationsInboxViewModel(
     fun onReloadNotifications() {
         _canLoadMore.value = true
         nextPage = 1
+        internalLoadNotifications()
+    }
+
+    fun onRefreshNotifications() {
+        _isRefreshing.value = true
+        nextPage = 1
+        InboxSection.entries.forEach { section ->
+            notifications[section] = mutableListOf()
+        }
         internalLoadNotifications()
     }
 

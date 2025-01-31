@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -32,12 +33,14 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Forum
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.SignalWifiStatusbarConnectedNoInternet4
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,8 +64,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isNull
 import org.openedx.core.ui.BackBtn
+import org.openedx.core.ui.FullScreenStateView
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.crop
@@ -81,7 +84,6 @@ import org.openedx.notifications.domain.model.NotificationContent
 import org.openedx.notifications.domain.model.NotificationItem
 import org.openedx.notifications.utils.TextUtils
 import java.util.Date
-import org.openedx.core.R as coreR
 
 class NotificationsInboxFragment : Fragment() {
 
@@ -99,11 +101,13 @@ class NotificationsInboxFragment : Fragment() {
                 val uiState by viewModel.uiState.collectAsState()
                 val uiMessage by viewModel.uiMessage.collectAsState(null)
                 val canLoadMore by viewModel.canLoadMore.collectAsState()
+                val refreshing by viewModel.isRefreshing.collectAsState()
 
                 InboxView(
                     windowSize = windowSize,
                     uiState = uiState,
                     uiMessage = uiMessage,
+                    refreshing = refreshing,
                     canLoadMore = canLoadMore,
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
@@ -118,6 +122,9 @@ class NotificationsInboxFragment : Fragment() {
                                 viewModel.navigateToPushNotificationsSettings(requireActivity().supportFragmentManager)
                             }
                         }
+                    },
+                    onSwipeRefresh = {
+                        viewModel.onRefreshNotifications()
                     },
                     onReloadNotifications = {
                         viewModel.onReloadNotifications()
@@ -137,14 +144,17 @@ class NotificationsInboxFragment : Fragment() {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun InboxView(
     windowSize: WindowSize,
     uiState: InboxUIState,
     uiMessage: UIMessage?,
     canLoadMore: Boolean,
+    refreshing: Boolean,
     onBackClick: () -> Unit,
     onSettingsClick: (NotificationsMenuType) -> Unit,
+    onSwipeRefresh: () -> Unit,
     onReloadNotifications: () -> Unit,
     paginationCallBack: () -> Unit,
     markNotificationAsRead: (notificationItem: NotificationItem, inboxSection: InboxSection) -> Unit,
@@ -169,6 +179,16 @@ private fun InboxView(
                     .padding(horizontal = 24.dp, vertical = 16.dp)
             )
         )
+    }
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = refreshing,
+        onRefresh = { onSwipeRefresh() },
+    )
+    val firstVisibleIndex = remember {
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
+    }
+    val lastVisibleIndex = remember {
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val loadMoreTriggerThreshold = 4
 
@@ -197,78 +217,89 @@ private fun InboxView(
             )
 
             Surface(
-                modifier = contentWidth,
                 color = MaterialTheme.appColors.background
             ) {
-                when (uiState) {
-                    is InboxUIState.Data -> {
-                        LazyColumn(
-                            Modifier
-                                .weight(1f)
-                                .background(MaterialTheme.appColors.background),
-                            state = scrollState,
-                        ) {
-                            uiState.notifications.forEach { (section, items) ->
-                                if (items.isNotEmpty()) {
-                                    item {
-                                        SectionHeader(
-                                            section = section,
-                                        )
-                                    }
+                Box(
+                    modifier = Modifier.pullRefresh(pullRefreshState),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    when (uiState) {
+                        is InboxUIState.Data -> {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .background(MaterialTheme.appColors.background)
+                                    .then(contentWidth),
+                                state = scrollState,
+                            ) {
+                                uiState.notifications.forEach { (section, items) ->
+                                    if (items.isNotEmpty()) {
+                                        item {
+                                            SectionHeader(
+                                                section = section,
+                                            )
+                                        }
 
-                                    items(items) { item ->
-                                        NotificationItemView(
-                                            modifier = Modifier.clickable {
-                                                markNotificationAsRead(item, section)
-                                            },
-                                            item = item,
-                                        )
-                                    }
+                                        items(items) { item ->
+                                            NotificationItemView(
+                                                modifier = Modifier.clickable {
+                                                    markNotificationAsRead(item, section)
+                                                },
+                                                item = item,
+                                            )
+                                        }
 
-                                    item {
-                                        Spacer(Modifier.height(24.dp))
-                                    }
-                                }
-                            }
-
-                            if (canLoadMore) {
-                                item {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                                        item {
+                                            Spacer(Modifier.height(24.dp))
+                                        }
                                     }
                                 }
-                            }
 
-                            if (scrollState.shouldLoadMore(loadMoreTriggerThreshold)) {
-                                paginationCallBack()
+                                if (canLoadMore) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 8.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                                        }
+                                    }
+                                }
+
+                                if (scrollState.shouldLoadMore(
+                                        rememberedFirstIndex = firstVisibleIndex,
+                                        rememberedLastIndex = lastVisibleIndex,
+                                        threshold = loadMoreTriggerThreshold
+                                    )
+                                ) {
+                                    paginationCallBack()
+                                }
                             }
+                        }
+
+                        is InboxUIState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                            }
+                        }
+
+                        is InboxUIState.Fallback -> {
+                            FullScreenStateView(
+                                state = uiState.state,
+                                onAction = onReloadNotifications,
+                            )
                         }
                     }
 
-                    is InboxUIState.Loading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                        }
-                    }
-
-                    is InboxUIState.Empty -> {
-                        InboxStateView(
-                            uiState = InboxUIState.Empty,
-                        )
-                    }
-
-                    is InboxUIState.Error -> {
-                        InboxStateView(
-                            uiState = InboxUIState.Error,
-                            onReloadNotifications = onReloadNotifications
-                        )
-                    }
+                    PullRefreshIndicator(
+                        refreshing,
+                        pullRefreshState,
+                        Modifier.align(Alignment.TopCenter)
+                    )
                 }
             }
         }
@@ -439,74 +470,6 @@ private fun NotificationItemView(
     }
 }
 
-@Composable
-private fun InboxStateView(
-    modifier: Modifier = Modifier,
-    uiState: InboxUIState,
-    onReloadNotifications: () -> Unit = { },
-) {
-    val iconResId = if (uiState is InboxUIState.Empty) Icons.Outlined.Notifications
-    else Icons.Outlined.SignalWifiStatusbarConnectedNoInternet4
-
-    val titleResId = if (uiState is InboxUIState.Empty) R.string.notifications_no_notifications_yet
-    else coreR.string.core_no_internet_connection
-
-    val descriptionResId =
-        if (uiState is InboxUIState.Empty) R.string.notifications_no_notifications_yet_description
-        else coreR.string.core_no_internet_connection_description
-
-    Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(CircleShape)
-                .size(62.dp)
-                .background(MaterialTheme.appColors.primaryCardCautionBackground)
-                .padding(4.dp),
-        ) {
-            Icon(
-                modifier = Modifier
-                    .size(42.dp)
-                    .align(Alignment.Center),
-                imageVector = iconResId,
-                contentDescription = null,
-                tint = MaterialTheme.appColors.onSurface
-            )
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = stringResource(titleResId),
-            style = MaterialTheme.appTypography.titleLarge,
-            color = MaterialTheme.appColors.textPrimary,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = stringResource(descriptionResId),
-            style = MaterialTheme.appTypography.bodyLarge,
-            color = MaterialTheme.appColors.textPrimary,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (uiState is InboxUIState.Error) {
-            OpenEdXPrimaryButton(
-                modifier = Modifier
-                    .widthIn(Dp.Unspecified, 162.dp),
-                text = stringResource(id = coreR.string.core_reload),
-                textColor = MaterialTheme.appColors.secondaryButtonText,
-                backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
-                onClick = onReloadNotifications,
-            )
-        }
-    }
-}
-
 @PreviewLightDark
 @Composable
 private fun InboxPreview(
@@ -518,8 +481,10 @@ private fun InboxPreview(
             uiState = uiState,
             uiMessage = null,
             canLoadMore = true,
+            refreshing = true,
             onBackClick = { },
             onSettingsClick = { },
+            onSwipeRefresh = { },
             onReloadNotifications = { },
             paginationCallBack = { },
             markNotificationAsRead = { _, _ -> },
@@ -566,7 +531,8 @@ private class InboxUiStatePreviewParameterProvider : PreviewParameterProvider<In
                 )
             )
         ),
-        InboxUIState.Empty,
-        InboxUIState.Error
+        InboxUIState.Fallback(state = InboxFullScreenState.Empty),
+        InboxUIState.Fallback(state = InboxFullScreenState.NetworkError),
+        InboxUIState.Fallback(state = InboxFullScreenState.ServerError),
     )
 }

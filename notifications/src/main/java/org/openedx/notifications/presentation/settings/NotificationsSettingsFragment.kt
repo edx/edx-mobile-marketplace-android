@@ -1,13 +1,8 @@
 package org.openedx.notifications.presentation.settings
 
-import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,12 +42,11 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.UIMessage
-import org.openedx.core.ui.AlertDialog
 import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.OpenEdxAlertDialog
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -67,7 +61,7 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.notifications.R
-import org.openedx.notifications.domain.model.NotificationsConfiguration
+import org.openedx.notifications.utils.PermissionUtils
 import org.openedx.core.R as CoreR
 
 class NotificationsSettingsFragment : Fragment() {
@@ -80,9 +74,8 @@ class NotificationsSettingsFragment : Fragment() {
         if (granted) {
             viewModel.fetchAndUpdateNotificationsSettings()
         } else {
-            viewModel.updateDiscussionPreference(false)
+            viewModel.enablePushNotifications(false)
         }
-        Log.d(NotificationsSettingsFragment::class.java.simpleName, "Permission granted: $granted")
     }
 
     override fun onCreateView(
@@ -95,14 +88,11 @@ class NotificationsSettingsFragment : Fragment() {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
 
-                val notificationsConfiguration by viewModel.notificationsConfiguration.collectAsState()
-                val showPermissionRequestDialog by viewModel.showPermissionRequestDialog.collectAsState()
+                val uiState by viewModel.uiState.collectAsState()
                 val uiMessage by viewModel.uiMessage.collectAsState(null)
 
-                NotificationsSettingsScreen(
-                    windowSize = windowSize,
-                    notificationsConfiguration = notificationsConfiguration,
-                    showPermissionRequestDialog = showPermissionRequestDialog,
+                NotificationsSettingsScreen(windowSize = windowSize,
+                    uiState = uiState as NotificationsSettingsUiState.Configuration,
                     uiMessage = uiMessage,
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
@@ -112,41 +102,17 @@ class NotificationsSettingsFragment : Fragment() {
                     },
                     onPositiveButtonClick = {
                         viewModel.dismissPermissionDialog()
-                        requestNotificationPermissionOrNavigate()
+                        PermissionUtils.requestNotificationPermission(activity = requireActivity(),
+                            permissionLauncher = pushNotificationPermissionLauncher,
+                            onRationaleShown = {
+                                PermissionUtils.navigateToNotificationSettings(requireContext())
+                            })
                     },
                     onNegativeButtonClick = {
                         viewModel.dismissPermissionDialog()
-                    }
-                )
+                    })
             }
         }
-    }
-
-    private fun requestNotificationPermissionOrNavigate() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    requireActivity(),
-                    android.Manifest.permission.POST_NOTIFICATIONS
-                )
-            ) {
-                navigateToAppSettings()
-            } else {
-                pushNotificationPermissionLauncher.launch(
-                    android.Manifest.permission.POST_NOTIFICATIONS
-                )
-            }
-        } else {
-            navigateToAppSettings()
-        }
-    }
-
-    private fun navigateToAppSettings() {
-        val intent = Intent().apply {
-            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            data = Uri.parse("package:${requireContext().packageName}")
-        }
-        requireContext().startActivity(intent)
     }
 }
 
@@ -154,8 +120,7 @@ class NotificationsSettingsFragment : Fragment() {
 @Composable
 private fun NotificationsSettingsScreen(
     windowSize: WindowSize,
-    notificationsConfiguration: NotificationsConfiguration,
-    showPermissionRequestDialog: Boolean,
+    uiState: NotificationsSettingsUiState.Configuration,
     uiMessage: UIMessage? = null,
     discussionPreferenceChanged: (Boolean) -> Unit,
     onPositiveButtonClick: () -> Unit = {},
@@ -195,8 +160,8 @@ private fun NotificationsSettingsScreen(
         }
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
-        if (showPermissionRequestDialog) {
-            AlertDialog(
+        if (uiState.showPermissionRequestDialog) {
+            OpenEdxAlertDialog(
                 title = stringResource(id = CoreR.string.core_permission_dialog_title),
                 message = stringResource(
                     id = CoreR.string.core_permission_dialog_message,
@@ -249,7 +214,7 @@ private fun NotificationsSettingsScreen(
                                 .padding(vertical = 16.dp)
                                 .noRippleClickable {
                                     discussionPreferenceChanged(
-                                        notificationsConfiguration.discussionsPushEnabled.not()
+                                        uiState.discussionsPushEnabled.not()
                                     )
                                 },
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -272,10 +237,10 @@ private fun NotificationsSettingsScreen(
                             }
                             Switch(
                                 modifier = Modifier.testTag("sw_discussions_activity"),
-                                checked = notificationsConfiguration.discussionsPushEnabled,
+                                checked = uiState.discussionsPushEnabled,
                                 onCheckedChange = {
                                     discussionPreferenceChanged(
-                                        notificationsConfiguration.discussionsPushEnabled.not()
+                                        uiState.discussionsPushEnabled.not()
                                     )
                                 },
                                 colors = SwitchDefaults.colors(
@@ -301,12 +266,9 @@ private fun NotificationsSettingsScreenPreview() {
     OpenEdXTheme {
         NotificationsSettingsScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
+            uiState = NotificationsSettingsUiState.Configuration(),
             discussionPreferenceChanged = {},
             onBackClick = {},
-            notificationsConfiguration = NotificationsConfiguration(
-                discussionsPushEnabled = false,
-            ),
-            showPermissionRequestDialog = false,
         )
     }
 }

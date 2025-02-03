@@ -1529,7 +1529,7 @@ fun FullScreenStateView(
 }
 
 @Composable
-fun AlertDialog(
+fun OpenEdxAlertDialog(
     title: String,
     message: String,
     positiveBtnText: String = "",
@@ -1570,7 +1570,7 @@ fun AlertDialog(
             )
         },
         confirmButton = {
-            if(positiveBtnText.isNotEmpty()) {
+            if (positiveBtnText.isNotEmpty()) {
                 OpenEdXTertiaryButton(
                     text = positiveBtnText,
                     onClick = positiveBtnAction
@@ -1578,7 +1578,7 @@ fun AlertDialog(
             }
         },
         dismissButton = {
-            if(negativeBtnText.isNotEmpty()) {
+            if (negativeBtnText.isNotEmpty()) {
                 OpenEdXTertiaryButton(
                     text = negativeBtnText,
                     onClick = negativeBtnAction
@@ -1751,5 +1751,21 @@ private fun FullScreenStatePreview(
 ) {
     OpenEdXTheme {
         FullScreenStateView(state = state)
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun OpenEdxAlertDialogPreview() {
+    OpenEdXTheme {
+        OpenEdxAlertDialog(
+            title = "Title",
+            message = "Message",
+            positiveBtnText = "Positive",
+            negativeBtnText = "Negative",
+            positiveBtnAction = {},
+            negativeBtnAction = {}
+        )
     }
 }

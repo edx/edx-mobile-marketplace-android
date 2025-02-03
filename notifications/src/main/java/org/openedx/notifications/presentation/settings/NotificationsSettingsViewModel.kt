@@ -6,8 +6,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
@@ -15,7 +15,6 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
-import org.openedx.notifications.domain.model.NotificationsConfiguration
 import org.openedx.notifications.presentation.NotificationsAnalytics
 import org.openedx.notifications.presentation.NotificationsAnalyticsEvent
 import org.openedx.notifications.presentation.NotificationsAnalyticsKey
@@ -28,32 +27,34 @@ class NotificationsSettingsViewModel(
     private val preference: NotificationsPreferences,
 ) : BaseViewModel() {
 
-    private val _notificationsConfiguration = MutableStateFlow(preference.notifications)
-    val notificationsConfiguration: StateFlow<NotificationsConfiguration>
-        get() = _notificationsConfiguration
-
-    private val _showPermissionRequestDialog = MutableStateFlow(false)
-    val showPermissionRequestDialog: StateFlow<Boolean>
-        get() = _showPermissionRequestDialog
+    private val _uiState = MutableStateFlow<NotificationsSettingsUiState>(
+        NotificationsSettingsUiState.Configuration(
+            showPermissionRequestDialog = false,
+            discussionsPushEnabled = preference.notifications.discussionsPushEnabled,
+        )
+    )
+    val uiState = _uiState.asStateFlow()
 
     private val _uiMessage = MutableSharedFlow<UIMessage>()
     val uiMessage = _uiMessage.asSharedFlow()
 
     init {
-        if (checkPushNotificationPermission()) {
+        if (hasPushNotificationPermission()) {
             fetchAndUpdateNotificationsSettings()
         } else {
-            updateDiscussionPreference(updatedValue = false)
-            _showPermissionRequestDialog.update { true }
+            enablePushNotifications(enabled = false)
         }
     }
 
     fun setDiscussionNotificationPreference(value: Boolean) {
-        if (checkPushNotificationPermission()) {
+        if (hasPushNotificationPermission()) {
             viewModelScope.launch {
                 try {
                     val response = interactor.updateNotificationsConfiguration(value)
-                    updateDiscussionPreference(updatedValue = response.updatedValue)
+                    enablePushNotifications(
+                        enabled = response.updatedValue,
+                        updatePreference = true
+                    )
 
                     logDiscussionPermissionToggleEvent(isDiscussionPushEnabled = value)
                 } catch (e: Exception) {
@@ -61,7 +62,7 @@ class NotificationsSettingsViewModel(
                 }
             }
         } else {
-            _showPermissionRequestDialog.update { true }
+            showPermissionDialog()
         }
     }
 
@@ -69,26 +70,43 @@ class NotificationsSettingsViewModel(
         viewModelScope.launch {
             try {
                 val response = interactor.fetchNotificationsConfiguration()
-                updateDiscussionPreference(updatedValue = response.discussionsPushEnabled)
+                enablePushNotifications(
+                    enabled = response.discussionsPushEnabled,
+                    updatePreference = true
+                )
             } catch (e: Exception) {
                 showErrorMessage()
             }
         }
     }
 
-    fun updateDiscussionPreference(updatedValue: Boolean) {
-        _notificationsConfiguration.update { it.copy(discussionsPushEnabled = updatedValue) }
-        preference.notifications = _notificationsConfiguration.value
+    fun enablePushNotifications(enabled: Boolean, updatePreference: Boolean = false) {
+        _uiState.update {
+            NotificationsSettingsUiState.Configuration(
+                discussionsPushEnabled = enabled,
+            )
+        }
+        if (updatePreference) {
+            preference.notifications =
+                preference.notifications.copy(discussionsPushEnabled = enabled)
+        }
     }
 
-    private fun checkPushNotificationPermission(): Boolean {
+    private fun hasPushNotificationPermission(): Boolean {
         val notificationManagerCompat = NotificationManagerCompat.from(context)
         return notificationManagerCompat.areNotificationsEnabled()
     }
 
+    private fun showPermissionDialog() {
+        _uiState.update {
+            NotificationsSettingsUiState.Configuration(
+                showPermissionRequestDialog = true,
+            )
+        }
+    }
+
     fun dismissPermissionDialog() {
-        _showPermissionRequestDialog.update { false }
-        updateDiscussionPreference(updatedValue = false)
+        _uiState.update { NotificationsSettingsUiState.Configuration() }
     }
 
     private suspend fun showErrorMessage() {

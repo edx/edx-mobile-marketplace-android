@@ -185,7 +185,7 @@ class DiscussionThreadsFragment : Fragment() {
                     mutableStateOf(threadId.isNotEmpty())
                 }
 
-                LaunchedEffect(uiState is DiscussionThreadsUIState.Threads) {
+                LaunchedEffect(uiState) {
                     if (uiState is DiscussionThreadsUIState.Threads && fromNotificationNavigation) {
                         val data = (uiState as DiscussionThreadsUIState.Threads).data
                         data.find { it.id == threadId }?.let {

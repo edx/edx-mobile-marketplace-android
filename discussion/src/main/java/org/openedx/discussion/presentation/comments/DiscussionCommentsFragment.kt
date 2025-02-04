@@ -181,7 +181,7 @@ class DiscussionCommentsFragment : Fragment() {
                 var fromNotificationNavigation by rememberSaveable {
                     mutableStateOf(viewModel.responseId.isNotEmpty() && viewModel.commentId.isNotEmpty())
                 }
-                LaunchedEffect(uiState is DiscussionCommentsUIState.Success) {
+                LaunchedEffect(uiState) {
                     if (uiState is DiscussionCommentsUIState.Success && fromNotificationNavigation) {
                         val commentsData =
                             (uiState as DiscussionCommentsUIState.Success).commentsData

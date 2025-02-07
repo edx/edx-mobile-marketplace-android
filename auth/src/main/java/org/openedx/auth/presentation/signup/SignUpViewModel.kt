@@ -56,7 +56,8 @@ class SignUpViewModel(
     private val _uiState = MutableStateFlow(
         SignUpUIState(
             isFacebookAuthEnabled = config.getFacebookConfig().isEnabled(),
-            isGoogleAuthEnabled = config.getGoogleConfig().isEnabled() && oAuthHelper.isGoogleAuthEnabled(),
+            isGoogleAuthEnabled = config.getGoogleConfig()
+                .isEnabled() && oAuthHelper.isGoogleAuthEnabled(),
             isMicrosoftAuthEnabled = config.getMicrosoftConfig().isEnabled(),
             isSocialAuthEnabled = config.isSocialAuthEnabled(),
             isLoading = true,
@@ -136,7 +137,12 @@ class SignUpViewModel(
     }
 
     fun register() {
-        logEvent(AuthAnalyticsEvent.CREATE_ACCOUNT_CLICKED)
+        logEvent(AuthAnalyticsEvent.CREATE_ACCOUNT_CLICKED, buildMap {
+            put(
+                AuthAnalyticsKey.METHOD.key,
+                (uiState.value.socialAuth?.authType ?: AuthType.PASSWORD).methodName.lowercase()
+            )
+        })
         val mapFields = uiState.value.allFields.associate { it.name to it.placeholder } +
                 mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())
         val resultMap = mapFields.toMutableMap()
@@ -203,6 +209,9 @@ class SignUpViewModel(
     }
 
     fun socialAuth(fragment: Fragment, authType: AuthType) {
+        logEvent(AuthAnalyticsEvent.SOCIAL_REGISTER_CLICKED, buildMap {
+            put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+        })
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {

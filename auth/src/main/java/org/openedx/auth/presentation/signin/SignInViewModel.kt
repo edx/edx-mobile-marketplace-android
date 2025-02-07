@@ -59,7 +59,8 @@ class SignInViewModel(
     private val _uiState = MutableStateFlow(
         SignInUIState(
             isFacebookAuthEnabled = config.getFacebookConfig().isEnabled(),
-            isGoogleAuthEnabled = config.getGoogleConfig().isEnabled() && oAuthHelper.isGoogleAuthEnabled(),
+            isGoogleAuthEnabled = config.getGoogleConfig()
+                .isEnabled() && oAuthHelper.isGoogleAuthEnabled(),
             isMicrosoftAuthEnabled = config.getMicrosoftConfig().isEnabled(),
             isSocialAuthEnabled = config.isSocialAuthEnabled(),
             isLogistrationEnabled = config.isPreLoginExperienceEnabled(),
@@ -83,7 +84,9 @@ class SignInViewModel(
     }
 
     fun login(username: String, password: String) {
-        logEvent(AuthAnalyticsEvent.USER_SIGN_IN_CLICKED)
+        logEvent(AuthAnalyticsEvent.USER_SIGN_IN_CLICKED, buildMap {
+            put(AuthAnalyticsKey.METHOD.key, AuthType.PASSWORD.methodName.lowercase())
+        })
         if (!validator.isEmailOrUserNameValid(username)) {
             _uiMessage.value =
                 UIMessage.SnackBarMessage(resourceManager.getString(R.string.auth_invalid_email_username))
@@ -130,6 +133,9 @@ class SignInViewModel(
     }
 
     fun socialAuth(fragment: Fragment, authType: AuthType) {
+        logEvent(AuthAnalyticsEvent.USER_SIGN_IN_CLICKED, buildMap {
+            put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+        })
         _uiState.update { it.copy(showProgress = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {

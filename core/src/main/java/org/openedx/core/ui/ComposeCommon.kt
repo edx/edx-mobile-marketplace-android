@@ -40,6 +40,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.CircularProgressIndicator
@@ -107,6 +108,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import coil.ImageLoader
 import coil.compose.AsyncImage
@@ -1526,6 +1528,66 @@ fun FullScreenStateView(
     }
 }
 
+@Composable
+fun OpenEdxAlertDialog(
+    title: String,
+    message: String,
+    positiveBtnText: String = "",
+    negativeBtnText: String = "",
+    positiveBtnAction: () -> Unit = {},
+    negativeBtnAction: () -> Unit = {},
+) {
+    AlertDialog(
+        modifier = Modifier.background(
+            color = MaterialTheme.appColors.background,
+            shape = MaterialTheme.appShapes.cardShape
+        ),
+        shape = MaterialTheme.appShapes.cardShape,
+        backgroundColor = MaterialTheme.appColors.background,
+
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
+        ),
+        onDismissRequest = negativeBtnAction,
+
+        title = title.takeIfNotEmpty()?.let {
+            @Composable {
+                Text(
+                    text = it,
+                    color = MaterialTheme.appColors.textPrimary,
+                    style = MaterialTheme.appTypography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        },
+        text = {
+            Text(
+                text = message,
+                color = MaterialTheme.appColors.textPrimary,
+                style = MaterialTheme.appTypography.bodyMedium
+            )
+        },
+        confirmButton = {
+            if (positiveBtnText.isNotEmpty()) {
+                OpenEdXTertiaryButton(
+                    text = positiveBtnText,
+                    onClick = positiveBtnAction
+                )
+            }
+        },
+        dismissButton = {
+            if (negativeBtnText.isNotEmpty()) {
+                OpenEdXTertiaryButton(
+                    text = negativeBtnText,
+                    onClick = negativeBtnAction
+                )
+            }
+        },
+    )
+}
+
 @Preview
 @Composable
 private fun StaticSearchBarPreview() {
@@ -1689,5 +1751,21 @@ private fun FullScreenStatePreview(
 ) {
     OpenEdXTheme {
         FullScreenStateView(state = state)
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun OpenEdxAlertDialogPreview() {
+    OpenEdXTheme {
+        OpenEdxAlertDialog(
+            title = "Title",
+            message = "Message",
+            positiveBtnText = "Positive",
+            negativeBtnText = "Negative",
+            positiveBtnAction = {},
+            negativeBtnAction = {}
+        )
     }
 }

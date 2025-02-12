@@ -3,6 +3,7 @@ package org.openedx.auth.presentation.signup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
+import com.microsoft.identity.client.exception.MsalException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -218,20 +219,33 @@ class SignUpViewModel(
                 runCatching {
                     oAuthHelper.socialAuth(fragment, authType)
                 }
+            }.onSuccess { socialAuth ->
+                socialAuth.checkToken()
+            }.onFailure { exception ->
+                _uiState.update { it.copy(isLoading = false) }
+                logEvent(
+                    AuthAnalyticsEvent.SOCIAL_AUTH_FAILURE,
+                    buildMap {
+                        put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+                        put(AuthAnalyticsKey.ERROR_MESSAGE.key, exception.message)
+                        if (exception is MsalException) {
+                            put(AuthAnalyticsKey.ERROR_CODE.key, exception.errorCode)
+                        }
+                    }
+                )
             }
-                .getOrNull()
-                .checkToken()
         }
     }
 
-    private suspend fun SocialAuthResponse?.checkToken() {
-        this?.accessToken?.let { token ->
+
+    private suspend fun SocialAuthResponse.checkToken() {
+        accessToken.let { token ->
             if (token.isNotEmpty()) {
                 exchangeToken(this)
             } else {
                 _uiState.update { it.copy(isLoading = false) }
             }
-        } ?: _uiState.update { it.copy(isLoading = false) }
+        }
     }
 
     private suspend fun exchangeToken(socialAuth: SocialAuthResponse) {

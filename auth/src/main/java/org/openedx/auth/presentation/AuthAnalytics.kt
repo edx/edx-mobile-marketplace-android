@@ -47,6 +47,10 @@ enum class AuthAnalyticsEvent(val eventName: String, val biValue: String) {
         "Logistration:User Sign In Clicked",
         "edx.bi.app.logistration.user.signin.clicked"
     ),
+    SOCIAL_AUTH_FAILURE(
+        "Logistration:Social Auth Failure",
+        "edx.bi.app.logistration.social.auth.failure"
+    ),
     SOCIAL_REGISTER_CLICKED(
         "Logistration:Social Register Clicked",
         "edx.bi.app.logistration.social.register.clicked"
@@ -74,4 +78,6 @@ enum class AuthAnalyticsKey(val key: String) {
     SEARCH_QUERY("search_query"),
     SUCCESS("success"),
     METHOD("method"),
+    ERROR_CODE("error_code"),
+    ERROR_MESSAGE("error_message"),
 }

@@ -191,19 +191,10 @@ class SignUpViewModel(
                     }
                 }
             } catch (e: Exception) {
-                logEvent(
+                logLogistrationFailureEvent(
                     AuthAnalyticsEvent.REGISTER_FAILURE,
-                    buildMap {
-                        put(
-                            AuthAnalyticsKey.METHOD.key,
-                            (uiState.value.socialAuth?.authType
-                                ?: AuthType.PASSWORD).methodName.lowercase()
-                        )
-                        put(AuthAnalyticsKey.ERROR_MESSAGE.key, e.message)
-                        if (e is HttpException) {
-                            put(AuthAnalyticsKey.ERROR_CODE.key, e.code())
-                        }
-                    }
+                    (uiState.value.socialAuth?.authType ?: AuthType.PASSWORD),
+                    e
                 )
                 _uiState.update { it.copy(isButtonLoading = false) }
                 if (e.isInternetError()) {
@@ -237,15 +228,10 @@ class SignUpViewModel(
                 socialAuth.checkToken()
             }.onFailure { exception ->
                 _uiState.update { it.copy(isLoading = false) }
-                logEvent(
+                logLogistrationFailureEvent(
                     AuthAnalyticsEvent.SOCIAL_AUTH_FAILURE,
-                    buildMap {
-                        put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
-                        put(AuthAnalyticsKey.ERROR_MESSAGE.key, exception.message)
-                        if (exception is MsalException) {
-                            put(AuthAnalyticsKey.ERROR_CODE.key, exception.errorCode)
-                        }
-                    }
+                    authType,
+                    exception
                 )
             }
         }
@@ -266,7 +252,7 @@ class SignUpViewModel(
         runCatching {
             interactor.loginSocial(socialAuth.accessToken, socialAuth.authType)
         }.onFailure {
-            logSignInErrorEvent(socialAuth.authType, it)
+            logLogistrationFailureEvent(AuthAnalyticsEvent.SIGN_IN_FAILURE, socialAuth.authType, it)
             val fields = uiState.value.allFields.toMutableList()
                 .filter { it.type != RegistrationFieldType.PASSWORD }
                 .map { field ->
@@ -364,8 +350,11 @@ class SignUpViewModel(
         )
     }
 
-    private fun logSignInErrorEvent(authType: AuthType, throws: Throwable) {
-        val event = AuthAnalyticsEvent.SIGN_IN_FAILURE
+    private fun logLogistrationFailureEvent(
+        event: AuthAnalyticsEvent,
+        authType: AuthType,
+        throws: Throwable
+    ) {
         analytics.logEvent(
             event = event.eventName,
             params = buildMap {

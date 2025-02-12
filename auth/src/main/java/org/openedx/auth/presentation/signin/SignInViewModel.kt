@@ -86,9 +86,7 @@ class SignInViewModel(
     }
 
     fun login(username: String, password: String) {
-        logEvent(AuthAnalyticsEvent.USER_SIGN_IN_CLICKED, buildMap {
-            put(AuthAnalyticsKey.METHOD.key, AuthType.PASSWORD.methodName.lowercase())
-        })
+        logSignInClickedEvent(AuthType.PASSWORD)
         if (!validator.isEmailOrUserNameValid(username)) {
             _uiMessage.value =
                 UIMessage.SnackBarMessage(resourceManager.getString(R.string.auth_invalid_email_username))
@@ -136,9 +134,7 @@ class SignInViewModel(
     }
 
     fun socialAuth(fragment: Fragment, authType: AuthType) {
-        logEvent(AuthAnalyticsEvent.USER_SIGN_IN_CLICKED, buildMap {
-            put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
-        })
+        logSignInClickedEvent(authType)
         _uiState.update { it.copy(showProgress = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -253,6 +249,12 @@ class SignInViewModel(
                 putAll(params)
             }
         )
+    }
+
+    private fun logSignInClickedEvent(authType: AuthType) {
+        logEvent(AuthAnalyticsEvent.USER_SIGN_IN_CLICKED, buildMap {
+            put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+        })
     }
 
     private fun logSignInSuccessEvent(authType: AuthType) {

@@ -36,6 +36,7 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.Logger
+import retrofit2.HttpException
 import org.openedx.core.R as coreR
 
 class SignUpViewModel(
@@ -173,8 +174,7 @@ class SignUpViewModel(
                         params = buildMap {
                             put(
                                 AuthAnalyticsKey.METHOD.key,
-                                (socialAuth?.authType?.methodName
-                                    ?: AuthType.PASSWORD.methodName).lowercase()
+                                (socialAuth?.authType ?: AuthType.PASSWORD).methodName.lowercase()
                             )
                         }
                     )
@@ -191,6 +191,20 @@ class SignUpViewModel(
                     }
                 }
             } catch (e: Exception) {
+                logEvent(
+                    AuthAnalyticsEvent.REGISTER_FAILURE,
+                    buildMap {
+                        put(
+                            AuthAnalyticsKey.METHOD.key,
+                            (uiState.value.socialAuth?.authType
+                                ?: AuthType.PASSWORD).methodName.lowercase()
+                        )
+                        put(AuthAnalyticsKey.ERROR_MESSAGE.key, e.message)
+                        if (e is HttpException) {
+                            put(AuthAnalyticsKey.ERROR_CODE.key, e.code())
+                        }
+                    }
+                )
                 _uiState.update { it.copy(isButtonLoading = false) }
                 if (e.isInternetError()) {
                     _uiMessage.emit(

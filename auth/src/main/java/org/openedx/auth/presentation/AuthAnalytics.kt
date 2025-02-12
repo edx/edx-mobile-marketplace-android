@@ -39,6 +39,10 @@ enum class AuthAnalyticsEvent(val eventName: String, val biValue: String) {
         "Logistration:Register Success",
         "edx.bi.app.user.register.success"
     ),
+    REGISTER_FAILURE(
+        "Logistration:Register Failure",
+        "edx.bi.app.user.register.failure"
+    ),
     SIGN_IN_CLICKED(
         "Logistration:Sign In Clicked",
         "edx.bi.app.logistration.signin.clicked"

@@ -311,7 +311,7 @@ class DashboardListViewModel(
                     }.onSuccess { enrolledCourses ->
                         appNotifier.send(EnrolledCourseEvent(enrolledCourses))
                     }.onFailure {
-                        logger.e { "Error getting enrolled courses: $it" }
+                        logger.d { "Error getting enrolled courses: $it" }
                         appNotifier.send(RequestEnrolledCourseErrorEvent)
                     }
                 }
@@ -357,7 +357,7 @@ class DashboardListViewModel(
                     }
                 )
             }.onFailure {
-                logger.e { "Error getting enrolled courses: $it" }
+                logger.d { "Error getting enrolled courses: $it" }
             }
         }
     }

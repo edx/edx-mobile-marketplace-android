@@ -120,7 +120,7 @@ class DashboardGalleryViewModel(
                     }.onSuccess { enrolledCourses ->
                         appNotifier.send(EnrolledCourseEvent(enrolledCourses))
                     }.onFailure {
-                        logger.e { "Error getting enrolled courses: $it" }
+                        logger.d { "Error getting enrolled courses: $it" }
                         appNotifier.send(RequestEnrolledCourseErrorEvent)
                     }
                 }
@@ -286,9 +286,9 @@ class DashboardGalleryViewModel(
 
     private fun detectUnfulfilledPurchase() {
         viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
-                interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
-            }.onSuccess { enrolledCourses ->
+            try {
+                val enrolledCourses =
+                    interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
                 iapInteractor.detectUnfulfilledPurchase(
                     enrolledCourses = enrolledCourses,
                     verificationInitiated = { purchaseFlowData ->
@@ -316,8 +316,8 @@ class DashboardGalleryViewModel(
                         )
                     }
                 )
-            }.onFailure {
-                logger.e { "Error getting enrolled courses: $it" }
+            } catch (e: Exception) {
+                logger.d { "Error getting enrolled courses: $e" }
             }
         }
     }

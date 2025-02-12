@@ -23,11 +23,15 @@ class HandleErrorInterceptor(
                 if (errorResponse?.error != null) {
                     when (errorResponse.error) {
                         ERROR_INVALID_GRANT -> {
-                            throw EdxError.InvalidGrantException()
+                            throw EdxError.InvalidGrantException(
+                                errorResponse.errorDescription ?: ""
+                            )
                         }
 
                         ERROR_USER_NOT_ACTIVE -> {
-                            throw EdxError.UserNotActiveException()
+                            throw EdxError.UserNotActiveException(
+                                errorResponse.errorDescription ?: ""
+                            )
                         }
 
                         else -> {

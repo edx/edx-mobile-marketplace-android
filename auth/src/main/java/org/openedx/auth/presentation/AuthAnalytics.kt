@@ -63,6 +63,10 @@ enum class AuthAnalyticsEvent(val eventName: String, val biValue: String) {
         "Logistration:Sign In Success",
         "edx.bi.app.user.signin.success"
     ),
+    SIGN_IN_FAILURE(
+        "Logistration:Sign In Failure",
+        "edx.bi.app.user.signin.failure"
+    ),
     FORGOT_PASSWORD_CLICKED(
         "Logistration:Forgot Password Clicked",
         "edx.bi.app.logistration.forgot_password.clicked"

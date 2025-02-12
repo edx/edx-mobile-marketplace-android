@@ -5,6 +5,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.microsoft.identity.client.exception.MsalException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +37,7 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.Logger
+import retrofit2.HttpException
 import org.openedx.core.R as CoreRes
 
 class SignInViewModel(
@@ -107,6 +109,7 @@ class SignInViewModel(
                 logSignInSuccessEvent(AuthType.PASSWORD)
                 appNotifier.send(SignInEvent())
             } catch (e: Exception) {
+                logSignInErrorEvent(AuthType.PASSWORD, e)
                 if (e is EdxError.InvalidGrantException) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(CoreRes.string.core_error_invalid_grant))
@@ -142,9 +145,12 @@ class SignInViewModel(
                 runCatching {
                     oAuthHelper.socialAuth(fragment, authType)
                 }
+            }.onSuccess { socialAuthResponse ->
+                socialAuthResponse.checkToken()
+            }.onFailure { exception ->
+                _uiState.update { it.copy(showProgress = false) }
+                logSignInErrorEvent(authType, exception)
             }
-                .getOrNull()
-                .checkToken()
         }
     }
 
@@ -168,6 +174,7 @@ class SignInViewModel(
             interactor.loginSocial(token, authType)
         }.onFailure { error ->
             logger.e { "Social login error: $error" }
+            logSignInErrorEvent(authType, error)
             onUnknownError()
         }.onSuccess {
             logger.d { "Social login (${authType.methodName}) success" }
@@ -255,6 +262,27 @@ class SignInViewModel(
             params = buildMap {
                 put(AuthAnalyticsKey.NAME.key, event.biValue)
                 put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+            }
+        )
+    }
+
+    private fun logSignInErrorEvent(authType: AuthType, throws: Throwable) {
+        val event = AuthAnalyticsEvent.SIGN_IN_FAILURE
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(AuthAnalyticsKey.NAME.key, event.biValue)
+                put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+                when (throws) {
+                    is MsalException -> throws.errorCode
+                    is HttpException -> throws.code()
+                    else -> null
+                }?.let { errorCode ->
+                    put(AuthAnalyticsKey.ERROR_CODE.key, errorCode)
+                }
+                throws.message?.let { errorMessage ->
+                    put(AuthAnalyticsKey.ERROR_MESSAGE.key, errorMessage)
+                }
             }
         )
     }

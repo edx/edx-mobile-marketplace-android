@@ -266,6 +266,7 @@ class SignUpViewModel(
         runCatching {
             interactor.loginSocial(socialAuth.accessToken, socialAuth.authType)
         }.onFailure {
+            logSignInErrorEvent(socialAuth.authType, it)
             val fields = uiState.value.allFields.toMutableList()
                 .filter { it.type != RegistrationFieldType.PASSWORD }
                 .map { field ->
@@ -359,6 +360,27 @@ class SignUpViewModel(
             params = buildMap {
                 put(AuthAnalyticsKey.NAME.key, event.biValue)
                 putAll(params)
+            }
+        )
+    }
+
+    private fun logSignInErrorEvent(authType: AuthType, throws: Throwable) {
+        val event = AuthAnalyticsEvent.SIGN_IN_FAILURE
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(AuthAnalyticsKey.NAME.key, event.biValue)
+                put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+                when (throws) {
+                    is MsalException -> throws.errorCode
+                    is HttpException -> throws.code()
+                    else -> null
+                }?.let { errorCode ->
+                    put(AuthAnalyticsKey.ERROR_CODE.key, errorCode)
+                }
+                throws.message?.let { errorMessage ->
+                    put(AuthAnalyticsKey.ERROR_MESSAGE.key, errorMessage)
+                }
             }
         )
     }

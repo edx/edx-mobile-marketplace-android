@@ -3,6 +3,7 @@ package org.openedx.app
 import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.content.Context
+import android.util.Log
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -24,6 +25,7 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.FileUtil
+import org.openedx.notifications.domain.interactor.NotificationsInteractor
 
 
 @SuppressLint("StaticFieldLeak")
@@ -36,7 +38,8 @@ class AppViewModel(
     private val analytics: AppAnalytics,
     private val deepLinkRouter: DeepLinkRouter,
     private val fileUtil: FileUtil,
-    private val context: Context
+    private val context: Context,
+    private val interactor: NotificationsInteractor,
 ) : BaseViewModel() {
 
     private val _logoutUser = SingleEventLiveData<Unit>()
@@ -118,6 +121,13 @@ class AppViewModel(
                     context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.cancelAll()
             }
+        }
+    }
+
+    fun markNotificationAsRead(notificationId: Int) {
+        viewModelScope.launch {
+            val marked = interactor.markNotificationAsRead(notificationId)
+            Log.d("AppViewModel", "Notification marked as read: $marked")
         }
     }
 }

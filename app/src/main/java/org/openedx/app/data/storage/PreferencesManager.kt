@@ -203,10 +203,10 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
     override var primer: NotificationsPrimerConfiguration
         set(value) {
             val primerJson = Gson().toJson(value)
-            saveString(PRIMER_CONFIGURATION, primerJson)
+            saveString(NOTIFICATIONS_PRIMER_CONFIGURATION, primerJson)
         }
         get() {
-            val primerString = getString(PRIMER_CONFIGURATION)
+            val primerString = getString(NOTIFICATIONS_PRIMER_CONFIGURATION)
             return Gson().fromJson(primerString, NotificationsPrimerConfiguration::class.java)
                 ?: NotificationsPrimerConfiguration()
         }
@@ -229,6 +229,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val RESET_APP_DIRECTORY = "reset_app_directory"
         private const val LAST_SIGN_IN_TYPE = "last_sign_in_type"
         private const val NOTIFICATIONS_CONFIGURATION = "notifications_configuration"
-        private const val PRIMER_CONFIGURATION = "primer_configuration"
+        private const val NOTIFICATIONS_PRIMER_CONFIGURATION = "notifications_primer_configuration"
     }
 }

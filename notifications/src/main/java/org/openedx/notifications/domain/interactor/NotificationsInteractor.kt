@@ -58,8 +58,8 @@ class NotificationsInteractor(
 
         val primerConfig = preferences.primer
 
-        // If the user has dismissed the primer 3 times, stop showing it
-        if (primerConfig.dismissalCount >= 3) {
+        // If the user has dismissed the primer PRIMER_MAX_DISMISSAL_COUNT times, stop showing it
+        if (primerConfig.dismissalCount >= PRIMER_MAX_DISMISSAL_COUNT) {
             return false
         }
 
@@ -67,8 +67,8 @@ class NotificationsInteractor(
         val nextPrimer = primerConfig.nextPrimer
 
         if (nextPrimer.isNull()) {
-            preferences.primer = NotificationsPrimerConfiguration(
-                nextPrimer = now.addDays(7),
+            configureNotificationsPrimer(
+                nextPrimer = now.addDays(PRIMER_INITIAL_RESHOW_DAYS),
                 dismissalCount = 1,
             )
             return true
@@ -77,15 +77,15 @@ class NotificationsInteractor(
         if (now.after(nextPrimer)) {
             when (primerConfig.dismissalCount) {
                 1 -> {
-                    preferences.primer = NotificationsPrimerConfiguration(
-                        nextPrimer = now.addDays(30),
+                    configureNotificationsPrimer(
+                        nextPrimer = now.addDays(PRIMER_FOLLOWUP_RESHOW_DAYS),
                         dismissalCount = 2,
                     )
                     return true
                 }
 
                 2 -> {
-                    preferences.primer = NotificationsPrimerConfiguration(
+                    configureNotificationsPrimer(
                         nextPrimer = null,
                         dismissalCount = 3,
                     )
@@ -100,5 +100,18 @@ class NotificationsInteractor(
 
         // Primer is scheduled but not yet due
         return false
+    }
+
+    private fun configureNotificationsPrimer(nextPrimer: Date?, dismissalCount: Int) {
+        preferences.primer = NotificationsPrimerConfiguration(
+            nextPrimer = nextPrimer,
+            dismissalCount = dismissalCount
+        )
+    }
+
+    companion object {
+        const val PRIMER_MAX_DISMISSAL_COUNT = 3
+        const val PRIMER_INITIAL_RESHOW_DAYS = 7
+        const val PRIMER_FOLLOWUP_RESHOW_DAYS = 30
     }
 }

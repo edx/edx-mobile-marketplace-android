@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,7 +40,6 @@ import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.notifications.R
 import org.openedx.notifications.utils.PermissionUtils
@@ -130,19 +129,13 @@ private fun NotificationsPrimerView(
     onNotifyClick: () -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.medium)
-            .border(
-                1.dp,
-                MaterialTheme.appColors.cardViewBorder,
-                MaterialTheme.appShapes.cardShape
-            ),
+        modifier = modifier.clip(MaterialTheme.shapes.medium),
         horizontalAlignment = Alignment.Start,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.appColors.primaryCardInfoBackground)
+                .background(MaterialTheme.appColors.notificationPrimerCardBackground)
                 .padding(20.dp),
         ) {
             Row(
@@ -157,7 +150,7 @@ private fun NotificationsPrimerView(
                 )
                 Spacer(Modifier.size(6.dp))
                 Text(
-                    text = stringResource(id = R.string.notification_primer_get_notifications),
+                    text = stringResource(id = R.string.notification_primer_title),
                     color = MaterialTheme.appColors.notificationPrimerBadge,
                     style = MaterialTheme.appTypography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -182,23 +175,62 @@ private fun NotificationsPrimerView(
         ) {
             Text(
                 text = stringResource(id = R.string.notification_primer_description),
-                color = MaterialTheme.appColors.textPrimary,
+                color = MaterialTheme.appColors.textPrimaryVariant,
                 style = MaterialTheme.appTypography.bodyLarge,
                 textAlign = TextAlign.Start
             )
 
             Spacer(Modifier.size(16.dp))
-            OpenEdXBrandButton(
-                modifier = Modifier.fillMaxWidth(0.5f),
-                text = stringResource(id = R.string.notification_primer_notify_me),
-                onClick = onNotifyClick,
+            NotificationsPrimerButtons(
+                onDismissRequest = onDismissRequest,
+                onNotifyClick = onNotifyClick,
             )
+        }
+    }
+}
 
-            Spacer(Modifier.size(8.dp))
-            OpenEdXTertiaryButton(
-                text = stringResource(id = R.string.notification_primer_no_thanks),
-                onClick = onDismissRequest,
-            )
+@Composable
+fun NotificationsPrimerButtons(
+    onDismissRequest: () -> Unit,
+    onNotifyClick: () -> Unit,
+) {
+    val configuration = LocalConfiguration.current
+
+    when (configuration.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OpenEdXTertiaryButton(
+                    text = stringResource(id = R.string.notification_primer_no_thanks),
+                    onClick = onDismissRequest,
+                )
+                Spacer(Modifier.size(8.dp))
+                OpenEdXBrandButton(
+                    modifier = Modifier,
+                    text = stringResource(id = R.string.notification_primer_notify_me),
+                    onClick = onNotifyClick,
+                )
+            }
+        }
+
+        else -> {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OpenEdXBrandButton(
+                    modifier = Modifier.fillMaxWidth(0.5f),
+                    text = stringResource(id = R.string.notification_primer_notify_me),
+                    onClick = onNotifyClick,
+                )
+                Spacer(Modifier.size(8.dp))
+                OpenEdXTertiaryButton(
+                    text = stringResource(id = R.string.notification_primer_no_thanks),
+                    onClick = onDismissRequest,
+                )
+            }
         }
     }
 }

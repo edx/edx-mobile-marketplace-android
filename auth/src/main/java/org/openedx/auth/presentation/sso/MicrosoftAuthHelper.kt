@@ -58,7 +58,7 @@ class MicrosoftAuthHelper {
 
                     override fun onCancel() {
                         logger.d { "Microsoft auth canceled" }
-                        continuation.resumeWithException(Exception("activity is cancelled by the user."))
+                        continuation.resumeWithException(Exception(OAuthHelper.ACTIVITY_CANCELLED_MESSAGE))
                     }
                 }).build()
             clientApplication.accounts.forEach {

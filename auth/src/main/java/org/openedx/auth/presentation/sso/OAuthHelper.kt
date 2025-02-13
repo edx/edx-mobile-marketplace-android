@@ -29,4 +29,9 @@ class OAuthHelper(
     fun clear() {
         facebookAuthHelper.clear()
     }
+
+    companion object {
+        const val ACCESS_TOKEN_EMPTY_MESSAGE = "Social Auth accessToken is empty"
+        const val ACTIVITY_CANCELLED_MESSAGE = "activity is cancelled by the user."
+    }
 }

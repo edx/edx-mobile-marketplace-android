@@ -28,7 +28,7 @@ class FacebookAuthHelper {
                 object : FacebookCallback<LoginResult> {
                     override fun onCancel() {
                         logger.d { "Facebook auth canceled" }
-                        continuation.resumeWithException(FacebookException("activity is cancelled by the user."))
+                        continuation.resumeWithException(FacebookException(OAuthHelper.ACTIVITY_CANCELLED_MESSAGE))
                     }
 
                     override fun onError(error: FacebookException) {

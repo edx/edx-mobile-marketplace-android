@@ -142,7 +142,11 @@ class SignInViewModel(
                     oAuthHelper.socialAuth(fragment, authType)
                 }
             }.onSuccess { socialAuthResponse ->
-                socialAuthResponse.checkToken()
+                if (socialAuthResponse.accessToken.isNotEmpty()) {
+                    socialAuthResponse.checkToken()
+                } else {
+                    logSignInErrorEvent(authType, Exception(OAuthHelper.ACCESS_TOKEN_EMPTY_MESSAGE))
+                }
             }.onFailure { exception ->
                 _uiState.update { it.copy(showProgress = false) }
                 logSignInErrorEvent(authType, exception)
@@ -199,14 +203,14 @@ class SignInViewModel(
         preferencesManager.lastSignInType = authType.name
     }
 
-    private suspend fun SocialAuthResponse?.checkToken() {
-        this?.accessToken?.let { token ->
+    private suspend fun SocialAuthResponse.checkToken() {
+        this.accessToken.let { token ->
             if (token.isNotEmpty()) {
                 exchangeToken(token, authType)
             } else {
                 _uiState.update { it.copy(showProgress = false) }
             }
-        } ?: onUnknownError()
+        }
     }
 
     fun openLink(fragmentManager: FragmentManager, links: Map<String, String>, link: String) {
@@ -275,16 +279,15 @@ class SignInViewModel(
             params = buildMap {
                 put(AuthAnalyticsKey.NAME.key, event.biValue)
                 put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
-                when (throws) {
+
+                val errorCode = when (throws) {
                     is MsalException -> throws.errorCode
-                    is HttpException -> throws.code()
+                    is HttpException -> throws.code().toString()
                     else -> null
-                }?.let { errorCode ->
-                    put(AuthAnalyticsKey.ERROR_CODE.key, errorCode)
                 }
-                throws.message?.let { errorMessage ->
-                    put(AuthAnalyticsKey.ERROR_MESSAGE.key, errorMessage)
-                }
+                errorCode?.let { put(AuthAnalyticsKey.ERROR_CODE.key, it) }
+
+                throws.message?.let { put(AuthAnalyticsKey.ERROR_MESSAGE.key, it) }
             }
         )
     }

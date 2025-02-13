@@ -139,12 +139,13 @@ class SignUpViewModel(
     }
 
     fun register() {
-        logEvent(AuthAnalyticsEvent.CREATE_ACCOUNT_CLICKED, buildMap {
-            put(
-                AuthAnalyticsKey.METHOD.key,
-                (uiState.value.socialAuth?.authType ?: AuthType.PASSWORD).methodName.lowercase()
-            )
-        })
+        logEvent(
+            event = AuthAnalyticsEvent.CREATE_ACCOUNT_CLICKED,
+            params = buildMap {
+                val authMethod = uiState.value.socialAuth?.authType ?: AuthType.PASSWORD
+                put(AuthAnalyticsKey.METHOD.key, authMethod.methodName.lowercase())
+            }
+        )
         val mapFields = uiState.value.allFields.associate { it.name to it.placeholder } +
                 mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())
         val resultMap = mapFields.toMutableMap()
@@ -252,7 +253,6 @@ class SignUpViewModel(
         runCatching {
             interactor.loginSocial(socialAuth.accessToken, socialAuth.authType)
         }.onFailure {
-            logLogistrationFailureEvent(AuthAnalyticsEvent.SIGN_IN_FAILURE, socialAuth.authType, it)
             val fields = uiState.value.allFields.toMutableList()
                 .filter { it.type != RegistrationFieldType.PASSWORD }
                 .map { field ->
@@ -353,23 +353,22 @@ class SignUpViewModel(
     private fun logLogistrationFailureEvent(
         event: AuthAnalyticsEvent,
         authType: AuthType,
-        throws: Throwable
+        throws: Throwable,
     ) {
         analytics.logEvent(
             event = event.eventName,
             params = buildMap {
                 put(AuthAnalyticsKey.NAME.key, event.biValue)
                 put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
-                when (throws) {
+
+                val errorCode = when (throws) {
                     is MsalException -> throws.errorCode
-                    is HttpException -> throws.code()
+                    is HttpException -> throws.code().toString()
                     else -> null
-                }?.let { errorCode ->
-                    put(AuthAnalyticsKey.ERROR_CODE.key, errorCode)
                 }
-                throws.message?.let { errorMessage ->
-                    put(AuthAnalyticsKey.ERROR_MESSAGE.key, errorMessage)
-                }
+                errorCode?.let { put(AuthAnalyticsKey.ERROR_CODE.key, it) }
+
+                throws.message?.let { put(AuthAnalyticsKey.ERROR_MESSAGE.key, it) }
             }
         )
     }

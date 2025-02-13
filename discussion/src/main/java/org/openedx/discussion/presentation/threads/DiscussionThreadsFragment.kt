@@ -127,6 +127,9 @@ class DiscussionThreadsFragment : Fragment() {
         savedInstanceState: Bundle?
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        val threadId = requireArguments().getString(ARG_THREAD_ID, "")
+        val responseId = requireArguments().getString(ARG_RESPONSE_ID, "")
+        val commentId = requireArguments().getString(ARG_COMMENT_ID, "")
         setContent {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
@@ -139,6 +142,7 @@ class DiscussionThreadsFragment : Fragment() {
                 DiscussionThreadsScreen(
                     windowSize = windowSize,
                     title = requireArguments().getString(ARG_TITLE, ""),
+                    threadId = threadId,
                     uiState = uiState,
                     uiMessage = uiMessage,
                     canLoadMore = canLoadMore,
@@ -157,7 +161,9 @@ class DiscussionThreadsFragment : Fragment() {
                         router.navigateToDiscussionComments(
                             requireActivity().supportFragmentManager,
                             viewModel.courseId,
-                            it
+                            it,
+                            responseId,
+                            commentId,
                         )
                     },
                     onCreatePostClick = {
@@ -175,8 +181,30 @@ class DiscussionThreadsFragment : Fragment() {
                         requireActivity().supportFragmentManager.popBackStack()
                     }
                 )
+                var fromNotificationNavigation by rememberSaveable {
+                    mutableStateOf(threadId.isNotEmpty())
+                }
+
+                LaunchedEffect(uiState) {
+                    if (uiState is DiscussionThreadsUIState.Threads && fromNotificationNavigation) {
+                        val data = (uiState as DiscussionThreadsUIState.Threads).data
+                        data.find { it.id == threadId }?.let {
+                            router.navigateToDiscussionComments(
+                                requireActivity().supportFragmentManager,
+                                viewModel.courseId,
+                                it,
+                                responseId,
+                                commentId,
+                            )
+                        }
+                        fromNotificationNavigation = false
+                    }
+                }
             }
         }
+        requireArguments().putString(ARG_THREAD_ID, "")
+        requireArguments().putString(ARG_RESPONSE_ID, "")
+        requireArguments().putString(ARG_COMMENT_ID, "")
     }
 
     companion object {
@@ -184,6 +212,9 @@ class DiscussionThreadsFragment : Fragment() {
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_BLOCK_ID = "blockId"
         private const val ARG_TOPIC_ID = "topicId"
+        private const val ARG_THREAD_ID = "threadId"
+        private const val ARG_RESPONSE_ID = "responseId"
+        private const val ARG_COMMENT_ID = "commentId"
         private const val ARG_TITLE = "title"
         private const val ARG_FRAGMENT_VIEW_TYPE = "fragmentViewType"
 
@@ -191,15 +222,21 @@ class DiscussionThreadsFragment : Fragment() {
             threadType: String,
             courseId: String,
             topicId: String,
+            threadId: String,
+            responseId: String,
+            commentId: String,
             title: String,
             viewType: String,
-            blockId: String = ""
+            blockId: String = "",
         ): DiscussionThreadsFragment {
             val fragment = DiscussionThreadsFragment()
             fragment.arguments = bundleOf(
                 ARG_THREAD_TYPE to threadType,
                 ARG_COURSE_ID to courseId,
                 ARG_TOPIC_ID to topicId,
+                ARG_THREAD_ID to threadId,
+                ARG_RESPONSE_ID to responseId,
+                ARG_COMMENT_ID to commentId,
                 ARG_TITLE to title,
                 ARG_FRAGMENT_VIEW_TYPE to viewType,
                 ARG_BLOCK_ID to blockId
@@ -214,6 +251,7 @@ class DiscussionThreadsFragment : Fragment() {
 private fun DiscussionThreadsScreen(
     windowSize: WindowSize,
     title: String,
+    threadId: String = "",
     uiState: DiscussionThreadsUIState,
     uiMessage: UIMessage?,
     canLoadMore: Boolean,
@@ -225,7 +263,7 @@ private fun DiscussionThreadsScreen(
     onItemClick: (org.openedx.discussion.domain.model.Thread) -> Unit,
     onCreatePostClick: () -> Unit,
     paginationCallback: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
 ) {
 
     val scaffoldState = rememberScaffoldState()
@@ -564,6 +602,7 @@ private fun DiscussionThreadsScreen(
                                                     ) {
                                                         paginationCallback()
                                                     }
+
                                                 }
                                             } else {
                                                 val noDiscussionsScrollState = rememberScrollState()

@@ -22,6 +22,14 @@ interface DiscussionRouter {
         thread: Thread,
     )
 
+    fun navigateToDiscussionComments(
+        fm: FragmentManager,
+        courseId: String,
+        thread: Thread,
+        responseId: String,
+        commentId: String,
+    )
+
     fun navigateToDiscussionResponses(
         fm: FragmentManager,
         courseId: String,

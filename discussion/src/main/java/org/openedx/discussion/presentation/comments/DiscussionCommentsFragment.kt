@@ -40,6 +40,7 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -100,7 +101,9 @@ class DiscussionCommentsFragment : Fragment() {
     private val viewModel by viewModel<DiscussionCommentsViewModel> {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
-            requireArguments().parcelable(ARG_THREAD)!!
+            requireArguments().parcelable(ARG_THREAD)!!,
+            requireArguments().getString(ARG_RESPONSE_ID, ""),
+            requireArguments().getString(ARG_COMMENT_ID, ""),
         )
     }
     private val router by inject<DiscussionRouter>()
@@ -175,8 +178,29 @@ class DiscussionCommentsFragment : Fragment() {
                         requireActivity().supportFragmentManager.popBackStack()
                     }
                 )
+                var fromNotificationNavigation by rememberSaveable {
+                    mutableStateOf(viewModel.responseId.isNotEmpty() && viewModel.commentId.isNotEmpty())
+                }
+                LaunchedEffect(uiState) {
+                    if (uiState is DiscussionCommentsUIState.Success && fromNotificationNavigation) {
+                        val commentsData =
+                            (uiState as DiscussionCommentsUIState.Success).commentsData
+                        commentsData.find { it.id == viewModel.responseId }?.let {
+                            router.navigateToDiscussionResponses(
+                                requireActivity().supportFragmentManager,
+                                viewModel.courseId,
+                                viewModel.thread.id,
+                                it,
+                                viewModel.thread.closed
+                            )
+                            fromNotificationNavigation = false
+                        }
+                    }
+                }
             }
         }
+        requireArguments().putString(ARG_RESPONSE_ID, "")
+        requireArguments().putString(ARG_COMMENT_ID, "")
     }
 
     companion object {
@@ -188,15 +212,21 @@ class DiscussionCommentsFragment : Fragment() {
 
         private const val ARG_COURSE_ID = "argCourseId"
         private const val ARG_THREAD = "argThread"
+        private const val ARG_RESPONSE_ID = "argResponseId"
+        private const val ARG_COMMENT_ID = "argCommentId"
 
         fun newInstance(
             courseId: String,
             thread: Thread,
+            responseId: String,
+            commentId: String,
         ): DiscussionCommentsFragment {
             val fragment = DiscussionCommentsFragment()
             fragment.arguments = bundleOf(
                 ARG_COURSE_ID to courseId,
-                ARG_THREAD to thread
+                ARG_THREAD to thread,
+                ARG_RESPONSE_ID to responseId,
+                ARG_COMMENT_ID to commentId,
             )
             return fragment
         }
@@ -219,7 +249,7 @@ private fun DiscussionCommentsScreen(
     onCommentClick: (DiscussionComment) -> Unit,
     onAddResponseClick: (String) -> Unit,
     onBackClick: () -> Unit,
-    onUserPhotoClick: (String) -> Unit
+    onUserPhotoClick: (String) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
@@ -508,7 +538,7 @@ private fun DiscussionCommentsScreenPreview() {
             onBackClick = {},
             refreshing = false,
             onSwipeRefresh = {},
-            onUserPhotoClick = {}
+            onUserPhotoClick = {},
         )
     }
 }
@@ -538,7 +568,7 @@ private fun DiscussionCommentsScreenTabletPreview() {
             onBackClick = {},
             refreshing = false,
             onSwipeRefresh = {},
-            onUserPhotoClick = {}
+            onUserPhotoClick = {},
         )
     }
 }

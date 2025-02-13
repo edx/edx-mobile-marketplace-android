@@ -134,6 +134,7 @@ class NotificationsInboxFragment : Fragment() {
                     },
                     markNotificationAsRead = { notification, inboxSection ->
                         viewModel.markNotificationAsRead(
+                            fm = requireActivity().supportFragmentManager,
                             notification = notification,
                             inboxSection = inboxSection,
                         )
@@ -498,6 +499,7 @@ private val mockNotificationItem = NotificationItem(
     notificationType = "",
     contentUrl = "",
     created = Date(),
+    courseId = "",
     lastRead = null,
     lastSeen = null,
     content = "Mock Content",

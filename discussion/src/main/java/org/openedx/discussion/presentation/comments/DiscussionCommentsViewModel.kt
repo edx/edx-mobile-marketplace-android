@@ -26,6 +26,8 @@ import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 class DiscussionCommentsViewModel(
     val courseId: String,
     thread: Thread,
+    val responseId: String,
+    val commentId: String,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
@@ -126,6 +128,17 @@ class DiscussionCommentsViewModel(
                 comments.addAll(response.results.map {
                     it.copy(isAuthor = it.author == corePreferences.user?.username)
                 })
+                if (responseId.isNotEmpty()) {
+                    val comment = comments.find { it.id == responseId }
+                    if (comment == null) {
+                        val newComment = interactor.getResponse(responseId)
+                        comments.add(0, newComment)
+                        commentCount.inc()
+                    } else {
+                        comments.remove(comment)
+                        comments.add(0, comment)
+                    }
+                }
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
 

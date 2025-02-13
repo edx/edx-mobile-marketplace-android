@@ -337,9 +337,32 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         title: String,
         viewType: FragmentViewType,
     ) {
+        navigateToDiscussionThread(fm, action, courseId, topicId, "", "", "", title, viewType)
+    }
+
+    override fun navigateToDiscussionThread(
+        fm: FragmentManager,
+        action: String,
+        courseId: String,
+        topicId: String,
+        threadId: String,
+        responseId: String,
+        commentId: String,
+        title: String,
+        viewType: FragmentViewType,
+    ) {
         replaceFragmentWithBackStack(
             fm,
-            DiscussionThreadsFragment.newInstance(action, courseId, topicId, title, viewType.name)
+            DiscussionThreadsFragment.newInstance(
+                action,
+                courseId,
+                topicId,
+                threadId,
+                responseId,
+                commentId,
+                title,
+                viewType.name
+            )
         )
     }
 
@@ -348,9 +371,19 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         courseId: String,
         thread: Thread,
     ) {
+        navigateToDiscussionComments(fm, courseId, thread, "", "")
+    }
+
+    override fun navigateToDiscussionComments(
+        fm: FragmentManager,
+        courseId: String,
+        thread: Thread,
+        responseId: String,
+        commentId: String,
+    ) {
         replaceFragmentWithBackStack(
             fm,
-            DiscussionCommentsFragment.newInstance(courseId, thread)
+            DiscussionCommentsFragment.newInstance(courseId, thread, responseId, commentId)
         )
     }
 

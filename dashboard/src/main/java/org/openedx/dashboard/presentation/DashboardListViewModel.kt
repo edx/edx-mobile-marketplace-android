@@ -44,7 +44,9 @@ import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.EnrolledCourseEvent
+import org.openedx.core.system.notifier.app.RequestEnrolledCourseErrorEvent
 import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
+import org.openedx.core.utils.Logger
 import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 
@@ -63,6 +65,8 @@ class DashboardListViewModel(
     private val iapAnalytics: IAPAnalytics,
     private val iapInteractor: IAPInteractor,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val coursesList = mutableListOf<EnrolledCourse>()
     private var page = 1
@@ -295,9 +299,14 @@ class DashboardListViewModel(
                     _appUpgradeEvent.value = it
                 }
                 if (it is RequestEnrolledCourseEvent) {
-                    val enrolledCourses =
+                    runCatching {
                         interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
-                    appNotifier.send(EnrolledCourseEvent(enrolledCourses))
+                    }.onSuccess { enrolledCourses ->
+                        appNotifier.send(EnrolledCourseEvent(enrolledCourses))
+                    }.onFailure {
+                        logger.d { "Error getting enrolled courses: $it" }
+                        appNotifier.send(RequestEnrolledCourseErrorEvent)
+                    }
                 }
             }
             .distinctUntilChanged()
@@ -310,35 +319,39 @@ class DashboardListViewModel(
 
     private fun detectUnfulfilledPurchase() {
         viewModelScope.launch(Dispatchers.IO) {
-            val enrolledCourses =
+            runCatching {
                 interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
-            iapInteractor.detectUnfulfilledPurchase(
-                enrolledCourses = enrolledCourses,
-                verificationInitiated = { purchaseFlowData ->
-                    eventLogger.apply {
-                        this.purchaseFlowData = purchaseFlowData
-                        this.logUnfulfilledPurchaseInitiatedEvent()
-                    }
-                },
-                onSuccess = { purchaseFlowData ->
-                    eventLogger.apply {
-                        this.purchaseFlowData = purchaseFlowData
-                        this.upgradeSuccessEvent()
-                    }
-                    _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
-                },
-                onFailure = {
-                    _iapUiState.tryEmit(
-                        IAPUIState.Error(
-                            IAPException(
-                                IAPRequestType.UNFULFILLED_CODE,
-                                it.httpErrorCode,
-                                it.errorMessage,
+            }.onSuccess { enrolledCourses ->
+                iapInteractor.detectUnfulfilledPurchase(
+                    enrolledCourses = enrolledCourses,
+                    verificationInitiated = { purchaseFlowData ->
+                        eventLogger.apply {
+                            this.purchaseFlowData = purchaseFlowData
+                            this.logUnfulfilledPurchaseInitiatedEvent()
+                        }
+                    },
+                    onSuccess = { purchaseFlowData ->
+                        eventLogger.apply {
+                            this.purchaseFlowData = purchaseFlowData
+                            this.upgradeSuccessEvent()
+                        }
+                        _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
+                    },
+                    onFailure = {
+                        _iapUiState.tryEmit(
+                            IAPUIState.Error(
+                                IAPException(
+                                    IAPRequestType.UNFULFILLED_CODE,
+                                    it.httpErrorCode,
+                                    it.errorMessage,
+                                )
                             )
                         )
-                    )
-                }
-            )
+                    }
+                )
+            }.onFailure {
+                logger.d { "Error getting enrolled courses: $it" }
+            }
         }
     }
 
@@ -351,5 +364,9 @@ class DashboardListViewModel(
         viewModelScope.launch {
             _iapUiState.emit(null)
         }
+    }
+
+    companion object {
+        private const val TAG = "DashboardListViewModel"
     }
 }

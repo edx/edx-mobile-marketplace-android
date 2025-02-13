@@ -37,6 +37,7 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.EnrolledCourseEvent
 import org.openedx.core.system.notifier.app.LogoutEvent
+import org.openedx.core.system.notifier.app.RequestEnrolledCourseErrorEvent
 import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
 import org.openedx.core.utils.EmailUtil
 import org.openedx.profile.domain.interactor.ProfileInteractor
@@ -134,11 +135,18 @@ class SettingsViewModel(
     private fun collectAppEvent() {
         viewModelScope.launch {
             appNotifier.notifier.collect { event ->
-                if (event is AppUpgradeEvent) {
-                    _appUpgradeEvent.value = event
-                }
-                if (event is EnrolledCourseEvent) {
-                    restorePurchase(event.enrolledCourses)
+                when (event) {
+                    is AppUpgradeEvent -> {
+                        _appUpgradeEvent.value = event
+                    }
+
+                    is EnrolledCourseEvent -> {
+                        restorePurchase(event.enrolledCourses)
+                    }
+
+                    is RequestEnrolledCourseErrorEvent -> {
+                        _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
+                    }
                 }
             }
         }

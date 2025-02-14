@@ -43,7 +43,7 @@ class NotificationsRepository(
 
     suspend fun fetchNotificationsConfiguration(): NotificationsConfiguration {
         val response = api.fetchNotificationsConfiguration().mapToDomain()
-        preference.notifications = NotificationsConfiguration(response.discussionsPushEnabled)
+        updateNotificationsPreference(response.discussionsPushEnabled)
         return response
     }
 
@@ -58,7 +58,11 @@ class NotificationsRepository(
                 value = isDiscussionPushEnabled,
             )
         ).mapToDomain()
-        preference.notifications = NotificationsConfiguration(response.updatedValue)
+        updateNotificationsPreference(response.updatedValue)
         return response
+    }
+
+    private fun updateNotificationsPreference(isDiscussionPushEnabled: Boolean) {
+        preference.notifications = NotificationsConfiguration(isDiscussionPushEnabled)
     }
 }

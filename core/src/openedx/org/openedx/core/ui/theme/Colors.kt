@@ -78,7 +78,7 @@ val light_primary_card_caution_background = Color(0xFFF3F1ED)
 val light_primary_card_info_background = Color(0xFFE7E4DB)
 val light_social_auth_divider = light_divider
 val light_inbox_time_marker_color = Color(0xFF707070)
-val light_notification_primer_badge = Color(0xFF00262B)
+val light_notification_primer_badge = Color(0xFF132D26)
 val light_notification_primer_card_background = light_primary_card_info_background
 
 

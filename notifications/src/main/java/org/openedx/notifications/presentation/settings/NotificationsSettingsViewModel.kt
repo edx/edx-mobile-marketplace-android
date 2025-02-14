@@ -24,7 +24,7 @@ class NotificationsSettingsViewModel(
     private val context: Context,
     private val interactor: NotificationsInteractor,
     private val analytics: NotificationsAnalytics,
-    private val preference: NotificationsPreferences,
+    preference: NotificationsPreferences,
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow<NotificationsSettingsUiState>(
@@ -51,10 +51,7 @@ class NotificationsSettingsViewModel(
             viewModelScope.launch {
                 try {
                     val response = interactor.updateNotificationsConfiguration(value)
-                    enablePushNotifications(
-                        enabled = response.updatedValue,
-                        updatePreference = true
-                    )
+                    enablePushNotifications(enabled = response.updatedValue)
 
                     logDiscussionPermissionToggleEvent(isDiscussionPushEnabled = value)
                 } catch (e: Exception) {
@@ -70,25 +67,18 @@ class NotificationsSettingsViewModel(
         viewModelScope.launch {
             try {
                 val response = interactor.fetchNotificationsConfiguration()
-                enablePushNotifications(
-                    enabled = response.discussionsPushEnabled,
-                    updatePreference = true
-                )
+                enablePushNotifications(enabled = response.discussionsPushEnabled)
             } catch (e: Exception) {
                 showErrorMessage()
             }
         }
     }
 
-    fun enablePushNotifications(enabled: Boolean, updatePreference: Boolean = false) {
+    fun enablePushNotifications(enabled: Boolean) {
         _uiState.update {
             NotificationsSettingsUiState.Configuration(
                 discussionsPushEnabled = enabled,
             )
-        }
-        if (updatePreference) {
-            preference.notifications =
-                preference.notifications.copy(discussionsPushEnabled = enabled)
         }
     }
 

@@ -124,7 +124,10 @@ class DiscussionThreadsFragment : Fragment() {
         lifecycleScope.launch {
             viewModel.showPrimer.collect { showPrimer ->
                 if (showPrimer) {
-                    viewModel.showNotificationsPrimer(requireActivity().supportFragmentManager)
+                    viewModel.showNotificationsPrimer(
+                        context = requireContext(),
+                        fm = requireActivity().supportFragmentManager
+                    )
                 }
             }
         }

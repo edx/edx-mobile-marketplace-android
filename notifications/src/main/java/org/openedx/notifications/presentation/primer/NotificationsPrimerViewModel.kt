@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
-import org.openedx.notifications.domain.model.NotificationsConfiguration
 import org.openedx.notifications.domain.model.NotificationsPrimerConfiguration
 
 class NotificationsPrimerViewModel(
@@ -16,25 +15,30 @@ class NotificationsPrimerViewModel(
     private val notificationsPreferences: NotificationsPreferences,
 ) : BaseViewModel() {
 
-    private val _shouldShowDialog = MutableStateFlow(true)
-    val shouldShowDialog: StateFlow<Boolean> = _shouldShowDialog.asStateFlow()
+    private val _uiState = MutableStateFlow<PrimerUIState>(PrimerUIState.ShowDialog)
+    val uiState: StateFlow<PrimerUIState> = _uiState.asStateFlow()
 
     fun enableDiscussionNotificationsPreference() {
         viewModelScope.launch {
             try {
                 interactor.updateNotificationsConfiguration(true)
-                notificationsPreferences.notifications = NotificationsConfiguration(true)
+                resetNotificationsPrimerConfiguration()
+                _uiState.value = PrimerUIState.DismissDialog
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    fun resetNotificationsPrimerConfiguration() {
+    private fun resetNotificationsPrimerConfiguration() {
         notificationsPreferences.primer = NotificationsPrimerConfiguration()
     }
 
     fun hideDialog() {
-        _shouldShowDialog.value = false
+        _uiState.value = PrimerUIState.HideDialog
+    }
+
+    fun dismissDialog() {
+        _uiState.value = PrimerUIState.DismissDialog
     }
 }

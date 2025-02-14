@@ -1,0 +1,7 @@
+package org.openedx.notifications.presentation.primer
+
+sealed class PrimerUIState {
+    data object ShowDialog : PrimerUIState()
+    data object HideDialog : PrimerUIState()
+    data object DismissDialog : PrimerUIState()
+}

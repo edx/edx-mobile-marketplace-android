@@ -53,10 +53,8 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
     ) { granted ->
         if (granted) {
             viewModel.enableDiscussionNotificationsPreference()
-            viewModel.resetNotificationsPrimerConfiguration()
-            dismiss()
         } else {
-            dismiss()
+            viewModel.dismissDialog()
         }
     }
 
@@ -69,25 +67,37 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
         isCancelable = false
         setContent {
             OpenEdXTheme {
-                val shouldShowDialog by viewModel.shouldShowDialog.collectAsState()
+                val uiState by viewModel.uiState.collectAsState()
 
-                if (shouldShowDialog) {
-                    NotificationsPrimer(
-                        onDismissRequest = {
-                            dismiss()
-                        },
-                        onNotifyClick = {
-                            viewModel.hideDialog()
-                            PermissionUtils.requestNotificationPermission(
-                                activity = requireActivity(),
-                                permissionLauncher = pushNotificationPermissionLauncher,
-                                onRationaleShown = {
-                                    PermissionUtils.navigateToNotificationSettings(requireContext())
-                                    dismiss()
-                                },
-                            )
-                        },
-                    )
+                when (uiState) {
+                    PrimerUIState.ShowDialog -> {
+                        NotificationsPrimer(
+                            onDismissRequest = {
+                                viewModel.dismissDialog()
+                            },
+                            onNotifyClick = {
+                                viewModel.hideDialog()
+                                PermissionUtils.requestNotificationPermission(
+                                    activity = requireActivity(),
+                                    permissionLauncher = pushNotificationPermissionLauncher,
+                                    onRationaleShown = {
+                                        PermissionUtils.navigateToNotificationSettings(
+                                            requireContext()
+                                        )
+                                        viewModel.dismissDialog()
+                                    },
+                                )
+                            },
+                        )
+                    }
+
+                    PrimerUIState.DismissDialog -> {
+                        dismiss()
+                    }
+
+                    PrimerUIState.HideDialog -> {
+                        // Do nothing
+                    }
                 }
             }
         }

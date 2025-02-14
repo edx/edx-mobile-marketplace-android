@@ -1,5 +1,6 @@
 package org.openedx.discussion.presentation.threads
 
+import android.content.Context
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -270,7 +271,7 @@ class DiscussionThreadsViewModel(
         }
     }
 
-    fun showNotificationsPrimer(fm: FragmentManager) {
-        pushGlobalManager.showNotificationsPrimer(fm)
+    fun showNotificationsPrimer(context: Context, fm: FragmentManager) {
+        pushGlobalManager.showNotificationsPrimer(context, fm)
     }
 }

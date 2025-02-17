@@ -161,7 +161,7 @@ class SignUpViewModelTest {
         viewModel.register()
         advanceUntilIdle()
         coVerify(exactly = 1) { interactor.validateRegistrationFields(any()) }
-        verify(exactly = 1) { analytics.logEvent(any(), any()) }
+        verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
         coVerify(exactly = 0) { interactor.register(any()) }
         coVerify(exactly = 0) { interactor.login(any(), any()) }

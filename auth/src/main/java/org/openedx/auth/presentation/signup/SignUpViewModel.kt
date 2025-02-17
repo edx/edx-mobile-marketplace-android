@@ -226,6 +226,9 @@ class SignUpViewModel(
                     oAuthHelper.socialAuth(fragment, authType)
                 }
             }.onSuccess { socialAuth ->
+                logEvent(AuthAnalyticsEvent.SOCIAL_AUTH_SUCCESS, buildMap {
+                    put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+                })
                 socialAuth.checkToken()
             }.onFailure { exception ->
                 _uiState.update { it.copy(isLoading = false) }

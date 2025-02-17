@@ -35,13 +35,17 @@ enum class AuthAnalyticsEvent(val eventName: String, val biValue: String) {
         "Logistration:Create Account Clicked",
         "edx.bi.app.logistration.create_account.clicked"
     ),
+    VALIDATION_FAILURE(
+        "Logistration:Validation Failure",
+        "edx.bi.app.logistration.validation.failure"
+    ),
     REGISTER_SUCCESS(
         "Logistration:Register Success",
         "edx.bi.app.user.register.success"
     ),
     REGISTER_FAILURE(
         "Logistration:Register Failure",
-        "edx.bi.app.user.register.failure"
+        "edx.bi.app.logistration.register.failure"
     ),
     SIGN_IN_CLICKED(
         "Logistration:Sign In Clicked",
@@ -69,7 +73,7 @@ enum class AuthAnalyticsEvent(val eventName: String, val biValue: String) {
     ),
     SIGN_IN_FAILURE(
         "Logistration:Sign In Failure",
-        "edx.bi.app.user.signin.failure"
+        "edx.bi.app.logistration.signin.failure"
     ),
     FORGOT_PASSWORD_CLICKED(
         "Logistration:Forgot Password Clicked",
@@ -90,6 +94,7 @@ enum class AuthAnalyticsKey(val key: String) {
     SEARCH_QUERY("search_query"),
     SUCCESS("success"),
     METHOD("method"),
+    STATUS_CODE("status_code"),
     ERROR_CODE("error_code"),
     ERROR_MESSAGE("error_message"),
 }

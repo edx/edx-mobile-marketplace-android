@@ -158,9 +158,8 @@ class SignUpViewModel(
         _uiState.update { it.copy(isButtonLoading = true, validationError = false) }
         viewModelScope.launch {
             setErrorInstructions(emptyMap())
-            runCatching {
-                interactor.validateRegistrationFields(mapFields)
-            }.onSuccess { validationFields ->
+            try {
+                val validationFields = interactor.validateRegistrationFields(mapFields)
                 setErrorInstructions(validationFields.validationResult)
                 if (validationFields.hasValidationError()) {
                     logLogistrationValidationFailureEvent(
@@ -171,9 +170,9 @@ class SignUpViewModel(
                 } else {
                     proceedWithRegistration(resultMap)
                 }
-            }.onFailure {
-                logLogistrationValidationFailureEvent(authMethod, it)
-                handleRegisterException(it)
+            } catch (e: Exception) {
+                logLogistrationValidationFailureEvent(authMethod, e)
+                handleRegisterException(e)
             }
         }
     }

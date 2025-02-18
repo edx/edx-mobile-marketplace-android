@@ -29,10 +29,10 @@ import org.openedx.app.room.AppDatabase
 import org.openedx.core.config.Config
 import org.openedx.core.config.FirebaseConfig
 import org.openedx.core.data.model.User
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.utils.FileUtil
-import org.openedx.notifications.domain.interactor.NotificationsInteractor
 
 @ExperimentalCoroutinesApi
 class AppViewModelTest {
@@ -50,7 +50,7 @@ class AppViewModelTest {
     private val fileUtil = mockk<FileUtil>()
     private val deepLinkRouter = mockk<DeepLinkRouter>()
     private val context = mockk<Context>()
-    private val interactor = mockk<NotificationsInteractor>()
+    private val pushManager = mockk<PushGlobalManager>()
 
     private val user = User(0, "", "", "")
 
@@ -82,7 +82,7 @@ class AppViewModelTest {
             deepLinkRouter,
             fileUtil,
             context,
-            interactor,
+            pushManager,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -118,7 +118,7 @@ class AppViewModelTest {
             deepLinkRouter,
             fileUtil,
             context,
-            interactor,
+            pushManager,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -156,7 +156,7 @@ class AppViewModelTest {
             deepLinkRouter,
             fileUtil,
             context,
-            interactor,
+            pushManager,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()

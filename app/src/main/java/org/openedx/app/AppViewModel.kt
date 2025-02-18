@@ -3,7 +3,6 @@ package org.openedx.app
 import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.content.Context
-import android.util.Log
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -21,12 +20,12 @@ import org.openedx.core.SingleEventLiveData
 import org.openedx.core.config.Config
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.FileUtil
-import org.openedx.notifications.domain.interactor.NotificationsInteractor
-
+import org.openedx.core.utils.Logger
 
 @SuppressLint("StaticFieldLeak")
 class AppViewModel(
@@ -39,8 +38,10 @@ class AppViewModel(
     private val deepLinkRouter: DeepLinkRouter,
     private val fileUtil: FileUtil,
     private val context: Context,
-    private val interactor: NotificationsInteractor,
+    private val pushManager: PushGlobalManager,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _logoutUser = SingleEventLiveData<Unit>()
     val logoutUser: LiveData<Unit>
@@ -126,8 +127,15 @@ class AppViewModel(
 
     fun markNotificationAsRead(notificationId: Int) {
         viewModelScope.launch {
-            val marked = interactor.markNotificationAsRead(notificationId)
-            Log.d("AppViewModel", "Notification marked as read: $marked")
+            try {
+                pushManager.markNotificationAsRead(notificationId)
+            } catch (e: Exception) {
+                logger.e(throwable = e, submitCrashReport = true)
+            }
         }
+    }
+
+    companion object {
+        private const val TAG = "AppViewModel"
     }
 }

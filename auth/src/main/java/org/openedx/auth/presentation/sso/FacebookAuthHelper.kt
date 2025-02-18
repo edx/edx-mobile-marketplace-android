@@ -14,7 +14,6 @@ import org.openedx.auth.domain.model.SocialAuthResponse
 import org.openedx.core.ApiConstants
 import org.openedx.core.extension.safeResume
 import org.openedx.core.utils.Logger
-import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class FacebookAuthHelper {
@@ -22,14 +21,14 @@ class FacebookAuthHelper {
     private val logger = Logger(TAG)
     private val callbackManager = CallbackManager.Factory.create()
 
-    suspend fun socialAuth(fragment: Fragment): SocialAuthResponse? =
+    suspend fun socialAuth(fragment: Fragment): SocialAuthResponse =
         suspendCancellableCoroutine { continuation ->
             LoginManager.getInstance().registerCallback(
                 callbackManager,
                 object : FacebookCallback<LoginResult> {
                     override fun onCancel() {
                         logger.d { "Facebook auth canceled" }
-                        continuation.resume(SocialAuthResponse())
+                        continuation.resumeWithException(FacebookException(OAuthHelper.ACTIVITY_CANCELLED_MESSAGE))
                     }
 
                     override fun onError(error: FacebookException) {

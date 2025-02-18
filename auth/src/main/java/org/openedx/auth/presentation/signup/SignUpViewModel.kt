@@ -3,6 +3,8 @@ package org.openedx.auth.presentation.signup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
+import com.microsoft.identity.client.exception.MsalException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -35,6 +37,7 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.Logger
+import retrofit2.HttpException
 import org.openedx.core.R as coreR
 
 class SignUpViewModel(
@@ -56,7 +59,8 @@ class SignUpViewModel(
     private val _uiState = MutableStateFlow(
         SignUpUIState(
             isFacebookAuthEnabled = config.getFacebookConfig().isEnabled(),
-            isGoogleAuthEnabled = config.getGoogleConfig().isEnabled() && oAuthHelper.isGoogleAuthEnabled(),
+            isGoogleAuthEnabled = config.getGoogleConfig().isEnabled() &&
+                    oAuthHelper.isGoogleAuthEnabled(),
             isMicrosoftAuthEnabled = config.getMicrosoftConfig().isEnabled(),
             isSocialAuthEnabled = config.isSocialAuthEnabled(),
             isLoading = true,
@@ -136,7 +140,13 @@ class SignUpViewModel(
     }
 
     fun register() {
-        logEvent(AuthAnalyticsEvent.CREATE_ACCOUNT_CLICKED)
+        val authMethod = uiState.value.socialAuth?.authType ?: AuthType.PASSWORD
+        logEvent(
+            event = AuthAnalyticsEvent.CREATE_ACCOUNT_CLICKED,
+            params = buildMap {
+                put(AuthAnalyticsKey.METHOD.key, authMethod.methodName.lowercase())
+            }
+        )
         val mapFields = uiState.value.allFields.associate { it.name to it.placeholder } +
                 mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())
         val resultMap = mapFields.toMutableMap()
@@ -147,82 +157,129 @@ class SignUpViewModel(
         }
         _uiState.update { it.copy(isButtonLoading = true, validationError = false) }
         viewModelScope.launch {
+            setErrorInstructions(emptyMap())
             try {
-                setErrorInstructions(emptyMap())
                 val validationFields = interactor.validateRegistrationFields(mapFields)
                 setErrorInstructions(validationFields.validationResult)
                 if (validationFields.hasValidationError()) {
+                    logLogistrationFailureEvent(
+                        event = AuthAnalyticsEvent.VALIDATION_FAILURE,
+                        authType = authMethod,
+                        throws = Exception(Gson().toJson(validationFields.validationResult)),
+                        errorCodeKey = AuthAnalyticsKey.STATUS_CODE
+                    )
                     _uiState.update { it.copy(validationError = true, isButtonLoading = false) }
                 } else {
-                    val socialAuth = uiState.value.socialAuth
-                    if (socialAuth?.accessToken != null) {
-                        resultMap[ApiConstants.ACCESS_TOKEN] = socialAuth.accessToken
-                        resultMap[ApiConstants.PROVIDER] = socialAuth.authType.postfix
-                        resultMap[ApiConstants.CLIENT_ID] = config.getOAuthClientId()
-                    }
-                    interactor.register(resultMap.toMap())
-                    logEvent(
-                        event = AuthAnalyticsEvent.REGISTER_SUCCESS,
-                        params = buildMap {
-                            put(
-                                AuthAnalyticsKey.METHOD.key,
-                                (socialAuth?.authType?.methodName
-                                    ?: AuthType.PASSWORD.methodName).lowercase()
-                            )
-                        }
-                    )
-                    if (socialAuth == null) {
-                        interactor.login(
-                            resultMap.getValue(ApiConstants.EMAIL),
-                            resultMap.getValue(ApiConstants.PASSWORD)
-                        )
-                        setUserId()
-                        _uiState.update { it.copy(successLogin = true, isButtonLoading = false) }
-                        appNotifier.send(SignInEvent())
-                    } else {
-                        exchangeToken(socialAuth)
-                    }
+                    proceedWithRegistration(resultMap)
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isButtonLoading = false) }
-                if (e.isInternetError()) {
-                    _uiMessage.emit(
-                        UIMessage.SnackBarMessage(
-                            resourceManager.getString(coreR.string.core_error_no_connection)
-                        )
-                    )
-                } else {
-                    _uiMessage.emit(
-                        UIMessage.SnackBarMessage(
-                            resourceManager.getString(coreR.string.core_error_unknown_error)
-                        )
-                    )
-                }
+                logLogistrationFailureEvent(
+                    event = AuthAnalyticsEvent.VALIDATION_FAILURE,
+                    authType = authMethod,
+                    throws = e,
+                    errorCodeKey = AuthAnalyticsKey.STATUS_CODE
+                )
+                handleRegisterException(e)
             }
         }
     }
 
+    private suspend fun proceedWithRegistration(resultMap: MutableMap<String, String>) {
+        try {
+            val socialAuth = uiState.value.socialAuth
+            if (socialAuth?.accessToken != null) {
+                resultMap[ApiConstants.ACCESS_TOKEN] = socialAuth.accessToken
+                resultMap[ApiConstants.PROVIDER] = socialAuth.authType.postfix
+                resultMap[ApiConstants.CLIENT_ID] = config.getOAuthClientId()
+            }
+            interactor.register(resultMap.toMap())
+            logEvent(
+                event = AuthAnalyticsEvent.REGISTER_SUCCESS,
+                params = buildMap {
+                    put(
+                        AuthAnalyticsKey.METHOD.key,
+                        (socialAuth?.authType
+                            ?: AuthType.PASSWORD).methodName.lowercase()
+                    )
+                }
+            )
+            if (socialAuth == null) {
+                interactor.login(
+                    resultMap.getValue(ApiConstants.EMAIL),
+                    resultMap.getValue(ApiConstants.PASSWORD)
+                )
+                setUserId()
+                _uiState.update {
+                    it.copy(
+                        successLogin = true,
+                        isButtonLoading = false
+                    )
+                }
+                appNotifier.send(SignInEvent())
+            } else {
+                exchangeToken(socialAuth)
+            }
+        } catch (e: Exception) {
+            logLogistrationFailureEvent(
+                AuthAnalyticsEvent.REGISTER_FAILURE,
+                uiState.value.socialAuth?.authType ?: AuthType.PASSWORD,
+                e
+            )
+            handleRegisterException(e)
+        }
+    }
+
+    private suspend fun handleRegisterException(throwable: Throwable) {
+        _uiState.update { it.copy(isButtonLoading = false) }
+        if (throwable.isInternetError()) {
+            _uiMessage.emit(
+                UIMessage.SnackBarMessage(
+                    resourceManager.getString(coreR.string.core_error_no_connection)
+                )
+            )
+        } else {
+            _uiMessage.emit(
+                UIMessage.SnackBarMessage(
+                    resourceManager.getString(coreR.string.core_error_unknown_error)
+                )
+            )
+        }
+    }
+
     fun socialAuth(fragment: Fragment, authType: AuthType) {
+        logEvent(AuthAnalyticsEvent.SOCIAL_REGISTER_CLICKED, buildMap {
+            put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+        })
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 runCatching {
                     oAuthHelper.socialAuth(fragment, authType)
                 }
+            }.onSuccess { socialAuth ->
+                logEvent(AuthAnalyticsEvent.SOCIAL_AUTH_SUCCESS, buildMap {
+                    put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+                })
+                socialAuth.checkToken()
+            }.onFailure { exception ->
+                _uiState.update { it.copy(isLoading = false) }
+                logLogistrationFailureEvent(
+                    AuthAnalyticsEvent.SOCIAL_AUTH_FAILURE,
+                    authType,
+                    exception
+                )
             }
-                .getOrNull()
-                .checkToken()
         }
     }
 
-    private suspend fun SocialAuthResponse?.checkToken() {
-        this?.accessToken?.let { token ->
+    private suspend fun SocialAuthResponse.checkToken() {
+        accessToken.let { token ->
             if (token.isNotEmpty()) {
                 exchangeToken(this)
             } else {
                 _uiState.update { it.copy(isLoading = false) }
             }
-        } ?: _uiState.update { it.copy(isLoading = false) }
+        }
     }
 
     private suspend fun exchangeToken(socialAuth: SocialAuthResponse) {
@@ -322,6 +379,29 @@ class SignUpViewModel(
             params = buildMap {
                 put(AuthAnalyticsKey.NAME.key, event.biValue)
                 putAll(params)
+            }
+        )
+    }
+
+    private fun logLogistrationFailureEvent(
+        event: AuthAnalyticsEvent,
+        authType: AuthType,
+        throws: Throwable,
+        errorCodeKey: AuthAnalyticsKey = AuthAnalyticsKey.ERROR_CODE
+    ) {
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(AuthAnalyticsKey.NAME.key, event.biValue)
+                put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+
+                val errorCode = when (throws) {
+                    is MsalException -> throws.errorCode
+                    is HttpException -> throws.code().toString()
+                    else -> null
+                }
+                errorCode?.let { put(errorCodeKey.key, it) }
+                throws.message?.let { put(AuthAnalyticsKey.ERROR_MESSAGE.key, it) }
             }
         )
     }

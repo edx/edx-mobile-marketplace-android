@@ -14,14 +14,13 @@ import org.openedx.core.ApiConstants
 import org.openedx.core.R
 import org.openedx.core.extension.safeResume
 import org.openedx.core.utils.Logger
-import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class MicrosoftAuthHelper {
     private val logger = Logger(TAG)
 
     @WorkerThread
-    suspend fun socialAuth(activityContext: Activity): SocialAuthResponse? =
+    suspend fun socialAuth(activityContext: Activity): SocialAuthResponse =
         suspendCancellableCoroutine { continuation ->
             val clientApplication =
                 PublicClientApplication.createMultipleAccountPublicClientApplication(
@@ -59,7 +58,7 @@ class MicrosoftAuthHelper {
 
                     override fun onCancel() {
                         logger.d { "Microsoft auth canceled" }
-                        continuation.resume(SocialAuthResponse())
+                        continuation.resumeWithException(Exception(OAuthHelper.ACTIVITY_CANCELLED_MESSAGE))
                     }
                 }).build()
             clientApplication.accounts.forEach {

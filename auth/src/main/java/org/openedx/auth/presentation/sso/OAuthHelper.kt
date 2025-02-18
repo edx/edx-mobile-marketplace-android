@@ -15,9 +15,9 @@ class OAuthHelper(
      * https://developers.facebook.com/docs/facebook-login/android/
      * https://github.com/AzureAD/microsoft-authentication-library-for-android
      */
-    internal suspend fun socialAuth(fragment: Fragment, authType: AuthType): SocialAuthResponse? {
+    internal suspend fun socialAuth(fragment: Fragment, authType: AuthType): SocialAuthResponse {
         return when (authType) {
-            AuthType.PASSWORD -> null
+            AuthType.PASSWORD -> throw IllegalArgumentException(PASSWORD_AUTH_NOT_SUPPORTED_MESSAGE)
             AuthType.GOOGLE -> googleAuthHelper.socialAuth(fragment.requireActivity())
             AuthType.FACEBOOK -> facebookAuthHelper.socialAuth(fragment)
             AuthType.MICROSOFT -> microsoftAuthHelper.socialAuth(fragment.requireActivity())
@@ -28,5 +28,12 @@ class OAuthHelper(
 
     fun clear() {
         facebookAuthHelper.clear()
+    }
+
+    companion object {
+        const val ACCESS_TOKEN_EMPTY_MESSAGE = "Social Auth accessToken is empty"
+        const val ACTIVITY_CANCELLED_MESSAGE = "Activity is cancelled by the user."
+        const val PASSWORD_AUTH_NOT_SUPPORTED_MESSAGE =
+            "Password auth is not supported via social auth"
     }
 }

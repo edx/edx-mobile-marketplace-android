@@ -161,7 +161,7 @@ class SignUpViewModelTest {
         viewModel.register()
         advanceUntilIdle()
         coVerify(exactly = 1) { interactor.validateRegistrationFields(any()) }
-        verify(exactly = 1) { analytics.logEvent(any(), any()) }
+        verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
         coVerify(exactly = 0) { interactor.register(any()) }
         coVerify(exactly = 0) { interactor.login(any(), any()) }
@@ -209,7 +209,7 @@ class SignUpViewModelTest {
         }
         viewModel.register()
         advanceUntilIdle()
-        verify(exactly = 1) { analytics.logEvent(any(), any()) }
+        verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
         coVerify(exactly = 1) { interactor.validateRegistrationFields(any()) }
@@ -249,7 +249,7 @@ class SignUpViewModelTest {
         viewModel.register()
         advanceUntilIdle()
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
-        verify(exactly = 1) { analytics.logEvent(any(), any()) }
+        verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
         coVerify(exactly = 1) { interactor.validateRegistrationFields(any()) }
         coVerify(exactly = 0) { interactor.register(any()) }
@@ -303,7 +303,7 @@ class SignUpViewModelTest {
         coVerify(exactly = 1) { interactor.validateRegistrationFields(any()) }
         coVerify(exactly = 1) { interactor.register(any()) }
         coVerify(exactly = 1) { interactor.login(any(), any()) }
-        verify(exactly = 2) { analytics.logEvent(any(), any()) }
+        verify(exactly = 3) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
         verify(exactly = 1) { appNotifier.notifier }
 

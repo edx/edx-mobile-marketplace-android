@@ -33,11 +33,19 @@ enum class AuthAnalyticsEvent(val eventName: String, val biValue: String) {
     ),
     CREATE_ACCOUNT_CLICKED(
         "Logistration:Create Account Clicked",
-        "edx.bi.app.logistration.user.create_account.clicked"
+        "edx.bi.app.logistration.create_account.clicked"
+    ),
+    VALIDATION_FAILURE(
+        "Logistration:Validation Failure",
+        "edx.bi.app.logistration.validation.failure"
     ),
     REGISTER_SUCCESS(
         "Logistration:Register Success",
         "edx.bi.app.user.register.success"
+    ),
+    REGISTER_FAILURE(
+        "Logistration:Register Failure",
+        "edx.bi.app.logistration.register.failure"
     ),
     SIGN_IN_CLICKED(
         "Logistration:Sign In Clicked",
@@ -47,9 +55,25 @@ enum class AuthAnalyticsEvent(val eventName: String, val biValue: String) {
         "Logistration:User Sign In Clicked",
         "edx.bi.app.logistration.user.signin.clicked"
     ),
+    SOCIAL_AUTH_SUCCESS(
+        "Logistration:Social Auth Success",
+        "edx.bi.app.logistration.social.auth.success"
+    ),
+    SOCIAL_AUTH_FAILURE(
+        "Logistration:Social Auth Failure",
+        "edx.bi.app.logistration.social.auth.failure"
+    ),
+    SOCIAL_REGISTER_CLICKED(
+        "Logistration:Social Register Clicked",
+        "edx.bi.app.logistration.social.register.clicked"
+    ),
     SIGN_IN_SUCCESS(
         "Logistration:Sign In Success",
         "edx.bi.app.user.signin.success"
+    ),
+    SIGN_IN_FAILURE(
+        "Logistration:Sign In Failure",
+        "edx.bi.app.logistration.signin.failure"
     ),
     FORGOT_PASSWORD_CLICKED(
         "Logistration:Forgot Password Clicked",
@@ -70,4 +94,7 @@ enum class AuthAnalyticsKey(val key: String) {
     SEARCH_QUERY("search_query"),
     SUCCESS("success"),
     METHOD("method"),
+    STATUS_CODE("status_code"),
+    ERROR_CODE("error_code"),
+    ERROR_MESSAGE("error_message"),
 }

@@ -299,7 +299,7 @@ class SignInViewModelTest {
 
         coVerify(exactly = 1) { interactor.login(any(), any()) }
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
-        verify(exactly = 1) { analytics.logEvent(any(), any()) }
+        verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
         verify(exactly = 1) { appNotifier.notifier }
 
@@ -332,14 +332,19 @@ class SignInViewModelTest {
             courseId = "",
             infoType = "",
         )
-        coEvery { interactor.login("acc@test.org", "edx") } throws EdxError.InvalidGrantException()
+        coEvery {
+            interactor.login(
+                "acc@test.org",
+                "edx"
+            )
+        } throws EdxError.InvalidGrantException("Invalid credentials given.")
         viewModel.login("acc@test.org", "edx")
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.login(any(), any()) }
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
         verify(exactly = 1) { appNotifier.notifier }
-        verify(exactly = 1) { analytics.logEvent(any(), any()) }
+        verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
 
         val message = viewModel.uiMessage.value as UIMessage.SnackBarMessage
@@ -378,7 +383,7 @@ class SignInViewModelTest {
         coVerify(exactly = 1) { interactor.login(any(), any()) }
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
         verify(exactly = 1) { appNotifier.notifier }
-        verify(exactly = 1) { analytics.logEvent(any(), any()) }
+        verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
 
         val message = viewModel.uiMessage.value as UIMessage.SnackBarMessage

@@ -5,6 +5,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.microsoft.identity.client.exception.MsalException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +37,7 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.Logger
+import retrofit2.HttpException
 import org.openedx.core.R as CoreRes
 
 class SignInViewModel(
@@ -59,7 +61,8 @@ class SignInViewModel(
     private val _uiState = MutableStateFlow(
         SignInUIState(
             isFacebookAuthEnabled = config.getFacebookConfig().isEnabled(),
-            isGoogleAuthEnabled = config.getGoogleConfig().isEnabled() && oAuthHelper.isGoogleAuthEnabled(),
+            isGoogleAuthEnabled = config.getGoogleConfig().isEnabled() &&
+                    oAuthHelper.isGoogleAuthEnabled(),
             isMicrosoftAuthEnabled = config.getMicrosoftConfig().isEnabled(),
             isSocialAuthEnabled = config.isSocialAuthEnabled(),
             isLogistrationEnabled = config.isPreLoginExperienceEnabled(),
@@ -83,7 +86,7 @@ class SignInViewModel(
     }
 
     fun login(username: String, password: String) {
-        logEvent(AuthAnalyticsEvent.USER_SIGN_IN_CLICKED)
+        logSignInClickedEvent(AuthType.PASSWORD)
         if (!validator.isEmailOrUserNameValid(username)) {
             _uiMessage.value =
                 UIMessage.SnackBarMessage(resourceManager.getString(R.string.auth_invalid_email_username))
@@ -104,6 +107,7 @@ class SignInViewModel(
                 logSignInSuccessEvent(AuthType.PASSWORD)
                 appNotifier.send(SignInEvent())
             } catch (e: Exception) {
+                logSignInErrorEvent(AuthType.PASSWORD, e)
                 if (e is EdxError.InvalidGrantException) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(CoreRes.string.core_error_invalid_grant))
@@ -130,15 +134,23 @@ class SignInViewModel(
     }
 
     fun socialAuth(fragment: Fragment, authType: AuthType) {
+        logSignInClickedEvent(authType)
         _uiState.update { it.copy(showProgress = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 runCatching {
                     oAuthHelper.socialAuth(fragment, authType)
                 }
+            }.onSuccess { socialAuthResponse ->
+                if (socialAuthResponse.accessToken.isNotEmpty()) {
+                    socialAuthResponse.checkToken()
+                } else {
+                    logSignInErrorEvent(authType, Exception(OAuthHelper.ACCESS_TOKEN_EMPTY_MESSAGE))
+                }
+            }.onFailure { exception ->
+                _uiState.update { it.copy(showProgress = false) }
+                logSignInErrorEvent(authType, exception)
             }
-                .getOrNull()
-                .checkToken()
         }
     }
 
@@ -162,6 +174,7 @@ class SignInViewModel(
             interactor.loginSocial(token, authType)
         }.onFailure { error ->
             logger.e { "Social login error: $error" }
+            logSignInErrorEvent(authType, error)
             onUnknownError()
         }.onSuccess {
             logger.d { "Social login (${authType.methodName}) success" }
@@ -190,14 +203,14 @@ class SignInViewModel(
         preferencesManager.lastSignInType = authType.name
     }
 
-    private suspend fun SocialAuthResponse?.checkToken() {
-        this?.accessToken?.let { token ->
+    private suspend fun SocialAuthResponse.checkToken() {
+        this.accessToken.let { token ->
             if (token.isNotEmpty()) {
                 exchangeToken(token, authType)
             } else {
                 _uiState.update { it.copy(showProgress = false) }
             }
-        } ?: onUnknownError()
+        }
     }
 
     fun openLink(fragmentManager: FragmentManager, links: Map<String, String>, link: String) {
@@ -242,6 +255,12 @@ class SignInViewModel(
         )
     }
 
+    private fun logSignInClickedEvent(authType: AuthType) {
+        logEvent(AuthAnalyticsEvent.USER_SIGN_IN_CLICKED, buildMap {
+            put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+        })
+    }
+
     private fun logSignInSuccessEvent(authType: AuthType) {
         val event = AuthAnalyticsEvent.SIGN_IN_SUCCESS
         analytics.logEvent(
@@ -249,6 +268,26 @@ class SignInViewModel(
             params = buildMap {
                 put(AuthAnalyticsKey.NAME.key, event.biValue)
                 put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+            }
+        )
+    }
+
+    private fun logSignInErrorEvent(authType: AuthType, throws: Throwable) {
+        val event = AuthAnalyticsEvent.SIGN_IN_FAILURE
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(AuthAnalyticsKey.NAME.key, event.biValue)
+                put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
+
+                val errorCode = when (throws) {
+                    is MsalException -> throws.errorCode
+                    is HttpException -> throws.code().toString()
+                    else -> null
+                }
+                errorCode?.let { put(AuthAnalyticsKey.ERROR_CODE.key, it) }
+
+                throws.message?.let { put(AuthAnalyticsKey.ERROR_MESSAGE.key, it) }
             }
         )
     }

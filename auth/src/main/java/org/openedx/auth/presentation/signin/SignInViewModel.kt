@@ -142,9 +142,6 @@ class SignInViewModel(
                     oAuthHelper.socialAuth(fragment, authType)
                 }
             }.onSuccess { socialAuthResponse ->
-                logEvent(AuthAnalyticsEvent.SOCIAL_AUTH_SUCCESS, buildMap {
-                    put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
-                })
                 if (socialAuthResponse.accessToken.isNotEmpty()) {
                     socialAuthResponse.checkToken()
                 } else {

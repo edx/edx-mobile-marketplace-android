@@ -32,7 +32,7 @@ class OAuthHelper(
 
     companion object {
         const val ACCESS_TOKEN_EMPTY_MESSAGE = "Social Auth accessToken is empty"
-        const val ACTIVITY_CANCELLED_MESSAGE = "activity is cancelled by the user."
+        const val ACTIVITY_CANCELLED_MESSAGE = "Activity is cancelled by the user."
         const val PASSWORD_AUTH_NOT_SUPPORTED_MESSAGE =
             "Password auth is not supported via social auth"
     }

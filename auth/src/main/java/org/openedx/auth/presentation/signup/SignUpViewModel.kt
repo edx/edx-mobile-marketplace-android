@@ -162,16 +162,23 @@ class SignUpViewModel(
                 val validationFields = interactor.validateRegistrationFields(mapFields)
                 setErrorInstructions(validationFields.validationResult)
                 if (validationFields.hasValidationError()) {
-                    logLogistrationValidationFailureEvent(
-                        authMethod,
-                        Exception(Gson().toJson(validationFields.validationResult))
+                    logLogistrationFailureEvent(
+                        event = AuthAnalyticsEvent.VALIDATION_FAILURE,
+                        authType = authMethod,
+                        throws = Exception(Gson().toJson(validationFields.validationResult)),
+                        errorCodeKey = AuthAnalyticsKey.STATUS_CODE
                     )
                     _uiState.update { it.copy(validationError = true, isButtonLoading = false) }
                 } else {
                     proceedWithRegistration(resultMap)
                 }
             } catch (e: Exception) {
-                logLogistrationValidationFailureEvent(authMethod, e)
+                logLogistrationFailureEvent(
+                    event = AuthAnalyticsEvent.VALIDATION_FAILURE,
+                    authType = authMethod,
+                    throws = e,
+                    errorCodeKey = AuthAnalyticsKey.STATUS_CODE
+                )
                 handleRegisterException(e)
             }
         }
@@ -264,7 +271,6 @@ class SignUpViewModel(
             }
         }
     }
-
 
     private suspend fun SocialAuthResponse.checkToken() {
         accessToken.let { token ->
@@ -381,6 +387,7 @@ class SignUpViewModel(
         event: AuthAnalyticsEvent,
         authType: AuthType,
         throws: Throwable,
+        errorCodeKey: AuthAnalyticsKey = AuthAnalyticsKey.ERROR_CODE
     ) {
         analytics.logEvent(
             event = event.eventName,
@@ -393,30 +400,7 @@ class SignUpViewModel(
                     is HttpException -> throws.code().toString()
                     else -> null
                 }
-                errorCode?.let { put(AuthAnalyticsKey.ERROR_CODE.key, it) }
-
-                throws.message?.let { put(AuthAnalyticsKey.ERROR_MESSAGE.key, it) }
-            }
-        )
-    }
-
-    private fun logLogistrationValidationFailureEvent(
-        authType: AuthType,
-        throws: Throwable,
-    ) {
-        val event = AuthAnalyticsEvent.VALIDATION_FAILURE
-        analytics.logEvent(
-            event = event.eventName,
-            params = buildMap {
-                put(AuthAnalyticsKey.NAME.key, event.biValue)
-                put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
-
-                val errorCode = when (throws) {
-                    is HttpException -> throws.code().toString()
-                    else -> null
-                }
-                errorCode?.let { put(AuthAnalyticsKey.STATUS_CODE.key, it) }
-
+                errorCode?.let { put(errorCodeKey.key, it) }
                 throws.message?.let { put(AuthAnalyticsKey.ERROR_MESSAGE.key, it) }
             }
         )

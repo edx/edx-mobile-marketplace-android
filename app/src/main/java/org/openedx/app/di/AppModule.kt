@@ -215,7 +215,7 @@ val appModule = module {
     single<IAPAnalytics> { get<AnalyticsManager>() }
     single<NotificationsAnalytics> { get<AnalyticsManager>() }
 
-    single { PushManager(get()) }
+    single { PushManager(get(), get()) }
     single<PushGlobalManager> { get<PushManager>() }
 
     factory { AgreementProvider(get(), get()) }

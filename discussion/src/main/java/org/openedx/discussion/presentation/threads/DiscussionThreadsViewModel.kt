@@ -1,22 +1,31 @@
 package org.openedx.discussion.presentation.threads
 
+import android.content.Context
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
+import org.openedx.discussion.system.notifier.DiscussionCommentAdded
 import org.openedx.discussion.system.notifier.DiscussionNotifier
+import org.openedx.discussion.system.notifier.DiscussionResponseAdded
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
+import org.openedx.discussion.system.notifier.DiscussionThreadFollowed
 
 class DiscussionThreadsViewModel(
     val courseId: String,
@@ -25,6 +34,7 @@ class DiscussionThreadsViewModel(
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
+    private val pushGlobalManager: PushGlobalManager,
     analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, "", analytics) {
 
@@ -43,6 +53,9 @@ class DiscussionThreadsViewModel(
     private val _canLoadMore = MutableLiveData<Boolean>()
     val canLoadMore: LiveData<Boolean>
         get() = _canLoadMore
+
+    private val _showPrimer = MutableStateFlow(false)
+    val showPrimer: StateFlow<Boolean> = _showPrimer.asStateFlow()
 
     private val threadsList = mutableListOf<org.openedx.discussion.domain.model.Thread>()
     private var nextPage = 1
@@ -67,6 +80,15 @@ class DiscussionThreadsViewModel(
                     if (index >= 0) {
                         threadsList[index] = it.thread
                         _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
+                    }
+                }
+
+                when (it) {
+                    is DiscussionThreadAdded,
+                    is DiscussionCommentAdded,
+                    is DiscussionResponseAdded,
+                    is DiscussionThreadFollowed -> {
+                        _showPrimer.value = true
                     }
                 }
             }
@@ -247,5 +269,9 @@ class DiscussionThreadsViewModel(
                 }
             }
         }
+    }
+
+    fun showNotificationsPrimer(context: Context, fm: FragmentManager) {
+        pushGlobalManager.showNotificationsPrimer(context, fm)
     }
 }

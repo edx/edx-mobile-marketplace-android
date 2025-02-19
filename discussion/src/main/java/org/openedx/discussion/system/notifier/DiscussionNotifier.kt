@@ -15,5 +15,5 @@ class DiscussionNotifier {
     suspend fun send(event: DiscussionCommentDataChanged) = channel.emit(event)
     suspend fun send(event: DiscussionThreadDataChanged) = channel.emit(event)
     suspend fun send(event: DiscussionThreadAdded) = channel.emit(event)
-
+    suspend fun send(event: DiscussionThreadFollowed) = channel.emit(event)
 }

@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -118,6 +119,17 @@ class DiscussionThreadsFragment : Fragment() {
             FragmentViewType.valueOf(requireArguments().getString(ARG_FRAGMENT_VIEW_TYPE, ""))
         if (viewType == FragmentViewType.MAIN_CONTENT) {
             viewModel.markBlockCompleted(requireArguments().getString(ARG_BLOCK_ID, ""))
+        }
+
+        lifecycleScope.launch {
+            viewModel.showPrimer.collect { showPrimer ->
+                if (showPrimer) {
+                    viewModel.showNotificationsPrimer(
+                        context = requireContext(),
+                        fm = requireActivity().supportFragmentManager
+                    )
+                }
+            }
         }
     }
 

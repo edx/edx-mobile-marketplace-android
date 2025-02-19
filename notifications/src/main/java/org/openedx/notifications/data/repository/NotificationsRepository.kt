@@ -5,6 +5,7 @@ import org.openedx.notifications.data.api.APIConstants
 import org.openedx.notifications.data.api.NotificationsApi
 import org.openedx.notifications.data.model.MarkNotificationReadBody
 import org.openedx.notifications.data.model.NotificationsUpdateBody
+import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.model.InboxNotifications
 import org.openedx.notifications.domain.model.NotificationsConfiguration
 import org.openedx.notifications.domain.model.NotificationsCount
@@ -12,6 +13,7 @@ import org.openedx.notifications.domain.model.NotificationsUpdateResponse
 
 class NotificationsRepository(
     private val api: NotificationsApi,
+    private val preference: NotificationsPreferences,
 ) {
     suspend fun getUnreadNotificationsCount(): NotificationsCount {
         return api.getUnreadNotificationsCount().mapToDomain()
@@ -40,13 +42,15 @@ class NotificationsRepository(
     }
 
     suspend fun fetchNotificationsConfiguration(): NotificationsConfiguration {
-        return api.fetchNotificationsConfiguration().mapToDomain()
+        val response = api.fetchNotificationsConfiguration().mapToDomain()
+        updateNotificationsPreference(response.discussionsPushEnabled)
+        return response
     }
 
     suspend fun updateNotificationsConfiguration(
         isDiscussionPushEnabled: Boolean,
     ): NotificationsUpdateResponse {
-        return api.updateNotificationsConfiguration(
+        val response = api.updateNotificationsConfiguration(
             NotificationsUpdateBody(
                 notificationApp = APIConstants.APP_NAME_DISCUSSION,
                 notificationType = APIConstants.NOTIFICATION_TYPE,
@@ -54,5 +58,11 @@ class NotificationsRepository(
                 value = isDiscussionPushEnabled,
             )
         ).mapToDomain()
+        updateNotificationsPreference(response.updatedValue)
+        return response
+    }
+
+    private fun updateNotificationsPreference(isDiscussionPushEnabled: Boolean) {
+        preference.notifications = NotificationsConfiguration(isDiscussionPushEnabled)
     }
 }

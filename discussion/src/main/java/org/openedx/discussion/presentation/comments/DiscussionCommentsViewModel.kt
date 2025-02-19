@@ -22,6 +22,7 @@ import org.openedx.discussion.system.notifier.DiscussionCommentAdded
 import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
+import org.openedx.discussion.system.notifier.DiscussionThreadFollowed
 
 class DiscussionCommentsViewModel(
     val courseId: String,
@@ -65,21 +66,7 @@ class DiscussionCommentsViewModel(
         super.onCreate(owner)
         viewModelScope.launch {
             notifier.notifier.collect {
-                if (it is DiscussionCommentAdded) {
-                    if (page == -1) {
-                        comments.add(it.comment)
-                        _uiState.value = DiscussionCommentsUIState.Success(
-                            thread,
-                            comments.toList(),
-                            commentCount
-                        )
-                    } else {
-                        _uiMessage.value =
-                            UIMessage.ToastMessage(resourceManager.getString(org.openedx.discussion.R.string.discussion_comment_added))
-                    }
-                    thread = thread.copy(commentCount = thread.commentCount + 1)
-                    sendThreadUpdated()
-                } else if (it is DiscussionCommentDataChanged) {
+                if (it is DiscussionCommentDataChanged) {
                     val index = comments.indexOfFirst { innerComment ->
                         innerComment.id == it.discussionComment.id
                     }
@@ -227,6 +214,10 @@ class DiscussionCommentsViewModel(
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
                 sendThreadUpdated()
                 logFollowToggleEvent(followed, thread.author)
+
+                if (followed) {
+                    notifier.send(DiscussionThreadFollowed())
+                }
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -341,6 +332,8 @@ class DiscussionCommentsViewModel(
                     responseId = response.id,
                     author = response.author
                 )
+
+                notifier.send(DiscussionCommentAdded())
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =

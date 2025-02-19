@@ -28,6 +28,7 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.extension.TextConverter
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
@@ -51,6 +52,7 @@ class DiscussionThreadsViewModelTest {
     private val interactor = mockk<DiscussionInteractor>()
     private val notifier = mockk<DiscussionNotifier>()
     private val analytics = mockk<DiscussionAnalytics>()
+    private val pushGlobalManager = mockk<PushGlobalManager>()
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
@@ -131,6 +133,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         advanceUntilIdle()
@@ -152,6 +155,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         coEvery { interactor.getAllThreads(any(), any(), any(), any()) } throws Exception()
@@ -184,6 +188,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         advanceUntilIdle()
@@ -213,6 +218,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         advanceUntilIdle()
@@ -234,6 +240,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         coEvery {
@@ -290,6 +297,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         advanceUntilIdle()
@@ -319,6 +327,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         advanceUntilIdle()
@@ -340,6 +349,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } throws Exception()
@@ -372,6 +382,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         advanceUntilIdle()
@@ -392,6 +403,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
@@ -413,6 +425,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
@@ -434,6 +447,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
@@ -465,6 +479,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
         viewModel.updateThread("")
@@ -502,6 +517,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
 
@@ -542,6 +558,7 @@ class DiscussionThreadsViewModelTest {
             interactor,
             resourceManager,
             notifier,
+            pushGlobalManager,
             analytics,
         )
 

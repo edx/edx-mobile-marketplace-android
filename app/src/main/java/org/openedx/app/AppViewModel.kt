@@ -125,10 +125,10 @@ class AppViewModel(
         }
     }
 
-    fun markNotificationAsRead(notificationId: Int) {
+    fun markNotificationAsRead(notificationId: Int?) {
         viewModelScope.launch {
             try {
-                pushManager.markNotificationAsRead(notificationId)
+                notificationId?.let { pushManager.markNotificationAsRead(it) }
             } catch (e: Exception) {
                 logger.e(throwable = e, submitCrashReport = true)
             }

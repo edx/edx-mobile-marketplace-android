@@ -50,13 +50,15 @@ class AppViewModel(
     val isBranchEnabled get() = config.getBranchConfig().enabled
     private val canResetAppDirectory get() = preferencesManager.canResetAppDirectory
 
+    init {
+        logAppLaunchEvent()
+        setUserId(preferencesManager.user)
+    }
+
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
 
         val user = preferencesManager.user
-
-        setUserId(user)
-
         if (user != null && preferencesManager.pushToken.isNotEmpty()) {
             SyncFirebaseTokenWorker.schedule(context)
         }
@@ -76,7 +78,7 @@ class AppViewModel(
         }
     }
 
-    fun logAppLaunchEvent() {
+    private fun logAppLaunchEvent() {
         analytics.logEvent(
             event = AppAnalyticsEvent.LAUNCH.eventName,
             params = buildMap {

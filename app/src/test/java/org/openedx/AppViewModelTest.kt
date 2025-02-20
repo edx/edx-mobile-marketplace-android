@@ -22,15 +22,15 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.app.AppAnalytics
-import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.AppViewModel
 import org.openedx.app.data.storage.PreferencesManager
+import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.room.AppDatabase
-import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.config.Config
 import org.openedx.core.config.FirebaseConfig
 import org.openedx.core.data.model.User
 import org.openedx.core.system.notifier.app.AppNotifier
+import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.utils.FileUtil
 
 @ExperimentalCoroutinesApi
@@ -55,6 +55,8 @@ class AppViewModelTest {
     @Before
     fun before() {
         Dispatchers.setMain(dispatcher)
+        every { analytics.logEvent(any(), any()) } returns Unit
+        every { preferencesManager.user } returns user
     }
 
     @After
@@ -65,7 +67,6 @@ class AppViewModelTest {
     @Test
     fun setIdSuccess() = runTest {
         every { analytics.setUserIdForSession(any()) } returns Unit
-        every { preferencesManager.user } returns user
         every { notifier.notifier } returns flow { }
         every { preferencesManager.canResetAppDirectory } returns false
         every { preferencesManager.pushToken } returns ""
@@ -98,7 +99,6 @@ class AppViewModelTest {
         }
         every { preferencesManager.clear() } returns Unit
         every { analytics.setUserIdForSession(any()) } returns Unit
-        every { preferencesManager.user } returns user
         every { room.clearAllTables() } returns Unit
         every { analytics.logoutEvent(true) } returns Unit
         every { preferencesManager.canResetAppDirectory } returns false
@@ -135,7 +135,6 @@ class AppViewModelTest {
         }
         every { preferencesManager.clear() } returns Unit
         every { analytics.setUserIdForSession(any()) } returns Unit
-        every { preferencesManager.user } returns user
         every { room.clearAllTables() } returns Unit
         every { analytics.logoutEvent(true) } returns Unit
         every { preferencesManager.canResetAppDirectory } returns false
@@ -163,7 +162,7 @@ class AppViewModelTest {
         verify(exactly = 1) { analytics.logoutEvent(true) }
         verify(exactly = 1) { preferencesManager.clear() }
         verify(exactly = 1) { analytics.setUserIdForSession(any()) }
-        verify(exactly = 1) { preferencesManager.user }
+        verify(exactly = 2) { preferencesManager.user }
         verify(exactly = 1) { room.clearAllTables() }
         verify(exactly = 1) { analytics.logoutEvent(true) }
     }

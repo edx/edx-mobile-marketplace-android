@@ -92,6 +92,10 @@ class PushManager(
         )
     }
 
+    override suspend fun markNotificationAsRead(notificationId: Int) {
+        interactor.markNotificationAsRead(notificationId)
+    }
+
     companion object {
         const val PRIMER_MAX_DISMISSAL_COUNT = 3
         const val PRIMER_INITIAL_RESHOW_DAYS = 7

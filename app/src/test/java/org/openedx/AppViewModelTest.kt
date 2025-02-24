@@ -22,15 +22,16 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.app.AppAnalytics
-import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.AppViewModel
 import org.openedx.app.data.storage.PreferencesManager
+import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.room.AppDatabase
-import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.config.Config
 import org.openedx.core.config.FirebaseConfig
 import org.openedx.core.data.model.User
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.app.AppNotifier
+import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.utils.FileUtil
 
 @ExperimentalCoroutinesApi
@@ -49,6 +50,7 @@ class AppViewModelTest {
     private val fileUtil = mockk<FileUtil>()
     private val deepLinkRouter = mockk<DeepLinkRouter>()
     private val context = mockk<Context>()
+    private val pushManager = mockk<PushGlobalManager>()
 
     private val user = User(0, "", "", "")
 
@@ -79,7 +81,8 @@ class AppViewModelTest {
             analytics,
             deepLinkRouter,
             fileUtil,
-            context
+            context,
+            pushManager,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -114,7 +117,8 @@ class AppViewModelTest {
             analytics,
             deepLinkRouter,
             fileUtil,
-            context
+            context,
+            pushManager,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -151,7 +155,8 @@ class AppViewModelTest {
             analytics,
             deepLinkRouter,
             fileUtil,
-            context
+            context,
+            pushManager,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()

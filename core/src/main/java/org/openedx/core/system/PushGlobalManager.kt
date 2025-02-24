@@ -7,4 +7,6 @@ interface PushGlobalManager {
     suspend fun getUnreadNotificationsCount(): Int
 
     fun showNotificationsPrimer(context: Context, fragmentManager: FragmentManager)
+
+    suspend fun markNotificationAsRead(notificationId: Int)
 }

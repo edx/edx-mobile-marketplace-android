@@ -20,11 +20,12 @@ import org.openedx.core.SingleEventLiveData
 import org.openedx.core.config.Config
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.FileUtil
-
+import org.openedx.core.utils.Logger
 
 @SuppressLint("StaticFieldLeak")
 class AppViewModel(
@@ -36,8 +37,11 @@ class AppViewModel(
     private val analytics: AppAnalytics,
     private val deepLinkRouter: DeepLinkRouter,
     private val fileUtil: FileUtil,
-    private val context: Context
+    private val context: Context,
+    private val pushManager: PushGlobalManager,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _logoutUser = SingleEventLiveData<Unit>()
     val logoutUser: LiveData<Unit>
@@ -119,5 +123,19 @@ class AppViewModel(
                 notificationManager.cancelAll()
             }
         }
+    }
+
+    fun markNotificationAsRead(notificationId: Int?) {
+        viewModelScope.launch {
+            try {
+                notificationId?.let { pushManager.markNotificationAsRead(it) }
+            } catch (e: Exception) {
+                logger.e(throwable = e, submitCrashReport = true)
+            }
+        }
+    }
+
+    companion object {
+        private const val TAG = "AppViewModel"
     }
 }

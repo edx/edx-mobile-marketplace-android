@@ -1,257 +1,127 @@
 package org.openedx.course.presentation.unit.video
 
-import android.annotation.SuppressLint
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.view.View
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.FrameLayout
-import androidx.core.os.bundleOf
-import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.Fragment
-import androidx.media3.common.C
-import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackParameters
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.viewModels
 import androidx.media3.common.Player
-import androidx.media3.common.Tracks
-import androidx.media3.common.util.Clock
-import androidx.media3.exoplayer.DefaultLoadControl
-import androidx.media3.exoplayer.DefaultRenderersFactory
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
-import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
-import androidx.media3.extractor.DefaultExtractorsFactory
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.PlayerView
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.domain.model.VideoQuality
-import org.openedx.core.extension.objectToString
-import org.openedx.core.extension.requestApplyInsetsWhenAttached
-import org.openedx.core.extension.stringToObject
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
-import org.openedx.core.presentation.global.viewBinding
-import org.openedx.course.R
-import org.openedx.course.databinding.FragmentVideoFullScreenBinding
+import org.openedx.core.ui.theme.OpenEdXTheme
+import org.openedx.core.R as CoreR
 
-class VideoFullScreenFragment : Fragment(R.layout.fragment_video_full_screen) {
+class VideoFullScreenFragment : DialogFragment() {
 
-    private val binding by viewBinding(FragmentVideoFullScreenBinding::bind)
-    private val viewModel by viewModel<VideoViewModel> {
-        parametersOf(
-            requireArguments().getString(ARG_COURSE_ID, ""),
-            requireArguments().getString(ARG_BLOCK_ID, "")
-        )
-    }
+    private val viewModel: EncodedVideoUnitViewModel by viewModels({ requireParentFragment() })
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
-
-    private var exoPlayer: ExoPlayer? = null
-    private var blockId = ""
     private val exoPlayerListener = object : Player.Listener {
-        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-            super.onPlayWhenReadyChanged(playWhenReady, reason)
-            viewModel.isPlaying = playWhenReady
-        }
-
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
             if (playbackState == Player.STATE_ENDED) {
                 if (!appReviewManager.isDialogShowed) {
                     appReviewManager.tryToOpenRateDialog()
                 }
-                viewModel.markBlockCompleted(blockId)
+                viewModel.markBlockCompleted(viewModel.blockId)
+            }
+        }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ) = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        setContent {
+            OpenEdXTheme {
+                PlayerComposeView()
             }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel.videoUrl = requireArguments().getString(ARG_BLOCK_VIDEO_URL, "")
-        blockId = requireArguments().getString(ARG_BLOCK_ID, "")
-        if (viewModel.currentVideoTime == 0L) {
-            viewModel.currentVideoTime = requireArguments().getLong(ARG_VIDEO_TIME, 0)
-        }
-        if (viewModel.videoDuration == 0L) {
-            viewModel.videoDuration = requireArguments().getLong(ARG_VIDEO_DURATION, 0)
-        }
-        if (viewModel.isPlaying == null) {
-            viewModel.isPlaying = requireArguments().getBoolean(ARG_IS_PLAYING)
-        }
-        viewModel.transcripts = stringToObject<Map<String, String>>(
-            requireArguments().getString(ARG_TRANSCRIPTS, "")
-        ) ?: emptyMap()
+        setStyle(STYLE_NO_FRAME, CoreR.style.Theme_OpenEdX_Dialog_FullScreen)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.root.setOnApplyWindowInsetsListener { _, insets ->
-            val insetsCompat = WindowInsetsCompat.toWindowInsetsCompat(insets)
-                .getInsets(WindowInsetsCompat.Type.systemBars())
-
-            val statusBarParams = binding.playerView.layoutParams as FrameLayout.LayoutParams
-            statusBarParams.topMargin = insetsCompat.top
-            statusBarParams.bottomMargin = insetsCompat.bottom
-            statusBarParams.marginStart = insetsCompat.left
-            statusBarParams.marginEnd = insetsCompat.right
-            binding.playerView.layoutParams = statusBarParams
-            insets
+    override fun onStart() {
+        super.onStart()
+        dialog?.window?.apply {
+            setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            statusBarColor = Color.BLACK
+            navigationBarColor = Color.BLACK
+            WindowCompat.getInsetsController(this, this.decorView).apply {
+                isAppearanceLightStatusBars = false
+                isAppearanceLightNavigationBars = false
+            }
+            setBackgroundDrawable(ColorDrawable(Color.BLACK))
+            attributes = attributes.apply { dimAmount = 0f }
         }
-        binding.root.requestApplyInsetsWhenAttached()
-        initPlayer()
     }
 
-    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-    private fun initPlayer() {
-        with(binding) {
-            if (exoPlayer == null) {
-                val videoQuality = viewModel.getVideoQuality()
-                val params = DefaultTrackSelector.Parameters.Builder(requireContext())
-                    .apply {
-                        if (videoQuality != VideoQuality.AUTO) {
-                            setMaxVideoSize(videoQuality.width, videoQuality.height)
-                            setViewportSize(videoQuality.width, videoQuality.height, false)
-                        }
-                    }
-                    .build()
-
-                val factory = AdaptiveTrackSelection.Factory()
-                val selector = DefaultTrackSelector(requireContext(), factory)
-                selector.parameters = params
-
-                exoPlayer = ExoPlayer.Builder(
-                    requireContext(),
-                    DefaultRenderersFactory(requireContext()),
-                    DefaultMediaSourceFactory(requireContext(), DefaultExtractorsFactory()),
-                    selector,
-                    DefaultLoadControl(),
-                    DefaultBandwidthMeter.getSingletonInstance(requireContext()),
-                    DefaultAnalyticsCollector(Clock.DEFAULT)
-                ).build().apply {
-                    setPlaybackSpeed(viewModel.videoSettings.videoPlaybackSpeed.speedValue)
-                }
+    @androidx.annotation.OptIn(UnstableApi::class)
+    @Composable
+    private fun PlayerComposeView() {
+        val currentView = LocalView.current
+        DisposableEffect(Unit) {
+            onDispose {
+                currentView.keepScreenOn = false
+                viewModel.leaveFullscreen()
             }
-            playerView.player = exoPlayer
-            playerView.setShowNextButton(false)
-            playerView.setShowPreviousButton(false)
-            playerView.setShowSubtitleButton(true)
-            val mediaItem = MediaItem.Builder()
-                .setUri(viewModel.videoUrl)
-                .setSubtitleConfigurations(viewModel.subtitleConfigurations)
-                .build()
-            exoPlayer?.setMediaItem(mediaItem, viewModel.currentVideoTime)
-            exoPlayer?.prepare()
-            exoPlayer?.playWhenReady = viewModel.isPlaying ?: false
-
-            playerView.setFullscreenButtonClickListener { _ ->
-                requireActivity().supportFragmentManager.popBackStackImmediate()
-            }
-
-            exoPlayer?.addListener(object : Player.Listener {
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    super.onIsPlayingChanged(isPlaying)
-                    viewModel.logPlayPauseEvent(
-                        viewModel.videoUrl,
-                        isPlaying,
-                        viewModel.currentVideoTime,
-                        viewModel.videoDuration,
-                    )
-                }
-
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    super.onPlaybackStateChanged(playbackState)
-                    if (playbackState == Player.STATE_ENDED) {
-                        viewModel.markBlockCompleted(blockId)
+        }
+        AndroidView(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding(),
+            factory = {
+                currentView.keepScreenOn = true
+                PlayerView(it).apply {
+                    player = viewModel.exoPlayer
+                    setShowNextButton(false)
+                    setShowPreviousButton(false)
+                    setShowSubtitleButton(true)
+                    setFullscreenButtonClickListener { _ ->
+                        dismiss()
                     }
                 }
-
-                override fun onTracksChanged(tracks: Tracks) {
-                    super.onTracksChanged(tracks)
-                    viewModel.selectedLanguage = tracks.groups
-                        .firstOrNull { it.isSelected && it.type == C.TRACK_TYPE_TEXT }
-                        ?.getTrackFormat(0)
-                        ?.language ?: ""
-
-                    playerView.hideController()
-                }
-
-                override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-                    super.onPlaybackParametersChanged(playbackParameters)
-                    val oldSpeed = viewModel.videoSettings.videoPlaybackSpeed.speedValue
-                    viewModel.setVideoPlaybackSpeed(playbackParameters.speed)
-                    viewModel.logVideoSpeedEvent(
-                        viewModel.videoUrl,
-                        oldSpeed,
-                        playbackParameters.speed,
-                        viewModel.currentVideoTime,
-                        viewModel.videoDuration,
-                    )
-                }
-            })
-        }
-    }
-
-    private fun releasePlayer() {
-        exoPlayer?.stop()
-        exoPlayer?.release()
-        exoPlayer = null
+            },
+        )
     }
 
     override fun onPause() {
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        exoPlayer?.removeListener(exoPlayerListener)
-        exoPlayer?.pause()
+        viewModel.exoPlayer?.removeListener(exoPlayerListener)
+        if (!requireActivity().isChangingConfigurations) {
+            viewModel.exoPlayer?.pause()
+        }
         super.onPause()
-    }
-
-    override fun onDestroyView() {
-        viewModel.currentVideoTime = exoPlayer?.currentPosition ?: C.TIME_UNSET
-        viewModel.sendTime()
-        super.onDestroyView()
-    }
-
-
-    @SuppressLint("SourceLockedOrientationActivity")
-    override fun onDestroy() {
-        releasePlayer()
-        super.onDestroy()
     }
 
     override fun onResume() {
         super.onResume()
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        exoPlayer?.addListener(exoPlayerListener)
+        viewModel.exoPlayer?.addListener(exoPlayerListener)
     }
 
     companion object {
-        private const val ARG_BLOCK_VIDEO_URL = "blockVideoUrl"
-        private const val ARG_VIDEO_TIME = "videoTime"
-        private const val ARG_VIDEO_DURATION = "videoDuration"
-        private const val ARG_BLOCK_ID = "blockId"
-        private const val ARG_COURSE_ID = "courseId"
-        private const val ARG_IS_PLAYING = "isPlaying"
-        private const val ARG_TRANSCRIPTS = "transcripts"
-
-        fun newInstance(
-            videoUrl: String,
-            videoTime: Long,
-            videoDuration: Long,
-            blockId: String,
-            courseId: String,
-            isPlaying: Boolean,
-            transcripts: Map<String, String>,
-        ): VideoFullScreenFragment {
-            val fragment = VideoFullScreenFragment()
-            fragment.arguments = bundleOf(
-                ARG_BLOCK_VIDEO_URL to videoUrl,
-                ARG_VIDEO_TIME to videoTime,
-                ARG_VIDEO_DURATION to videoDuration,
-                ARG_BLOCK_ID to blockId,
-                ARG_COURSE_ID to courseId,
-                ARG_IS_PLAYING to isPlaying,
-                ARG_TRANSCRIPTS to objectToString(transcripts),
-            )
-            return fragment
-        }
+        const val TAG = "VideoFullScreenFragment"
+        fun newInstance() = VideoFullScreenFragment()
     }
 }

@@ -14,13 +14,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.cast.SessionAvailabilityListener
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.window.layout.WindowMetricsCalculator
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -38,8 +37,6 @@ import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
 import org.openedx.course.databinding.FragmentVideoUnitBinding
 import org.openedx.course.presentation.CourseAnalyticsEvent
-import org.openedx.course.presentation.CourseAnalyticsKey
-import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
 import kotlin.math.roundToInt
@@ -53,7 +50,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             requireArguments().getString(ARG_BLOCK_ID, ""),
         )
     }
-    private val router by inject<CourseRouter>()
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
 
     private var windowSize: WindowSize? = null
@@ -166,47 +162,33 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
         }
 
-        viewModel.isVideoEnded.observe(viewLifecycleOwner) { isVideoEnded ->
-            if (isVideoEnded && !appReviewManager.isDialogShowed) {
+        viewModel.state.onEach {
+            if (it.isVideoEnded && !appReviewManager.isDialogShowed) {
                 appReviewManager.tryToOpenRateDialog()
             }
-        }
+        }.launchIn(lifecycleScope)
     }
 
     @androidx.annotation.OptIn(UnstableApi::class)
     private fun initPlayer() {
         with(binding) {
+            playerView.player = null
             playerView.player = viewModel.getActivePlayer()
             playerView.setShowNextButton(false)
             playerView.setShowPreviousButton(false)
             showVideoControllerIndefinitely(false)
-
-            val movieMetadata = MediaMetadata.Builder()
-                .setMediaType(MediaMetadata.MEDIA_TYPE_MOVIE)
-                .build()
-            val mediaItem = MediaItem.Builder().setMediaMetadata(movieMetadata)
-                .setUri(viewModel.videoUrl)
-                .setMimeType("video/*")
-                .build()
-
-            if (!viewModel.isPlayerSetUp) {
-                setPlayerMedia(mediaItem)
-                viewModel.getActivePlayer()?.prepare()
-                viewModel.getActivePlayer()?.playWhenReady = viewModel.isPlaying && isResumed
-                viewModel.isPlayerSetUp = true
-            }
-            viewModel.getActivePlayer()?.seekTo(viewModel.getCurrentVideoTime())
-
+            viewModel.applyPlayerMedia()
+            viewModel.exoPlayer?.playWhenReady = viewModel.isPlaying
             viewModel.castPlayer?.setSessionAvailabilityListener(
                 object : SessionAvailabilityListener {
                     override fun onCastSessionAvailable() {
                         viewModel.logCastConnection(CourseAnalyticsEvent.CAST_CONNECTED)
-                        viewModel.isCastActive = true
+                        viewModel.changeCastState(true)
                         viewModel.exoPlayer?.pause()
                         playerView.player = viewModel.castPlayer
                         viewModel.castPlayer?.setMediaItem(
-                            mediaItem,
-                            viewModel.exoPlayer?.currentPosition ?: 0L
+                            viewModel.getMediaItem(),
+                            viewModel.getCurrentVideoTime()
                         )
                         viewModel.castPlayer?.playWhenReady = true
                         showVideoControllerIndefinitely(true)
@@ -214,7 +196,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
                     override fun onCastSessionUnavailable() {
                         viewModel.logCastConnection(CourseAnalyticsEvent.CAST_DISCONNECTED)
-                        viewModel.isCastActive = false
+                        viewModel.changeCastState(false)
                         playerView.player = viewModel.exoPlayer
                         viewModel.exoPlayer?.seekTo(viewModel.castPlayer?.currentPosition ?: 0L)
                         viewModel.castPlayer?.stop()
@@ -225,19 +207,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             )
 
             playerView.setFullscreenButtonClickListener {
-                if (viewModel.isCastActive)
-                    return@setFullscreenButtonClickListener
-
-                router.navigateToFullScreenVideo(
-                    requireActivity().supportFragmentManager,
-                    viewModel.videoUrl,
-                    viewModel.exoPlayer?.currentPosition ?: 0L,
-                    viewModel.exoPlayer?.duration?: 0L,
-                    viewModel.blockId,
-                    viewModel.courseId,
-                    viewModel.isPlaying,
-                    viewModel.transcripts,
-                )
+                if (viewModel.enterFullscreen()) {
+                    VideoFullScreenFragment.newInstance().show(childFragmentManager, VideoFullScreenFragment.TAG)
+                }
             }
         }
     }
@@ -256,7 +228,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onDestroy() {
         if (!requireActivity().isChangingConfigurations) {
             viewModel.releasePlayers()
-            viewModel.isPlayerSetUp = false
         }
         handler.removeCallbacks(videoTimeRunnable)
         super.onDestroy()
@@ -271,21 +242,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         } else {
             binding.playerView.controllerAutoShow = true
             binding.playerView.controllerShowTimeoutMs = 2000
-        }
-    }
-
-    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-    private fun setPlayerMedia(mediaItem: MediaItem) {
-        if (viewModel.videoUrl.endsWith(".m3u8")) {
-            val factory = DefaultDataSource.Factory(requireContext())
-            val mediaSource: HlsMediaSource =
-                HlsMediaSource.Factory(factory).createMediaSource(mediaItem)
-            viewModel.exoPlayer?.setMediaSource(mediaSource, viewModel.getCurrentVideoTime())
-        } else {
-            viewModel.getActivePlayer()?.setMediaItem(
-                mediaItem,
-                viewModel.getCurrentVideoTime()
-            )
         }
     }
 

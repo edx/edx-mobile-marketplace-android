@@ -21,11 +21,13 @@ class NotificationsPrimerViewModel(
     fun enableDiscussionNotificationsPreference() {
         viewModelScope.launch {
             try {
+                _uiState.value = PrimerUIState.Loading
                 interactor.updateNotificationsConfiguration(true)
                 resetNotificationsPrimerConfiguration()
-                _uiState.value = PrimerUIState.DismissDialog
             } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                _uiState.value = PrimerUIState.DismissDialog
             }
         }
     }

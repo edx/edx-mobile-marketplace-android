@@ -52,7 +52,11 @@ import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.Logger
 import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
+import org.openedx.dashboard.presentation.DashboardAnalytics
+import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
+import org.openedx.dashboard.presentation.DashboardAnalyticsKey
 import org.openedx.dashboard.presentation.DashboardRouter
+import org.openedx.dashboard.presentation.PrimaryCourseCardAction
 
 @SuppressLint("StaticFieldLeak")
 class DashboardGalleryViewModel(
@@ -69,6 +73,7 @@ class DashboardGalleryViewModel(
     private val appNotifier: AppNotifier,
     private val iapInteractor: IAPInteractor,
     private val windowSize: WindowSize,
+    private val analytics: DashboardAnalytics,
     iapAnalytics: IAPAnalytics,
 ) : BaseViewModel() {
 
@@ -188,6 +193,7 @@ class DashboardGalleryViewModel(
 
     fun navigateToAllEnrolledCourses(fragmentManager: FragmentManager) {
         dashboardRouter.navigateToAllEnrolledCourses(fragmentManager)
+        logEvent(DashboardAnalyticsEvent.VIEW_ALL_COURSES_CLICKED)
     }
 
     fun navigateToCourseOutline(
@@ -195,6 +201,7 @@ class DashboardGalleryViewModel(
         enrolledCourse: EnrolledCourse,
         openDates: Boolean = false,
         resumeBlockId: String = "",
+        action: DashboardGalleryScreenAction,
     ) {
         dashboardRouter.navigateToCourseOutline(
             fm = fragmentManager,
@@ -203,7 +210,56 @@ class DashboardGalleryViewModel(
             openTab = if (openDates) CourseTab.DATES.name else CourseTab.HOME.name,
             resumeBlockId = resumeBlockId
         )
+        logDashboardGalleryActionEvent(
+            courseId = enrolledCourse.course.id,
+            resumeBlockId = resumeBlockId,
+            action = action
+        )
     }
+
+    private fun logDashboardGalleryActionEvent(
+        courseId: String,
+        resumeBlockId: String,
+        action: DashboardGalleryScreenAction,
+    ) {
+        when (action) {
+            is DashboardGalleryScreenAction.OpenCourse -> {
+                if (action.isPrimaryCourse) {
+                    logPrimaryCourseCardClicked(
+                        courseId,
+                        PrimaryCourseCardAction.CARD,
+                    )
+                } else {
+                    logSecondaryCourseCardClicked(courseId)
+                }
+            }
+
+            is DashboardGalleryScreenAction.OpenBlock -> {
+                logPrimaryCourseCardClicked(
+                    courseId,
+                    PrimaryCourseCardAction.RESUME_COURSE,
+                    resumeBlockId
+                )
+            }
+
+            is DashboardGalleryScreenAction.NavigateToDates -> {
+                if (action.isPastAssignment) {
+                    logPrimaryCourseCardClicked(
+                        courseId,
+                        PrimaryCourseCardAction.PAST_ASSIGNMENT
+                    )
+                } else {
+                    logPrimaryCourseCardClicked(
+                        courseId,
+                        PrimaryCourseCardAction.UPCOMING_ASSIGNMENT
+                    )
+                }
+            }
+
+            else -> {}
+        }
+    }
+
 
     fun processIAPAction(
         fragmentManager: FragmentManager,
@@ -224,6 +280,10 @@ class DashboardGalleryViewModel(
                     ).show(
                         fragmentManager,
                         IAPDialogFragment.TAG
+                    )
+                    logPrimaryCourseCardClicked(
+                        courseId = course.course.id,
+                        action = PrimaryCourseCardAction.UPGRADE_VALUE_PROP
                     )
                 }
             }
@@ -331,6 +391,43 @@ class DashboardGalleryViewModel(
         viewModelScope.launch {
             _iapUiState.emit(null)
         }
+    }
+
+    private fun logPrimaryCourseCardClicked(
+        courseId: String,
+        action: PrimaryCourseCardAction,
+        resumeBlockId: String? = null
+    ) {
+        logEvent(
+            event = DashboardAnalyticsEvent.PRIMARY_COURSE_CARD_CLICKED,
+            params = buildMap {
+                put(DashboardAnalyticsKey.COURSE_ID.key, courseId)
+                put(DashboardAnalyticsKey.ACTION.key, action.action)
+                resumeBlockId?.let { put(DashboardAnalyticsKey.BLOCK_ID.key, it) }
+            }
+        )
+    }
+
+    private fun logSecondaryCourseCardClicked(courseId: String) {
+        logEvent(
+            event = DashboardAnalyticsEvent.SECONDARY_COURSE_CARD_CLICKED,
+            params = buildMap {
+                put(DashboardAnalyticsKey.COURSE_ID.key, courseId)
+            }
+        )
+    }
+
+    private fun logEvent(
+        event: DashboardAnalyticsEvent,
+        params: Map<String, Any?> = mutableMapOf(),
+    ) {
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(DashboardAnalyticsKey.NAME.key, event.biValue)
+                putAll(params)
+            }
+        )
     }
 
     companion object {

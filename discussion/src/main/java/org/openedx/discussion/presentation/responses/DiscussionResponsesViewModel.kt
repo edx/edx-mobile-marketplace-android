@@ -197,12 +197,9 @@ class DiscussionResponsesViewModel(
 
                 comment = comment.copy(childCount = comment.childCount + 1)
                 sendUpdatedComment()
-                if (page == -1) {
-                    comments.add(response)
-                } else {
-                    _uiMessage.value =
-                        UIMessage.ToastMessage(resourceManager.getString(org.openedx.discussion.R.string.discussion_comment_added))
-                }
+
+                comments.add(0, response)
+
                 _uiState.value =
                     DiscussionResponsesUIState.Success(comment, comments.toList())
                 logCommentAddedEvent(

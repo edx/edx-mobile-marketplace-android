@@ -417,6 +417,7 @@ private fun DiscussionThreadsScreen(
                         }
                         coroutine.launch {
                             bottomSheetScaffoldState.hide()
+                            scrollState.animateScrollToItem(index = 0)
                         }
                     },
                     searchValueChanged = {

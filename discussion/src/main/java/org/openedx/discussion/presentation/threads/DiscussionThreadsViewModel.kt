@@ -38,7 +38,8 @@ class DiscussionThreadsViewModel(
     analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, "", analytics) {
 
-    private val _uiState = MutableLiveData<DiscussionThreadsUIState>()
+    private val _uiState =
+        MutableLiveData<DiscussionThreadsUIState>(DiscussionThreadsUIState.Loading)
     val uiState: LiveData<DiscussionThreadsUIState>
         get() = _uiState
 
@@ -159,20 +160,16 @@ class DiscussionThreadsViewModel(
     }
 
     fun sortThreads(orderBy: String) {
-        if (lastOrderBy != orderBy) {
-            lastOrderBy = orderBy
-            threadsList.clear()
-            nextPage = 1
-        }
+        lastOrderBy = orderBy
+        threadsList.clear()
+        nextPage = 1
         loadThreads()
     }
 
     fun filterThreads(filter: String?) {
-        if (filterType != filter || filterType.isNullOrEmpty()) {
-            threadsList.clear()
-            nextPage = 1
-        }
         filterType = filter.takeUnless { it == FilterType.ALL_POSTS.value }
+        threadsList.clear()
+        nextPage = 1
         loadThreads()
     }
 

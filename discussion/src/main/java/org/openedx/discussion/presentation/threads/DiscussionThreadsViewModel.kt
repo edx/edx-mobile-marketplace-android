@@ -124,19 +124,7 @@ class DiscussionThreadsViewModel(
     }
 
     private fun internalLoadThreads() {
-        when (threadType) {
-            DiscussionTopicsViewModel.ALL_POSTS -> {
-                getAllThreads()
-            }
-
-            DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
-                getFollowingThreads()
-            }
-
-            DiscussionTopicsViewModel.TOPIC -> {
-                getThreads()
-            }
-        }
+        getThreads()
     }
 
     fun filterThreads(filter: String?) {
@@ -149,81 +137,30 @@ class DiscussionThreadsViewModel(
         } else {
             filter
         }
-        when (threadType) {
-            DiscussionTopicsViewModel.ALL_POSTS -> {
-                getAllThreads()
-            }
-
-            DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
-                getFollowingThreads()
-            }
-
-            DiscussionTopicsViewModel.TOPIC -> {
-                getThreads()
-            }
-        }
+        getThreads()
     }
 
     private fun getThreads() {
         viewModelScope.launch {
             try {
-                val response =
-                    interactor.getThreads(courseId, topicId, lastOrderBy, filterType, nextPage)
-                if (response.pagination.next.isNotEmpty()) {
-                    _canLoadMore.value = true
-                    nextPage++
-                } else {
-                    _canLoadMore.value = false
-                    nextPage = -1
-                }
-                threadsList.addAll(response.results)
-                _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
-            } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
-                } else {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
-                }
-            }
-            _isUpdating.value = false
-            isLoading = false
-        }
-    }
+                val response = when (threadType) {
+                    DiscussionTopicsViewModel.ALL_POSTS -> {
+                        interactor.getAllThreads(courseId, lastOrderBy, filterType, nextPage)
+                    }
 
-    private fun getAllThreads() {
-        viewModelScope.launch {
-            try {
-                val response = interactor.getAllThreads(courseId, lastOrderBy, filterType, nextPage)
-                if (response.pagination.next.isNotEmpty()) {
-                    _canLoadMore.value = true
-                    nextPage++
-                } else {
-                    _canLoadMore.value = false
-                    nextPage = -1
-                }
-                threadsList.addAll(response.results)
-                _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
-            } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
-                } else {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
-                }
-            }
-            _isUpdating.value = false
-            isLoading = false
-        }
-    }
+                    DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
+                        interactor.getFollowingThreads(courseId, true, lastOrderBy, nextPage)
+                    }
 
-    private fun getFollowingThreads() {
-        viewModelScope.launch {
-            try {
-                val response =
-                    interactor.getFollowingThreads(courseId, true, lastOrderBy, page = nextPage)
+                    DiscussionTopicsViewModel.TOPIC -> {
+                        interactor.getThreads(courseId, topicId, lastOrderBy, filterType, nextPage)
+                    }
+
+                    else -> {
+                        throw Exception("")
+                    }
+                }
+
                 if (response.pagination.next.isNotEmpty()) {
                     _canLoadMore.value = true
                     nextPage++

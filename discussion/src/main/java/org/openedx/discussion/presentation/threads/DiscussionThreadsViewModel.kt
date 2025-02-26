@@ -101,7 +101,6 @@ class DiscussionThreadsViewModel(
     }
 
     fun sortThreads(orderBy: String) {
-        _uiState.value = DiscussionThreadsUIState.Loading
         internalLoadThreads(orderBy)
     }
 

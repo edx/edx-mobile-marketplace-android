@@ -100,10 +100,6 @@ class DiscussionThreadsViewModel(
         logTopicScreenEvent(topicId)
     }
 
-    private fun internalLoadThreads() {
-        getThreads()
-    }
-
     private fun getThreads() {
         viewModelScope.launch {
             try {
@@ -151,7 +147,7 @@ class DiscussionThreadsViewModel(
     fun fetchMore() {
         if (!isLoading && nextPage != -1) {
             isLoading = true
-            internalLoadThreads()
+            getThreads()
         }
     }
 
@@ -159,7 +155,7 @@ class DiscussionThreadsViewModel(
         _isUpdating.value = true
         threadsList.clear()
         nextPage = 1
-        internalLoadThreads()
+        getThreads()
     }
 
     fun sortThreads(orderBy: String) {
@@ -168,7 +164,7 @@ class DiscussionThreadsViewModel(
             threadsList.clear()
             nextPage = 1
         }
-        internalLoadThreads()
+        getThreads()
     }
 
     fun filterThreads(filter: String?) {

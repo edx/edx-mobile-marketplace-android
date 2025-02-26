@@ -42,12 +42,14 @@ import androidx.fragment.app.DialogFragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.OpenEdXTertiaryButton
+import org.openedx.core.ui.OpenEdxAlertDialog
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.notifications.R
 import org.openedx.notifications.utils.PermissionUtils
+import org.openedx.core.R as CoreR
 
 class NotificationsPrimerDialogFragment : DialogFragment() {
 
@@ -82,15 +84,11 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                                 viewModel.dismissDialog()
                             },
                             onNotifyClick = {
-                                viewModel.hideDialog()
                                 PermissionUtils.requestNotificationPermission(
                                     activity = requireActivity(),
                                     permissionLauncher = pushNotificationPermissionLauncher,
                                     onRationaleShown = {
-                                        PermissionUtils.navigateToNotificationSettings(
-                                            requireContext()
-                                        )
-                                        viewModel.dismissDialog()
+                                        viewModel.showRationalDialog()
                                     },
                                 )
                             },
@@ -113,9 +111,42 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                             CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                         }
                     }
+
+                    PrimerUIState.ShowRationalDialog -> {
+                        ShowRationalePermissionDialog(
+                            onNegativeButtonClick = {
+                                viewModel.dismissDialog()
+                            },
+
+                            onPositiveButtonClick = {
+                                PermissionUtils.navigateToNotificationSettings(
+                                    requireContext()
+                                )
+                                viewModel.dismissDialog()
+                            },
+                        )
+                    }
                 }
             }
         }
+    }
+
+    @Composable
+    private fun ShowRationalePermissionDialog(
+        onPositiveButtonClick: () -> Unit = {},
+        onNegativeButtonClick: () -> Unit = {},
+    ) {
+        OpenEdxAlertDialog(
+            title = stringResource(id = CoreR.string.core_permission_dialog_title),
+            message = stringResource(
+                id = CoreR.string.core_permission_dialog_message,
+                stringResource(id = R.string.notifications_notifications).lowercase()
+            ),
+            positiveBtnText = stringResource(id = CoreR.string.core_continue),
+            negativeBtnText = stringResource(id = CoreR.string.core_cancel),
+            positiveBtnAction = onPositiveButtonClick,
+            negativeBtnAction = onNegativeButtonClick,
+        )
     }
 }
 

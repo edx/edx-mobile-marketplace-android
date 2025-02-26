@@ -43,4 +43,8 @@ class NotificationsPrimerViewModel(
     fun dismissDialog() {
         _uiState.value = PrimerUIState.DismissDialog
     }
+
+    fun showRationalDialog() {
+        _uiState.value = PrimerUIState.ShowRationalDialog
+    }
 }

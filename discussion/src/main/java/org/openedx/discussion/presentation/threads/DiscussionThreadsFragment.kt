@@ -161,7 +161,7 @@ class DiscussionThreadsFragment : Fragment() {
                     viewType = viewType,
                     refreshing = refreshing,
                     onSwipeRefresh = {
-                        viewModel.refreshThreads(SortType.LAST_ACTIVITY_AT.queryParam)
+                        viewModel.refreshThreads()
                     },
                     updatedOrder = {
                         viewModel.sortThreads(it)

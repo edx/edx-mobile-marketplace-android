@@ -71,7 +71,7 @@ class DiscussionThreadsViewModel(
             notifier.notifier.collect {
                 if (it is DiscussionThreadAdded) {
                     if (lastOrderBy.isNotEmpty()) {
-                        refreshThreads(lastOrderBy)
+                        refreshThreads()
                     }
                 } else if (it is DiscussionThreadDataChanged) {
                     val index = threadsList.indexOfFirst { thread ->
@@ -101,42 +101,40 @@ class DiscussionThreadsViewModel(
     }
 
     fun sortThreads(orderBy: String) {
-        internalLoadThreads(orderBy)
+        if (lastOrderBy != orderBy) {
+            lastOrderBy = orderBy
+            threadsList.clear()
+            nextPage = 1
+        }
+        internalLoadThreads()
     }
 
-    fun refreshThreads(orderBy: String) {
+    fun refreshThreads() {
         _isUpdating.value = true
         threadsList.clear()
         nextPage = 1
-        internalLoadThreads(orderBy)
+        internalLoadThreads()
     }
 
     fun fetchMore() {
         if (!isLoading && nextPage != -1) {
             isLoading = true
-            internalLoadThreads(lastOrderBy)
+            internalLoadThreads()
         }
     }
 
-    private fun internalLoadThreads(orderBy: String) {
-        if (lastOrderBy != orderBy) {
-            threadsList.clear()
-            nextPage = 1
-        }
-        lastOrderBy = orderBy
+    private fun internalLoadThreads() {
         when (threadType) {
             DiscussionTopicsViewModel.ALL_POSTS -> {
-                getAllThreads(orderBy)
+                getAllThreads()
             }
 
             DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
-                getFollowingThreads(orderBy)
+                getFollowingThreads()
             }
 
             DiscussionTopicsViewModel.TOPIC -> {
-                getThreads(
-                    orderBy
-                )
+                getThreads()
             }
         }
     }
@@ -153,26 +151,24 @@ class DiscussionThreadsViewModel(
         }
         when (threadType) {
             DiscussionTopicsViewModel.ALL_POSTS -> {
-                getAllThreads(lastOrderBy)
+                getAllThreads()
             }
 
             DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
-                getFollowingThreads(lastOrderBy)
+                getFollowingThreads()
             }
 
             DiscussionTopicsViewModel.TOPIC -> {
-                getThreads(
-                    lastOrderBy
-                )
+                getThreads()
             }
         }
     }
 
-    private fun getThreads(orderBy: String) {
+    private fun getThreads() {
         viewModelScope.launch {
             try {
                 val response =
-                    interactor.getThreads(courseId, topicId, orderBy, filterType, nextPage)
+                    interactor.getThreads(courseId, topicId, lastOrderBy, filterType, nextPage)
                 if (response.pagination.next.isNotEmpty()) {
                     _canLoadMore.value = true
                     nextPage++
@@ -196,10 +192,10 @@ class DiscussionThreadsViewModel(
         }
     }
 
-    private fun getAllThreads(orderBy: String) {
+    private fun getAllThreads() {
         viewModelScope.launch {
             try {
-                val response = interactor.getAllThreads(courseId, orderBy, filterType, nextPage)
+                val response = interactor.getAllThreads(courseId, lastOrderBy, filterType, nextPage)
                 if (response.pagination.next.isNotEmpty()) {
                     _canLoadMore.value = true
                     nextPage++
@@ -223,11 +219,11 @@ class DiscussionThreadsViewModel(
         }
     }
 
-    private fun getFollowingThreads(orderBy: String) {
+    private fun getFollowingThreads() {
         viewModelScope.launch {
             try {
                 val response =
-                    interactor.getFollowingThreads(courseId, true, orderBy, page = nextPage)
+                    interactor.getFollowingThreads(courseId, true, lastOrderBy, page = nextPage)
                 if (response.pagination.next.isNotEmpty()) {
                     _canLoadMore.value = true
                     nextPage++

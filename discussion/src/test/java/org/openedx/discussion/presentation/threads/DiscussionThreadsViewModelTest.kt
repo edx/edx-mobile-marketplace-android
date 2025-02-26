@@ -479,7 +479,7 @@ class DiscussionThreadsViewModelTest {
             pushGlobalManager,
             analytics,
         )
-        viewModel.refreshThreads("")
+        viewModel.refreshThreads()
         advanceUntilIdle()
 
         coVerify(exactly = 2) { interactor.getThreads(any(), any(), any(), any(), any()) }
@@ -524,7 +524,7 @@ class DiscussionThreadsViewModelTest {
         lifecycleRegistry.addObserver(viewModel)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
 
-        viewModel.refreshThreads("date")
+        viewModel.refreshThreads()
         advanceUntilIdle()
 
         coVerify(exactly = 3) { interactor.getThreads(any(), any(), any(), any(), any()) }
@@ -564,7 +564,7 @@ class DiscussionThreadsViewModelTest {
         lifecycleRegistry.addObserver(viewModel)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
 
-        viewModel.refreshThreads("date")
+        viewModel.refreshThreads()
         advanceUntilIdle()
 
         coVerify(exactly = 2) { interactor.getThreads(any(), any(), any(), any(), any()) }

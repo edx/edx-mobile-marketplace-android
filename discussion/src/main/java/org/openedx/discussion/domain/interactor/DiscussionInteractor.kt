@@ -16,10 +16,9 @@ class DiscussionInteractor(
 
     suspend fun getFollowingThreads(
         courseId: String,
-        following: Boolean,
         orderBy: String,
         page: Int
-    ) = repository.getCourseThreads(courseId, following, null, orderBy, null, page)
+    ) = repository.getCourseThreads(courseId, true, null, orderBy, null, page)
 
     suspend fun getThreads(
         courseId: String,

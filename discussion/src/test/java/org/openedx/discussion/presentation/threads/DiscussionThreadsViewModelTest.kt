@@ -207,7 +207,6 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 any(),
                 any(),
-                any(),
                 any()
             )
         } throws UnknownHostException()
@@ -223,7 +222,7 @@ class DiscussionThreadsViewModelTest {
         )
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assertEquals(noInternet, message?.message)
@@ -247,13 +246,12 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 any(),
                 any(),
-                any(),
                 any()
             )
         } throws Exception()
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assertEquals(somethingWrong, message?.message)
@@ -267,7 +265,6 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 "",
                 any(),
-                any(),
                 range(1, 2)
             )
         } returns ThreadsData(
@@ -278,7 +275,6 @@ class DiscussionThreadsViewModelTest {
         coEvery {
             interactor.getFollowingThreads(
                 "",
-                any(),
                 any(),
                 eq(3)
             )
@@ -299,7 +295,7 @@ class DiscussionThreadsViewModelTest {
         )
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any()) }
 
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.isUpdating.value == false)

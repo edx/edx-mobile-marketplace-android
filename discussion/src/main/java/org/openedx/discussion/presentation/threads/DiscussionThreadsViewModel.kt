@@ -109,7 +109,7 @@ class DiscussionThreadsViewModel(
                     }
 
                     DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
-                        interactor.getFollowingThreads(courseId, true, lastOrderBy, nextPage)
+                        interactor.getFollowingThreads(courseId, lastOrderBy, nextPage)
                     }
 
                     DiscussionTopicsViewModel.TOPIC -> {

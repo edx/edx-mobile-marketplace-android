@@ -32,6 +32,7 @@ import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
@@ -59,45 +60,45 @@ class DiscussionThreadsViewModelTest {
 
     //region mockThread
 
-    val mockThread = org.openedx.discussion.domain.model.Thread(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        TextConverter.textToLinkedImageText(""),
-        false,
-        true,
-        20,
-        emptyList(),
-        false,
-        "",
-        "",
-        "",
-        "",
-        DiscussionType.DISCUSSION,
-        "",
-        "",
-        "Discussion title long Discussion title long good item",
-        true,
-        false,
-        true,
-        21,
-        4,
-        false,
-        false,
-        mapOf(),
-        0,
-        false,
-        false,
-        false,
+    private val mockThread = Thread(
+        id = "",
+        author = "",
+        authorLabel = "",
+        createdAt = "",
+        updatedAt = "",
+        rawBody = "",
+        renderedBody = "",
+        parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+        abuseFlagged = false,
+        voted = true,
+        voteCount = 20,
+        editableFields = emptyList(),
+        canDelete = false,
+        courseId = "",
+        topicId = "",
+        groupId = "",
+        groupName = "",
+        type = DiscussionType.DISCUSSION,
+        previewBody = "",
+        abuseFlaggedCount = "",
+        title = "Discussion title long Discussion title long good item",
+        pinned = true,
+        closed = false,
+        following = true,
+        commentCount = 21,
+        unreadCommentCount = 4,
+        read = false,
+        hasEndorsed = false,
+        users = mapOf(),
+        responseCount = 10,
+        anonymous = false,
+        anonymousToPeers = false,
+        isAuthor = false,
     )
 
     //endregion
 
-    private val threads = listOf<org.openedx.discussion.domain.model.Thread>(
+    private val threads = listOf(
         mockThread.copy(id = "0"),
         mockThread.copy(id = "1"),
         mockThread.copy(id = "2")
@@ -207,7 +208,6 @@ class DiscussionThreadsViewModelTest {
                 any(),
                 any(),
                 any(),
-                any(),
                 any()
             )
         } throws UnknownHostException()
@@ -223,7 +223,7 @@ class DiscussionThreadsViewModelTest {
         )
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assertEquals(noInternet, message?.message)
@@ -248,13 +248,12 @@ class DiscussionThreadsViewModelTest {
                 any(),
                 any(),
                 any(),
-                any(),
                 any()
             )
         } throws Exception()
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assertEquals(somethingWrong, message?.message)
@@ -269,7 +268,6 @@ class DiscussionThreadsViewModelTest {
                 "",
                 any(),
                 any(),
-                null,
                 range(1, 2)
             )
         } returns ThreadsData(
@@ -282,7 +280,6 @@ class DiscussionThreadsViewModelTest {
                 "",
                 any(),
                 any(),
-                null,
                 eq(3)
             )
         } returns ThreadsData(
@@ -302,7 +299,7 @@ class DiscussionThreadsViewModelTest {
         )
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any()) }
 
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.isUpdating.value == false)

@@ -60,7 +60,7 @@ class DiscussionThreadsViewModel(
     private val threadsList = mutableListOf<org.openedx.discussion.domain.model.Thread>()
     private var nextPage = 1
     private var isLoading = false
-    private var lastOrderBy = ""
+    private var lastOrderBy = SortType.LAST_ACTIVITY_AT.queryParam
     private var filterType: String? = null
 
     private var isBlockAlreadyCompleted = false
@@ -96,47 +96,11 @@ class DiscussionThreadsViewModel(
     }
 
     init {
-        sortThreads(SortType.LAST_ACTIVITY_AT.queryParam)
+        getThreads()
         logTopicScreenEvent(topicId)
     }
 
-    fun sortThreads(orderBy: String) {
-        if (lastOrderBy != orderBy) {
-            lastOrderBy = orderBy
-            threadsList.clear()
-            nextPage = 1
-        }
-        internalLoadThreads()
-    }
-
-    fun refreshThreads() {
-        _isUpdating.value = true
-        threadsList.clear()
-        nextPage = 1
-        internalLoadThreads()
-    }
-
-    fun fetchMore() {
-        if (!isLoading && nextPage != -1) {
-            isLoading = true
-            internalLoadThreads()
-        }
-    }
-
     private fun internalLoadThreads() {
-        getThreads()
-    }
-
-    fun filterThreads(filter: String?) {
-        if (filterType != filter || (filter != FilterType.ALL_POSTS.value && filterType.isNullOrEmpty())) {
-            threadsList.clear()
-            nextPage = 1
-        }
-        filterType = if (filter == FilterType.ALL_POSTS.value) {
-            null
-        } else {
-            filter
-        }
         getThreads()
     }
 
@@ -182,6 +146,42 @@ class DiscussionThreadsViewModel(
             _isUpdating.value = false
             isLoading = false
         }
+    }
+
+    fun fetchMore() {
+        if (!isLoading && nextPage != -1) {
+            isLoading = true
+            internalLoadThreads()
+        }
+    }
+
+    fun refreshThreads() {
+        _isUpdating.value = true
+        threadsList.clear()
+        nextPage = 1
+        internalLoadThreads()
+    }
+
+    fun sortThreads(orderBy: String) {
+        if (lastOrderBy != orderBy) {
+            lastOrderBy = orderBy
+            threadsList.clear()
+            nextPage = 1
+        }
+        internalLoadThreads()
+    }
+
+    fun filterThreads(filter: String?) {
+        if (filterType != filter || (filter != FilterType.ALL_POSTS.value && filterType.isNullOrEmpty())) {
+            threadsList.clear()
+            nextPage = 1
+        }
+        filterType = if (filter == FilterType.ALL_POSTS.value) {
+            null
+        } else {
+            filter
+        }
+        getThreads()
     }
 
     fun markBlockCompleted(blockId: String) {

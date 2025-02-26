@@ -96,31 +96,14 @@ class DiscussionThreadsViewModel(
     }
 
     init {
-        internalLoadThreads()
+        loadThreads()
         logTopicScreenEvent(topicId)
     }
 
-    private fun internalLoadThreads() {
+    private fun loadThreads() {
         viewModelScope.launch {
             try {
-                val response = when (threadType) {
-                    DiscussionTopicsViewModel.ALL_POSTS -> {
-                        interactor.getAllThreads(courseId, lastOrderBy, filterType, nextPage)
-                    }
-
-                    DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
-                        interactor.getFollowingThreads(courseId, lastOrderBy, nextPage)
-                    }
-
-                    DiscussionTopicsViewModel.TOPIC -> {
-                        interactor.getThreads(courseId, topicId, lastOrderBy, filterType, nextPage)
-                    }
-
-                    else -> {
-                        throw Exception("")
-                    }
-                }
-
+                val response = fetchThreads()
                 if (response.pagination.next.isNotEmpty()) {
                     _canLoadMore.value = true
                     nextPage++
@@ -138,16 +121,33 @@ class DiscussionThreadsViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
+            } finally {
+                _isUpdating.value = false
+                isLoading = false
             }
-            _isUpdating.value = false
-            isLoading = false
         }
+    }
+
+    private suspend fun fetchThreads() = when (threadType) {
+        DiscussionTopicsViewModel.ALL_POSTS -> {
+            interactor.getAllThreads(courseId, lastOrderBy, filterType, nextPage)
+        }
+
+        DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
+            interactor.getFollowingThreads(courseId, lastOrderBy, nextPage)
+        }
+
+        DiscussionTopicsViewModel.TOPIC -> {
+            interactor.getThreads(courseId, topicId, lastOrderBy, filterType, nextPage)
+        }
+
+        else -> throw IllegalArgumentException("Invalid thread type")
     }
 
     fun fetchMore() {
         if (!isLoading && nextPage != -1) {
             isLoading = true
-            internalLoadThreads()
+            loadThreads()
         }
     }
 
@@ -155,7 +155,7 @@ class DiscussionThreadsViewModel(
         _isUpdating.value = true
         threadsList.clear()
         nextPage = 1
-        internalLoadThreads()
+        loadThreads()
     }
 
     fun sortThreads(orderBy: String) {
@@ -164,35 +164,27 @@ class DiscussionThreadsViewModel(
             threadsList.clear()
             nextPage = 1
         }
-        internalLoadThreads()
+        loadThreads()
     }
 
     fun filterThreads(filter: String?) {
-        if (filterType != filter || (filter != FilterType.ALL_POSTS.value && filterType.isNullOrEmpty())) {
+        if (filterType != filter || filterType.isNullOrEmpty()) {
             threadsList.clear()
             nextPage = 1
         }
-        filterType = if (filter == FilterType.ALL_POSTS.value) {
-            null
-        } else {
-            filter
-        }
-        internalLoadThreads()
+        filterType = filter.takeUnless { it == FilterType.ALL_POSTS.value }
+        loadThreads()
     }
 
     fun markBlockCompleted(blockId: String) {
-        if (!isBlockAlreadyCompleted) {
-            viewModelScope.launch {
-                try {
-                    isBlockAlreadyCompleted = true
-                    interactor.markBlocksCompletion(
-                        courseId,
-                        listOf(blockId)
-                    )
-                } catch (e: Exception) {
-                    isBlockAlreadyCompleted = false
-                    e.printStackTrace()
-                }
+        if (isBlockAlreadyCompleted) return
+        viewModelScope.launch {
+            try {
+                isBlockAlreadyCompleted = true
+                interactor.markBlocksCompletion(courseId, listOf(blockId))
+            } catch (e: Exception) {
+                isBlockAlreadyCompleted = false
+                e.printStackTrace()
             }
         }
     }

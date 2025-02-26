@@ -71,7 +71,7 @@ class DiscussionThreadsViewModel(
             notifier.notifier.collect {
                 if (it is DiscussionThreadAdded) {
                     if (lastOrderBy.isNotEmpty()) {
-                        updateThread(lastOrderBy)
+                        refreshThreads(lastOrderBy)
                     }
                 } else if (it is DiscussionThreadDataChanged) {
                     val index = threadsList.indexOfFirst { thread ->
@@ -96,16 +96,16 @@ class DiscussionThreadsViewModel(
     }
 
     init {
-        getThreadByType(SortType.LAST_ACTIVITY_AT.queryParam)
+        sortThreads(SortType.LAST_ACTIVITY_AT.queryParam)
         logTopicScreenEvent(topicId)
     }
 
-    fun getThreadByType(orderBy: String) {
+    fun sortThreads(orderBy: String) {
         _uiState.value = DiscussionThreadsUIState.Loading
         internalLoadThreads(orderBy)
     }
 
-    fun updateThread(orderBy: String) {
+    fun refreshThreads(orderBy: String) {
         _isUpdating.value = true
         threadsList.clear()
         nextPage = 1

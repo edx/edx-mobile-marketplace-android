@@ -118,7 +118,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType AllThreads no internet connection`() = runTest {
+    fun `sortThreads AllThreads no internet connection`() = runTest {
         coEvery {
             interactor.getAllThreads(
                 any(),
@@ -148,7 +148,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType AllThreads unknown exception`() = runTest {
+    fun `sortThreads AllThreads unknown exception`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
             "",
             "",
@@ -171,7 +171,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType AllThreads success`() = runTest {
+    fun `sortThreads AllThreads success`() = runTest {
         coEvery { interactor.getAllThreads("", any(), null, range(1, 2)) } returns ThreadsData(
             threads,
             "",
@@ -202,7 +202,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType FollowingPosts no internet connection`() = runTest {
+    fun `sortThreads FollowingPosts no internet connection`() = runTest {
         coEvery {
             interactor.getFollowingThreads(
                 any(),
@@ -232,7 +232,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType FollowingPosts unknown exception`() = runTest {
+    fun `sortThreads FollowingPosts unknown exception`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
             "",
             "",
@@ -262,7 +262,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType FollowingPosts success`() = runTest {
+    fun `sortThreads FollowingPosts success`() = runTest {
         coEvery {
             interactor.getFollowingThreads(
                 "",
@@ -307,7 +307,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType Topic no internet connection`() = runTest {
+    fun `sortThreads Topic no internet connection`() = runTest {
         coEvery {
             interactor.getThreads(
                 any(),
@@ -338,7 +338,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType Topic unknown exception`() = runTest {
+    fun `sortThreads Topic unknown exception`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
             "",
             "",
@@ -361,7 +361,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType Topic success`() = runTest {
+    fun `sortThreads Topic success`() = runTest {
         coEvery { interactor.getThreads("", any(), any(), null, range(1, 2)) } returns ThreadsData(
             threads,
             "",
@@ -458,7 +458,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `updateThread Topic success`() = runTest {
+    fun `refreshThread Topic success`() = runTest {
         coEvery { interactor.getThreads("", any(), any(), null, range(1, 2)) } returns ThreadsData(
             threads,
             "",
@@ -479,7 +479,7 @@ class DiscussionThreadsViewModelTest {
             pushGlobalManager,
             analytics,
         )
-        viewModel.updateThread("")
+        viewModel.refreshThreads("")
         advanceUntilIdle()
 
         coVerify(exactly = 2) { interactor.getThreads(any(), any(), any(), any(), any()) }
@@ -524,7 +524,7 @@ class DiscussionThreadsViewModelTest {
         lifecycleRegistry.addObserver(viewModel)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
 
-        viewModel.updateThread("date")
+        viewModel.refreshThreads("date")
         advanceUntilIdle()
 
         coVerify(exactly = 3) { interactor.getThreads(any(), any(), any(), any(), any()) }
@@ -564,7 +564,7 @@ class DiscussionThreadsViewModelTest {
         lifecycleRegistry.addObserver(viewModel)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
 
-        viewModel.updateThread("date")
+        viewModel.refreshThreads("date")
         advanceUntilIdle()
 
         coVerify(exactly = 2) { interactor.getThreads(any(), any(), any(), any(), any()) }

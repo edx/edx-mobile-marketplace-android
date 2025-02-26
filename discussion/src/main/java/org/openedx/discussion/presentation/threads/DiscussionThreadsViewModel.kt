@@ -135,7 +135,6 @@ class DiscussionThreadsViewModel(
 
             DiscussionTopicsViewModel.TOPIC -> {
                 getThreads(
-                    topicId,
                     orderBy
                 )
             }
@@ -163,14 +162,13 @@ class DiscussionThreadsViewModel(
 
             DiscussionTopicsViewModel.TOPIC -> {
                 getThreads(
-                    topicId,
                     lastOrderBy
                 )
             }
         }
     }
 
-    private fun getThreads(topicId: String, orderBy: String) {
+    private fun getThreads(orderBy: String) {
         viewModelScope.launch {
             try {
                 val response =

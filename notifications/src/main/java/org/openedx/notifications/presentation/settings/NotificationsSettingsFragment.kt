@@ -64,6 +64,8 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.notifications.R
+import org.openedx.notifications.presentation.NotificationsAnalyticsEvent
+import org.openedx.notifications.presentation.NotificationsAnalyticsKey
 import org.openedx.notifications.utils.PermissionUtils
 import org.openedx.core.R as CoreR
 
@@ -110,18 +112,40 @@ class NotificationsSettingsFragment : Fragment() {
                             } else {
                                 viewModel.enablePushNotifications(false)
                             }
+                            viewModel.logEvent(
+                                NotificationsAnalyticsEvent.SYSTEM_PERMISSION_DIALOG_ACTION,
+                                mapOf(
+                                    NotificationsAnalyticsKey.ACTION.key to
+                                            if (granted) NotificationsAnalyticsKey.ALLOW.key
+                                            else NotificationsAnalyticsKey.DONT_ALLOW.key
+                                )
+                            )
                         }
                         PermissionUtils.requestNotificationPermission(activity = requireActivity(),
                             permissionLauncher = pushNotificationPermissionLauncher,
+                            onSystemDialogShown = {
+                                viewModel.logScreenEvent(NotificationsAnalyticsEvent.SYSTEM_PERMISSION_DIALOG_VIEWED)
+                            },
                             onRationaleShown = {
                                 viewModel.showPermissionDialogRationale()
                             })
                     },
+                    onRationaleShown = {
+                        viewModel.logScreenEvent(NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_VIEWED)
+                    },
                     onPositiveButtonClick = {
+                        viewModel.logEvent(
+                            NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
+                            mapOf(NotificationsAnalyticsKey.ACTION.key to NotificationsAnalyticsKey.CONTINUE.key)
+                        )
                         viewModel.dismissPermissionDialog()
                         PermissionUtils.navigateToNotificationSettings(requireContext())
                     },
                     onNegativeButtonClick = {
+                        viewModel.logEvent(
+                            NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
+                            mapOf(NotificationsAnalyticsKey.ACTION.key to NotificationsAnalyticsKey.CANCEL.key)
+                        )
                         viewModel.dismissPermissionDialog()
                     }
                 )
@@ -161,6 +185,7 @@ private fun NotificationsSettingsScreen(
     uiMessage: UIMessage? = null,
     discussionPreferenceChanged: (Boolean) -> Unit,
     onRequestPermission: () -> Unit = {},
+    onRationaleShown: () -> Unit = {},
     onPositiveButtonClick: () -> Unit = {},
     onNegativeButtonClick: () -> Unit = {},
     onBackClick: () -> Unit,
@@ -210,6 +235,7 @@ private fun NotificationsSettingsScreen(
                 positiveBtnAction = onPositiveButtonClick,
                 negativeBtnAction = onNegativeButtonClick,
             )
+            onRationaleShown()
         }
         if (uiState.requestPermission) {
             onRequestPermission()

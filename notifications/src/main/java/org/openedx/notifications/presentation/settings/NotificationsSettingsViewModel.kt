@@ -45,7 +45,7 @@ class NotificationsSettingsViewModel(
         } else {
             enablePushNotifications(enabled = false)
         }
-        logNotificationSettingsScreenEvent()
+        logScreenEvent(NotificationsAnalyticsEvent.PUSH_NOTIFICATIONS_SETTINGS)
     }
 
     fun setDiscussionNotificationPreference(value: Boolean) {
@@ -126,8 +126,18 @@ class NotificationsSettingsViewModel(
         )
     }
 
-    private fun logNotificationSettingsScreenEvent() {
-        val event = NotificationsAnalyticsEvent.PUSH_NOTIFICATIONS_SETTINGS
+    private fun logDiscussionPermissionToggleEvent(
+        isDiscussionPushEnabled: Boolean,
+    ) {
+        logEvent(
+            event = NotificationsAnalyticsEvent.DISCUSSION_PREFERENCE_TOGGLE,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.ACTION.key, isDiscussionPushEnabled)
+            }
+        )
+    }
+
+    fun logScreenEvent(event: NotificationsAnalyticsEvent) {
         analytics.logScreenEvent(
             screenName = event.eventName,
             params = buildMap {
@@ -140,18 +150,7 @@ class NotificationsSettingsViewModel(
         )
     }
 
-    private fun logDiscussionPermissionToggleEvent(
-        isDiscussionPushEnabled: Boolean,
-    ) {
-        logEvent(
-            event = NotificationsAnalyticsEvent.DISCUSSION_PREFERENCE_TOGGLE,
-            params = buildMap {
-                put(NotificationsAnalyticsKey.ACTION.key, isDiscussionPushEnabled)
-            }
-        )
-    }
-
-    private fun logEvent(
+    fun logEvent(
         event: NotificationsAnalyticsEvent,
         params: Map<String, Any?> = emptyMap(),
     ) {

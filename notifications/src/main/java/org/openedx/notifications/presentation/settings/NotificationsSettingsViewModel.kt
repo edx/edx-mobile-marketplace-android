@@ -29,7 +29,8 @@ class NotificationsSettingsViewModel(
 
     private val _uiState = MutableStateFlow<NotificationsSettingsUiState>(
         NotificationsSettingsUiState.Configuration(
-            showPermissionRequestDialog = false,
+            requestPermission = false,
+            showPermissionDialogRationale = false,
             discussionsPushEnabled = preference.notifications.discussionsPushEnabled,
         )
     )
@@ -59,11 +60,11 @@ class NotificationsSettingsViewModel(
                 }
             }
         } else {
-            showPermissionDialog()
+            requestPermission()
         }
     }
 
-    fun fetchAndUpdateNotificationsSettings() {
+    private fun fetchAndUpdateNotificationsSettings() {
         viewModelScope.launch {
             try {
                 val response = interactor.fetchNotificationsConfiguration()
@@ -87,10 +88,19 @@ class NotificationsSettingsViewModel(
         return notificationManagerCompat.areNotificationsEnabled()
     }
 
-    private fun showPermissionDialog() {
+    private fun requestPermission() {
         _uiState.update {
             NotificationsSettingsUiState.Configuration(
-                showPermissionRequestDialog = true,
+                requestPermission = true,
+            )
+        }
+    }
+
+    fun showPermissionDialogRationale() {
+        _uiState.update {
+            NotificationsSettingsUiState.Configuration(
+                requestPermission = false,
+                showPermissionDialogRationale = true,
             )
         }
     }

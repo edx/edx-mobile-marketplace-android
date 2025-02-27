@@ -71,15 +71,11 @@ class NotificationsSettingsFragment : Fragment() {
 
     private val viewModel by viewModel<NotificationsSettingsViewModel>()
 
-    private val pushNotificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            viewModel.fetchAndUpdateNotificationsSettings()
-        } else {
-            viewModel.enablePushNotifications(false)
+    private var onPermissionResult: ((Boolean) -> Unit)? = null
+    private val pushNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            onPermissionResult?.invoke(granted)
         }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -104,13 +100,26 @@ class NotificationsSettingsFragment : Fragment() {
                     discussionPreferenceChanged = {
                         viewModel.setDiscussionNotificationPreference(it)
                     },
-                    onPositiveButtonClick = {
-                        viewModel.dismissPermissionDialog()
+                    onRequestPermission = {
+                        onPermissionResult = { granted ->
+                            if (granted) {
+                                viewModel.setDiscussionNotificationPreference(
+                                    (uiState as NotificationsSettingsUiState.Configuration)
+                                        .discussionsPushEnabled.not()
+                                )
+                            } else {
+                                viewModel.enablePushNotifications(false)
+                            }
+                        }
                         PermissionUtils.requestNotificationPermission(activity = requireActivity(),
                             permissionLauncher = pushNotificationPermissionLauncher,
                             onRationaleShown = {
-                                PermissionUtils.navigateToNotificationSettings(requireContext())
+                                viewModel.showPermissionDialogRationale()
                             })
+                    },
+                    onPositiveButtonClick = {
+                        viewModel.dismissPermissionDialog()
+                        PermissionUtils.navigateToNotificationSettings(requireContext())
                     },
                     onNegativeButtonClick = {
                         viewModel.dismissPermissionDialog()
@@ -151,6 +160,7 @@ private fun NotificationsSettingsScreen(
     uiState: NotificationsSettingsUiState.Configuration,
     uiMessage: UIMessage? = null,
     discussionPreferenceChanged: (Boolean) -> Unit,
+    onRequestPermission: () -> Unit = {},
     onPositiveButtonClick: () -> Unit = {},
     onNegativeButtonClick: () -> Unit = {},
     onBackClick: () -> Unit,
@@ -188,7 +198,7 @@ private fun NotificationsSettingsScreen(
         }
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
-        if (uiState.showPermissionRequestDialog) {
+        if (uiState.showPermissionDialogRationale) {
             OpenEdxAlertDialog(
                 title = stringResource(id = CoreR.string.core_permission_dialog_title),
                 message = stringResource(
@@ -200,6 +210,9 @@ private fun NotificationsSettingsScreen(
                 positiveBtnAction = onPositiveButtonClick,
                 negativeBtnAction = onNegativeButtonClick,
             )
+        }
+        if (uiState.requestPermission) {
+            onRequestPermission()
         }
 
         Box(

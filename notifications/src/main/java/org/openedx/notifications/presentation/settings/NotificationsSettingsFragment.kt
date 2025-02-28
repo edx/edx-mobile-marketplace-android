@@ -5,6 +5,8 @@ import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +27,7 @@ import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -95,6 +98,7 @@ class NotificationsSettingsFragment : Fragment() {
                     uiState = uiState as NotificationsSettingsUiState.Configuration,
                     uiMessage = uiMessage,
                     onBackClick = {
+                        viewModel.logBatchPermissionToggleEvent()
                         requireActivity().supportFragmentManager.popBackStack()
                     },
                     discussionPreferenceChanged = {
@@ -110,7 +114,31 @@ class NotificationsSettingsFragment : Fragment() {
                     },
                     onNegativeButtonClick = {
                         viewModel.dismissPermissionDialog()
-                    })
+                    }
+                )
+
+                HandleBackNavigation()
+            }
+        }
+    }
+
+    @Composable
+    private fun HandleBackNavigation() {
+        val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+
+        val onBackPressedCallback = remember {
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    viewModel.logBatchPermissionToggleEvent()
+                    requireActivity().supportFragmentManager.popBackStackImmediate()
+                }
+            }
+        }
+
+        DisposableEffect(backDispatcher) {
+            backDispatcher?.addCallback(onBackPressedCallback)
+            onDispose {
+                onBackPressedCallback.remove()
             }
         }
     }

@@ -227,7 +227,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
 
     private fun handlePushNotification(data: Bundle) {
         val deepLink = DeepLink(data.toStringMap())
-        viewModel.markNotificationAsRead(deepLink.notificationId)
+        viewModel.handleDiscussionNotification(deepLink)
         viewModel.makeExternalRoute(supportFragmentManager, deepLink)
     }
 

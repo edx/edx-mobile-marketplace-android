@@ -14,6 +14,7 @@ apply plugin: 'kotlin-kapt'
 if (firebaseEnabled) {
     apply plugin: 'com.google.gms.google-services'
     apply plugin: 'com.google.firebase.crashlytics'
+    apply plugin: 'com.google.firebase.firebase-perf'
 
     tasks.register('generateGoogleServicesJson') {
         configHelper.generateGoogleServicesJson(appId)
@@ -151,6 +152,7 @@ dependencies {
 
     api platform("com.google.firebase:firebase-bom:$firebase_version")
     api "com.google.firebase:firebase-messaging"
+    api "com.google.firebase:firebase-perf:21.0.4"
 
     // Segment Library
     implementation "com.segment.analytics.kotlin:android:1.16.3"

@@ -9,7 +9,7 @@ interface DashboardAnalytics {
 enum class DashboardAnalyticsEvent(val eventName: String, val biValue: String) {
     LEARN_MY_COURSES(
         "Learn:My Courses",
-        "edx.bi.app.learn.my_course"
+        "edx.bi.app.learn.my_courses"
     ),
     LEARN_MY_PROGRAMS(
         "Learn:My Programs",
@@ -17,27 +17,31 @@ enum class DashboardAnalyticsEvent(val eventName: String, val biValue: String) {
     ),
     PRIMARY_COURSE_CARD_CLICKED(
         "Learn:Primary Course Card Clicked",
-        "edx.bi.app.learn.primary_course_clicked"
+        "edx.bi.app.learn.primary_course.clicked"
     ),
     SECONDARY_COURSE_CARD_CLICKED(
         "Learn:Secondary Course Card Clicked",
-        "edx.bi.app.learn.secondary_course_clicked"
+        "edx.bi.app.learn.secondary_course.clicked"
     ),
     VIEW_ALL_COURSES_CLICKED(
         "Learn:View All Courses Clicked",
-        "edx.bi.app.learn.view_all_courses_clicked"
+        "edx.bi.app.learn.view_all_courses.clicked"
     ),
-    MY_COURSES(
-        "MyCourses:Viewed",
-        "edx.bi.app.my_courses.viewed"
+    VIEW_ALL_CARD_CLICKED(
+        "Learn:View All Card Clicked",
+        "edx.bi.app.learn.view_all_card.clicked"
+    ),
+    MY_COURSES_ALL_COURSES_VIEWED(
+        "MyCourses:All Courses Viewed",
+        "edx.bi.app.my_courses.all_courses.viewed"
     ),
     MY_COURSES_FILTER_CLICKED(
         "MyCourses:Filter Clicked",
-        "edx.bi.app.my_courses.filter_clicked"
+        "edx.bi.app.my_courses.filter.clicked"
     ),
     COURSE_CARD_CLICKED(
         "MyCourses:Course Card Clicked",
-        "edx.bi.app.my_courses.course_card_clicked"
+        "edx.bi.app.my_courses.course_card.clicked"
     ),
 }
 
@@ -46,7 +50,7 @@ enum class DashboardAnalyticsKey(val key: String) {
     COURSE_ID("course_id"),
     ACTION("action"),
     FILTER("filter"),
-    BLOCK_ID("block_id")
+    BLOCK_ID("block_id"),
 }
 
 enum class PrimaryCourseCardAction(val action: String) {

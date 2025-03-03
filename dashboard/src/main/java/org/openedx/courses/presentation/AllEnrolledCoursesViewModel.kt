@@ -63,7 +63,7 @@ class AllEnrolledCoursesViewModel(
     init {
         collectDiscoveryNotifier()
         getCourses(currentFilter.value)
-        logScreenEvent(DashboardAnalyticsEvent.MY_COURSES)
+        logScreenEvent(DashboardAnalyticsEvent.MY_COURSES_ALL_COURSES_VIEWED)
         logMyCoursesFilterClickedEvent(currentFilter.value.key)
     }
 

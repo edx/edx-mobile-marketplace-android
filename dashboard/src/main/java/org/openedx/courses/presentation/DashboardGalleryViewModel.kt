@@ -191,9 +191,14 @@ class DashboardGalleryViewModel(
         viewModelScope.launch { discoveryNotifier.send(NavigationToDiscovery()) }
     }
 
-    fun navigateToAllEnrolledCourses(fragmentManager: FragmentManager) {
+    fun navigateToAllEnrolledCourses(fragmentManager: FragmentManager, isCardClicked: Boolean) {
         dashboardRouter.navigateToAllEnrolledCourses(fragmentManager)
-        logEvent(DashboardAnalyticsEvent.VIEW_ALL_COURSES_CLICKED)
+        val event = if (isCardClicked) {
+            DashboardAnalyticsEvent.VIEW_ALL_CARD_CLICKED
+        } else {
+            DashboardAnalyticsEvent.VIEW_ALL_COURSES_CLICKED
+        }
+        logEvent(event)
     }
 
     fun navigateToCourseOutline(
@@ -216,50 +221,6 @@ class DashboardGalleryViewModel(
             action = action
         )
     }
-
-    private fun logDashboardGalleryActionEvent(
-        courseId: String,
-        resumeBlockId: String,
-        action: DashboardGalleryScreenAction,
-    ) {
-        when (action) {
-            is DashboardGalleryScreenAction.OpenCourse -> {
-                if (action.isPrimaryCourse) {
-                    logPrimaryCourseCardClicked(
-                        courseId,
-                        PrimaryCourseCardAction.CARD,
-                    )
-                } else {
-                    logSecondaryCourseCardClicked(courseId)
-                }
-            }
-
-            is DashboardGalleryScreenAction.OpenBlock -> {
-                logPrimaryCourseCardClicked(
-                    courseId,
-                    PrimaryCourseCardAction.RESUME_COURSE,
-                    resumeBlockId
-                )
-            }
-
-            is DashboardGalleryScreenAction.NavigateToDates -> {
-                if (action.isPastAssignment) {
-                    logPrimaryCourseCardClicked(
-                        courseId,
-                        PrimaryCourseCardAction.PAST_ASSIGNMENT
-                    )
-                } else {
-                    logPrimaryCourseCardClicked(
-                        courseId,
-                        PrimaryCourseCardAction.UPCOMING_ASSIGNMENT
-                    )
-                }
-            }
-
-            else -> {}
-        }
-    }
-
 
     fun processIAPAction(
         fragmentManager: FragmentManager,
@@ -406,6 +367,54 @@ class DashboardGalleryViewModel(
                 resumeBlockId?.let { put(DashboardAnalyticsKey.BLOCK_ID.key, it) }
             }
         )
+    }
+
+    private fun logDashboardGalleryActionEvent(
+        courseId: String,
+        resumeBlockId: String,
+        action: DashboardGalleryScreenAction,
+    ) {
+        when (action) {
+            is DashboardGalleryScreenAction.OpenCourse -> {
+                if (action.isPrimaryCourse) {
+                    logPrimaryCourseCardClicked(
+                        courseId = courseId,
+                        action = PrimaryCourseCardAction.CARD,
+                    )
+                } else {
+                    logSecondaryCourseCardClicked(courseId)
+                }
+            }
+
+            is DashboardGalleryScreenAction.OpenBlock -> {
+                val clickedAction = when (action.blockType) {
+                    BlockType.PAST_ASSIGNMENT -> PrimaryCourseCardAction.PAST_ASSIGNMENT
+                    BlockType.FUTURE_ASSIGNMENT -> PrimaryCourseCardAction.UPCOMING_ASSIGNMENT
+                    BlockType.RESUME_BLOCK -> PrimaryCourseCardAction.RESUME_COURSE
+                }
+                logPrimaryCourseCardClicked(
+                    courseId = courseId,
+                    action = clickedAction,
+                    resumeBlockId = resumeBlockId
+                )
+            }
+
+            is DashboardGalleryScreenAction.NavigateToDates -> {
+                if (action.blockType == BlockType.PAST_ASSIGNMENT) {
+                    logPrimaryCourseCardClicked(
+                        courseId = courseId,
+                        action = PrimaryCourseCardAction.PAST_ASSIGNMENT
+                    )
+                } else {
+                    logPrimaryCourseCardClicked(
+                        courseId = courseId,
+                        action = PrimaryCourseCardAction.UPCOMING_ASSIGNMENT
+                    )
+                }
+            }
+
+            else -> {}
+        }
     }
 
     private fun logSecondaryCourseCardClicked(courseId: String) {

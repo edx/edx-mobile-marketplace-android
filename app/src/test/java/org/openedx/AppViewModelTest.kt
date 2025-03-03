@@ -57,6 +57,8 @@ class AppViewModelTest {
     @Before
     fun before() {
         Dispatchers.setMain(dispatcher)
+        every { analytics.logEvent(any(), any()) } returns Unit
+        every { preferencesManager.user } returns user
     }
 
     @After
@@ -67,7 +69,6 @@ class AppViewModelTest {
     @Test
     fun setIdSuccess() = runTest {
         every { analytics.setUserIdForSession(any()) } returns Unit
-        every { preferencesManager.user } returns user
         every { notifier.notifier } returns flow { }
         every { preferencesManager.canResetAppDirectory } returns false
         every { preferencesManager.pushToken } returns ""
@@ -101,7 +102,6 @@ class AppViewModelTest {
         }
         every { preferencesManager.clear() } returns Unit
         every { analytics.setUserIdForSession(any()) } returns Unit
-        every { preferencesManager.user } returns user
         every { room.clearAllTables() } returns Unit
         every { analytics.logoutEvent(true) } returns Unit
         every { preferencesManager.canResetAppDirectory } returns false
@@ -139,7 +139,6 @@ class AppViewModelTest {
         }
         every { preferencesManager.clear() } returns Unit
         every { analytics.setUserIdForSession(any()) } returns Unit
-        every { preferencesManager.user } returns user
         every { room.clearAllTables() } returns Unit
         every { analytics.logoutEvent(true) } returns Unit
         every { preferencesManager.canResetAppDirectory } returns false
@@ -168,7 +167,7 @@ class AppViewModelTest {
         verify(exactly = 1) { analytics.logoutEvent(true) }
         verify(exactly = 1) { preferencesManager.clear() }
         verify(exactly = 1) { analytics.setUserIdForSession(any()) }
-        verify(exactly = 1) { preferencesManager.user }
+        verify(exactly = 2) { preferencesManager.user }
         verify(exactly = 1) { room.clearAllTables() }
         verify(exactly = 1) { analytics.logoutEvent(true) }
     }

@@ -353,17 +353,19 @@ fun CourseDashboard(
             val refreshing by viewModel.refreshing.collectAsState(true)
             val courseImage by viewModel.courseImage.collectAsState()
             val uiMessage by viewModel.uiMessage.collectAsState(null)
-            val requiredTab = when (openTab.uppercase()) {
-                CourseContainerTab.HOME.name -> CourseContainerTab.HOME
-                CourseContainerTab.VIDEOS.name -> CourseContainerTab.VIDEOS
-                CourseContainerTab.DATES.name -> CourseContainerTab.DATES
-                CourseContainerTab.DISCUSSIONS.name -> CourseContainerTab.DISCUSSIONS
-                CourseContainerTab.MORE.name -> CourseContainerTab.MORE
-                else -> CourseContainerTab.HOME
-            }
+            val requiredTabIndex = CourseContainerTab.entries.indexOf(
+                when (openTab.uppercase()) {
+                    CourseContainerTab.HOME.name -> CourseContainerTab.HOME
+                    CourseContainerTab.VIDEOS.name -> CourseContainerTab.VIDEOS
+                    CourseContainerTab.DATES.name -> CourseContainerTab.DATES
+                    CourseContainerTab.DISCUSSIONS.name -> CourseContainerTab.DISCUSSIONS
+                    CourseContainerTab.MORE.name -> CourseContainerTab.MORE
+                    else -> CourseContainerTab.HOME
+                }
+            )
 
             val pagerState = rememberPagerState(
-                initialPage = CourseContainerTab.entries.indexOf(requiredTab),
+                initialPage = requiredTabIndex,
                 pageCount = { CourseContainerTab.entries.size }
             )
             val dataReady = viewModel.dataReady.observeAsState()
@@ -388,6 +390,7 @@ fun CourseDashboard(
 
             LaunchedEffect(pagerState.currentPage) {
                 tabState.animateScrollToItem(pagerState.currentPage)
+                viewModel.courseContainerTabClickedEvent(pagerState.currentPage)
             }
 
             Column(
@@ -450,7 +453,7 @@ fun CourseDashboard(
                                     rowState = tabState,
                                     pagerState = pagerState,
                                     withPager = true,
-                                    onTabClicked = viewModel::courseContainerTabClickedEvent
+                                    onTabClicked = { }
                                 )
                             }
                         },

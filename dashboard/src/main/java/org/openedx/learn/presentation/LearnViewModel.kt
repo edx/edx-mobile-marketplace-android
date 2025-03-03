@@ -51,27 +51,22 @@ class LearnViewModel(
 
     init {
         viewModelScope.launch {
-            _uiState.collect { uiState ->
-                if (uiState.learnType == LearnType.COURSES) {
-                    logMyCoursesTabClickedEvent()
-                } else {
-                    logMyProgramsTabClickedEvent()
-                }
-            }
-        }
-        viewModelScope.launch {
             pushNotifier.notifier.collect { event ->
                 if (event is PushEvent.RefreshBadgeCount) {
                     checkNotificationCount()
                 }
             }
         }
+        logTabClickedEvent(_uiState.value.learnType)
         checkNotificationCount()
     }
 
     fun updateLearnType(learnType: LearnType) {
         viewModelScope.launch {
-            _uiState.update { it.copy(learnType = learnType) }
+            if (learnType != _uiState.value.learnType) {
+                _uiState.update { it.copy(learnType = learnType) }
+                logTabClickedEvent(learnType)
+            }
         }
     }
 
@@ -93,12 +88,11 @@ class LearnViewModel(
         _uiState.update { it.copy(hasUnreadNotifications = false) }
     }
 
-    private fun logMyCoursesTabClickedEvent() {
-        logScreenEvent(DashboardAnalyticsEvent.MY_COURSES)
-    }
-
-    private fun logMyProgramsTabClickedEvent() {
-        logScreenEvent(DashboardAnalyticsEvent.MY_PROGRAMS)
+    private fun logTabClickedEvent(learnType: LearnType) {
+        when (learnType) {
+            LearnType.COURSES -> logScreenEvent(DashboardAnalyticsEvent.MY_COURSES)
+            LearnType.PROGRAMS -> logScreenEvent(DashboardAnalyticsEvent.MY_PROGRAMS)
+        }
     }
 
     private fun logScreenEvent(event: DashboardAnalyticsEvent) {

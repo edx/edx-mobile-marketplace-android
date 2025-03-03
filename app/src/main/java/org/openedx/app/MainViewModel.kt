@@ -38,6 +38,10 @@ class MainViewModel(
     val isDiscoveryTypeWebView get() = config.getDiscoveryConfig().isViewTypeWebView()
     val getDiscoveryFragment get() = DiscoveryNavigator(isDiscoveryTypeWebView).getDiscoveryFragment()
 
+    init {
+        logNotificationPermissionStatusEvent()
+    }
+
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
         notifier.notifier
@@ -48,7 +52,6 @@ class MainViewModel(
             }
             .distinctUntilChanged()
             .launchIn(viewModelScope)
-        logNotificationPermissionStatusEvent()
     }
 
     fun enableBottomBar(enable: Boolean) {

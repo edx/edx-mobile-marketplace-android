@@ -7,7 +7,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
-import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
@@ -233,6 +232,7 @@ class CourseContainerViewModelTest {
         coEvery { interactor.getEnrollmentDetails(any()) } returns courseDetails
         every { imageProcessor.loadImage(any(), any(), any()) } returns Unit
         every { imageProcessor.applyBlur(any(), any()) } returns mockBitmap
+        every { courseAnalytics.logScreenEvent(any(), any()) } returns Unit
     }
 
     @After
@@ -279,18 +279,6 @@ class CourseContainerViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getEnrollmentDetails(any()) }
-        verify(exactly = 1) {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.DASHBOARD.eventName,
-                any()
-            )
-        }
-        verify(exactly = 1) {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.HOME_TAB.eventName,
-                any()
-            )
-        }
         assert(!viewModel.refreshing.value)
         assert(viewModel.courseAccessStatus.value == CourseAccessError.UNKNOWN)
     }
@@ -318,34 +306,11 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
-        every {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.DASHBOARD.eventName,
-                any()
-            )
-        } returns Unit
-        every {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.HOME_TAB.eventName,
-                any()
-            )
-        } returns Unit
+
         viewModel.fetchCourseDetails()
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getEnrollmentDetails(any()) }
-        verify(exactly = 1) {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.DASHBOARD.eventName,
-                any()
-            )
-        }
-        verify(exactly = 1) {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.HOME_TAB.eventName,
-                any()
-            )
-        }
         assert(viewModel.errorMessage.value == null)
         assert(!viewModel.refreshing.value)
         assert(viewModel.courseAccessStatus.value != null)
@@ -389,18 +354,6 @@ class CourseContainerViewModelTest {
         viewModel.fetchCourseDetails()
         advanceUntilIdle()
         coVerify(exactly = 0) { courseApi.getEnrollmentDetails(any()) }
-        verify(exactly = 1) {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.DASHBOARD.eventName,
-                any()
-            )
-        }
-        verify(exactly = 1) {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.HOME_TAB.eventName,
-                any()
-            )
-        }
 
         assert(viewModel.errorMessage.value == null)
         assert(!viewModel.refreshing.value)

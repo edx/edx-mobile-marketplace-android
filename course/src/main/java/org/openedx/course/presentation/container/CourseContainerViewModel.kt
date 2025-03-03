@@ -234,12 +234,11 @@ class CourseContainerViewModel(
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)
+
+        courseDashboardViewed()
     }
 
     fun fetchCourseDetails(isIAPFlow: Boolean = false, isExpiredCoursePurchase: Boolean = false) {
-        if (isIAPFlow.not()) {
-            courseDashboardViewed()
-        }
         _showProgress.value = true
         viewModelScope.launch {
             try {
@@ -673,7 +672,6 @@ class CourseContainerViewModel(
 
     private fun courseDashboardViewed() {
         logCourseContainerEvent(CourseAnalyticsEvent.DASHBOARD)
-        courseTabClickedEvent()
     }
 
     private fun courseTabClickedEvent() {

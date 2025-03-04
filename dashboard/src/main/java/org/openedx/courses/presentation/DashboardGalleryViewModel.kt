@@ -434,6 +434,7 @@ class DashboardGalleryViewModel(
             event = event.eventName,
             params = buildMap {
                 put(DashboardAnalyticsKey.NAME.key, event.biValue)
+                put(DashboardAnalyticsKey.CATEGORY.key, DashboardAnalyticsKey.LEARN.key)
                 putAll(params)
             }
         )

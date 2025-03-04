@@ -47,10 +47,13 @@ enum class DashboardAnalyticsEvent(val eventName: String, val biValue: String) {
 
 enum class DashboardAnalyticsKey(val key: String) {
     NAME("name"),
+    CATEGORY("category"),
     COURSE_ID("course_id"),
     ACTION("action"),
     FILTER("filter"),
     BLOCK_ID("block_id"),
+    LEARN("learn"),
+    MY_COURSES("my_courses"),
 }
 
 enum class PrimaryCourseCardAction(val action: String) {

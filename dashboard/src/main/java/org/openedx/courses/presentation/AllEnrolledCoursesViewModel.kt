@@ -207,6 +207,7 @@ class AllEnrolledCoursesViewModel(
             event = event.eventName,
             params = buildMap {
                 put(DashboardAnalyticsKey.NAME.key, event.biValue)
+                put(DashboardAnalyticsKey.CATEGORY.key, DashboardAnalyticsKey.MY_COURSES.key)
                 putAll(params)
             }
         )
@@ -215,7 +216,10 @@ class AllEnrolledCoursesViewModel(
     private fun logScreenEvent(event: DashboardAnalyticsEvent) {
         analytics.logScreenEvent(
             screenName = event.eventName,
-            params = mapOf(DashboardAnalyticsKey.NAME.key to event.biValue)
+            params = mapOf(
+                DashboardAnalyticsKey.NAME.key to event.biValue,
+                DashboardAnalyticsKey.CATEGORY.key to DashboardAnalyticsKey.MY_COURSES.key
+            )
         )
     }
 }

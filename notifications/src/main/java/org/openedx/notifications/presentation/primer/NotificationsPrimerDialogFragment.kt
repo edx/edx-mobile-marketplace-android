@@ -84,11 +84,12 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                                 viewModel.dismissDialog()
                             },
                             onNotifyClick = {
+                                viewModel.hideDialog()
                                 PermissionUtils.requestNotificationPermission(
                                     activity = requireActivity(),
                                     permissionLauncher = pushNotificationPermissionLauncher,
                                     onRationaleShown = {
-                                        viewModel.showRationalDialog()
+                                        viewModel.showRationaleDialog()
                                     },
                                 )
                             },
@@ -112,7 +113,7 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                         }
                     }
 
-                    PrimerUIState.ShowRationalDialog -> {
+                    PrimerUIState.ShowRationaleDialog -> {
                         ShowRationalePermissionDialog(
                             onNegativeButtonClick = {
                                 viewModel.dismissDialog()
@@ -129,24 +130,6 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                 }
             }
         }
-    }
-
-    @Composable
-    private fun ShowRationalePermissionDialog(
-        onPositiveButtonClick: () -> Unit = {},
-        onNegativeButtonClick: () -> Unit = {},
-    ) {
-        OpenEdxAlertDialog(
-            title = stringResource(id = CoreR.string.core_permission_dialog_title),
-            message = stringResource(
-                id = CoreR.string.core_permission_dialog_message,
-                stringResource(id = R.string.notifications_notifications).lowercase()
-            ),
-            positiveBtnText = stringResource(id = CoreR.string.core_continue),
-            negativeBtnText = stringResource(id = CoreR.string.core_cancel),
-            positiveBtnAction = onPositiveButtonClick,
-            negativeBtnAction = onNegativeButtonClick,
-        )
     }
 }
 
@@ -289,6 +272,24 @@ fun NotificationsPrimerButtons(
             }
         }
     }
+}
+
+@Composable
+private fun ShowRationalePermissionDialog(
+    onPositiveButtonClick: () -> Unit = {},
+    onNegativeButtonClick: () -> Unit = {},
+) {
+    OpenEdxAlertDialog(
+        title = stringResource(id = CoreR.string.core_permission_dialog_title),
+        message = stringResource(
+            id = CoreR.string.core_permission_dialog_message,
+            stringResource(id = R.string.notifications_notifications).lowercase()
+        ),
+        positiveBtnText = stringResource(id = CoreR.string.core_continue),
+        negativeBtnText = stringResource(id = CoreR.string.core_cancel),
+        positiveBtnAction = onPositiveButtonClick,
+        negativeBtnAction = onNegativeButtonClick,
+    )
 }
 
 @PreviewLightDark

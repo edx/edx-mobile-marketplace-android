@@ -4,6 +4,6 @@ sealed class PrimerUIState {
     data object ShowDialog : PrimerUIState()
     data object HideDialog : PrimerUIState()
     data object DismissDialog : PrimerUIState()
-    data object ShowRationalDialog : PrimerUIState()
+    data object ShowRationaleDialog : PrimerUIState()
     data object Loading: PrimerUIState()
 }

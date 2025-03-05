@@ -387,10 +387,10 @@ class DashboardGalleryViewModel(
             }
 
             is DashboardGalleryScreenAction.OpenBlock -> {
-                val clickedAction = when (action.blockType) {
-                    BlockType.PAST_ASSIGNMENT -> PrimaryCourseCardAction.PAST_ASSIGNMENT
-                    BlockType.FUTURE_ASSIGNMENT -> PrimaryCourseCardAction.UPCOMING_ASSIGNMENT
-                    BlockType.RESUME_BLOCK -> PrimaryCourseCardAction.RESUME_COURSE
+                val clickedAction = when (action.source) {
+                    ActionSource.PAST_ASSIGNMENT -> PrimaryCourseCardAction.PAST_ASSIGNMENT
+                    ActionSource.UPCOMING_ASSIGNMENT -> PrimaryCourseCardAction.UPCOMING_ASSIGNMENT
+                    ActionSource.RESUME_BLOCK -> PrimaryCourseCardAction.RESUME_COURSE
                 }
                 logPrimaryCourseCardClicked(
                     courseId = courseId,
@@ -400,7 +400,7 @@ class DashboardGalleryViewModel(
             }
 
             is DashboardGalleryScreenAction.NavigateToDates -> {
-                if (action.blockType == BlockType.PAST_ASSIGNMENT) {
+                if (action.source == ActionSource.PAST_ASSIGNMENT) {
                     logPrimaryCourseCardClicked(
                         courseId = courseId,
                         action = PrimaryCourseCardAction.PAST_ASSIGNMENT

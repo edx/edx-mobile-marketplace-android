@@ -4,13 +4,19 @@ import org.openedx.core.domain.model.EnrolledCourse
 
 interface DashboardGalleryScreenAction {
     object SwipeRefresh : DashboardGalleryScreenAction
+
     object Reload : DashboardGalleryScreenAction
+
     object NavigateToDiscovery : DashboardGalleryScreenAction
-    data class ViewAll(val isCardClicked: Boolean) : DashboardGalleryScreenAction
+
+    data class ViewAll(
+        val isCardClicked: Boolean,
+    ) : DashboardGalleryScreenAction
+
     data class OpenBlock(
         val enrolledCourse: EnrolledCourse,
         val blockId: String,
-        val blockType: BlockType,
+        val source: ActionSource,
     ) : DashboardGalleryScreenAction
 
     data class OpenCourse(
@@ -20,6 +26,10 @@ interface DashboardGalleryScreenAction {
 
     data class NavigateToDates(
         val enrolledCourse: EnrolledCourse,
-        val blockType: BlockType,
+        val source: ActionSource,
     ) : DashboardGalleryScreenAction
+}
+
+enum class ActionSource {
+    PAST_ASSIGNMENT, UPCOMING_ASSIGNMENT, RESUME_BLOCK
 }

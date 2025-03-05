@@ -258,20 +258,20 @@ private fun DashboardGalleryView(
                                 onViewAllClick = { isCardClicked ->
                                     onAction(DashboardGalleryScreenAction.ViewAll(isCardClicked))
                                 },
-                                navigateToDates = { course, blockType ->
+                                navigateToDates = { course, actionSource ->
                                     onAction(
                                         DashboardGalleryScreenAction.NavigateToDates(
                                             enrolledCourse = course,
-                                            blockType = blockType
+                                            source = actionSource
                                         )
                                     )
                                 },
-                                resumeBlockId = { enrolledCourse, blockId, blockType ->
+                                resumeBlockId = { enrolledCourse, blockId, actionSource ->
                                     onAction(
                                         DashboardGalleryScreenAction.OpenBlock(
                                             enrolledCourse = enrolledCourse,
                                             blockId = blockId,
-                                            blockType = blockType
+                                            source = actionSource
                                         )
                                     )
                                 },
@@ -363,10 +363,10 @@ private fun UserCourses(
     modifier: Modifier = Modifier,
     userCourses: CourseEnrollments,
     apiHostUrl: String,
-    openCourse: (enrolledCourse: EnrolledCourse, isPrimaryCourse: Boolean) -> Unit,
-    navigateToDates: (enrolledCourse: EnrolledCourse, blockType: BlockType) -> Unit,
+    openCourse: (EnrolledCourse, isPrimaryCourse: Boolean) -> Unit,
+    navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
     onViewAllClick: (isCardClicked: Boolean) -> Unit,
-    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, blockType: BlockType) -> Unit,
+    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
     onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
     Column(
@@ -381,7 +381,7 @@ private fun UserCourses(
                 apiHostUrl = apiHostUrl,
                 navigateToDates = navigateToDates,
                 resumeBlockId = resumeBlockId,
-                openCourse = openCourse,
+                openCourse = { openCourse(it, true) },
                 onIAPAction = onIAPAction,
             )
         }
@@ -391,7 +391,7 @@ private fun UserCourses(
                 courseCount = userCourses.enrollments.pagination.count,
                 hasNextPage = userCourses.enrollments.pagination.next.isNotEmpty(),
                 apiHostUrl = apiHostUrl,
-                onCourseClick = openCourse,
+                onCourseClick = { openCourse(it, false) },
                 onViewAllClick = onViewAllClick
             )
         }
@@ -404,7 +404,7 @@ private fun SecondaryCourses(
     courseCount: Int,
     hasNextPage: Boolean,
     apiHostUrl: String,
-    onCourseClick: (enrolledCourse: EnrolledCourse, isPrimaryCourse: Boolean) -> Unit,
+    onCourseClick: (EnrolledCourse) -> Unit,
     onViewAllClick: (isCardClicked: Boolean) -> Unit
 ) {
     val windowSize = rememberWindowSize()
@@ -499,7 +499,7 @@ private fun ViewAllItem(
 private fun CourseListItem(
     course: EnrolledCourse,
     apiHostUrl: String,
-    onCourseClick: (course: EnrolledCourse, isPrimaryCourse: Boolean) -> Unit,
+    onCourseClick: (EnrolledCourse) -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -507,7 +507,7 @@ private fun CourseListItem(
             .height(152.dp)
             .padding(4.dp)
             .clickable {
-                onCourseClick(course, false)
+                onCourseClick(course)
             },
         backgroundColor = MaterialTheme.appColors.cardViewBackground,
         shape = MaterialTheme.appShapes.courseImageShape,
@@ -602,9 +602,9 @@ private fun PrimaryCourseCard(
     isIAPEnabled: Boolean,
     primaryCourse: EnrolledCourse,
     apiHostUrl: String,
-    navigateToDates: (enrolledCourse: EnrolledCourse, blockType: BlockType) -> Unit,
-    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, blockType: BlockType) -> Unit,
-    openCourse: (enrolledCourse: EnrolledCourse, isPrimaryCourse: Boolean) -> Unit,
+    navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
+    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
+    openCourse: (EnrolledCourse) -> Unit,
     onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
     val orientation = LocalConfiguration.current.orientation
@@ -623,7 +623,7 @@ private fun PrimaryCourseCard(
                 Row(
                     modifier = Modifier
                         .clickable {
-                            openCourse(primaryCourse, true)
+                            openCourse(primaryCourse)
                         }
                         .height(IntrinsicSize.Min)
                 ) {
@@ -649,7 +649,7 @@ private fun PrimaryCourseCard(
             else -> {
                 Column(
                     modifier = Modifier.clickable {
-                        openCourse(primaryCourse, true)
+                        openCourse(primaryCourse)
                     }
                 ) {
                     PrimaryCourseCaption(
@@ -688,9 +688,9 @@ private fun PrimaryCourseButtons(
     modifier: Modifier = Modifier,
     primaryCourse: EnrolledCourse,
     adjustHeight: Boolean = false,
-    navigateToDates: (enrolledCourse: EnrolledCourse, blockType: BlockType) -> Unit,
-    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, blockType: BlockType) -> Unit,
-    openCourse: (enrolledCourse: EnrolledCourse, isPrimaryCourse: Boolean) -> Unit,
+    navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
+    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
+    openCourse: (EnrolledCourse) -> Unit,
     isIAPEnabled: Boolean,
     onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
@@ -714,10 +714,10 @@ private fun PrimaryCourseButtons(
                             resumeBlockId(
                                 primaryCourse,
                                 nearestAssignment.blockId,
-                                BlockType.PAST_ASSIGNMENT
+                                ActionSource.PAST_ASSIGNMENT
                             )
                         } else {
-                            navigateToDates(primaryCourse, BlockType.PAST_ASSIGNMENT)
+                            navigateToDates(primaryCourse, ActionSource.PAST_ASSIGNMENT)
                         }
                     },
                 painter = rememberVectorPainter(Icons.Default.Warning),
@@ -749,10 +749,10 @@ private fun PrimaryCourseButtons(
                             resumeBlockId(
                                 primaryCourse,
                                 nearestAssignment.blockId,
-                                BlockType.FUTURE_ASSIGNMENT
+                                ActionSource.UPCOMING_ASSIGNMENT
                             )
                         } else {
-                            navigateToDates(primaryCourse, BlockType.FUTURE_ASSIGNMENT)
+                            navigateToDates(primaryCourse, ActionSource.UPCOMING_ASSIGNMENT)
                         }
                     },
                 painter = painterResource(id = CoreR.drawable.ic_core_chapter_icon),
@@ -787,12 +787,12 @@ private fun PrimaryCourseButtons(
             primaryCourse = primaryCourse,
             onClick = {
                 if (primaryCourse.courseStatus == null) {
-                    openCourse(primaryCourse, true)
+                    openCourse(primaryCourse)
                 } else {
                     resumeBlockId(
                         primaryCourse,
                         primaryCourse.courseStatus?.lastVisitedBlockId ?: "",
-                        BlockType.RESUME_BLOCK
+                        ActionSource.RESUME_BLOCK
                     )
                 }
             }
@@ -1078,7 +1078,14 @@ private val mockDashboardCourseList = DashboardCourseList(
 
 private val mockUserCourses = CourseEnrollments(
     enrollments = mockDashboardCourseList,
-    configs = AppConfig(CourseDatesCalendarSync(true, true, true, true)),
+    configs = AppConfig(
+        CourseDatesCalendarSync(
+            isEnabled = true,
+            isSelfPacedEnabled = true,
+            isInstructorPacedEnabled = true,
+            isDeepLinkEnabled = true
+        )
+    ),
     primary = mockCourse
 )
 

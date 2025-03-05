@@ -389,6 +389,11 @@ class DiscussionThreadsViewModelTest {
 
     @Test
     fun `filterThreads All posts`() = runTest {
+        coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
+            threads,
+            "",
+            pagination = Pagination(10, "", 2, "")
+        )
         val viewModel = DiscussionThreadsViewModel(
             "",
             "",
@@ -398,11 +403,6 @@ class DiscussionThreadsViewModelTest {
             notifier,
             pushGlobalManager,
             analytics,
-        )
-        coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
-            threads,
-            "",
-            pagination = Pagination(10, "", 2, "")
         )
         viewModel.filterThreads(FilterType.ALL_POSTS.value)
         advanceUntilIdle()

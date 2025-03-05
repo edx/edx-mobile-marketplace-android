@@ -181,7 +181,6 @@ class DiscussionResponsesViewModel(
                 sendUpdatedComment()
 
                 comments.add(0, response)
-
                 _uiState.value =
                     DiscussionResponsesUIState.Success(comment, comments.toList())
                 logCommentAddedEvent(

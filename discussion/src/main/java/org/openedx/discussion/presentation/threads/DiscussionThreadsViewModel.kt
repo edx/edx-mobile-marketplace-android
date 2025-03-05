@@ -17,6 +17,7 @@ import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
+import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
@@ -62,7 +63,7 @@ class DiscussionThreadsViewModel(
     private var nextPage = 1
     private var isLoading = false
     private var lastOrderBy = SortType.LAST_ACTIVITY_AT.queryParam
-    private var filterType: String? = null
+    private var lastFilterType = FilterType.ALL_POSTS.value
 
     private var isBlockAlreadyCompleted = false
 
@@ -129,20 +130,24 @@ class DiscussionThreadsViewModel(
         }
     }
 
-    private suspend fun fetchThreads() = when (threadType) {
-        DiscussionTopicsViewModel.ALL_POSTS -> {
-            interactor.getAllThreads(courseId, lastOrderBy, filterType, nextPage)
-        }
+    private suspend fun fetchThreads(): ThreadsData {
+        val filterValue = lastFilterType.takeUnless { it == FilterType.ALL_POSTS.value }
 
-        DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
-            interactor.getFollowingThreads(courseId, lastOrderBy, nextPage)
-        }
+        return when (threadType) {
+            DiscussionTopicsViewModel.ALL_POSTS -> {
+                interactor.getAllThreads(courseId, lastOrderBy, filterValue, nextPage)
+            }
 
-        DiscussionTopicsViewModel.TOPIC -> {
-            interactor.getThreads(courseId, topicId, lastOrderBy, filterType, nextPage)
-        }
+            DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
+                interactor.getFollowingThreads(courseId, lastOrderBy, nextPage)
+            }
 
-        else -> throw IllegalArgumentException("Invalid thread type")
+            DiscussionTopicsViewModel.TOPIC -> {
+                interactor.getThreads(courseId, topicId, lastOrderBy, filterValue, nextPage)
+            }
+
+            else -> throw IllegalArgumentException("Invalid thread type")
+        }
     }
 
     fun fetchMore() {
@@ -160,17 +165,21 @@ class DiscussionThreadsViewModel(
     }
 
     fun sortThreads(orderBy: String) {
-        lastOrderBy = orderBy
-        threadsList.clear()
-        nextPage = 1
-        loadThreads()
+        if (lastOrderBy != orderBy) {
+            lastOrderBy = orderBy
+            threadsList.clear()
+            nextPage = 1
+            loadThreads()
+        }
     }
 
-    fun filterThreads(filter: String?) {
-        filterType = filter.takeUnless { it == FilterType.ALL_POSTS.value }
-        threadsList.clear()
-        nextPage = 1
-        loadThreads()
+    fun filterThreads(filter: String) {
+        if (lastFilterType != filter) {
+            lastFilterType = filter
+            threadsList.clear()
+            nextPage = 1
+            loadThreads()
+        }
     }
 
     fun markBlockCompleted(blockId: String) {

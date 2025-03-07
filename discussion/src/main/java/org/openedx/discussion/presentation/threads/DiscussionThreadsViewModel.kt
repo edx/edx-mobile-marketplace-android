@@ -6,9 +6,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
@@ -54,8 +54,8 @@ class DiscussionThreadsViewModel(
     val canLoadMore: LiveData<Boolean>
         get() = _canLoadMore
 
-    private val _showPrimer = MutableStateFlow(false)
-    val showPrimer: StateFlow<Boolean> = _showPrimer.asStateFlow()
+    private val _showPrimer = MutableSharedFlow<Boolean>(0)
+    val showPrimer: SharedFlow<Boolean> = _showPrimer.asSharedFlow()
 
     private val threadsList = mutableListOf<org.openedx.discussion.domain.model.Thread>()
     private var nextPage = 1
@@ -88,7 +88,7 @@ class DiscussionThreadsViewModel(
                     is DiscussionCommentAdded,
                     is DiscussionResponseAdded,
                     is DiscussionThreadFollowed -> {
-                        _showPrimer.value = true
+                        _showPrimer.emit(true)
                     }
                 }
             }

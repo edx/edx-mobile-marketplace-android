@@ -178,6 +178,7 @@ val screenModule = module {
             get(),
             windowSize,
             get(),
+            get(),
         )
     }
     viewModel { AllEnrolledCoursesViewModel(get(), get(), get(), get(), get(), get(), get()) }

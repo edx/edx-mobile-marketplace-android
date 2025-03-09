@@ -90,8 +90,8 @@ class LearnViewModel(
 
     private fun logTabClickedEvent(learnType: LearnType) {
         when (learnType) {
-            LearnType.COURSES -> logScreenEvent(DashboardAnalyticsEvent.MY_COURSES)
-            LearnType.PROGRAMS -> logScreenEvent(DashboardAnalyticsEvent.MY_PROGRAMS)
+            LearnType.COURSES -> logScreenEvent(DashboardAnalyticsEvent.LEARN_MY_COURSES)
+            LearnType.PROGRAMS -> logScreenEvent(DashboardAnalyticsEvent.LEARN_MY_PROGRAMS)
         }
     }
 
@@ -100,6 +100,7 @@ class LearnViewModel(
             screenName = event.eventName,
             params = buildMap {
                 put(DashboardAnalyticsKey.NAME.key, event.biValue)
+                put(DashboardAnalyticsKey.CATEGORY.key, DashboardAnalyticsKey.LEARN.key)
             }
         )
     }

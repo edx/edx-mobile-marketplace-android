@@ -24,8 +24,11 @@ import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 import org.openedx.dashboard.presentation.DashboardAnalytics
+import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
+import org.openedx.dashboard.presentation.DashboardAnalyticsKey
 import org.openedx.dashboard.presentation.DashboardRouter
 
+@Suppress("SameParameterValue")
 class AllEnrolledCoursesViewModel(
     private val config: Config,
     private val networkConnection: NetworkConnection,
@@ -60,6 +63,8 @@ class AllEnrolledCoursesViewModel(
     init {
         collectDiscoveryNotifier()
         getCourses(currentFilter.value)
+        logScreenEvent(DashboardAnalyticsEvent.MY_COURSES_ALL_COURSES_VIEWED)
+        logMyCoursesFilterClickedEvent(currentFilter.value.key)
     }
 
     fun getCourses(courseStatusFilter: CourseStatusFilter? = null) {
@@ -71,6 +76,7 @@ class AllEnrolledCoursesViewModel(
     fun changeFilter(courseStatusFilter: CourseStatusFilter?) {
         if (courseStatusFilter != currentFilter.value) {
             getCourses(courseStatusFilter)
+            logMyCoursesFilterClickedEvent(currentFilter.value.key)
         }
     }
 
@@ -151,10 +157,6 @@ class AllEnrolledCoursesViewModel(
         }
     }
 
-    private fun dashboardCourseClickedEvent(courseId: String, courseName: String) {
-        analytics.dashboardCourseClickedEvent(courseId, courseName)
-    }
-
     private fun collectDiscoveryNotifier() {
         viewModelScope.launch {
             discoveryNotifier.notifier.collect {
@@ -170,11 +172,54 @@ class AllEnrolledCoursesViewModel(
         courseId: String,
         courseName: String,
     ) {
-        dashboardCourseClickedEvent(courseId, courseName)
+        logCourseCardClickedEvent(courseId)
         dashboardRouter.navigateToCourseOutline(
             fm = fragmentManager,
             courseId = courseId,
             courseTitle = courseName
+        )
+    }
+
+    private fun logMyCoursesFilterClickedEvent(filter: String) {
+        logEvent(
+            event = DashboardAnalyticsEvent.MY_COURSES_FILTER_CLICKED,
+            params = buildMap {
+                put(DashboardAnalyticsKey.FILTER.key, filter)
+            }
+        )
+    }
+
+    private fun logCourseCardClickedEvent(courseId: String) {
+        logEvent(
+            event = DashboardAnalyticsEvent.COURSE_CARD_CLICKED,
+            params = buildMap {
+                put(DashboardAnalyticsKey.COURSE_ID.key, courseId)
+                put(DashboardAnalyticsKey.FILTER.key, currentFilter.value.key)
+            }
+        )
+    }
+
+    private fun logEvent(
+        event: DashboardAnalyticsEvent,
+        params: Map<String, Any?> = mutableMapOf(),
+    ) {
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(DashboardAnalyticsKey.NAME.key, event.biValue)
+                put(DashboardAnalyticsKey.CATEGORY.key, DashboardAnalyticsKey.MY_COURSES.key)
+                putAll(params)
+            }
+        )
+    }
+
+    private fun logScreenEvent(event: DashboardAnalyticsEvent) {
+        analytics.logScreenEvent(
+            screenName = event.eventName,
+            params = mapOf(
+                DashboardAnalyticsKey.NAME.key to event.biValue,
+                DashboardAnalyticsKey.CATEGORY.key to DashboardAnalyticsKey.MY_COURSES.key
+            )
         )
     }
 }

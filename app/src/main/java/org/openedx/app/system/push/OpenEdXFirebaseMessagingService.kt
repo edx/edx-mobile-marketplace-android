@@ -17,15 +17,19 @@ import org.openedx.app.AppActivity
 import org.openedx.app.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.extension.isNotNullOrEmpty
+import org.openedx.notifications.PushManager
 
 class OpenEdXFirebaseMessagingService : FirebaseMessagingService() {
 
     private val preferences: CorePreferences by inject()
     private val config: Config by inject()
+    private val pushManager: PushManager by inject()
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         if (BrazeFirebaseMessagingService.handleBrazeRemoteMessage(this, message)) {
+            pushManager.logNotificationReceivedEvent(message.data.filterValues { it.isNotNullOrEmpty() })
             // This Remote Message originated from Braze and a push notification was displayed.
             // No further action is needed.
             return
@@ -68,7 +72,8 @@ class OpenEdXFirebaseMessagingService : FirebaseMessagingService() {
             .setContentTitle(notification.title)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                .bigText(notification.body))
+                    .bigText(notification.body)
+            )
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)

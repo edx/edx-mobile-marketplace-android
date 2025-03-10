@@ -127,10 +127,11 @@ class AppViewModel(
         }
     }
 
-    fun markNotificationAsRead(notificationId: Int?) {
+    fun handleDiscussionNotification(deepLink: DeepLink) {
         viewModelScope.launch {
             try {
-                notificationId?.let { pushManager.markNotificationAsRead(it) }
+                deepLink.notificationDomain?.let { pushManager.logNotificationTappedEvent(deepLink.toMap()) }
+                deepLink.notificationId?.let { pushManager.markNotificationAsRead(it) }
             } catch (e: Exception) {
                 logger.e(throwable = e, submitCrashReport = true)
             }

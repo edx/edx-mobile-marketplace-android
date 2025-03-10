@@ -11,6 +11,7 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.FragmentViewType
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.system.ResourceManager
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.InboxSection
@@ -55,18 +56,6 @@ class NotificationsInboxViewModel(
         logScreenViewEvent()
         getInboxNotifications()
         markNotificationsAsSeen()
-    }
-
-    private fun logScreenViewEvent() {
-        analytics.logScreenEvent(
-            screenName = NotificationsAnalyticsEvent.NOTIFICATION_INBOX_VIEW.eventName,
-            params = buildMap {
-                put(
-                    NotificationsAnalyticsKey.NAME.key,
-                    NotificationsAnalyticsEvent.NOTIFICATION_INBOX_VIEW.biValue
-                )
-            }
-        )
     }
 
     private fun getInboxNotifications() {
@@ -153,7 +142,6 @@ class NotificationsInboxViewModel(
         viewModelScope.launch {
             try {
                 val currentSection = notifications[inboxSection] ?: return@launch
-
                 val index = currentSection.indexOfFirst { it.id == notification.id }
                 if (index == -1) return@launch
 
@@ -167,18 +155,10 @@ class NotificationsInboxViewModel(
                         notifications = notifications.toMap()
                     )
                 }
-                logEvent(
-                    event = NotificationsAnalyticsEvent.NOTIFICATION_ITEM_TAPPED,
-                    params = buildMap {
-                        put(
-                            NotificationsAnalyticsKey.NOTIFICATION_TYPE.key,
-                            notification.notificationType
-                        )
-                    }
-                )
+                logNotificationItemClickedEvent(notification)
 
                 // Navigating the user to the related post or response in the Course Discussion Tab
-                if(notification.courseId.isNotEmpty()) {
+                if (notification.courseId.isNotEmpty()) {
                     notificationsRouter.navigateToDiscussionThread(
                         fm = fm,
                         action = "Topic",
@@ -200,6 +180,15 @@ class NotificationsInboxViewModel(
     }
 
     fun markAllNotificationsAsRead() {
+        logEvent(
+            event = NotificationsAnalyticsEvent.INBOX_MARK_ALL_READ_CLICKED,
+            params = buildMap {
+                put(
+                    NotificationsAnalyticsKey.NOTIFICATION_DOMAIN.key,
+                    NotificationsAnalyticsKey.DISCUSSION.key
+                )
+            },
+        )
         viewModelScope.launch {
             try {
                 if (_uiState.value is InboxUIState.Data) {
@@ -220,7 +209,12 @@ class NotificationsInboxViewModel(
     }
 
     fun navigateToPushNotificationsSettings(fm: FragmentManager) {
+        logEvent(NotificationsAnalyticsEvent.INBOX_PUSH_NOTIFICATIONS_SETTINGS_CLICKED)
         notificationsRouter.navigateToPushNotificationsSettings(fm)
+    }
+
+    fun logInboxMenuClicked() {
+        logEvent(NotificationsAnalyticsEvent.INBOX_MENU_CLICKED)
     }
 
     private suspend fun emitErrorMessage(e: Exception) {
@@ -235,7 +229,40 @@ class NotificationsInboxViewModel(
         }
     }
 
-    private fun logEvent(event: NotificationsAnalyticsEvent, params: Map<String, Any?>) {
+    private fun logNotificationItemClickedEvent(notification: NotificationItem) {
+        logEvent(
+            event = NotificationsAnalyticsEvent.NOTIFICATION_INBOX_ITEM_CLICKED,
+            params = buildMap<String, String?> {
+                put(NotificationsAnalyticsKey.NOTIFICATION_DOMAIN.key, notification.appName)
+                put(NotificationsAnalyticsKey.NOTIFICATION_TYPE.key, notification.notificationType)
+                put(NotificationsAnalyticsKey.NOTIFICATION_ID.key, notification.id.toString())
+                put(NotificationsAnalyticsKey.COURSE_ID.key, notification.courseId)
+                put(NotificationsAnalyticsKey.TOPIC_ID.key, notification.contentContext.topicId)
+                put(NotificationsAnalyticsKey.THREAD_ID.key, notification.contentContext.threadId)
+                put(NotificationsAnalyticsKey.RESPONSE_ID.key, notification.contentContext.parentId)
+                put(NotificationsAnalyticsKey.COMMENT_ID.key, notification.contentContext.commentId)
+            }.filterValues { it.isNotNullOrEmpty() }
+        )
+    }
+
+    private fun logScreenViewEvent() {
+        val event = NotificationsAnalyticsEvent.NOTIFICATION_INBOX_VIEW
+        analytics.logScreenEvent(
+            screenName = event.eventName,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.NAME.key, event.biValue)
+                put(
+                    NotificationsAnalyticsKey.CATEGORY.key,
+                    NotificationsAnalyticsKey.NOTIFICATIONS.key
+                )
+            }
+        )
+    }
+
+    private fun logEvent(
+        event: NotificationsAnalyticsEvent,
+        params: Map<String, Any?> = emptyMap(),
+    ) {
         analytics.logEvent(
             event = event.eventName,
             params = buildMap {
@@ -243,10 +270,6 @@ class NotificationsInboxViewModel(
                 put(
                     NotificationsAnalyticsKey.CATEGORY.key,
                     NotificationsAnalyticsKey.NOTIFICATIONS.key
-                )
-                put(
-                    NotificationsAnalyticsKey.NOTIFICATION_CATEGORY.key,
-                    NotificationsAnalyticsKey.DISCUSSION.key
                 )
                 putAll(params)
             }

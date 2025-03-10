@@ -12,6 +12,7 @@ class DeepLink(params: Map<String, String>) {
     val threadId = params[Keys.THREAD_ID.value]
     val commentId = params[Keys.COMMENT_ID.value]
     val parentId = params[Keys.PARENT_ID.value]
+    val notificationDomain = params[Keys.NOTIFICATION_DOMAIN.value]
     val type = DeepLinkType.typeOf(screenName ?: notificationType ?: "")
 
     enum class Keys(val value: String) {
@@ -25,6 +26,23 @@ class DeepLink(params: Map<String, String>) {
         THREAD_ID("thread_id"),
         COMMENT_ID("comment_id"),
         PARENT_ID("parent_id"),
+        NOTIFICATION_DOMAIN("notification_domain"),
+    }
+
+    fun toMap(): Map<String, String> {
+        return mapOf(
+            Keys.SCREEN_NAME.value to screenName.orEmpty(),
+            Keys.NOTIFICATION_ID.value to notificationId?.toString().orEmpty(),
+            Keys.NOTIFICATION_TYPE.value to notificationType.orEmpty(),
+            Keys.COURSE_ID.value to courseId.orEmpty(),
+            Keys.PATH_ID.value to pathId.orEmpty(),
+            Keys.COMPONENT_ID.value to componentId.orEmpty(),
+            Keys.TOPIC_ID.value to topicId.orEmpty(),
+            Keys.THREAD_ID.value to threadId.orEmpty(),
+            Keys.COMMENT_ID.value to commentId.orEmpty(),
+            Keys.PARENT_ID.value to parentId.orEmpty(),
+            Keys.NOTIFICATION_DOMAIN.value to notificationDomain.orEmpty(),
+        ).filterValues { it.isNotEmpty() }
     }
 }
 

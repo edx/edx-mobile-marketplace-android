@@ -44,16 +44,16 @@ class NotificationsSettingsViewModel(
         } else {
             enablePushNotifications(enabled = false)
         }
+        logNotificationSettingsScreenEvent()
     }
 
     fun setDiscussionNotificationPreference(value: Boolean) {
+        logDiscussionPermissionToggleEvent(isDiscussionPushEnabled = value)
         if (hasPushNotificationPermission()) {
             viewModelScope.launch {
                 try {
                     val response = interactor.updateNotificationsConfiguration(value)
                     enablePushNotifications(enabled = response.updatedValue)
-
-                    logDiscussionPermissionToggleEvent(isDiscussionPushEnabled = value)
                 } catch (e: Exception) {
                     showErrorMessage()
                 }
@@ -103,22 +103,57 @@ class NotificationsSettingsViewModel(
         _uiMessage.emit(
             UIMessage.SnackBarMessage(context.getString(R.string.core_service_unavailable_message))
         )
+    }
 
+    fun logBatchPermissionToggleEvent() {
+        val discussionToggle =
+            (uiState.value as NotificationsSettingsUiState.Configuration).discussionsPushEnabled
+        logEvent(
+            event = NotificationsAnalyticsEvent.PUSH_PREFERENCES_BATCH_TOGGLE_STATE,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.DISCUSSIONS_ACTIVITY.key, discussionToggle)
+            }
+        )
+    }
+
+    private fun logNotificationSettingsScreenEvent() {
+        val event = NotificationsAnalyticsEvent.PUSH_NOTIFICATIONS_SETTINGS
+        analytics.logScreenEvent(
+            screenName = event.eventName,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.NAME.key, event.biValue)
+                put(
+                    NotificationsAnalyticsKey.CATEGORY.key,
+                    NotificationsAnalyticsKey.NOTIFICATIONS.key
+                )
+            }
+        )
     }
 
     private fun logDiscussionPermissionToggleEvent(
         isDiscussionPushEnabled: Boolean,
     ) {
-        val event = NotificationsAnalyticsEvent.DISCUSSION_PERMISSION_TOGGLE
+        logEvent(
+            event = NotificationsAnalyticsEvent.DISCUSSION_PREFERENCE_TOGGLE,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.ACTION.key, isDiscussionPushEnabled)
+            }
+        )
+    }
+
+    private fun logEvent(
+        event: NotificationsAnalyticsEvent,
+        params: Map<String, Any?> = emptyMap(),
+    ) {
         analytics.logEvent(
             event = event.eventName,
             params = buildMap {
                 put(NotificationsAnalyticsKey.NAME.key, event.biValue)
-                put(NotificationsAnalyticsKey.ACTION.key, isDiscussionPushEnabled)
                 put(
                     NotificationsAnalyticsKey.CATEGORY.key,
                     NotificationsAnalyticsKey.NOTIFICATIONS.key
                 )
+                putAll(params)
             }
         )
     }

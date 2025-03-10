@@ -89,6 +89,7 @@ enum class NotificationsAnalyticsKey(val key: String) {
     DISCUSSION("discussion"),
     DISCUSSIONS_ACTIVITY("discussions_activity"),
     TYPE("notification_type"),
+    ID("notification_id"),
     UNREAD_NOTIFICATIONS("unread_notifications"),
     NOTIFY_ME("notify_me"),
     NO_THANKS("no_thanks"),

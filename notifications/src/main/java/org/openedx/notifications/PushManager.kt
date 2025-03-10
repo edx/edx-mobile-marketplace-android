@@ -157,14 +157,8 @@ class PushManager(
         data: Map<String, String>
     ): Map<String, String?> = buildMap {
         put(NotificationsAnalyticsKey.NAME.key, event.biValue)
-        put(NotificationsAnalyticsKey.DOMAIN.key, data[PARAM_NOTIFICATION_DOMAIN])
-        put(NotificationsAnalyticsKey.TYPE.key, data[PARAM_NOTIFICATION_TYPE])
-        put(NotificationsAnalyticsKey.COURSE_ID.key, data[PARAM_COURSE_ID])
-        put(NotificationsAnalyticsKey.TOPIC_ID.key, data[PARAM_TOPIC_ID])
-        put(NotificationsAnalyticsKey.THREAD_ID.key, data[PARAM_THREAD_ID])
-        put(NotificationsAnalyticsKey.RESPONSE_ID.key, data[PARAM_RESPONSE_ID])
-        put(NotificationsAnalyticsKey.COMMENT_ID.key, data[PARAM_COMMENT_ID])
         put(NotificationsAnalyticsKey.CATEGORY.key, NotificationsAnalyticsKey.NOTIFICATIONS.key)
+        putAll(data)
     }.filterValues { it.isNotNullOrEmpty() }
 
     companion object {
@@ -176,12 +170,6 @@ class PushManager(
 
         const val PARAM_EXTRA = "extra"
         const val PARAM_NOTIFICATION_DOMAIN = "notification_domain"
-        const val PARAM_NOTIFICATION_TYPE = "notification_type"
-        const val PARAM_COURSE_ID = "course_id"
-        const val PARAM_TOPIC_ID = "topic_id"
-        const val PARAM_THREAD_ID = "thread_id"
-        const val PARAM_RESPONSE_ID = "response_id"
-        const val PARAM_COMMENT_ID = "comment_id"
 
         const val EXCEPTION_MESSAGE = "Failed to parse notification data:"
     }

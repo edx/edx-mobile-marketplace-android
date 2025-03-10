@@ -11,6 +11,7 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.FragmentViewType
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.system.ResourceManager
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.InboxSection
@@ -141,7 +142,6 @@ class NotificationsInboxViewModel(
         viewModelScope.launch {
             try {
                 val currentSection = notifications[inboxSection] ?: return@launch
-                val contentContext = notification.contentContext
                 val index = currentSection.indexOfFirst { it.id == notification.id }
                 if (index == -1) return@launch
 
@@ -155,24 +155,7 @@ class NotificationsInboxViewModel(
                         notifications = notifications.toMap()
                     )
                 }
-                logEvent(
-                    event = NotificationsAnalyticsEvent.NOTIFICATION_INBOX_ITEM_CLICKED,
-                    params = buildMap {
-                        put(
-                            NotificationsAnalyticsKey.TYPE.key,
-                            notification.notificationType
-                        )
-                        put(NotificationsAnalyticsKey.COURSE_ID.key, notification.courseId)
-                        put(NotificationsAnalyticsKey.TOPIC_ID.key, contentContext.topicId)
-                        put(NotificationsAnalyticsKey.THREAD_ID.key, contentContext.threadId)
-                        put(NotificationsAnalyticsKey.RESPONSE_ID.key, contentContext.parentId)
-                        put(NotificationsAnalyticsKey.COMMENT_ID.key, contentContext.commentId)
-                        put(
-                            NotificationsAnalyticsKey.DOMAIN.key,
-                            NotificationsAnalyticsKey.DISCUSSION.key
-                        )
-                    }
-                )
+                logNotificationItemClickedEvent(notification)
 
                 // Navigating the user to the related post or response in the Course Discussion Tab
                 if (notification.courseId.isNotEmpty()) {
@@ -244,6 +227,22 @@ class NotificationsInboxViewModel(
                 UIMessage.SnackBarMessage(resourceManager.getString(coreR.string.core_error_unknown_error))
             )
         }
+    }
+
+    private fun logNotificationItemClickedEvent(notification: NotificationItem) {
+        logEvent(
+            event = NotificationsAnalyticsEvent.NOTIFICATION_INBOX_ITEM_CLICKED,
+            params = buildMap<String, String?> {
+                NotificationsAnalyticsKey.DOMAIN.key to notification.appName
+                NotificationsAnalyticsKey.TYPE.key to notification.notificationType
+                NotificationsAnalyticsKey.ID.key to notification.id.toString()
+                NotificationsAnalyticsKey.COURSE_ID.key to notification.courseId
+                NotificationsAnalyticsKey.TOPIC_ID.key to notification.contentContext.topicId
+                NotificationsAnalyticsKey.THREAD_ID.key to notification.contentContext.threadId
+                NotificationsAnalyticsKey.RESPONSE_ID.key to notification.contentContext.parentId
+                NotificationsAnalyticsKey.COMMENT_ID.key to notification.contentContext.commentId
+            }.filterValues { it.isNotNullOrEmpty() }
+        )
     }
 
     private fun logScreenViewEvent() {

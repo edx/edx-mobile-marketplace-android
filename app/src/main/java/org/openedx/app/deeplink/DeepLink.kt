@@ -9,8 +9,8 @@ class DeepLink(params: Map<String, String>) {
     val componentId = params[Keys.COMPONENT_ID.value]
     val topicId = params[Keys.TOPIC_ID.value]
     val threadId = params[Keys.THREAD_ID.value]
+    val responseId = params[Keys.RESPONSE_ID.value]
     val commentId = params[Keys.COMMENT_ID.value]
-    val parentId = params[Keys.PARENT_ID.value]
     val notificationDomain = params[Keys.NOTIFICATION_DOMAIN.value]
     val type = DeepLinkType.typeOf(screenName ?: "")
 
@@ -22,8 +22,8 @@ class DeepLink(params: Map<String, String>) {
         COMPONENT_ID("component_id"),
         TOPIC_ID("topic_id"),
         THREAD_ID("thread_id"),
+        RESPONSE_ID("response_id"),
         COMMENT_ID("comment_id"),
-        PARENT_ID("parent_id"),
         NOTIFICATION_DOMAIN("notification_domain"),
     }
 
@@ -36,8 +36,8 @@ class DeepLink(params: Map<String, String>) {
             Keys.COMPONENT_ID.value to componentId.orEmpty(),
             Keys.TOPIC_ID.value to topicId.orEmpty(),
             Keys.THREAD_ID.value to threadId.orEmpty(),
+            Keys.RESPONSE_ID.value to responseId.orEmpty(),
             Keys.COMMENT_ID.value to commentId.orEmpty(),
-            Keys.PARENT_ID.value to parentId.orEmpty(),
             Keys.NOTIFICATION_DOMAIN.value to notificationDomain.orEmpty(),
         ).filterValues { it.isNotEmpty() }
     }

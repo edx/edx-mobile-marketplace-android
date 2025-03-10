@@ -166,7 +166,7 @@ class NotificationsInboxViewModel(
                         topicId = notification.contentContext.topicId,
                         threadId = notification.contentContext.threadId,
                         responseId = notification.contentContext.responseId,
-                        commentId = notification.contentContext.responseCommentId,
+                        commentId = notification.contentContext.commentId,
                         title = notification.contentContext.courseName,
                         viewType = FragmentViewType.FULL_CONTENT
                     )
@@ -239,7 +239,7 @@ class NotificationsInboxViewModel(
                 put(NotificationsAnalyticsKey.COURSE_ID.key, notification.courseId)
                 put(NotificationsAnalyticsKey.TOPIC_ID.key, notification.contentContext.topicId)
                 put(NotificationsAnalyticsKey.THREAD_ID.key, notification.contentContext.threadId)
-                put(NotificationsAnalyticsKey.RESPONSE_ID.key, notification.contentContext.parentId)
+                put(NotificationsAnalyticsKey.RESPONSE_ID.key, notification.contentContext.responseId)
                 put(NotificationsAnalyticsKey.COMMENT_ID.key, notification.contentContext.commentId)
             }.filterValues { it.isNotNullOrEmpty() }
         )

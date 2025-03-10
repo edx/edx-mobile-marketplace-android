@@ -526,8 +526,8 @@ class DeepLinkRouter(
         val topicId = deepLink.topicId
         val threadId = deepLink.threadId
         val commentId = deepLink.commentId
-        val parentId = deepLink.parentId
-        if (courseId == null || topicId == null || threadId == null || commentId == null || parentId == null) {
+        val responseId = deepLink.responseId
+        if (courseId == null || topicId == null || threadId == null || commentId == null || responseId == null) {
             return
         }
         launch {
@@ -557,7 +557,7 @@ class DeepLinkRouter(
                         thread = thread
                     )
                 }
-                val comment = discussionInteractor.getResponse(parentId)
+                val comment = discussionInteractor.getResponse(responseId)
                 launch(Dispatchers.Main) {
                     appRouter.navigateToDiscussionResponses(
                         fm = fm,

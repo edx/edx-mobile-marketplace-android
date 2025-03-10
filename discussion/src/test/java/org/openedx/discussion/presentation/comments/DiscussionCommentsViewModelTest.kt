@@ -59,7 +59,6 @@ class DiscussionCommentsViewModelTest {
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
-    private val commentAddedSuccessfully = "Comment Successfully added"
 
     //region mockThread
 
@@ -144,7 +143,6 @@ class DiscussionCommentsViewModelTest {
         every { preferencesManager.user?.username } returns ""
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
         every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
-        every { resourceManager.getString(org.openedx.discussion.R.string.discussion_comment_added) } returns commentAddedSuccessfully
     }
 
     @After

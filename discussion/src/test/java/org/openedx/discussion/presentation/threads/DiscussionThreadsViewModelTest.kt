@@ -32,6 +32,7 @@ import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
@@ -59,45 +60,45 @@ class DiscussionThreadsViewModelTest {
 
     //region mockThread
 
-    val mockThread = org.openedx.discussion.domain.model.Thread(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        TextConverter.textToLinkedImageText(""),
-        false,
-        true,
-        20,
-        emptyList(),
-        false,
-        "",
-        "",
-        "",
-        "",
-        DiscussionType.DISCUSSION,
-        "",
-        "",
-        "Discussion title long Discussion title long good item",
-        true,
-        false,
-        true,
-        21,
-        4,
-        false,
-        false,
-        mapOf(),
-        0,
-        false,
-        false,
-        false,
+    private val mockThread = Thread(
+        id = "",
+        author = "",
+        authorLabel = "",
+        createdAt = "",
+        updatedAt = "",
+        rawBody = "",
+        renderedBody = "",
+        parsedRenderedBody = TextConverter.textToLinkedImageText(""),
+        abuseFlagged = false,
+        voted = true,
+        voteCount = 20,
+        editableFields = emptyList(),
+        canDelete = false,
+        courseId = "",
+        topicId = "",
+        groupId = "",
+        groupName = "",
+        type = DiscussionType.DISCUSSION,
+        previewBody = "",
+        abuseFlaggedCount = "",
+        title = "Discussion title long Discussion title long good item",
+        pinned = true,
+        closed = false,
+        following = true,
+        commentCount = 21,
+        unreadCommentCount = 4,
+        read = false,
+        hasEndorsed = false,
+        users = mapOf(),
+        responseCount = 10,
+        anonymous = false,
+        anonymousToPeers = false,
+        isAuthor = false,
     )
 
     //endregion
 
-    private val threads = listOf<org.openedx.discussion.domain.model.Thread>(
+    private val threads = listOf(
         mockThread.copy(id = "0"),
         mockThread.copy(id = "1"),
         mockThread.copy(id = "2")
@@ -117,7 +118,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType AllThreads no internet connection`() = runTest {
+    fun `sortThreads AllThreads no internet connection`() = runTest {
         coEvery {
             interactor.getAllThreads(
                 any(),
@@ -147,7 +148,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType AllThreads unknown exception`() = runTest {
+    fun `sortThreads AllThreads unknown exception`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
             "",
             "",
@@ -170,7 +171,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType AllThreads success`() = runTest {
+    fun `sortThreads AllThreads success`() = runTest {
         coEvery { interactor.getAllThreads("", any(), null, range(1, 2)) } returns ThreadsData(
             threads,
             "",
@@ -201,11 +202,9 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType FollowingPosts no internet connection`() = runTest {
+    fun `sortThreads FollowingPosts no internet connection`() = runTest {
         coEvery {
             interactor.getFollowingThreads(
-                any(),
-                any(),
                 any(),
                 any(),
                 any()
@@ -223,7 +222,7 @@ class DiscussionThreadsViewModelTest {
         )
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assertEquals(noInternet, message?.message)
@@ -232,7 +231,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType FollowingPosts unknown exception`() = runTest {
+    fun `sortThreads FollowingPosts unknown exception`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
             "",
             "",
@@ -247,14 +246,12 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 any(),
                 any(),
-                any(),
-                any(),
                 any()
             )
         } throws Exception()
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assertEquals(somethingWrong, message?.message)
@@ -263,13 +260,11 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType FollowingPosts success`() = runTest {
+    fun `sortThreads FollowingPosts success`() = runTest {
         coEvery {
             interactor.getFollowingThreads(
                 "",
                 any(),
-                any(),
-                null,
                 range(1, 2)
             )
         } returns ThreadsData(
@@ -281,8 +276,6 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 "",
                 any(),
-                any(),
-                null,
                 eq(3)
             )
         } returns ThreadsData(
@@ -302,7 +295,7 @@ class DiscussionThreadsViewModelTest {
         )
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.getFollowingThreads(any(), any(), any()) }
 
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.isUpdating.value == false)
@@ -310,7 +303,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType Topic no internet connection`() = runTest {
+    fun `sortThreads Topic no internet connection`() = runTest {
         coEvery {
             interactor.getThreads(
                 any(),
@@ -341,7 +334,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType Topic unknown exception`() = runTest {
+    fun `sortThreads Topic unknown exception`() = runTest {
         val viewModel = DiscussionThreadsViewModel(
             "",
             "",
@@ -364,7 +357,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `getThreadByType Topic success`() = runTest {
+    fun `sortThreads Topic success`() = runTest {
         coEvery { interactor.getThreads("", any(), any(), null, range(1, 2)) } returns ThreadsData(
             threads,
             "",
@@ -396,6 +389,11 @@ class DiscussionThreadsViewModelTest {
 
     @Test
     fun `filterThreads All posts`() = runTest {
+        coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
+            threads,
+            "",
+            pagination = Pagination(10, "", 2, "")
+        )
         val viewModel = DiscussionThreadsViewModel(
             "",
             "",
@@ -405,11 +403,6 @@ class DiscussionThreadsViewModelTest {
             notifier,
             pushGlobalManager,
             analytics,
-        )
-        coEvery { interactor.getThreads(any(), any(), any(), any(), any()) } returns ThreadsData(
-            threads,
-            "",
-            pagination = Pagination(10, "", 2, "")
         )
         viewModel.filterThreads(FilterType.ALL_POSTS.value)
         advanceUntilIdle()
@@ -461,7 +454,7 @@ class DiscussionThreadsViewModelTest {
     }
 
     @Test
-    fun `updateThread Topic success`() = runTest {
+    fun `refreshThread Topic success`() = runTest {
         coEvery { interactor.getThreads("", any(), any(), null, range(1, 2)) } returns ThreadsData(
             threads,
             "",
@@ -482,7 +475,7 @@ class DiscussionThreadsViewModelTest {
             pushGlobalManager,
             analytics,
         )
-        viewModel.updateThread("")
+        viewModel.refreshThreads()
         advanceUntilIdle()
 
         coVerify(exactly = 2) { interactor.getThreads(any(), any(), any(), any(), any()) }
@@ -527,7 +520,7 @@ class DiscussionThreadsViewModelTest {
         lifecycleRegistry.addObserver(viewModel)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
 
-        viewModel.updateThread("date")
+        viewModel.refreshThreads()
         advanceUntilIdle()
 
         coVerify(exactly = 3) { interactor.getThreads(any(), any(), any(), any(), any()) }
@@ -567,7 +560,7 @@ class DiscussionThreadsViewModelTest {
         lifecycleRegistry.addObserver(viewModel)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
 
-        viewModel.updateThread("date")
+        viewModel.refreshThreads()
         advanceUntilIdle()
 
         coVerify(exactly = 2) { interactor.getThreads(any(), any(), any(), any(), any()) }

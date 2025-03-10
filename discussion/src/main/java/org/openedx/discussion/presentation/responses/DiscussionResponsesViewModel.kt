@@ -96,13 +96,7 @@ class DiscussionResponsesViewModel(
                 })
                 _uiState.value = DiscussionResponsesUIState.Success(comment, comments.toList())
             } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
-                } else {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
-                }
+                handleException(e)
             } finally {
                 isLoading = false
                 _isUpdating.value = false
@@ -139,13 +133,7 @@ class DiscussionResponsesViewModel(
                 }
                 _uiState.value = DiscussionResponsesUIState.Success(comment, comments.toList())
             } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
-                } else {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
-                }
+                handleException(e)
             }
         }
     }
@@ -178,13 +166,7 @@ class DiscussionResponsesViewModel(
                 }
                 _uiState.value = DiscussionResponsesUIState.Success(comment, comments.toList())
             } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
-                } else {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
-                }
+                handleException(e)
             }
         }
     }
@@ -197,12 +179,8 @@ class DiscussionResponsesViewModel(
 
                 comment = comment.copy(childCount = comment.childCount + 1)
                 sendUpdatedComment()
-                if (page == -1) {
-                    comments.add(response)
-                } else {
-                    _uiMessage.value =
-                        UIMessage.ToastMessage(resourceManager.getString(org.openedx.discussion.R.string.discussion_comment_added))
-                }
+
+                comments.add(0, response)
                 _uiState.value =
                     DiscussionResponsesUIState.Success(comment, comments.toList())
                 logCommentAddedEvent(
@@ -213,15 +191,18 @@ class DiscussionResponsesViewModel(
 
                 notifier.send(DiscussionResponseAdded())
             } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
-                } else {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
-                }
+                handleException(e)
             }
         }
     }
 
+    private fun handleException(e: Exception) {
+        if (e.isInternetError()) {
+            _uiMessage.value =
+                UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
+        } else {
+            _uiMessage.value =
+                UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
+        }
+    }
 }

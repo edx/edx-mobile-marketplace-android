@@ -85,6 +85,7 @@ class DeepLinkRouter(
                 navigateToProfile(fm = fm)
                 return
             }
+
             else -> {
                 //ignore
             }
@@ -199,25 +200,25 @@ class DeepLinkRouter(
                     )
                 }
 
-                DeepLinkType.DISCUSSION_COMMENT, DeepLinkType.FORUM_RESPONSE -> {
-                    navigateToDashboard(fm = fm)
-                    navigateToCourseDiscussion(
-                        fm = fm,
-                        deepLink = deepLink
-                    )
-                    navigateToDiscussionResponse(
-                        fm = fm,
-                        deepLink = deepLink
-                    )
-                }
-
-                DeepLinkType.FORUM_COMMENT -> {
+                DeepLinkType.DISCUSSION_COMMENT, DeepLinkType.FORUM_COMMENT -> {
                     navigateToDashboard(fm = fm)
                     navigateToCourseDiscussion(
                         fm = fm,
                         deepLink = deepLink
                     )
                     navigateToDiscussionComment(
+                        fm = fm,
+                        deepLink = deepLink
+                    )
+                }
+
+                DeepLinkType.FORUM_RESPONSE -> {
+                    navigateToDashboard(fm = fm)
+                    navigateToCourseDiscussion(
+                        fm = fm,
+                        deepLink = deepLink
+                    )
+                    navigateToDiscussionResponse(
                         fm = fm,
                         deepLink = deepLink
                     )

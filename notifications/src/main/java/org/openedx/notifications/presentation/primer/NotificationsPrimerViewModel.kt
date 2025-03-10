@@ -9,14 +9,22 @@ import org.openedx.core.BaseViewModel
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.NotificationsPrimerConfiguration
+import org.openedx.notifications.presentation.NotificationsAnalytics
+import org.openedx.notifications.presentation.NotificationsAnalyticsEvent
+import org.openedx.notifications.presentation.NotificationsAnalyticsKey
 
 class NotificationsPrimerViewModel(
     private val interactor: NotificationsInteractor,
-    private val notificationsPreferences: NotificationsPreferences,
+    private val preferences: NotificationsPreferences,
+    private val analytics: NotificationsAnalytics,
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow<PrimerUIState>(PrimerUIState.ShowDialog)
     val uiState: StateFlow<PrimerUIState> = _uiState.asStateFlow()
+
+    init {
+        logPrimerScreenEvent()
+    }
 
     fun enableDiscussionNotificationsPreference() {
         viewModelScope.launch {
@@ -33,7 +41,7 @@ class NotificationsPrimerViewModel(
     }
 
     private fun resetNotificationsPrimerConfiguration() {
-        notificationsPreferences.primer = NotificationsPrimerConfiguration()
+        preferences.primer = NotificationsPrimerConfiguration()
     }
 
     fun hideDialog() {
@@ -46,5 +54,36 @@ class NotificationsPrimerViewModel(
 
     fun showRationaleDialog() {
         _uiState.value = PrimerUIState.ShowRationaleDialog
+    }
+
+    fun logPrimerActionEvent(action: NotificationsAnalyticsKey) {
+        val event = NotificationsAnalyticsEvent.DISCUSSION_PRIMER_ACTION
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.NAME.key, event.biValue)
+                put(NotificationsAnalyticsKey.ACTION.key, action.key)
+                put(
+                    NotificationsAnalyticsKey.CATEGORY.key,
+                    NotificationsAnalyticsKey.NOTIFICATIONS.key
+                )
+            }
+        )
+    }
+
+    private fun logPrimerScreenEvent() {
+        val event = NotificationsAnalyticsEvent.DISCUSSION_PRIMER_VIEWED
+        val dialogFrequency = preferences.primer.dismissalCount
+        analytics.logScreenEvent(
+            screenName = event.eventName,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.NAME.key, event.biValue)
+                put(NotificationsAnalyticsKey.PRIMER_DIALOG_FREQUENCY.key, dialogFrequency)
+                put(
+                    NotificationsAnalyticsKey.CATEGORY.key,
+                    NotificationsAnalyticsKey.NOTIFICATIONS.key
+                )
+            }
+        )
     }
 }

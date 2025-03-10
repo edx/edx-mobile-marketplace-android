@@ -3,7 +3,7 @@ package org.openedx.app.deeplink
 class DeepLink(params: Map<String, String>) {
 
     private val screenName = params[Keys.SCREEN_NAME.value]
-    val notificationId = params[Keys.NOTIFICATION_ID.value]?.toIntOrNull()
+    private val notificationType = params[Keys.NOTIFICATION_TYPE.value]
     val courseId = params[Keys.COURSE_ID.value]
     val pathId = params[Keys.PATH_ID.value]
     val componentId = params[Keys.COMPONENT_ID.value]
@@ -12,11 +12,11 @@ class DeepLink(params: Map<String, String>) {
     val responseId = params[Keys.RESPONSE_ID.value]
     val commentId = params[Keys.COMMENT_ID.value]
     val notificationDomain = params[Keys.NOTIFICATION_DOMAIN.value]
+    val notificationId = params[Keys.NOTIFICATION_ID.value]?.toIntOrNull()
     val type = DeepLinkType.typeOf(screenName ?: "")
 
     enum class Keys(val value: String) {
         SCREEN_NAME("screen_name"),
-        NOTIFICATION_ID("notification_id"),
         COURSE_ID("course_id"),
         PATH_ID("path_id"),
         COMPONENT_ID("component_id"),
@@ -25,12 +25,13 @@ class DeepLink(params: Map<String, String>) {
         RESPONSE_ID("response_id"),
         COMMENT_ID("comment_id"),
         NOTIFICATION_DOMAIN("notification_domain"),
+        NOTIFICATION_TYPE("notification_type"),
+        NOTIFICATION_ID("notification_id"),
     }
 
     fun toMap(): Map<String, String> {
         return mapOf(
             Keys.SCREEN_NAME.value to screenName.orEmpty(),
-            Keys.NOTIFICATION_ID.value to notificationId?.toString().orEmpty(),
             Keys.COURSE_ID.value to courseId.orEmpty(),
             Keys.PATH_ID.value to pathId.orEmpty(),
             Keys.COMPONENT_ID.value to componentId.orEmpty(),
@@ -39,6 +40,8 @@ class DeepLink(params: Map<String, String>) {
             Keys.RESPONSE_ID.value to responseId.orEmpty(),
             Keys.COMMENT_ID.value to commentId.orEmpty(),
             Keys.NOTIFICATION_DOMAIN.value to notificationDomain.orEmpty(),
+            Keys.NOTIFICATION_TYPE.value to notificationType.orEmpty(),
+            Keys.NOTIFICATION_ID.value to notificationId?.toString().orEmpty(),
         ).filterValues { it.isNotEmpty() }
     }
 }

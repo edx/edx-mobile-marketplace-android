@@ -233,14 +233,14 @@ class NotificationsInboxViewModel(
         logEvent(
             event = NotificationsAnalyticsEvent.NOTIFICATION_INBOX_ITEM_CLICKED,
             params = buildMap<String, String?> {
-                NotificationsAnalyticsKey.DOMAIN.key to notification.appName
-                NotificationsAnalyticsKey.TYPE.key to notification.notificationType
-                NotificationsAnalyticsKey.ID.key to notification.id.toString()
-                NotificationsAnalyticsKey.COURSE_ID.key to notification.courseId
-                NotificationsAnalyticsKey.TOPIC_ID.key to notification.contentContext.topicId
-                NotificationsAnalyticsKey.THREAD_ID.key to notification.contentContext.threadId
-                NotificationsAnalyticsKey.RESPONSE_ID.key to notification.contentContext.parentId
-                NotificationsAnalyticsKey.COMMENT_ID.key to notification.contentContext.commentId
+                put(NotificationsAnalyticsKey.DOMAIN.key, notification.appName)
+                put(NotificationsAnalyticsKey.TYPE.key, notification.notificationType)
+                put(NotificationsAnalyticsKey.ID.key, notification.id.toString())
+                put(NotificationsAnalyticsKey.COURSE_ID.key, notification.courseId)
+                put(NotificationsAnalyticsKey.TOPIC_ID.key, notification.contentContext.topicId)
+                put(NotificationsAnalyticsKey.THREAD_ID.key, notification.contentContext.threadId)
+                put(NotificationsAnalyticsKey.RESPONSE_ID.key, notification.contentContext.parentId)
+                put(NotificationsAnalyticsKey.COMMENT_ID.key, notification.contentContext.commentId)
             }.filterValues { it.isNotNullOrEmpty() }
         )
     }

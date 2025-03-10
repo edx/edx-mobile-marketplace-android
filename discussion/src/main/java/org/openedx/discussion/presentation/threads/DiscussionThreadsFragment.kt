@@ -161,10 +161,10 @@ class DiscussionThreadsFragment : Fragment() {
                     viewType = viewType,
                     refreshing = refreshing,
                     onSwipeRefresh = {
-                        viewModel.updateThread(SortType.LAST_ACTIVITY_AT.queryParam)
+                        viewModel.refreshThreads()
                     },
                     updatedOrder = {
-                        viewModel.getThreadByType(it)
+                        viewModel.sortThreads(it)
                     },
                     updatedFilter = {
                         viewModel.filterThreads(it)
@@ -417,6 +417,7 @@ private fun DiscussionThreadsScreen(
                         }
                         coroutine.launch {
                             bottomSheetScaffoldState.hide()
+                            scrollState.animateScrollToItem(index = 0)
                         }
                     },
                     searchValueChanged = {

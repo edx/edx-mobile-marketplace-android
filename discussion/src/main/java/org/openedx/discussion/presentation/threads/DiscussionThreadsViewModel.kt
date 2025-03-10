@@ -17,6 +17,7 @@ import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
+import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
@@ -38,7 +39,8 @@ class DiscussionThreadsViewModel(
     analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, "", analytics) {
 
-    private val _uiState = MutableLiveData<DiscussionThreadsUIState>()
+    private val _uiState =
+        MutableLiveData<DiscussionThreadsUIState>(DiscussionThreadsUIState.Loading)
     val uiState: LiveData<DiscussionThreadsUIState>
         get() = _uiState
 
@@ -60,8 +62,8 @@ class DiscussionThreadsViewModel(
     private val threadsList = mutableListOf<org.openedx.discussion.domain.model.Thread>()
     private var nextPage = 1
     private var isLoading = false
-    private var lastOrderBy = ""
-    private var filterType: String? = null
+    private var lastOrderBy = SortType.LAST_ACTIVITY_AT.queryParam
+    private var lastFilterType = FilterType.ALL_POSTS.value
 
     private var isBlockAlreadyCompleted = false
 
@@ -71,7 +73,7 @@ class DiscussionThreadsViewModel(
             notifier.notifier.collect {
                 if (it is DiscussionThreadAdded) {
                     if (lastOrderBy.isNotEmpty()) {
-                        updateThread(lastOrderBy)
+                        refreshThreads()
                     }
                 } else if (it is DiscussionThreadDataChanged) {
                     val index = threadsList.indexOfFirst { thread ->
@@ -96,177 +98,99 @@ class DiscussionThreadsViewModel(
     }
 
     init {
-        getThreadByType(SortType.LAST_ACTIVITY_AT.queryParam)
+        loadThreads()
         logTopicScreenEvent(topicId)
     }
 
-    fun getThreadByType(orderBy: String) {
-        _uiState.value = DiscussionThreadsUIState.Loading
-        internalLoadThreads(orderBy)
+    private fun loadThreads() {
+        viewModelScope.launch {
+            try {
+                val response = fetchThreads()
+                if (response.pagination.next.isNotEmpty()) {
+                    _canLoadMore.value = true
+                    nextPage++
+                } else {
+                    _canLoadMore.value = false
+                    nextPage = -1
+                }
+                threadsList.addAll(response.results)
+                _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
+            } catch (e: Exception) {
+                if (e.isInternetError()) {
+                    _uiMessage.value =
+                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
+                } else {
+                    _uiMessage.value =
+                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
+                }
+            } finally {
+                _isUpdating.value = false
+                isLoading = false
+            }
+        }
     }
 
-    fun updateThread(orderBy: String) {
-        _isUpdating.value = true
-        threadsList.clear()
-        nextPage = 1
-        internalLoadThreads(orderBy)
+    private suspend fun fetchThreads(): ThreadsData {
+        val filterValue = lastFilterType.takeUnless { it == FilterType.ALL_POSTS.value }
+
+        return when (threadType) {
+            DiscussionTopicsViewModel.ALL_POSTS -> {
+                interactor.getAllThreads(courseId, lastOrderBy, filterValue, nextPage)
+            }
+
+            DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
+                interactor.getFollowingThreads(courseId, lastOrderBy, nextPage)
+            }
+
+            DiscussionTopicsViewModel.TOPIC -> {
+                interactor.getThreads(courseId, topicId, lastOrderBy, filterValue, nextPage)
+            }
+
+            else -> throw IllegalArgumentException("Invalid thread type")
+        }
     }
 
     fun fetchMore() {
         if (!isLoading && nextPage != -1) {
             isLoading = true
-            internalLoadThreads(lastOrderBy)
+            loadThreads()
         }
     }
 
-    private fun internalLoadThreads(orderBy: String) {
+    fun refreshThreads() {
+        _isUpdating.value = true
+        threadsList.clear()
+        nextPage = 1
+        loadThreads()
+    }
+
+    fun sortThreads(orderBy: String) {
         if (lastOrderBy != orderBy) {
+            lastOrderBy = orderBy
             threadsList.clear()
             nextPage = 1
-        }
-        lastOrderBy = orderBy
-        when (threadType) {
-            DiscussionTopicsViewModel.ALL_POSTS -> {
-                getAllThreads(orderBy)
-            }
-
-            DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
-                getFollowingThreads(orderBy)
-            }
-
-            DiscussionTopicsViewModel.TOPIC -> {
-                getThreads(
-                    topicId,
-                    orderBy
-                )
-            }
+            loadThreads()
         }
     }
 
-    fun filterThreads(filter: String?) {
-        if (filterType != filter || (filter != FilterType.ALL_POSTS.value && filterType.isNullOrEmpty())) {
+    fun filterThreads(filter: String) {
+        if (lastFilterType != filter) {
+            lastFilterType = filter
             threadsList.clear()
             nextPage = 1
-        }
-        filterType = if (filter == FilterType.ALL_POSTS.value) {
-            null
-        } else {
-            filter
-        }
-        when (threadType) {
-            DiscussionTopicsViewModel.ALL_POSTS -> {
-                getAllThreads(lastOrderBy)
-            }
-
-            DiscussionTopicsViewModel.FOLLOWING_POSTS -> {
-                getFollowingThreads(lastOrderBy)
-            }
-
-            DiscussionTopicsViewModel.TOPIC -> {
-                getThreads(
-                    topicId,
-                    lastOrderBy
-                )
-            }
-        }
-    }
-
-    private fun getThreads(topicId: String, orderBy: String) {
-        viewModelScope.launch {
-            try {
-                val response =
-                    interactor.getThreads(courseId, topicId, orderBy, filterType, nextPage)
-                if (response.pagination.next.isNotEmpty()) {
-                    _canLoadMore.value = true
-                    nextPage++
-                } else {
-                    _canLoadMore.value = false
-                    nextPage = -1
-                }
-                threadsList.addAll(response.results)
-                _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
-            } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
-                } else {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
-                }
-            }
-            _isUpdating.value = false
-            isLoading = false
-        }
-    }
-
-    private fun getAllThreads(orderBy: String) {
-        viewModelScope.launch {
-            try {
-                val response = interactor.getAllThreads(courseId, orderBy, filterType, nextPage)
-                if (response.pagination.next.isNotEmpty()) {
-                    _canLoadMore.value = true
-                    nextPage++
-                } else {
-                    _canLoadMore.value = false
-                    nextPage = -1
-                }
-                threadsList.addAll(response.results)
-                _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
-            } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
-                } else {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
-                }
-            }
-            _isUpdating.value = false
-            isLoading = false
-        }
-    }
-
-    private fun getFollowingThreads(orderBy: String) {
-        viewModelScope.launch {
-            try {
-                val response =
-                    interactor.getFollowingThreads(courseId, true, orderBy, page = nextPage)
-                if (response.pagination.next.isNotEmpty()) {
-                    _canLoadMore.value = true
-                    nextPage++
-                } else {
-                    _canLoadMore.value = false
-                    nextPage = -1
-                }
-                threadsList.addAll(response.results)
-                _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
-            } catch (e: Exception) {
-                if (e.isInternetError()) {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
-                } else {
-                    _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
-                }
-            }
-            _isUpdating.value = false
-            isLoading = false
+            loadThreads()
         }
     }
 
     fun markBlockCompleted(blockId: String) {
-        if (!isBlockAlreadyCompleted) {
-            viewModelScope.launch {
-                try {
-                    isBlockAlreadyCompleted = true
-                    interactor.markBlocksCompletion(
-                        courseId,
-                        listOf(blockId)
-                    )
-                } catch (e: Exception) {
-                    isBlockAlreadyCompleted = false
-                    e.printStackTrace()
-                }
+        if (isBlockAlreadyCompleted) return
+        viewModelScope.launch {
+            try {
+                isBlockAlreadyCompleted = true
+                interactor.markBlocksCompletion(courseId, listOf(blockId))
+            } catch (e: Exception) {
+                isBlockAlreadyCompleted = false
+                e.printStackTrace()
             }
         }
     }

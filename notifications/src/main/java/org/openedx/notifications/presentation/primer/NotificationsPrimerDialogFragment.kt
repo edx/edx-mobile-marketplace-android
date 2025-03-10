@@ -48,6 +48,7 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.notifications.R
+import org.openedx.notifications.presentation.NotificationsAnalyticsKey
 import org.openedx.notifications.utils.PermissionUtils
 import org.openedx.core.R as CoreR
 
@@ -81,9 +82,11 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                     PrimerUIState.ShowDialog -> {
                         NotificationsPrimer(
                             onDismissRequest = {
+                                viewModel.logPrimerActionEvent(NotificationsAnalyticsKey.NO_THANKS)
                                 viewModel.dismissDialog()
                             },
                             onNotifyClick = {
+                                viewModel.logPrimerActionEvent(NotificationsAnalyticsKey.NOTIFY_ME)
                                 viewModel.hideDialog()
                                 PermissionUtils.requestNotificationPermission(
                                     activity = requireActivity(),

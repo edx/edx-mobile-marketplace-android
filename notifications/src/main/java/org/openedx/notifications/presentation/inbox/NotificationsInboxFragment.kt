@@ -112,7 +112,10 @@ class NotificationsInboxFragment : Fragment() {
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
                     },
-                    onSettingsClick = { menuType ->
+                    onMenuClick = {
+                        viewModel.logInboxMenuClicked()
+                    },
+                    onMenuItemClick = { menuType ->
                         when (menuType) {
                             NotificationsMenuType.MARK_ALL_READ -> {
                                 viewModel.markAllNotificationsAsRead()
@@ -154,7 +157,8 @@ private fun InboxView(
     canLoadMore: Boolean,
     refreshing: Boolean,
     onBackClick: () -> Unit,
-    onSettingsClick: (NotificationsMenuType) -> Unit,
+    onMenuClick: () -> Unit,
+    onMenuItemClick: (NotificationsMenuType) -> Unit,
     onSwipeRefresh: () -> Unit,
     onReloadNotifications: () -> Unit,
     paginationCallBack: () -> Unit,
@@ -214,7 +218,8 @@ private fun InboxView(
             Header(
                 modifier = topBarWidth,
                 onBackClick = onBackClick,
-                onSettingsClick = onSettingsClick,
+                onMenuClick = onMenuClick,
+                onMenuItemClick = onMenuItemClick,
             )
 
             Surface(
@@ -311,7 +316,8 @@ private fun InboxView(
 private fun Header(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit,
-    onSettingsClick: (NotificationsMenuType) -> Unit,
+    onMenuClick: () -> Unit,
+    onMenuItemClick: (NotificationsMenuType) -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -339,10 +345,9 @@ private fun Header(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 16.dp),
-            onItemClick = onSettingsClick
+            onMenuClick = onMenuClick,
+            onItemClick = onMenuItemClick,
         )
-
-
     }
 }
 
@@ -368,6 +373,7 @@ private fun SectionHeader(
 @Composable
 private fun NotificationsDropdownMenu(
     modifier: Modifier = Modifier,
+    onMenuClick: () -> Unit,
     onItemClick: (NotificationsMenuType) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -378,6 +384,7 @@ private fun NotificationsDropdownMenu(
         Row(
             modifier = Modifier
                 .clickable {
+                    onMenuClick()
                     expanded = true
                 },
             verticalAlignment = Alignment.CenterVertically
@@ -484,7 +491,8 @@ private fun InboxPreview(
             canLoadMore = true,
             refreshing = true,
             onBackClick = { },
-            onSettingsClick = { },
+            onMenuClick = { },
+            onMenuItemClick = { },
             onSwipeRefresh = { },
             onReloadNotifications = { },
             paginationCallBack = { },

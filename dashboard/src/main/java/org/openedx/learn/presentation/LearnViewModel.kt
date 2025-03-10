@@ -84,6 +84,7 @@ class LearnViewModel(
     }
 
     fun onNotificationBadgeClick(fm: FragmentManager) {
+        pushManager.logNotificationBellClickedEvent(_uiState.value.hasUnreadNotifications)
         dashboardRouter.navigateToNotificationsInbox(fm)
         _uiState.update { it.copy(hasUnreadNotifications = false) }
     }

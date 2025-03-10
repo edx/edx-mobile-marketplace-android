@@ -133,7 +133,7 @@ val appModule = module {
     single<WhatsNewRouter> { get<AppRouter>() }
     single<AppUpgradeRouter> { get<AppRouter>() }
     single<NotificationsRouter> { get<AppRouter>() }
-    
+
     single { DeepLinkRouter(get(), get(), get(), get(), get(), get()) }
 
     single { NetworkConnection(get()) }
@@ -215,7 +215,7 @@ val appModule = module {
     single<IAPAnalytics> { get<AnalyticsManager>() }
     single<NotificationsAnalytics> { get<AnalyticsManager>() }
 
-    single { PushManager(get(), get()) }
+    single { PushManager(get(), get(), get()) }
     single<PushGlobalManager> { get<PushManager>() }
 
     factory { AgreementProvider(get(), get()) }

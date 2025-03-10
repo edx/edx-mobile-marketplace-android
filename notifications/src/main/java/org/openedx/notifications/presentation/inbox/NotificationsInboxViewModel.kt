@@ -184,7 +184,7 @@ class NotificationsInboxViewModel(
             event = NotificationsAnalyticsEvent.INBOX_MARK_ALL_READ_CLICKED,
             params = buildMap {
                 put(
-                    NotificationsAnalyticsKey.DOMAIN.key,
+                    NotificationsAnalyticsKey.NOTIFICATION_DOMAIN.key,
                     NotificationsAnalyticsKey.DISCUSSION.key
                 )
             },
@@ -233,9 +233,9 @@ class NotificationsInboxViewModel(
         logEvent(
             event = NotificationsAnalyticsEvent.NOTIFICATION_INBOX_ITEM_CLICKED,
             params = buildMap<String, String?> {
-                put(NotificationsAnalyticsKey.DOMAIN.key, notification.appName)
-                put(NotificationsAnalyticsKey.TYPE.key, notification.notificationType)
-                put(NotificationsAnalyticsKey.ID.key, notification.id.toString())
+                put(NotificationsAnalyticsKey.NOTIFICATION_DOMAIN.key, notification.appName)
+                put(NotificationsAnalyticsKey.NOTIFICATION_TYPE.key, notification.notificationType)
+                put(NotificationsAnalyticsKey.NOTIFICATION_ID.key, notification.id.toString())
                 put(NotificationsAnalyticsKey.COURSE_ID.key, notification.courseId)
                 put(NotificationsAnalyticsKey.TOPIC_ID.key, notification.contentContext.topicId)
                 put(NotificationsAnalyticsKey.THREAD_ID.key, notification.contentContext.threadId)

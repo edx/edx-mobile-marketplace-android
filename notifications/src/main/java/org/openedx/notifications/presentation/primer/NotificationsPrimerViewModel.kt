@@ -23,7 +23,10 @@ class NotificationsPrimerViewModel(
     val uiState: StateFlow<PrimerUIState> = _uiState.asStateFlow()
 
     init {
-        logPrimerScreenEvent()
+        val dialogFrequency = preferences.primer.dismissalCount
+        logScreenEvent(NotificationsAnalyticsEvent.DISCUSSION_PRIMER_VIEWED, buildMap {
+            put(NotificationsAnalyticsKey.PRIMER_DIALOG_FREQUENCY.key, dialogFrequency)
+        })
     }
 
     fun enableDiscussionNotificationsPreference() {
@@ -57,32 +60,38 @@ class NotificationsPrimerViewModel(
     }
 
     fun logPrimerActionEvent(action: NotificationsAnalyticsKey) {
-        val event = NotificationsAnalyticsEvent.DISCUSSION_PRIMER_ACTION
-        analytics.logEvent(
-            event = event.eventName,
-            params = buildMap {
-                put(NotificationsAnalyticsKey.NAME.key, event.biValue)
-                put(NotificationsAnalyticsKey.ACTION.key, action.key)
-                put(
-                    NotificationsAnalyticsKey.CATEGORY.key,
-                    NotificationsAnalyticsKey.NOTIFICATIONS.key
-                )
-            }
-        )
+        logEvent(
+            event = NotificationsAnalyticsEvent.DISCUSSION_PRIMER_ACTION,
+            params = buildMap { put(NotificationsAnalyticsKey.ACTION.key, action.key) })
     }
 
-    private fun logPrimerScreenEvent() {
-        val event = NotificationsAnalyticsEvent.DISCUSSION_PRIMER_VIEWED
-        val dialogFrequency = preferences.primer.dismissalCount
+    fun logScreenEvent(event: NotificationsAnalyticsEvent, params: Map<String, Any> = emptyMap()) {
         analytics.logScreenEvent(
             screenName = event.eventName,
             params = buildMap {
                 put(NotificationsAnalyticsKey.NAME.key, event.biValue)
-                put(NotificationsAnalyticsKey.PRIMER_DIALOG_FREQUENCY.key, dialogFrequency)
                 put(
                     NotificationsAnalyticsKey.CATEGORY.key,
                     NotificationsAnalyticsKey.NOTIFICATIONS.key
                 )
+                putAll(params)
+            }
+        )
+    }
+
+    fun logEvent(
+        event: NotificationsAnalyticsEvent,
+        params: Map<String, Any?> = emptyMap(),
+    ) {
+        analytics.logEvent(
+            event = event.eventName,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.NAME.key, event.biValue)
+                put(
+                    NotificationsAnalyticsKey.CATEGORY.key,
+                    NotificationsAnalyticsKey.NOTIFICATIONS.key
+                )
+                putAll(params)
             }
         )
     }

@@ -48,6 +48,7 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.notifications.R
+import org.openedx.notifications.presentation.NotificationsAnalyticsEvent
 import org.openedx.notifications.presentation.NotificationsAnalyticsKey
 import org.openedx.notifications.utils.PermissionUtils
 import org.openedx.core.R as CoreR
@@ -59,11 +60,7 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
     private val pushNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) {
-            viewModel.enableDiscussionNotificationsPreference()
-        } else {
-            viewModel.dismissDialog()
-        }
+        handlePermissionResult(granted)
     }
 
     override fun onCreateView(
@@ -91,6 +88,11 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                                 PermissionUtils.requestNotificationPermission(
                                     activity = requireActivity(),
                                     permissionLauncher = pushNotificationPermissionLauncher,
+                                    onSystemDialogShown = {
+                                        viewModel.logScreenEvent(
+                                            event = NotificationsAnalyticsEvent.SYSTEM_PERMISSION_DIALOG_VIEWED
+                                        )
+                                    },
                                     onRationaleShown = {
                                         viewModel.showRationaleDialog()
                                     },
@@ -118,11 +120,22 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
 
                     PrimerUIState.ShowRationaleDialog -> {
                         ShowRationalePermissionDialog(
+                            onDialogShown = {
+                                viewModel.logScreenEvent(NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_VIEWED)
+                            },
                             onNegativeButtonClick = {
+                                viewModel.logEvent(
+                                    NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
+                                    mapOf(NotificationsAnalyticsKey.ACTION.key to NotificationsAnalyticsKey.CANCEL.key)
+                                )
                                 viewModel.dismissDialog()
                             },
 
                             onPositiveButtonClick = {
+                                viewModel.logEvent(
+                                    NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
+                                    mapOf(NotificationsAnalyticsKey.ACTION.key to NotificationsAnalyticsKey.CONTINUE.key)
+                                )
                                 PermissionUtils.navigateToNotificationSettings(
                                     requireContext()
                                 )
@@ -133,6 +146,24 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                 }
             }
         }
+    }
+
+    private fun handlePermissionResult(granted: Boolean) {
+        if (granted) {
+            viewModel.enableDiscussionNotificationsPreference()
+        } else {
+            viewModel.dismissDialog()
+        }
+        viewModel.logEvent(
+            NotificationsAnalyticsEvent.SYSTEM_PERMISSION_DIALOG_ACTION,
+            buildMap {
+                put(
+                    NotificationsAnalyticsKey.ACTION.key,
+                    if (granted) NotificationsAnalyticsKey.ALLOW.key
+                    else NotificationsAnalyticsKey.DONT_ALLOW.key
+                )
+            }
+        )
     }
 }
 
@@ -279,6 +310,7 @@ fun NotificationsPrimerButtons(
 
 @Composable
 private fun ShowRationalePermissionDialog(
+    onDialogShown: () -> Unit = {},
     onPositiveButtonClick: () -> Unit = {},
     onNegativeButtonClick: () -> Unit = {},
 ) {
@@ -293,6 +325,7 @@ private fun ShowRationalePermissionDialog(
         positiveBtnAction = onPositiveButtonClick,
         negativeBtnAction = onNegativeButtonClick,
     )
+    onDialogShown()
 }
 
 @PreviewLightDark

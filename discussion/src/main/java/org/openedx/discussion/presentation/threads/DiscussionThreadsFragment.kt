@@ -106,7 +106,8 @@ class DiscussionThreadsFragment : Fragment() {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
             requireArguments().getString(ARG_TOPIC_ID, ""),
-            requireArguments().getString(ARG_THREAD_TYPE, "")
+            requireArguments().getString(ARG_THREAD_ID, ""),
+            requireArguments().getString(ARG_THREAD_TYPE, ""),
         )
     }
     private val router by inject<DiscussionRouter>()
@@ -139,7 +140,6 @@ class DiscussionThreadsFragment : Fragment() {
         savedInstanceState: Bundle?
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-        val threadId = requireArguments().getString(ARG_THREAD_ID, "")
         val responseId = requireArguments().getString(ARG_RESPONSE_ID, "")
         val commentId = requireArguments().getString(ARG_COMMENT_ID, "")
         setContent {
@@ -154,7 +154,6 @@ class DiscussionThreadsFragment : Fragment() {
                 DiscussionThreadsScreen(
                     windowSize = windowSize,
                     title = requireArguments().getString(ARG_TITLE, ""),
-                    threadId = threadId,
                     uiState = uiState,
                     uiMessage = uiMessage,
                     canLoadMore = canLoadMore,
@@ -194,13 +193,13 @@ class DiscussionThreadsFragment : Fragment() {
                     }
                 )
                 var fromNotificationNavigation by rememberSaveable {
-                    mutableStateOf(threadId.isNotEmpty())
+                    mutableStateOf(viewModel.threadId.isNotEmpty())
                 }
 
                 LaunchedEffect(uiState) {
                     if (uiState is DiscussionThreadsUIState.Threads && fromNotificationNavigation) {
                         val data = (uiState as DiscussionThreadsUIState.Threads).data
-                        data.find { it.id == threadId }?.let {
+                        data.find { it.id == viewModel.threadId }?.let {
                             router.navigateToDiscussionComments(
                                 requireActivity().supportFragmentManager,
                                 viewModel.courseId,
@@ -263,7 +262,6 @@ class DiscussionThreadsFragment : Fragment() {
 private fun DiscussionThreadsScreen(
     windowSize: WindowSize,
     title: String,
-    threadId: String = "",
     uiState: DiscussionThreadsUIState,
     uiMessage: UIMessage?,
     canLoadMore: Boolean,

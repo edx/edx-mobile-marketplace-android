@@ -31,6 +31,7 @@ import org.openedx.discussion.system.notifier.DiscussionThreadFollowed
 class DiscussionThreadsViewModel(
     val courseId: String,
     val topicId: String,
+    val threadId: String,
     private val threadType: String,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
@@ -114,6 +115,16 @@ class DiscussionThreadsViewModel(
                     nextPage = -1
                 }
                 threadsList.addAll(response.results)
+                if (threadId.isNotEmpty()) {
+                    val thread = threadsList.find { it.id == threadId }
+                    if (thread == null) {
+                        val newThread = interactor.getThread(threadId, courseId, topicId)
+                        threadsList.add(0, newThread)
+                    } else {
+                        threadsList.remove(thread)
+                        threadsList.add(0, thread)
+                    }
+                }
                 _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
             } catch (e: Exception) {
                 if (e.isInternetError()) {

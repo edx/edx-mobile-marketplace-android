@@ -428,10 +428,11 @@ val screenModule = module {
             get()
         )
     }
-    viewModel { (courseId: String, topicId: String, threadType: String) ->
+    viewModel { (courseId: String, topicId: String, threadId: String, threadType: String) ->
         DiscussionThreadsViewModel(
             courseId,
             topicId,
+            threadId,
             threadType,
             get(),
             get(),

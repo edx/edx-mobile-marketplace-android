@@ -29,12 +29,13 @@ class NotificationsSettingsViewModel(
 
     private val _uiState = MutableStateFlow<NotificationsSettingsUiState>(
         NotificationsSettingsUiState.Configuration(
-            requestPermission = false,
-            showPermissionDialogRationale = false,
             discussionsPushEnabled = preference.notifications.discussionsPushEnabled,
         )
     )
     val uiState = _uiState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<NotificationsSettingsUiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     private val _uiMessage = MutableSharedFlow<UIMessage>()
     val uiMessage = _uiMessage.asSharedFlow()
@@ -89,25 +90,21 @@ class NotificationsSettingsViewModel(
     }
 
     private fun requestPermission() {
-        _uiState.update {
-            NotificationsSettingsUiState.Configuration(
-                requestPermission = true,
-            )
+        viewModelScope.launch {
+            _uiEvent.emit(NotificationsSettingsUiEvent.RequestPermission)
         }
     }
 
     fun showPermissionDialogRationale() {
-        _uiState.update {
-            NotificationsSettingsUiState.Configuration(
-                requestPermission = false,
-                showPermissionDialogRationale = true,
-            )
+        viewModelScope.launch {
+            _uiEvent.emit(NotificationsSettingsUiEvent.ShowPermissionDialogRationale)
         }
     }
 
     fun dismissPermissionDialog() {
-        _uiState.update { NotificationsSettingsUiState.Configuration() }
-    }
+        viewModelScope.launch {
+            _uiEvent.emit(NotificationsSettingsUiEvent.Nothing)
+        }    }
 
     private suspend fun showErrorMessage() {
         _uiMessage.emit(

@@ -2,8 +2,12 @@ package org.openedx.notifications.presentation.settings
 
 sealed class NotificationsSettingsUiState {
     data class Configuration(
-        val requestPermission: Boolean = false,
-        val showPermissionDialogRationale: Boolean = false,
         val discussionsPushEnabled: Boolean = false,
     ) : NotificationsSettingsUiState()
+}
+
+sealed class NotificationsSettingsUiEvent {
+    data object RequestPermission : NotificationsSettingsUiEvent()
+    data object ShowPermissionDialogRationale : NotificationsSettingsUiEvent()
+    data object Nothing : NotificationsSettingsUiEvent()
 }

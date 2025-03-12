@@ -99,7 +99,10 @@ class NotificationsPrimerViewModel(
         )
     }
 
-    private fun logScreenEvent(event: NotificationsAnalyticsEvent, params: Map<String, Any> = emptyMap()) {
+    private fun logScreenEvent(
+        event: NotificationsAnalyticsEvent,
+        params: Map<String, Any> = emptyMap()
+    ) {
         analytics.logScreenEvent(
             screenName = event.eventName,
             params = buildMap {

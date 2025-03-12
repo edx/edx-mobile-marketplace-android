@@ -135,7 +135,38 @@ class NotificationsSettingsViewModel(
         )
     }
 
-    fun logScreenEvent(event: NotificationsAnalyticsEvent) {
+    fun logPermissionDialogActionEvent(
+        event: NotificationsAnalyticsEvent,
+        action: NotificationsAnalyticsKey
+    ) {
+        logEvent(
+            event = event,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.ACTION.key, action.key)
+                put(
+                    NotificationsAnalyticsKey.SOURCE.key,
+                    NotificationsAnalyticsKey.PUSH_SETTINGS.key
+                )
+            }
+        )
+    }
+
+    fun logPermissionDialogScreenEvent(event: NotificationsAnalyticsEvent) {
+        logScreenEvent(
+            event = event,
+            params = buildMap {
+                put(
+                    NotificationsAnalyticsKey.SOURCE.key,
+                    NotificationsAnalyticsKey.PUSH_SETTINGS.key
+                )
+            }
+        )
+    }
+
+    fun logScreenEvent(
+        event: NotificationsAnalyticsEvent,
+        params: Map<String, Any?> = emptyMap(),
+    ) {
         analytics.logScreenEvent(
             screenName = event.eventName,
             params = buildMap {
@@ -144,6 +175,7 @@ class NotificationsSettingsViewModel(
                     NotificationsAnalyticsKey.CATEGORY.key,
                     NotificationsAnalyticsKey.NOTIFICATIONS.key
                 )
+                putAll(params)
             }
         )
     }

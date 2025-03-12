@@ -71,6 +71,34 @@ class NotificationsPrimerViewModel(
         )
     }
 
+    fun logPermissionDialogActionEvent(
+        event: NotificationsAnalyticsEvent,
+        action: NotificationsAnalyticsKey
+    ) {
+        logEvent(
+            event = event,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.ACTION.key, action.key)
+                put(
+                    NotificationsAnalyticsKey.SOURCE.key,
+                    NotificationsAnalyticsKey.DISCUSSION_PRIMER.key
+                )
+            }
+        )
+    }
+
+    fun logPermissionDialogScreenEvent(event: NotificationsAnalyticsEvent) {
+        logScreenEvent(
+            event = event,
+            params = buildMap {
+                put(
+                    NotificationsAnalyticsKey.SOURCE.key,
+                    NotificationsAnalyticsKey.DISCUSSION_PRIMER.key
+                )
+            }
+        )
+    }
+
     fun logScreenEvent(event: NotificationsAnalyticsEvent, params: Map<String, Any> = emptyMap()) {
         analytics.logScreenEvent(
             screenName = event.eventName,

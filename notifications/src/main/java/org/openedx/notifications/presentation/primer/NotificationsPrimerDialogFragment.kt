@@ -89,7 +89,7 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                                     activity = requireActivity(),
                                     permissionLauncher = pushNotificationPermissionLauncher,
                                     onSystemDialogShown = {
-                                        viewModel.logScreenEvent(
+                                        viewModel.logPermissionDialogScreenEvent(
                                             event = NotificationsAnalyticsEvent.SYSTEM_PERMISSION_DIALOG_VIEWED
                                         )
                                     },
@@ -121,20 +121,22 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
                     PrimerUIState.ShowRationaleDialog -> {
                         ShowRationalePermissionDialog(
                             onDialogShown = {
-                                viewModel.logScreenEvent(NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_VIEWED)
+                                viewModel.logPermissionDialogScreenEvent(
+                                    event = NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_VIEWED
+                                )
                             },
                             onNegativeButtonClick = {
-                                viewModel.logEvent(
-                                    NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
-                                    mapOf(NotificationsAnalyticsKey.ACTION.key to NotificationsAnalyticsKey.CANCEL.key)
+                                viewModel.logPermissionDialogActionEvent(
+                                    event = NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
+                                    action = NotificationsAnalyticsKey.CANCEL
                                 )
                                 viewModel.dismissDialog()
                             },
 
                             onPositiveButtonClick = {
-                                viewModel.logEvent(
-                                    NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
-                                    mapOf(NotificationsAnalyticsKey.ACTION.key to NotificationsAnalyticsKey.CONTINUE.key)
+                                viewModel.logPermissionDialogActionEvent(
+                                    event = NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
+                                    action = NotificationsAnalyticsKey.CONTINUE
                                 )
                                 PermissionUtils.navigateToNotificationSettings(
                                     requireContext()
@@ -154,15 +156,9 @@ class NotificationsPrimerDialogFragment : DialogFragment() {
         } else {
             viewModel.dismissDialog()
         }
-        viewModel.logEvent(
-            NotificationsAnalyticsEvent.SYSTEM_PERMISSION_DIALOG_ACTION,
-            buildMap {
-                put(
-                    NotificationsAnalyticsKey.ACTION.key,
-                    if (granted) NotificationsAnalyticsKey.ALLOW.key
-                    else NotificationsAnalyticsKey.DONT_ALLOW.key
-                )
-            }
+        viewModel.logPermissionDialogActionEvent(
+            event = NotificationsAnalyticsEvent.SYSTEM_PERMISSION_DIALOG_ACTION,
+            action = if (granted) NotificationsAnalyticsKey.ALLOW else NotificationsAnalyticsKey.DONT_ALLOW
         )
     }
 }

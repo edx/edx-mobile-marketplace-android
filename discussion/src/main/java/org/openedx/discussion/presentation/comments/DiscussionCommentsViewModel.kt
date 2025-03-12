@@ -119,10 +119,12 @@ class DiscussionCommentsViewModel(
                     val comment = comments.find { it.id == responseId }
                     if (comment == null) {
                         val newComment = interactor.getResponse(responseId)
+                        newComment.shouldHighlight = true
                         comments.add(0, newComment)
                         commentCount.inc()
                     } else {
                         comments.remove(comment)
+                        comment.shouldHighlight = true
                         comments.add(0, comment)
                     }
                 }

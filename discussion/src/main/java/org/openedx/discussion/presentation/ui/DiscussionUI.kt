@@ -230,6 +230,12 @@ fun CommentItem(
         Icons.Outlined.ThumbUp
     }
 
+    val backgroundColor = if (comment.shouldHighlight) {
+        MaterialTheme.appColors.primaryCardInfoBackground
+    } else {
+        MaterialTheme.appColors.cardViewBackground
+    }
+
     val context = LocalContext.current
 
     Card(
@@ -241,7 +247,7 @@ fun CommentItem(
                 shape
             )
         ),
-        backgroundColor = MaterialTheme.appColors.cardViewBackground,
+        backgroundColor = backgroundColor,
         elevation = 0.dp
     ) {
         Column(
@@ -693,7 +699,8 @@ private fun ThreadItemPreview() {
     }
 }
 
-@Preview
+@Preview(uiMode = UI_MODE_NIGHT_NO)
+@Preview(uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun CommentItemPreview() {
     OpenEdXTheme {

@@ -1,6 +1,7 @@
 package org.openedx.discussion.domain.model
 
 import android.os.Parcelable
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.LinkedImageText
@@ -31,4 +32,7 @@ data class DiscussionComment(
     val profileImage: ProfileImage?,
     val users: Map<String, DiscussionProfile>?,
     var isAuthor: Boolean,
-) : Parcelable
+) : Parcelable {
+    @IgnoredOnParcel
+    var shouldHighlight: Boolean = false
+}

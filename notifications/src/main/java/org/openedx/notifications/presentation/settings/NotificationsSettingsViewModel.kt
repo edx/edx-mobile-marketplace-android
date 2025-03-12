@@ -163,7 +163,7 @@ class NotificationsSettingsViewModel(
         )
     }
 
-    fun logScreenEvent(
+    private fun logScreenEvent(
         event: NotificationsAnalyticsEvent,
         params: Map<String, Any?> = emptyMap(),
     ) {
@@ -180,7 +180,7 @@ class NotificationsSettingsViewModel(
         )
     }
 
-    fun logEvent(
+    private fun logEvent(
         event: NotificationsAnalyticsEvent,
         params: Map<String, Any?> = emptyMap(),
     ) {

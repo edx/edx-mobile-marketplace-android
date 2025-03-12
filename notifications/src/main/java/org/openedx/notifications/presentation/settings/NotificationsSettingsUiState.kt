@@ -9,5 +9,5 @@ sealed class NotificationsSettingsUiState {
 sealed class NotificationsSettingsUiEvent {
     data object RequestPermission : NotificationsSettingsUiEvent()
     data object ShowPermissionDialogRationale : NotificationsSettingsUiEvent()
-    data object Nothing : NotificationsSettingsUiEvent()
+    data object None : NotificationsSettingsUiEvent()
 }

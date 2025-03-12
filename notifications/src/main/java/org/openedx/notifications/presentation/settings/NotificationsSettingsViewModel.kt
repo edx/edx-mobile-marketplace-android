@@ -103,8 +103,9 @@ class NotificationsSettingsViewModel(
 
     fun dismissPermissionDialog() {
         viewModelScope.launch {
-            _uiEvent.emit(NotificationsSettingsUiEvent.Nothing)
-        }    }
+            _uiEvent.emit(NotificationsSettingsUiEvent.None)
+        }
+    }
 
     private suspend fun showErrorMessage() {
         _uiMessage.emit(

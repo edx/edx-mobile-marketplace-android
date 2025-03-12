@@ -14,7 +14,7 @@ object PermissionUtils {
     fun requestNotificationPermission(
         activity: Activity,
         permissionLauncher: ActivityResultLauncher<String>,
-        onSystemDialogShown: () -> Unit = {},
+        onSystemDialogShown: () -> Unit,
         onRationaleShown: () -> Unit,
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

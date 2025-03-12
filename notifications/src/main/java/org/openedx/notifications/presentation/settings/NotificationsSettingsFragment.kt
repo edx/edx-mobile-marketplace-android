@@ -91,7 +91,7 @@ class NotificationsSettingsFragment : Fragment() {
 
                 val uiState by viewModel.uiState.collectAsState()
                 val uiMessage by viewModel.uiMessage.collectAsState(null)
-                val uiEvent by viewModel.uiEvent.collectAsState(NotificationsSettingsUiEvent.Nothing)
+                val uiEvent by viewModel.uiEvent.collectAsState(NotificationsSettingsUiEvent.None)
 
                 NotificationsSettingsScreen(
                     windowSize = windowSize,
@@ -148,7 +148,7 @@ class NotificationsSettingsFragment : Fragment() {
                         viewModel.logScreenEvent(NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_VIEWED)
                     }
 
-                    NotificationsSettingsUiEvent.Nothing -> {
+                    NotificationsSettingsUiEvent.None -> {
                         // Do nothing
                     }
                 }

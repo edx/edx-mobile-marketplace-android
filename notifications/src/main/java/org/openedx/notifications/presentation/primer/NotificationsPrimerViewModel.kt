@@ -24,9 +24,12 @@ class NotificationsPrimerViewModel(
 
     init {
         val dialogFrequency = preferences.primer.dismissalCount
-        logScreenEvent(NotificationsAnalyticsEvent.DISCUSSION_PRIMER_VIEWED, buildMap {
-            put(NotificationsAnalyticsKey.PRIMER_DIALOG_FREQUENCY.key, dialogFrequency)
-        })
+        logScreenEvent(
+            event = NotificationsAnalyticsEvent.DISCUSSION_PRIMER_VIEWED,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.PRIMER_DIALOG_FREQUENCY.key, dialogFrequency)
+            }
+        )
     }
 
     fun enableDiscussionNotificationsPreference() {
@@ -62,7 +65,10 @@ class NotificationsPrimerViewModel(
     fun logPrimerActionEvent(action: NotificationsAnalyticsKey) {
         logEvent(
             event = NotificationsAnalyticsEvent.DISCUSSION_PRIMER_ACTION,
-            params = buildMap { put(NotificationsAnalyticsKey.ACTION.key, action.key) })
+            params = buildMap {
+                put(NotificationsAnalyticsKey.ACTION.key, action.key)
+            }
+        )
     }
 
     fun logScreenEvent(event: NotificationsAnalyticsEvent, params: Map<String, Any> = emptyMap()) {

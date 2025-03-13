@@ -172,9 +172,7 @@ class DiscussionThreadsFragment : Fragment() {
                         router.navigateToDiscussionComments(
                             requireActivity().supportFragmentManager,
                             viewModel.courseId,
-                            it,
-                            responseId,
-                            commentId,
+                            it
                         )
                     },
                     onCreatePostClick = {

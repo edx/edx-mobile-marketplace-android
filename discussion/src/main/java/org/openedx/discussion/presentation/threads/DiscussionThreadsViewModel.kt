@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
+import org.openedx.core.config.Config
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
@@ -33,6 +34,7 @@ class DiscussionThreadsViewModel(
     val topicId: String,
     val threadId: String,
     private val threadType: String,
+    private val config: Config,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
@@ -207,6 +209,8 @@ class DiscussionThreadsViewModel(
     }
 
     fun showNotificationsPrimer(context: Context, fm: FragmentManager) {
-        pushGlobalManager.showNotificationsPrimer(context, fm)
+        if (config.isPushNotificationsEnabled()) {
+            pushGlobalManager.showNotificationsPrimer(context, fm)
+        }
     }
 }

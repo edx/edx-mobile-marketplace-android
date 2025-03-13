@@ -26,6 +26,7 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.R
 import org.openedx.core.UIMessage
+import org.openedx.core.config.Config
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.system.PushGlobalManager
@@ -50,6 +51,7 @@ class DiscussionThreadsViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
 
     private val resourceManager = mockk<ResourceManager>()
+    private val config = mockk<Config>()
     private val interactor = mockk<DiscussionInteractor>()
     private val notifier = mockk<DiscussionNotifier>()
     private val analytics = mockk<DiscussionAnalytics>()
@@ -132,6 +134,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.ALL_POSTS,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -155,6 +158,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.ALL_POSTS,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -189,6 +193,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.ALL_POSTS,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -218,6 +223,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.FOLLOWING_POSTS,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -241,6 +247,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.FOLLOWING_POSTS,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -293,6 +300,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.FOLLOWING_POSTS,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -324,6 +332,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.TOPIC,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -347,6 +356,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.TOPIC,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -381,6 +391,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.TOPIC,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -408,6 +419,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.TOPIC,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -426,6 +438,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.TOPIC,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -449,6 +462,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.TOPIC,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -482,6 +496,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.TOPIC,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -521,6 +536,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.TOPIC,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,
@@ -563,6 +579,7 @@ class DiscussionThreadsViewModelTest {
             topicId = "",
             threadId = "",
             threadType = DiscussionTopicsViewModel.TOPIC,
+            config = config,
             interactor = interactor,
             resourceManager = resourceManager,
             notifier = notifier,

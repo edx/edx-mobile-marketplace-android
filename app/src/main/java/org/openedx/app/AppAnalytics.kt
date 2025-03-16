@@ -33,6 +33,8 @@ enum class AppAnalyticsEvent(val eventName: String, val biValue: String) {
 enum class AppAnalyticsKey(val key: String) {
     NAME("name"),
     STATUS("status"),
+    CATEGORY("category"),
+    NOTIFICATIONS("notifications"),
 }
 
 enum class PermissionStatus(val status: String) {

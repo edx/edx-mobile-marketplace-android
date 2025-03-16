@@ -90,6 +90,7 @@ class MainViewModel(
         analytics.logEvent(event.eventName, buildMap {
             put(AppAnalyticsKey.NAME.key, event.biValue)
             put(AppAnalyticsKey.STATUS.key, permissionStatus.status)
+            put(AppAnalyticsKey.CATEGORY.key, AppAnalyticsKey.NOTIFICATIONS)
         })
     }
 }

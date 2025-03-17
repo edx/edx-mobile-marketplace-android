@@ -29,11 +29,13 @@ class NotificationsSettingsViewModel(
 
     private val _uiState = MutableStateFlow<NotificationsSettingsUiState>(
         NotificationsSettingsUiState.Configuration(
-            showPermissionRequestDialog = false,
             discussionsPushEnabled = preference.notifications.discussionsPushEnabled,
         )
     )
     val uiState = _uiState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<NotificationsSettingsUiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     private val _uiMessage = MutableSharedFlow<UIMessage>()
     val uiMessage = _uiMessage.asSharedFlow()
@@ -44,7 +46,7 @@ class NotificationsSettingsViewModel(
         } else {
             enablePushNotifications(enabled = false)
         }
-        logNotificationSettingsScreenEvent()
+        logScreenEvent(NotificationsAnalyticsEvent.PUSH_NOTIFICATIONS_SETTINGS)
     }
 
     fun setDiscussionNotificationPreference(value: Boolean) {
@@ -59,11 +61,11 @@ class NotificationsSettingsViewModel(
                 }
             }
         } else {
-            showPermissionDialog()
+            requestPermission()
         }
     }
 
-    fun fetchAndUpdateNotificationsSettings() {
+    private fun fetchAndUpdateNotificationsSettings() {
         viewModelScope.launch {
             try {
                 val response = interactor.fetchNotificationsConfiguration()
@@ -87,16 +89,22 @@ class NotificationsSettingsViewModel(
         return notificationManagerCompat.areNotificationsEnabled()
     }
 
-    private fun showPermissionDialog() {
-        _uiState.update {
-            NotificationsSettingsUiState.Configuration(
-                showPermissionRequestDialog = true,
-            )
+    private fun requestPermission() {
+        viewModelScope.launch {
+            _uiEvent.emit(NotificationsSettingsUiEvent.RequestPermission)
+        }
+    }
+
+    fun showPermissionDialogRationale() {
+        viewModelScope.launch {
+            _uiEvent.emit(NotificationsSettingsUiEvent.ShowPermissionDialogRationale)
         }
     }
 
     fun dismissPermissionDialog() {
-        _uiState.update { NotificationsSettingsUiState.Configuration() }
+        viewModelScope.launch {
+            _uiEvent.emit(NotificationsSettingsUiEvent.None)
+        }
     }
 
     private suspend fun showErrorMessage() {
@@ -116,8 +124,49 @@ class NotificationsSettingsViewModel(
         )
     }
 
-    private fun logNotificationSettingsScreenEvent() {
-        val event = NotificationsAnalyticsEvent.PUSH_NOTIFICATIONS_SETTINGS
+    private fun logDiscussionPermissionToggleEvent(
+        isDiscussionPushEnabled: Boolean,
+    ) {
+        logEvent(
+            event = NotificationsAnalyticsEvent.DISCUSSION_PREFERENCE_TOGGLE,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.ACTION.key, isDiscussionPushEnabled)
+            }
+        )
+    }
+
+    fun logPermissionDialogActionEvent(
+        event: NotificationsAnalyticsEvent,
+        action: NotificationsAnalyticsKey
+    ) {
+        logEvent(
+            event = event,
+            params = buildMap {
+                put(NotificationsAnalyticsKey.ACTION.key, action.key)
+                put(
+                    NotificationsAnalyticsKey.SOURCE.key,
+                    NotificationsAnalyticsKey.PUSH_SETTINGS.key
+                )
+            }
+        )
+    }
+
+    fun logPermissionDialogScreenEvent(event: NotificationsAnalyticsEvent) {
+        logScreenEvent(
+            event = event,
+            params = buildMap {
+                put(
+                    NotificationsAnalyticsKey.SOURCE.key,
+                    NotificationsAnalyticsKey.PUSH_SETTINGS.key
+                )
+            }
+        )
+    }
+
+    private fun logScreenEvent(
+        event: NotificationsAnalyticsEvent,
+        params: Map<String, Any?> = emptyMap(),
+    ) {
         analytics.logScreenEvent(
             screenName = event.eventName,
             params = buildMap {
@@ -126,17 +175,7 @@ class NotificationsSettingsViewModel(
                     NotificationsAnalyticsKey.CATEGORY.key,
                     NotificationsAnalyticsKey.NOTIFICATIONS.key
                 )
-            }
-        )
-    }
-
-    private fun logDiscussionPermissionToggleEvent(
-        isDiscussionPushEnabled: Boolean,
-    ) {
-        logEvent(
-            event = NotificationsAnalyticsEvent.DISCUSSION_PREFERENCE_TOGGLE,
-            params = buildMap {
-                put(NotificationsAnalyticsKey.ACTION.key, isDiscussionPushEnabled)
+                putAll(params)
             }
         )
     }

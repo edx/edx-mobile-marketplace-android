@@ -64,6 +64,8 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.notifications.R
+import org.openedx.notifications.presentation.NotificationsAnalyticsEvent
+import org.openedx.notifications.presentation.NotificationsAnalyticsKey
 import org.openedx.notifications.utils.PermissionUtils
 import org.openedx.core.R as CoreR
 
@@ -74,11 +76,7 @@ class NotificationsSettingsFragment : Fragment() {
     private val pushNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) {
-            viewModel.fetchAndUpdateNotificationsSettings()
-        } else {
-            viewModel.enablePushNotifications(false)
-        }
+        handlePermissionResult(granted)
     }
 
     override fun onCreateView(
@@ -93,29 +91,71 @@ class NotificationsSettingsFragment : Fragment() {
 
                 val uiState by viewModel.uiState.collectAsState()
                 val uiMessage by viewModel.uiMessage.collectAsState(null)
+                val uiEvent by viewModel.uiEvent.collectAsState(NotificationsSettingsUiEvent.None)
 
-                NotificationsSettingsScreen(windowSize = windowSize,
+                NotificationsSettingsScreen(
+                    windowSize = windowSize,
                     uiState = uiState as NotificationsSettingsUiState.Configuration,
                     uiMessage = uiMessage,
-                    onBackClick = {
-                        viewModel.logBatchPermissionToggleEvent()
-                        requireActivity().supportFragmentManager.popBackStack()
-                    },
                     discussionPreferenceChanged = {
                         viewModel.setDiscussionNotificationPreference(it)
                     },
-                    onPositiveButtonClick = {
-                        viewModel.dismissPermissionDialog()
-                        PermissionUtils.requestNotificationPermission(activity = requireActivity(),
-                            permissionLauncher = pushNotificationPermissionLauncher,
-                            onRationaleShown = {
-                                PermissionUtils.navigateToNotificationSettings(requireContext())
-                            })
-                    },
-                    onNegativeButtonClick = {
-                        viewModel.dismissPermissionDialog()
+                    onBackClick = {
+                        viewModel.logBatchPermissionToggleEvent()
+                        requireActivity().supportFragmentManager.popBackStack()
                     }
                 )
+
+                when (uiEvent) {
+                    NotificationsSettingsUiEvent.RequestPermission -> {
+                        PermissionUtils.requestNotificationPermission(
+                            activity = requireActivity(),
+                            permissionLauncher = pushNotificationPermissionLauncher,
+                            onSystemDialogShown = {
+                                viewModel.logPermissionDialogScreenEvent(
+                                    event = NotificationsAnalyticsEvent.SYSTEM_PERMISSION_DIALOG_VIEWED
+                                )
+                            },
+                            onRationaleShown = {
+                                viewModel.showPermissionDialogRationale()
+                            }
+                        )
+                    }
+
+                    NotificationsSettingsUiEvent.ShowPermissionDialogRationale -> {
+                        OpenEdxAlertDialog(
+                            title = stringResource(id = CoreR.string.core_permission_dialog_title),
+                            message = stringResource(
+                                id = CoreR.string.core_permission_dialog_message,
+                                stringResource(id = R.string.notifications_notifications).lowercase()
+                            ),
+                            positiveBtnText = stringResource(id = CoreR.string.core_continue),
+                            negativeBtnText = stringResource(id = CoreR.string.core_cancel),
+                            positiveBtnAction = {
+                                viewModel.logPermissionDialogActionEvent(
+                                    event = NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
+                                    action = NotificationsAnalyticsKey.CONTINUE
+                                )
+                                viewModel.dismissPermissionDialog()
+                                PermissionUtils.navigateToNotificationSettings(requireContext())
+                            },
+                            negativeBtnAction = {
+                                viewModel.logPermissionDialogActionEvent(
+                                    event = NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_ACTION,
+                                    action = NotificationsAnalyticsKey.CANCEL
+                                )
+                                viewModel.dismissPermissionDialog()
+                            },
+                        )
+                        viewModel.logPermissionDialogScreenEvent(
+                            event = NotificationsAnalyticsEvent.APP_PERMISSION_RATIONALE_DIALOG_VIEWED
+                        )
+                    }
+
+                    NotificationsSettingsUiEvent.None -> {
+                        // Do nothing
+                    }
+                }
 
                 HandleBackNavigation()
             }
@@ -142,6 +182,20 @@ class NotificationsSettingsFragment : Fragment() {
             }
         }
     }
+
+    private fun handlePermissionResult(granted: Boolean) {
+        if (granted) {
+            viewModel.setDiscussionNotificationPreference(true)
+        } else {
+            viewModel.enablePushNotifications(false)
+        }
+
+        viewModel.logPermissionDialogActionEvent(
+            event = NotificationsAnalyticsEvent.SYSTEM_PERMISSION_DIALOG_ACTION,
+            action = if (granted) NotificationsAnalyticsKey.ALLOW else NotificationsAnalyticsKey.DONT_ALLOW
+        )
+        viewModel.dismissPermissionDialog()
+    }
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -151,8 +205,6 @@ private fun NotificationsSettingsScreen(
     uiState: NotificationsSettingsUiState.Configuration,
     uiMessage: UIMessage? = null,
     discussionPreferenceChanged: (Boolean) -> Unit,
-    onPositiveButtonClick: () -> Unit = {},
-    onNegativeButtonClick: () -> Unit = {},
     onBackClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -187,20 +239,6 @@ private fun NotificationsSettingsScreen(
             )
         }
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
-
-        if (uiState.showPermissionRequestDialog) {
-            OpenEdxAlertDialog(
-                title = stringResource(id = CoreR.string.core_permission_dialog_title),
-                message = stringResource(
-                    id = CoreR.string.core_permission_dialog_message,
-                    stringResource(id = R.string.notifications_notifications).lowercase()
-                ),
-                positiveBtnText = stringResource(id = CoreR.string.core_continue),
-                negativeBtnText = stringResource(id = CoreR.string.core_cancel),
-                positiveBtnAction = onPositiveButtonClick,
-                negativeBtnAction = onNegativeButtonClick,
-            )
-        }
 
         Box(
             modifier = Modifier.fillMaxSize(),

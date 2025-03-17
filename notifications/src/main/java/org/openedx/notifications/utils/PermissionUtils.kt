@@ -14,6 +14,7 @@ object PermissionUtils {
     fun requestNotificationPermission(
         activity: Activity,
         permissionLauncher: ActivityResultLauncher<String>,
+        onSystemDialogShown: () -> Unit,
         onRationaleShown: () -> Unit,
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -25,6 +26,7 @@ object PermissionUtils {
                 onRationaleShown()
             } else {
                 permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                onSystemDialogShown()
             }
         } else {
             onRationaleShown()

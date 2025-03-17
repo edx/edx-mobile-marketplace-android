@@ -99,4 +99,7 @@ enum class NotificationsAnalyticsKey(val key: String) {
     THREAD_ID("thread_id"),
     RESPONSE_ID("response_id"),
     COMMENT_ID("comment_id"),
+    SOURCE("source"),
+    DISCUSSION_PRIMER("discussion_primer"),
+    PUSH_SETTINGS("push_settings"),
 }

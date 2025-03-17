@@ -166,7 +166,7 @@ class NotificationsInboxViewModel(
                         topicId = notification.contentContext.topicId,
                         threadId = notification.contentContext.threadId,
                         responseId = notification.contentContext.responseId,
-                        commentId = notification.contentContext.responseCommentId,
+                        commentId = notification.contentContext.commentId,
                         title = notification.contentContext.courseName,
                         viewType = FragmentViewType.FULL_CONTENT
                     )
@@ -230,6 +230,7 @@ class NotificationsInboxViewModel(
     }
 
     private fun logNotificationItemClickedEvent(notification: NotificationItem) {
+        val contentContext = notification.contentContext
         logEvent(
             event = NotificationsAnalyticsEvent.NOTIFICATION_INBOX_ITEM_CLICKED,
             params = buildMap<String, String?> {
@@ -237,10 +238,10 @@ class NotificationsInboxViewModel(
                 put(NotificationsAnalyticsKey.NOTIFICATION_TYPE.key, notification.notificationType)
                 put(NotificationsAnalyticsKey.NOTIFICATION_ID.key, notification.id.toString())
                 put(NotificationsAnalyticsKey.COURSE_ID.key, notification.courseId)
-                put(NotificationsAnalyticsKey.TOPIC_ID.key, notification.contentContext.topicId)
-                put(NotificationsAnalyticsKey.THREAD_ID.key, notification.contentContext.threadId)
-                put(NotificationsAnalyticsKey.RESPONSE_ID.key, notification.contentContext.parentId)
-                put(NotificationsAnalyticsKey.COMMENT_ID.key, notification.contentContext.commentId)
+                put(NotificationsAnalyticsKey.TOPIC_ID.key, contentContext.topicId)
+                put(NotificationsAnalyticsKey.THREAD_ID.key, contentContext.threadId)
+                put(NotificationsAnalyticsKey.RESPONSE_ID.key, contentContext.responseId)
+                put(NotificationsAnalyticsKey.COMMENT_ID.key, contentContext.commentId)
             }.filterValues { it.isNotNullOrEmpty() }
         )
     }

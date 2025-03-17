@@ -151,7 +151,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
             }
 
             val extras = intent.extras
-            if (extras?.containsKey(DeepLink.Keys.NOTIFICATION_TYPE.value) == true) {
+            if (extras?.containsKey(DeepLink.Keys.SCREEN_NAME.value) == true) {
                 handlePushNotification(extras)
             }
         }
@@ -177,7 +177,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         this.intent = intent
 
         val extras = intent?.extras
-        if (extras?.containsKey(DeepLink.Keys.NOTIFICATION_TYPE.value) == true) {
+        if (extras?.containsKey(DeepLink.Keys.SCREEN_NAME.value) == true) {
             handlePushNotification(extras)
         }
 

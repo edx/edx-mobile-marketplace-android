@@ -38,8 +38,8 @@ data class NotificationContent(
     val paragraph: String,
     val strongText: String,
     val topicId: String,
-    val parentId: String,
     val threadId: String,
+    val responseId: String,
     val commentId: String,
     val postTitle: String,
     val courseName: String,
@@ -47,8 +47,4 @@ data class NotificationContent(
     val emailContent: String,
     val authorName: String,
     val authorPronoun: String,
-){
-    val responseId = parentId.ifEmpty { commentId }
-
-    val responseCommentId = if(responseId == commentId) "" else commentId
-}
+)

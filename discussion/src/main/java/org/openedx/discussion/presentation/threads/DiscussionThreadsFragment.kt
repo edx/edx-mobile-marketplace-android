@@ -239,7 +239,7 @@ class DiscussionThreadsFragment : Fragment() {
             commentId: String,
             title: String,
             viewType: String,
-            blockId: String = "",
+            blockId: String,
         ): DiscussionThreadsFragment {
             val fragment = DiscussionThreadsFragment()
             fragment.arguments = bundleOf(

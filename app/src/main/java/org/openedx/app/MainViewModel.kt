@@ -2,7 +2,6 @@ package org.openedx.app
 
 import android.annotation.SuppressLint
 import android.content.Context
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -15,13 +14,15 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.NavigationToDiscovery
 import org.openedx.discovery.presentation.DiscoveryNavigator
 
 @SuppressLint("StaticFieldLeak")
 class MainViewModel(
-    private val context: Context,
+    context: Context,
+    pushManager: PushGlobalManager,
     private val config: Config,
     private val notifier: DiscoveryNotifier,
     private val analytics: AppAnalytics,
@@ -39,7 +40,7 @@ class MainViewModel(
     val getDiscoveryFragment get() = DiscoveryNavigator(isDiscoveryTypeWebView).getDiscoveryFragment()
 
     init {
-        logNotificationPermissionStatusEvent()
+        pushManager.logNotificationPermissionStatusEvent(context)
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -77,20 +78,5 @@ class MainViewModel(
                 put(AppAnalyticsKey.NAME.key, event.biValue)
             }
         )
-    }
-
-    private fun logNotificationPermissionStatusEvent() {
-        val event = AppAnalyticsEvent.NOTIFICATION_PERMISSION
-        val permissionStatus =
-            if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
-                PermissionStatus.AUTHORIZED
-            } else {
-                PermissionStatus.DENIED
-            }
-        analytics.logEvent(event.eventName, buildMap {
-            put(AppAnalyticsKey.NAME.key, event.biValue)
-            put(AppAnalyticsKey.STATUS.key, permissionStatus.status)
-            put(AppAnalyticsKey.CATEGORY.key, AppAnalyticsKey.NOTIFICATIONS)
-        })
     }
 }

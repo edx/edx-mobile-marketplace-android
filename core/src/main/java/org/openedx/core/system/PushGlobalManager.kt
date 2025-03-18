@@ -15,8 +15,11 @@ interface PushGlobalManager {
     fun requestNotificationPermission(
         activity: Activity,
         permissionLauncher: ActivityResultLauncher<String>,
-        onRationaleShown: () -> Unit,
+        onSystemDialogShown: () -> Unit = {},
+        onRationaleShown: () -> Unit = {},
     )
+
+    fun logNotificationPermissionStatusEvent(context: Context)
 
     fun logNotificationBellClickedEvent(hasUnreadNotifications: Boolean)
 

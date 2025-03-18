@@ -42,6 +42,7 @@ import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.system.CalendarManager
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
@@ -77,6 +78,7 @@ class CourseContainerViewModelTest {
     private val mockBitmap = mockk<Bitmap>()
     private val imageProcessor = mockk<ImageProcessor>()
     private val courseRouter = mockk<CourseRouter>()
+    private val pushManager = mockk<PushGlobalManager>()
     private val courseApi = mockk<CourseApi>()
 
     private val openEdx = "OpenEdx"
@@ -260,6 +262,7 @@ class CourseContainerViewModelTest {
             iapAnalytics = iapAnalytics,
             imageProcessor = imageProcessor,
             courseRouter = courseRouter,
+            pushManager = pushManager,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getEnrollmentDetails(any()) } throws Exception()
@@ -303,6 +306,7 @@ class CourseContainerViewModelTest {
             iapAnalytics = iapAnalytics,
             imageProcessor = imageProcessor,
             courseRouter = courseRouter,
+            pushManager = pushManager,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
@@ -336,6 +340,7 @@ class CourseContainerViewModelTest {
             iapAnalytics = iapAnalytics,
             imageProcessor = imageProcessor,
             courseRouter = courseRouter,
+            pushManager = pushManager,
         )
         every { networkConnection.isOnline() } returns false
         coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
@@ -380,6 +385,7 @@ class CourseContainerViewModelTest {
             iapAnalytics = iapAnalytics,
             imageProcessor = imageProcessor,
             courseRouter = courseRouter,
+            pushManager = pushManager,
         )
         coEvery { interactor.getCourseStructure(any(), true) } throws Exception()
         coEvery { courseNotifier.send(CourseStructureUpdated("")) } returns Unit
@@ -413,6 +419,7 @@ class CourseContainerViewModelTest {
             iapAnalytics = iapAnalytics,
             imageProcessor = imageProcessor,
             courseRouter = courseRouter,
+            pushManager = pushManager,
         )
         coEvery { interactor.getEnrollmentDetails(any()) } returns courseDetails
         coEvery { interactor.getCourseStructure(any(), true) } returns courseStructure

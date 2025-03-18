@@ -775,12 +775,11 @@ class CourseContainerViewModel(
 
     fun requestNotificationPermission(
         activity: FragmentActivity,
-        permissionLauncher: ActivityResultLauncher<String>
+        permissionLauncher: ActivityResultLauncher<String>,
     ) {
         pushManager.requestNotificationPermission(
             activity = activity,
             permissionLauncher = permissionLauncher,
-            onRationaleShown = {}
         )
     }
 }

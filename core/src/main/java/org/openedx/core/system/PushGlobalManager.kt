@@ -1,6 +1,8 @@
 package org.openedx.core.system
 
+import android.app.Activity
 import android.content.Context
+import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.FragmentManager
 
 interface PushGlobalManager {
@@ -9,6 +11,12 @@ interface PushGlobalManager {
     suspend fun markNotificationAsRead(notificationId: Int)
 
     fun showNotificationsPrimer(context: Context, fragmentManager: FragmentManager)
+
+    fun requestNotificationPermission(
+        activity: Activity,
+        permissionLauncher: ActivityResultLauncher<String>,
+        onRationaleShown: () -> Unit,
+    )
 
     fun logNotificationBellClickedEvent(hasUnreadNotifications: Boolean)
 

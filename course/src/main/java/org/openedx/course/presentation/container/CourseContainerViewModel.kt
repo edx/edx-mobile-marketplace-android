@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
+import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.StringRes
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
@@ -53,6 +54,7 @@ import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncUIState
 import org.openedx.core.system.CalendarManager
+import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CalendarSyncEvent.CheckCalendarSyncEvent
@@ -96,9 +98,10 @@ class CourseContainerViewModel(
     private val corePreferences: CorePreferences,
     private val coursePreferences: CoursePreferences,
     private val courseAnalytics: CourseAnalytics,
-    private val iapAnalytics: IAPAnalytics,
     private val imageProcessor: ImageProcessor,
+    private val pushManager: PushGlobalManager,
     val courseRouter: CourseRouter,
+    iapAnalytics: IAPAnalytics,
 ) : BaseViewModel() {
 
     private val _dataReady = MutableLiveData<Boolean?>()
@@ -767,6 +770,17 @@ class CourseContainerViewModel(
                 )
                 putAll(param)
             }
+        )
+    }
+
+    fun requestNotificationPermission(
+        activity: FragmentActivity,
+        permissionLauncher: ActivityResultLauncher<String>
+    ) {
+        pushManager.requestNotificationPermission(
+            activity = activity,
+            permissionLauncher = permissionLauncher,
+            onRationaleShown = {}
         )
     }
 }

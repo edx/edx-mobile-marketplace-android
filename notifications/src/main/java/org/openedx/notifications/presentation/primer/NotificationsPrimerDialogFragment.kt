@@ -47,10 +47,10 @@ import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.utils.PermissionUtils
 import org.openedx.notifications.R
 import org.openedx.notifications.presentation.NotificationsAnalyticsEvent
 import org.openedx.notifications.presentation.NotificationsAnalyticsKey
-import org.openedx.notifications.utils.PermissionUtils
 import org.openedx.core.R as CoreR
 
 class NotificationsPrimerDialogFragment : DialogFragment() {

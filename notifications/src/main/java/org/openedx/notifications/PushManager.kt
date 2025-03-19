@@ -1,8 +1,6 @@
 package org.openedx.notifications
 
-import android.app.Activity
 import android.content.Context
-import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.FragmentManager
 import org.json.JSONObject
@@ -20,7 +18,6 @@ import org.openedx.notifications.presentation.NotificationsAnalyticsEvent
 import org.openedx.notifications.presentation.NotificationsAnalyticsKey
 import org.openedx.notifications.presentation.PermissionStatus
 import org.openedx.notifications.presentation.primer.NotificationsPrimerDialogFragment
-import org.openedx.notifications.utils.PermissionUtils
 import java.util.Date
 
 class PushManager(
@@ -106,20 +103,6 @@ class PushManager(
         preferences.primer = NotificationsPrimerConfiguration(
             nextPrimer = nextPrimer,
             dismissalCount = dismissalCount
-        )
-    }
-
-    override fun requestNotificationPermission(
-        activity: Activity,
-        permissionLauncher: ActivityResultLauncher<String>,
-        onSystemDialogShown: () -> Unit,
-        onRationaleShown: () -> Unit,
-    ) {
-        PermissionUtils.requestNotificationPermission(
-            activity = activity,
-            permissionLauncher = permissionLauncher,
-            onSystemDialogShown = onSystemDialogShown,
-            onRationaleShown = onRationaleShown,
         )
     }
 

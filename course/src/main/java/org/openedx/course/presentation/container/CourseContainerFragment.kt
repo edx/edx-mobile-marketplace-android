@@ -99,6 +99,7 @@ import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.utils.PermissionUtils
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.DatesShiftedSnackBar
 import org.openedx.course.R
@@ -170,9 +171,11 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
                 if (viewModel.calendarSyncUIState.value.isCalendarSyncEnabled) {
                     setUpCourseCalendar()
                 }
-                viewModel.requestNotificationPermission(
+                PermissionUtils.requestNotificationPermission(
                     activity = requireActivity(),
                     permissionLauncher = pushNotificationPermissionLauncher,
+                    onSystemDialogShown = {},
+                    onRationaleShown = {},
                 )
             }
         }

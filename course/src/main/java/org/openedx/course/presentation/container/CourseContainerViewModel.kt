@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
-import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.StringRes
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
@@ -770,16 +769,6 @@ class CourseContainerViewModel(
                 )
                 putAll(param)
             }
-        )
-    }
-
-    fun requestNotificationPermission(
-        activity: FragmentActivity,
-        permissionLauncher: ActivityResultLauncher<String>,
-    ) {
-        pushManager.requestNotificationPermission(
-            activity = activity,
-            permissionLauncher = permissionLauncher,
         )
     }
 }

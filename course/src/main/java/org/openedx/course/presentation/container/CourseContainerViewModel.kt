@@ -53,7 +53,6 @@ import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncUIState
 import org.openedx.core.system.CalendarManager
-import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CalendarSyncEvent.CheckCalendarSyncEvent
@@ -97,10 +96,9 @@ class CourseContainerViewModel(
     private val corePreferences: CorePreferences,
     private val coursePreferences: CoursePreferences,
     private val courseAnalytics: CourseAnalytics,
+    private val iapAnalytics: IAPAnalytics,
     private val imageProcessor: ImageProcessor,
-    private val pushManager: PushGlobalManager,
     val courseRouter: CourseRouter,
-    iapAnalytics: IAPAnalytics,
 ) : BaseViewModel() {
 
     private val _dataReady = MutableLiveData<Boolean?>()

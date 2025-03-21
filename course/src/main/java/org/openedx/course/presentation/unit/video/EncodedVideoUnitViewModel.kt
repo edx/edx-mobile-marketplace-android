@@ -258,6 +258,7 @@ class EncodedVideoUnitViewModel(
 
     fun getMediaItem() = MediaItem.Builder().setMediaMetadata(movieMetadata)
         .setUri(videoUrl)
+        .setMimeType(if (videoUrl.endsWith(HLS_EXT)) MimeTypes.APPLICATION_M3U8 else VIDEO_MIME_TYPE)
         .build()
 
     @UnstableApi
@@ -298,5 +299,6 @@ class EncodedVideoUnitViewModel(
     private companion object {
         private const val TAG = "EncodedVideoUnitViewModel"
         private const val HLS_EXT = ".m3u8"
+        private const val VIDEO_MIME_TYPE = "video/*"
     }
 }

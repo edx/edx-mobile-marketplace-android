@@ -1,7 +1,6 @@
 package org.openedx.course.presentation.container
 
 import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -100,6 +99,7 @@ import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.utils.PermissionUtils
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.DatesShiftedSnackBar
 import org.openedx.course.R
@@ -171,12 +171,12 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
                 if (viewModel.calendarSyncUIState.value.isCalendarSyncEnabled) {
                     setUpCourseCalendar()
                 }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    pushNotificationPermissionLauncher.launch(
-                        android.Manifest.permission.POST_NOTIFICATIONS
-                    )
-                }
+                PermissionUtils.requestNotificationPermission(
+                    activity = requireActivity(),
+                    permissionLauncher = pushNotificationPermissionLauncher,
+                    onSystemDialogShown = {},
+                    onRationaleShown = {},
+                )
             }
         }
         viewModel.errorMessage.observe(viewLifecycleOwner) {

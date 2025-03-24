@@ -16,6 +16,7 @@ import org.openedx.notifications.domain.model.NotificationsPrimerConfiguration
 import org.openedx.notifications.presentation.NotificationsAnalytics
 import org.openedx.notifications.presentation.NotificationsAnalyticsEvent
 import org.openedx.notifications.presentation.NotificationsAnalyticsKey
+import org.openedx.notifications.presentation.PermissionStatus
 import org.openedx.notifications.presentation.primer.NotificationsPrimerDialogFragment
 import java.util.Date
 
@@ -103,6 +104,21 @@ class PushManager(
             nextPrimer = nextPrimer,
             dismissalCount = dismissalCount
         )
+    }
+
+    override fun logNotificationPermissionStatusEvent(context: Context) {
+        val event = NotificationsAnalyticsEvent.NOTIFICATION_PERMISSION_STATUS
+        val permissionStatus =
+            if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                PermissionStatus.AUTHORIZED
+            } else {
+                PermissionStatus.DENIED
+            }
+        analytics.logEvent(event.eventName, buildMap {
+            put(NotificationsAnalyticsKey.NAME.key, event.biValue)
+            put(NotificationsAnalyticsKey.STATUS.key, permissionStatus.status)
+            put(NotificationsAnalyticsKey.CATEGORY.key, NotificationsAnalyticsKey.NOTIFICATIONS.key)
+        })
     }
 
     override fun logNotificationBellClickedEvent(hasUnreadNotifications: Boolean) {

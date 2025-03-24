@@ -48,6 +48,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
             requireArguments().getString(ARG_BLOCK_ID, ""),
+            requireArguments().getString(ARG_TITLE, ""),
         )
     }
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
@@ -89,7 +90,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         super.onViewCreated(view, savedInstanceState)
         binding.cvVideoTitle?.setContent {
             OpenEdXTheme {
-                VideoTitle(text = requireArguments().getString(ARG_TITLE) ?: "")
+                VideoTitle(text = viewModel.title)
             }
         }
 

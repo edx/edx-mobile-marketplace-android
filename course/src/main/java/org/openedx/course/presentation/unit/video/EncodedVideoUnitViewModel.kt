@@ -51,6 +51,7 @@ import java.util.concurrent.Executors
 class EncodedVideoUnitViewModel(
     courseId: String,
     blockId: String,
+    val title: String,
     private val context: Context,
     private val preferencesManager: CorePreferences,
     courseRepository: CourseRepository,
@@ -112,6 +113,7 @@ class EncodedVideoUnitViewModel(
 
     private val movieMetadata = MediaMetadata.Builder()
         .setMediaType(MediaMetadata.MEDIA_TYPE_MOVIE)
+        .setTitle(title)
         .build()
 
     private val exoPlayerListener = object : Player.Listener {

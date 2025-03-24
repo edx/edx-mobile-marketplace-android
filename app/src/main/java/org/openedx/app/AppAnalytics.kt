@@ -24,18 +24,8 @@ enum class AppAnalyticsEvent(val eventName: String, val biValue: String) {
         "MainDashboard:Profile",
         "edx.bi.app.main_dashboard.profile"
     ),
-    NOTIFICATION_PERMISSION(
-        "Notification:Setting Permission Status",
-        "edx.bi.app.notification.permission_settings.status"
-    )
 }
 
 enum class AppAnalyticsKey(val key: String) {
     NAME("name"),
-    STATUS("status"),
-}
-
-enum class PermissionStatus(val status: String) {
-    DENIED("denied"),
-    AUTHORIZED("authorized"),
 }

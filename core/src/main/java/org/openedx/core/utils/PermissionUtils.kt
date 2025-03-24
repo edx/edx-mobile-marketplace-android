@@ -1,4 +1,4 @@
-package org.openedx.notifications.utils
+package org.openedx.core.utils
 
 import android.app.Activity
 import android.content.Context

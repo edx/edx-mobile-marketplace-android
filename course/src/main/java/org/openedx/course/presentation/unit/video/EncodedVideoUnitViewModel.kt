@@ -183,16 +183,15 @@ class EncodedVideoUnitViewModel(
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
         exoPlayer?.addListener(exoPlayerListener)
+        getActivePlayer()?.playWhenReady = true
     }
 
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
-        if (state.value.isCastActive) {
-            getActivePlayer()?.release()
-        } else {
+        if (!state.value.isCastActive) {
             exoPlayer?.removeListener(exoPlayerListener)
-            exoPlayer?.pause()
         }
+        getActivePlayer()?.pause()
     }
 
     fun getActivePlayer(): Player? {

@@ -10,6 +10,8 @@ interface PushGlobalManager {
 
     fun showNotificationsPrimer(context: Context, fragmentManager: FragmentManager)
 
+    fun logNotificationPermissionStatusEvent(context: Context)
+
     fun logNotificationBellClickedEvent(hasUnreadNotifications: Boolean)
 
     fun logNotificationReceivedEvent(data: Map<String, String>)

@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
+import org.openedx.core.config.Config
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
@@ -31,7 +32,9 @@ import org.openedx.discussion.system.notifier.DiscussionThreadFollowed
 class DiscussionThreadsViewModel(
     val courseId: String,
     val topicId: String,
+    val threadId: String,
     private val threadType: String,
+    private val config: Config,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
@@ -114,6 +117,16 @@ class DiscussionThreadsViewModel(
                     nextPage = -1
                 }
                 threadsList.addAll(response.results)
+                if (threadId.isNotEmpty()) {
+                    val thread = threadsList.find { it.id == threadId }
+                    if (thread == null) {
+                        val newThread = interactor.getThread(threadId, courseId, topicId)
+                        threadsList.add(0, newThread)
+                    } else {
+                        threadsList.remove(thread)
+                        threadsList.add(0, thread)
+                    }
+                }
                 _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
             } catch (e: Exception) {
                 if (e.isInternetError()) {
@@ -196,6 +209,8 @@ class DiscussionThreadsViewModel(
     }
 
     fun showNotificationsPrimer(context: Context, fm: FragmentManager) {
-        pushGlobalManager.showNotificationsPrimer(context, fm)
+        if (config.isPushNotificationsEnabled()) {
+            pushGlobalManager.showNotificationsPrimer(context, fm)
+        }
     }
 }

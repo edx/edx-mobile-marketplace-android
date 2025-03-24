@@ -73,6 +73,10 @@ enum class NotificationsAnalyticsEvent(val eventName: String, val biValue: Strin
     NOTIFICATION_DISCUSSION_PUSH_TAPPED(
         eventName = "Notification:Discussion Push Tapped",
         biValue = "edx.bi.app.notification.push.discussion.tapped"
+    ),
+    NOTIFICATION_PERMISSION_STATUS(
+        "Notification:Setting Permission Status",
+        "edx.bi.app.notification.permission_settings.status"
     )
 }
 
@@ -102,4 +106,10 @@ enum class NotificationsAnalyticsKey(val key: String) {
     SOURCE("source"),
     DISCUSSION_PRIMER("discussion_primer"),
     PUSH_SETTINGS("push_settings"),
+    STATUS("status"),
+}
+
+enum class PermissionStatus(val status: String) {
+    DENIED("denied"),
+    AUTHORIZED("authorized")
 }

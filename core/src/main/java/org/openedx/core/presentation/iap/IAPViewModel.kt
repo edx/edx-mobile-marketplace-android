@@ -97,7 +97,9 @@ class IAPViewModel(
         }
 
         when (purchaseFlowData.iapFlow) {
-            IAPFlow.USER_INITIATED -> {
+            IAPFlow.USER_INITIATED,
+            IAPFlow.TRACK_SELECTION,
+                -> {
                 eventLogger.loadIAPScreenEvent()
                 loadPrice()
             }

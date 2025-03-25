@@ -127,12 +127,13 @@ class CourseInfoViewModel(
         }
     }
 
-    fun onSuccessfulCourseEnrollment(fragmentManager: FragmentManager, courseId: String) {
+    fun onSuccessfulCourseEnrollment(fragmentManager: FragmentManager, courseId: String, showTrackSelection: Boolean = false) {
         if (courseId.isNotEmpty()) {
             router.navigateToCourseOutline(
                 fm = fragmentManager,
                 courseId = courseId,
                 courseTitle = "",
+                showTrackSelection = showTrackSelection
             )
         }
     }

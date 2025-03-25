@@ -21,6 +21,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -35,15 +38,18 @@ import org.openedx.core.R
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
+import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.extension.parcelable
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.presentation.iap.IAPViewModel
+import org.openedx.core.presentation.iap.TrackSelection
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OpenEdXBrandButton
+import org.openedx.core.ui.TrackSelectionFeature
 import org.openedx.core.ui.UnlockingAccessView
 import org.openedx.core.ui.ValuePropUpgradeFeatures
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -68,6 +74,8 @@ class IAPDialogFragment : DialogFragment() {
                 val iapState by iapViewModel.uiState.collectAsState()
                 val uiMessage by iapViewModel.uiMessage.collectAsState(null)
                 val scaffoldState = rememberScaffoldState()
+
+                var selectedOption by remember { mutableStateOf(TrackSelection.FREE) }
 
                 val isFullScreenLoader =
                     (iapState as? IAPUIState.Loading)?.loaderType == IAPLoaderType.FULL_SCREEN
@@ -106,16 +114,37 @@ class IAPDialogFragment : DialogFragment() {
                                     }
 
                                     iapState is IAPUIState.ProductData &&
-                                            iapViewModel.purchaseData.formattedPrice.isNullOrEmpty()
-                                                .not() -> {
-                                        OpenEdXBrandButton(
-                                            text = stringResource(
-                                                id = R.string.iap_upgrade_price,
-                                                iapViewModel.purchaseData.formattedPrice!!,
-                                            ),
-                                            onClick = {
-                                                iapViewModel.startPurchaseFlow()
-                                            })
+                                            iapViewModel.purchaseData.formattedPrice.isNotNullOrEmpty() -> {
+                                        if (iapViewModel.purchaseData.iapFlow == IAPFlow.TRACK_SELECTION) {
+                                            val buttonText =
+                                                if (selectedOption == TrackSelection.CERTIFICATE) {
+                                                    stringResource(
+                                                        id = R.string.iap_continue_to_payment,
+                                                        iapViewModel.purchaseData.formattedPrice!!,
+                                                    )
+                                                } else {
+                                                    stringResource(id = R.string.iap_continue_with_free_track)
+                                                }
+                                            OpenEdXBrandButton(
+                                                text = buttonText,
+                                                onClick = {
+                                                    if (selectedOption == TrackSelection.CERTIFICATE) {
+                                                        iapViewModel.startPurchaseFlow()
+                                                    } else {
+                                                        iapViewModel.eventLogger.logContinueToFreeTrackClickedEvent()
+                                                        onDismiss()
+                                                    }
+                                                })
+                                        } else if (iapViewModel.purchaseData.iapFlow == IAPFlow.USER_INITIATED) {
+                                            OpenEdXBrandButton(
+                                                text = stringResource(
+                                                    id = R.string.iap_upgrade_price,
+                                                    iapViewModel.purchaseData.formattedPrice!!,
+                                                ),
+                                                onClick = {
+                                                    iapViewModel.startPurchaseFlow()
+                                                })
+                                        }
                                     }
                                 }
                             }
@@ -134,6 +163,21 @@ class IAPDialogFragment : DialogFragment() {
                     )
 
                     when (iapState) {
+                        is IAPUIState.ProductData -> {
+                            if (iapViewModel.purchaseData.iapFlow == IAPFlow.TRACK_SELECTION) {
+                                TrackSelectionFeature(
+                                    modifier = Modifier.padding(contentPadding),
+                                    price = iapViewModel.purchaseData.formattedPrice!!,
+                                    selectedOption = selectedOption.apply {
+                                        accessExpires = iapViewModel.purchaseData.courseExpiresDate
+                                    },
+                                    onOptionSelect = { option ->
+                                        selectedOption = option
+                                    },
+                                )
+                            }
+                        }
+
                         is IAPUIState.PurchaseProduct -> {
                             iapViewModel.purchaseItem(requireActivity())
                         }
@@ -211,11 +255,15 @@ class IAPDialogFragment : DialogFragment() {
 
                     if (isFullScreenLoader) {
                         UnlockingAccessView()
-                    } else if (TextUtils.isEmpty(iapViewModel.purchaseData.courseName).not()) {
+                    } else if (TextUtils.isEmpty(iapViewModel.purchaseData.courseName)
+                            .not() && iapViewModel.purchaseData.iapFlow == IAPFlow.USER_INITIATED
+                    ) {
                         ValuePropUpgradeFeatures(
                             Modifier.padding(contentPadding),
                             iapViewModel.purchaseData.courseName!!
                         )
+                    } else {
+                        // ignore
                     }
                 }
             }
@@ -241,6 +289,7 @@ class IAPDialogFragment : DialogFragment() {
             screenName: String = "",
             courseId: String = "",
             courseName: String = "",
+            courseExpiresDate: String = "",
             isSelfPaced: Boolean = false,
             componentId: String? = null,
             productInfo: ProductInfo? = null,
@@ -251,6 +300,7 @@ class IAPDialogFragment : DialogFragment() {
                 this.screenName = screenName
                 this.courseId = courseId
                 this.courseName = courseName
+                this.courseExpiresDate = courseExpiresDate
                 this.isSelfPaced = isSelfPaced
                 this.componentId = componentId
                 this.productInfo = productInfo

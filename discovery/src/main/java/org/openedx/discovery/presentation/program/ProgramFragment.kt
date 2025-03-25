@@ -158,7 +158,8 @@ class ProgramFragment : Fragment() {
                             linkAuthority.ENROLLED_COURSE_INFO -> {
                                 viewModel.onEnrolledCourseClick(
                                     fragmentManager = requireActivity().supportFragmentManager,
-                                    courseId = param
+                                    courseId = param,
+                                    showTrackSelection = true,
                                 )
                             }
 

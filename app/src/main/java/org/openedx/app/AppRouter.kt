@@ -167,10 +167,15 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         fm: FragmentManager,
         courseId: String,
         courseTitle: String,
+        showTrackSelection: Boolean,
     ) {
         replaceFragmentWithBackStack(
             fm,
-            CourseContainerFragment.newInstance(courseId, courseTitle)
+            CourseContainerFragment.newInstance(
+                courseId = courseId,
+                courseTitle = courseTitle,
+                showTrackSelection = showTrackSelection,
+            )
         )
     }
     //endregion
@@ -187,10 +192,10 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         replaceFragmentWithBackStack(
             fm,
             CourseContainerFragment.newInstance(
-                courseId,
-                courseTitle,
-                openTab,
-                resumeBlockId
+                courseId = courseId,
+                courseTitle = courseTitle,
+                openTab = openTab,
+                resumeBlockId = resumeBlockId,
             )
         )
     }

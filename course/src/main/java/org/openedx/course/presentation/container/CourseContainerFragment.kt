@@ -73,6 +73,7 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
+import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.dialog.IAPDialogFragment
@@ -121,6 +122,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
             requireArguments().getString(ARG_TITLE, ""),
+            requireArguments().getBoolean(ARG_SHOW_TRACK_SELECTION, false),
             requireArguments().getString(ARG_RESUME_BLOCK, "")
         )
     }
@@ -310,18 +312,21 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
         const val ARG_TITLE = "title"
         const val ARG_OPEN_TAB = "open_tab"
         const val ARG_RESUME_BLOCK = "resume_block"
+        const val ARG_SHOW_TRACK_SELECTION = "show_track_selection"
         fun newInstance(
             courseId: String,
             courseTitle: String,
             openTab: String = CourseContainerTab.HOME.name,
             resumeBlockId: String = "",
+            showTrackSelection: Boolean = false,
         ): CourseContainerFragment {
             val fragment = CourseContainerFragment()
             fragment.arguments = bundleOf(
                 ARG_COURSE_ID to courseId,
                 ARG_TITLE to courseTitle,
                 ARG_OPEN_TAB to openTab,
-                ARG_RESUME_BLOCK to resumeBlockId
+                ARG_RESUME_BLOCK to resumeBlockId,
+                ARG_SHOW_TRACK_SELECTION to showTrackSelection,
             )
             return fragment
         }
@@ -369,6 +374,7 @@ fun CourseDashboard(
                 pageCount = { CourseContainerTab.entries.size }
             )
             val dataReady = viewModel.dataReady.observeAsState()
+            val canShowTrackSelection by viewModel.canShowTrackSelection.collectAsState()
             val accessStatus = viewModel.courseAccessStatus.observeAsState()
             val canShowUpgradeButton by viewModel.canShowUpgradeButton.collectAsState()
             val tabState = rememberLazyListState()
@@ -387,153 +393,178 @@ fun CourseDashboard(
                 }
             }
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
+            if (dataReady.value.isNull()) return@Scaffold
 
-            LaunchedEffect(pagerState.currentPage) {
-                tabState.animateScrollToItem(pagerState.currentPage)
-                viewModel.courseContainerTabClickedEvent(pagerState.currentPage)
-            }
+            if (dataReady.value.isTrue() && canShowTrackSelection && canShowUpgradeButton) {
+                val courseExpiresDate =
+                    viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires?.let {
+                        TimeUtils.getCourseAccessFormattedDate(
+                            LocalContext.current,
+                            it
+                        )
+                    } ?: ""
+                IAPDialogFragment.newInstance(
+                    iapFlow = IAPFlow.TRACK_SELECTION,
+                    screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
+                    courseId = viewModel.courseId,
+                    courseName = viewModel.courseName,
+                    courseExpiresDate = courseExpiresDate,
+                    isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
+                    productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
+                ).show(
+                    fragmentManager,
+                    IAPDialogFragment.TAG
+                )
+                viewModel.disableTrackSelection()
+            } else {
+                LaunchedEffect(pagerState.currentPage) {
+                    tabState.animateScrollToItem(pagerState.currentPage)
+                    viewModel.courseContainerTabClickedEvent(pagerState.currentPage)
+                }
 
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Box(
-                    modifier = Modifier.weight(1f)
+                Column(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    CollapsingLayout(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(paddingValues)
-                            .pullRefresh(pullRefreshState),
-                        courseImage = courseImage,
-                        imageHeight = 200,
-                        expandedTop = {
-                            ExpandedHeaderContent(
-                                courseTitle = viewModel.courseName,
-                                org = viewModel.courseDetails?.courseInfoOverview?.org ?: ""
-                            )
-                        },
-                        collapsedTop = {
-                            CollapsedHeaderContent(
-                                courseTitle = viewModel.courseName
-                            )
-                        },
-                        upgradeButton = {
-                            if (dataReady.value.isTrue() && canShowUpgradeButton) {
-                                val horizontalPadding = if (!windowSize.isTablet) 16.dp else 98.dp
-                                UpgradeToAccessView(
-                                    modifier = Modifier.padding(
-                                        start = horizontalPadding,
-                                        end = 16.dp,
-                                        top = 16.dp
-                                    ),
-                                    type = UpgradeToAccessViewType.COURSE,
-                                ) {
-                                    IAPDialogFragment.newInstance(
-                                        iapFlow = IAPFlow.USER_INITIATED,
-                                        screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
-                                        courseId = viewModel.courseId,
-                                        courseName = viewModel.courseName,
-                                        isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
-                                        productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
-                                    ).show(
-                                        fragmentManager,
-                                        IAPDialogFragment.TAG
-                                    )
-                                }
-                            }
-                        },
-                        navigation = {
-                            if (isNavigationEnabled) {
-                                RoundTabsBar(
-                                    items = CourseContainerTab.entries,
-                                    contentPadding = PaddingValues(
-                                        horizontal = 12.dp,
-                                        vertical = 16.dp
-                                    ),
-                                    rowState = tabState,
-                                    pagerState = pagerState,
-                                    withPager = true,
-                                    onTabClicked = { }
-                                )
-                            }
-                        },
-                        isEnabled = CourseAccessError.NONE == accessStatus.value,
-                        onBackClick = {
-                            fragmentManager.popBackStack()
-                        },
-                        bodyContent = {
-                            when (accessStatus.value) {
-                                CourseAccessError.AUDIT_EXPIRED_UPGRADABLE -> {
-                                    AuditExpiredUpgradableView(
-                                        viewModel = viewModel,
-                                        fragmentActivity = fragmentActivity
-                                    )
-                                }
-
-                                CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE,
-                                CourseAccessError.NOT_YET_STARTED,
-                                CourseAccessError.UNKNOWN,
-                                    -> {
-                                    CourseAccessErrorView(
-                                        viewModel = viewModel,
-                                        accessError = accessStatus.value,
-                                        fragmentManager = fragmentManager,
-                                    )
-                                }
-
-                                CourseAccessError.NONE -> {
-                                    DashboardPager(
-                                        windowSize = windowSize,
-                                        viewModel = viewModel,
-                                        pagerState = pagerState,
-                                        isNavigationEnabled = isNavigationEnabled,
-                                        isResumed = isResumed,
-                                        fragmentManager = fragmentManager,
-                                    )
-                                }
-
-                                else -> {
-                                }
-                            }
-                        }
-                    )
-                    PullRefreshIndicator(
-                        refreshing,
-                        pullRefreshState,
-                        Modifier.align(Alignment.TopCenter)
-                    )
-
-                    var isInternetConnectionShown by rememberSaveable {
-                        mutableStateOf(false)
-                    }
-                    if (!isInternetConnectionShown && !viewModel.hasInternetConnection) {
-                        OfflineModeDialog(
-                            Modifier
+                    Box(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        CollapsingLayout(
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .align(Alignment.BottomCenter),
-                            onDismissCLick = {
-                                isInternetConnectionShown = true
+                                .padding(paddingValues)
+                                .pullRefresh(pullRefreshState),
+                            courseImage = courseImage,
+                            imageHeight = 200,
+                            expandedTop = {
+                                ExpandedHeaderContent(
+                                    courseTitle = viewModel.courseName,
+                                    org = viewModel.courseDetails?.courseInfoOverview?.org ?: ""
+                                )
                             },
-                            onReloadClick = {
-                                isInternetConnectionShown = viewModel.hasInternetConnection
-                                onRefresh(pagerState.currentPage)
-                            }
-                        )
-                    }
+                            collapsedTop = {
+                                CollapsedHeaderContent(
+                                    courseTitle = viewModel.courseName
+                                )
+                            },
+                            upgradeButton = {
+                                if (dataReady.value.isTrue() && canShowUpgradeButton) {
+                                    val horizontalPadding =
+                                        if (!windowSize.isTablet) 16.dp else 98.dp
+                                    UpgradeToAccessView(
+                                        modifier = Modifier.padding(
+                                            start = horizontalPadding,
+                                            end = 16.dp,
+                                            top = 16.dp
+                                        ),
+                                        type = UpgradeToAccessViewType.COURSE,
+                                    ) {
+                                        IAPDialogFragment.newInstance(
+                                            iapFlow = IAPFlow.USER_INITIATED,
+                                            screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
+                                            courseId = viewModel.courseId,
+                                            courseName = viewModel.courseName,
+                                            isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
+                                            productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
+                                        ).show(
+                                            fragmentManager,
+                                            IAPDialogFragment.TAG
+                                        )
+                                    }
+                                }
+                            },
+                            navigation = {
+                                if (isNavigationEnabled) {
+                                    RoundTabsBar(
+                                        items = CourseContainerTab.entries,
+                                        contentPadding = PaddingValues(
+                                            horizontal = 12.dp,
+                                            vertical = 16.dp
+                                        ),
+                                        rowState = tabState,
+                                        pagerState = pagerState,
+                                        withPager = true,
+                                        onTabClicked = { }
+                                    )
+                                }
+                            },
+                            isEnabled = CourseAccessError.NONE == accessStatus.value,
+                            onBackClick = {
+                                fragmentManager.popBackStack()
+                            },
+                            bodyContent = {
+                                when (accessStatus.value) {
+                                    CourseAccessError.AUDIT_EXPIRED_UPGRADABLE -> {
+                                        AuditExpiredUpgradableView(
+                                            viewModel = viewModel,
+                                            fragmentActivity = fragmentActivity
+                                        )
+                                    }
 
-                    SnackbarHost(
-                        modifier = Modifier.align(Alignment.BottomStart),
-                        hostState = snackState
-                    ) { snackbarData: SnackbarData ->
-                        DatesShiftedSnackBar(
-                            showAction = CourseContainerTab.entries[pagerState.currentPage] != CourseContainerTab.DATES,
-                            onViewDates = {
-                                scrollToDates(scope, pagerState)
-                            },
-                            onClose = {
-                                snackbarData.dismiss()
+                                    CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE,
+                                    CourseAccessError.NOT_YET_STARTED,
+                                    CourseAccessError.UNKNOWN,
+                                        -> {
+                                        CourseAccessErrorView(
+                                            viewModel = viewModel,
+                                            accessError = accessStatus.value,
+                                            fragmentManager = fragmentManager,
+                                        )
+                                    }
+
+                                    CourseAccessError.NONE -> {
+                                        DashboardPager(
+                                            windowSize = windowSize,
+                                            viewModel = viewModel,
+                                            pagerState = pagerState,
+                                            isNavigationEnabled = isNavigationEnabled,
+                                            isResumed = isResumed,
+                                            fragmentManager = fragmentManager,
+                                        )
+                                    }
+
+                                    else -> {
+                                    }
+                                }
                             }
                         )
+                        PullRefreshIndicator(
+                            refreshing,
+                            pullRefreshState,
+                            Modifier.align(Alignment.TopCenter)
+                        )
+
+                        var isInternetConnectionShown by rememberSaveable {
+                            mutableStateOf(false)
+                        }
+                        if (!isInternetConnectionShown && !viewModel.hasInternetConnection) {
+                            OfflineModeDialog(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.BottomCenter),
+                                onDismissCLick = {
+                                    isInternetConnectionShown = true
+                                },
+                                onReloadClick = {
+                                    isInternetConnectionShown = viewModel.hasInternetConnection
+                                    onRefresh(pagerState.currentPage)
+                                }
+                            )
+                        }
+
+                        SnackbarHost(
+                            modifier = Modifier.align(Alignment.BottomStart),
+                            hostState = snackState
+                        ) { snackbarData: SnackbarData ->
+                            DatesShiftedSnackBar(
+                                showAction = CourseContainerTab.entries[pagerState.currentPage] != CourseContainerTab.DATES,
+                                onViewDates = {
+                                    scrollToDates(scope, pagerState)
+                                },
+                                onClose = {
+                                    snackbarData.dismiss()
+                                }
+                            )
+                        }
                     }
                 }
             }

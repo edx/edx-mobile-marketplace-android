@@ -163,21 +163,6 @@ class IAPDialogFragment : DialogFragment() {
                     )
 
                     when (iapState) {
-                        is IAPUIState.ProductData -> {
-                            if (iapViewModel.purchaseData.iapFlow == IAPFlow.TRACK_SELECTION) {
-                                TrackSelectionFeature(
-                                    modifier = Modifier.padding(contentPadding),
-                                    price = iapViewModel.purchaseData.formattedPrice!!,
-                                    selectedOption = selectedOption.apply {
-                                        accessExpires = iapViewModel.purchaseData.courseExpiresDate
-                                    },
-                                    onOptionSelect = { option ->
-                                        selectedOption = option
-                                    },
-                                )
-                            }
-                        }
-
                         is IAPUIState.PurchaseProduct -> {
                             iapViewModel.purchaseItem(requireActivity())
                         }
@@ -255,13 +240,24 @@ class IAPDialogFragment : DialogFragment() {
 
                     if (isFullScreenLoader) {
                         UnlockingAccessView()
-                    } else if (TextUtils.isEmpty(iapViewModel.purchaseData.courseName)
-                            .not() && iapViewModel.purchaseData.iapFlow == IAPFlow.USER_INITIATED
-                    ) {
-                        ValuePropUpgradeFeatures(
-                            Modifier.padding(contentPadding),
-                            iapViewModel.purchaseData.courseName!!
-                        )
+                    } else if (TextUtils.isEmpty(iapViewModel.purchaseData.courseName).not()) {
+                        if (iapViewModel.purchaseData.iapFlow == IAPFlow.TRACK_SELECTION) {
+                            TrackSelectionFeature(
+                                modifier = Modifier.padding(contentPadding),
+                                price = iapViewModel.purchaseData.formattedPrice!!,
+                                selectedOption = selectedOption.apply {
+                                    accessExpires = iapViewModel.purchaseData.courseExpiresDate
+                                },
+                                onOptionSelect = { option ->
+                                    selectedOption = option
+                                },
+                            )
+                        } else {
+                            ValuePropUpgradeFeatures(
+                                Modifier.padding(contentPadding),
+                                iapViewModel.purchaseData.courseName!!
+                            )
+                        }
                     } else {
                         // ignore
                     }

@@ -245,6 +245,7 @@ class CourseContainerViewModelTest {
         val viewModel = CourseContainerViewModel(
             courseId = "",
             courseName = "",
+            showTrackSelection = false,
             resumeBlockId = "",
             config = config,
             interactor = interactor,
@@ -288,6 +289,7 @@ class CourseContainerViewModelTest {
         val viewModel = CourseContainerViewModel(
             courseId = "",
             courseName = "",
+            showTrackSelection = false,
             resumeBlockId = "",
             config = config,
             interactor = interactor,
@@ -321,6 +323,7 @@ class CourseContainerViewModelTest {
         val viewModel = CourseContainerViewModel(
             courseId = "",
             courseName = "",
+            showTrackSelection = false,
             resumeBlockId = "",
             config = config,
             interactor = interactor,
@@ -365,6 +368,7 @@ class CourseContainerViewModelTest {
         val viewModel = CourseContainerViewModel(
             courseId = "",
             courseName = "",
+            showTrackSelection = false,
             resumeBlockId = "",
             config = config,
             interactor = interactor,
@@ -398,6 +402,7 @@ class CourseContainerViewModelTest {
         val viewModel = CourseContainerViewModel(
             courseId = "",
             courseName = "",
+            showTrackSelection = false,
             resumeBlockId = "",
             config = config,
             interactor = interactor,

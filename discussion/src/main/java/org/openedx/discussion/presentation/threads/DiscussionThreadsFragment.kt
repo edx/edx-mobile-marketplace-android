@@ -96,6 +96,7 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.ui.ThreadItem
 import org.openedx.discussion.R as discussionR
@@ -236,7 +237,7 @@ class DiscussionThreadsFragment : Fragment() {
             commentId: String,
             title: String,
             viewType: String,
-            blockId: String = "",
+            blockId: String,
         ): DiscussionThreadsFragment {
             val fragment = DiscussionThreadsFragment()
             fragment.arguments = bundleOf(
@@ -268,7 +269,7 @@ private fun DiscussionThreadsScreen(
     onSwipeRefresh: () -> Unit,
     updatedOrder: (String) -> Unit,
     updatedFilter: (String) -> Unit,
-    onItemClick: (org.openedx.discussion.domain.model.Thread) -> Unit,
+    onItemClick: (Thread) -> Unit,
     onCreatePostClick: () -> Unit,
     paginationCallback: () -> Unit,
     onBackClick: () -> Unit,
@@ -706,7 +707,7 @@ private fun DiscussionThreadsScreenPreview() {
         DiscussionThreadsScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             "All posts",
-            uiState = DiscussionThreadsUIState.Threads(listOf(mockThread, mockThread, mockThread)),
+            uiState = DiscussionThreadsUIState.Threads(listOf(mockPinnedThread, mockThread)),
             uiMessage = null,
             onItemClick = {},
             onBackClick = {},
@@ -754,7 +755,7 @@ private fun DiscussionThreadsScreenTabletPreview() {
         DiscussionThreadsScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             "All posts",
-            uiState = DiscussionThreadsUIState.Threads(listOf(mockThread, mockThread, mockThread)),
+            uiState = DiscussionThreadsUIState.Threads(listOf(mockPinnedThread, mockThread)),
             uiMessage = null,
             onItemClick = {},
             onBackClick = {},
@@ -770,7 +771,7 @@ private fun DiscussionThreadsScreenTabletPreview() {
     }
 }
 
-private val mockThread = org.openedx.discussion.domain.model.Thread(
+private val mockThread = Thread(
     id = "",
     author = "",
     authorLabel = "",
@@ -792,7 +793,7 @@ private val mockThread = org.openedx.discussion.domain.model.Thread(
     previewBody = "",
     abuseFlaggedCount = "",
     title = "Discussion title long Discussion title long good item",
-    pinned = true,
+    pinned = false,
     closed = false,
     following = true,
     commentCount = 21,
@@ -805,3 +806,5 @@ private val mockThread = org.openedx.discussion.domain.model.Thread(
     anonymousToPeers = false,
     isAuthor = false,
 )
+
+private val mockPinnedThread = mockThread.copy(pinned = true)

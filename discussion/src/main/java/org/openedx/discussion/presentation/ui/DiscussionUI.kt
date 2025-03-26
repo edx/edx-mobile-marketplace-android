@@ -27,6 +27,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.runtime.Composable
@@ -60,6 +61,7 @@ import org.openedx.core.utils.TimeUtils
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.Topic
 import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment
 import org.openedx.core.R as CoreR
@@ -67,7 +69,7 @@ import org.openedx.core.R as CoreR
 @Composable
 fun ThreadMainItem(
     modifier: Modifier,
-    thread: org.openedx.discussion.domain.model.Thread,
+    thread: Thread,
     onClick: (String, Boolean) -> Unit,
     onUserPhotoClick: (String) -> Unit
 ) {
@@ -492,8 +494,8 @@ fun CommentMainItem(
 
 @Composable
 fun ThreadItem(
-    thread: org.openedx.discussion.domain.model.Thread,
-    onClick: (org.openedx.discussion.domain.model.Thread) -> Unit,
+    thread: Thread,
+    onClick: (Thread) -> Unit,
 ) {
     val icon = when (thread.type) {
         DiscussionType.DISCUSSION -> painterResource(id = R.drawable.discussion_ic_discussion)
@@ -525,26 +527,28 @@ fun ThreadItem(
                 color = MaterialTheme.appColors.textPrimaryVariant,
                 textStyle = MaterialTheme.appTypography.labelSmall
             )
-            if (thread.unreadCommentCount > 0 && !thread.read) {
-                Row(
-                    modifier = Modifier,
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
+            Row(
+                modifier = Modifier,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val iconSize = (MaterialTheme.appTypography.labelSmall.fontSize.value + 4).dp
+                if (thread.unreadCommentCount > 0 && !thread.read) {
                     Box {
                         Icon(
-                            modifier = Modifier.size((MaterialTheme.appTypography.labelSmall.fontSize.value + 4).dp),
+                            modifier = Modifier.size(iconSize),
                             painter = painterResource(id = R.drawable.discussion_ic_unread_replies),
                             tint = MaterialTheme.appColors.textPrimaryVariant,
                             contentDescription = null
                         )
                         Image(
-                            modifier = Modifier.size((MaterialTheme.appTypography.labelSmall.fontSize.value + 4).dp),
+                            modifier = Modifier.size(iconSize),
                             painter = painterResource(id = R.drawable.discussion_ic_unread_replies_dot),
                             contentDescription = null
                         )
                     }
                     Text(
+                        modifier = Modifier.align(Alignment.CenterVertically),
                         text = pluralStringResource(
                             id = R.plurals.discussion_missed_posts,
                             thread.unreadCommentCount,
@@ -552,6 +556,15 @@ fun ThreadItem(
                         ),
                         color = MaterialTheme.appColors.textPrimaryVariant,
                         style = MaterialTheme.appTypography.labelSmall
+                    )
+                }
+                if (thread.pinned) {
+                    Spacer(Modifier.width(10.dp))
+                    Icon(
+                        modifier = Modifier.size(iconSize),
+                        imageVector = Icons.Default.PushPin,
+                        contentDescription = null,
+                        tint = MaterialTheme.appColors.textPrimaryVariant,
                     )
                 }
             }
@@ -661,10 +674,10 @@ fun TopicItem(
 @Composable
 private fun TopicItemPreview() {
     OpenEdXTheme {
-        TopicItem(topic = mockTopic,
-            onClick = { _, _ ->
-
-            })
+        TopicItem(
+            topic = mockTopic,
+            onClick = { _, _ -> },
+        )
     }
 }
 
@@ -675,7 +688,8 @@ private fun ThreadItemPreview() {
     OpenEdXTheme {
         ThreadItem(
             thread = mockThread,
-            onClick = {})
+            onClick = {},
+        )
     }
 }
 
@@ -730,7 +744,7 @@ private val mockComment = DiscussionComment(
     isAuthor = false,
 )
 
-private val mockThread = org.openedx.discussion.domain.model.Thread(
+private val mockThread = Thread(
     id = "",
     author = "ABC",
     authorLabel = "",

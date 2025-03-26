@@ -329,14 +329,15 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         replaceFragmentWithBackStack(
             fm,
             DiscussionThreadsFragment.newInstance(
-                action,
-                courseId,
-                topicId,
-                threadId,
-                responseId,
-                commentId,
-                title,
-                viewType.name
+                threadType = action,
+                courseId = courseId,
+                topicId = topicId,
+                threadId = threadId,
+                responseId = responseId,
+                commentId = commentId,
+                title = title,
+                viewType = viewType.name,
+                blockId = "",
             )
         )
     }

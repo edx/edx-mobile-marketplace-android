@@ -58,14 +58,15 @@ class CourseUnitContainerAdapter(
 
             (block.isDiscussionBlock && block.studentViewData?.topicId.isNullOrEmpty().not()) -> {
                 DiscussionThreadsFragment.newInstance(
-                    DiscussionTopicsViewModel.TOPIC,
-                    viewModel.courseId,
-                    block.studentViewData?.topicId ?: "",
-                    "",
-                    "",
-                    block.displayName,
-                    FragmentViewType.MAIN_CONTENT.name,
-                    block.id
+                    threadType = DiscussionTopicsViewModel.TOPIC,
+                    courseId = viewModel.courseId,
+                    topicId = block.studentViewData?.topicId ?: "",
+                    threadId = "",
+                    responseId = "",
+                    commentId = "",
+                    title = block.displayName,
+                    viewType = FragmentViewType.MAIN_CONTENT.name,
+                    blockId = block.id,
                 )
             }
 

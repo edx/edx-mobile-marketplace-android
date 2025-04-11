@@ -148,7 +148,7 @@ fun OptionCard(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.Start
         ) {
-            OpenedxRadioButton(
+            OpenEdxRadioButton(
                 isSelected = isSelected,
                 onClick = onClick,
             )
@@ -179,7 +179,7 @@ fun OptionCard(
                 if (trackSelection == TrackSelection.FREE && trackSelection.accessExpires != null) {
                     Text(
                         text = stringResource(
-                            id = R.string.iap_access_expires,
+                            id = R.string.core_label_expires,
                             trackSelection.accessExpires!!
                         ),
                         color = MaterialTheme.appColors.textPrimary,

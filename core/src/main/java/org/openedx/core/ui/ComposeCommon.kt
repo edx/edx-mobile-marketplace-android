@@ -1590,7 +1590,7 @@ fun OpenEdxAlertDialog(
 }
 
 @Composable
-fun OpenedxRadioButton(
+fun OpenEdxRadioButton(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {

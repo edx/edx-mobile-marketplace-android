@@ -84,7 +84,7 @@ import org.openedx.core.R as CoreR
 class CourseContainerViewModel(
     val courseId: String,
     var courseName: String,
-    showTrackSelection: Boolean,
+    var showTrackSelection: Boolean,
     private var resumeBlockId: String,
     private val config: Config,
     private val interactor: CourseInteractor,
@@ -167,7 +167,7 @@ class CourseContainerViewModel(
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
 
-    private var _canShowTrackSelection = MutableStateFlow(showTrackSelection)
+    private var _canShowTrackSelection = MutableStateFlow(false)
     val canShowTrackSelection: StateFlow<Boolean>
         get() = _canShowTrackSelection.asStateFlow()
 
@@ -253,6 +253,7 @@ class CourseContainerViewModel(
                     courseName = courseInfoOverview.name
                     _canShowUpgradeButton.value =
                         iapInteractor.isIAPEnabled && courseDetails.isUpgradeable
+                    _canShowTrackSelection.value = showTrackSelection && _canShowUpgradeButton.value
                     loadCourseImage(courseInfoOverview.media?.image?.large)
                     _showProgress.value = false
                     if (courseDetails.hasAccess.isFalse()) {
@@ -478,6 +479,7 @@ class CourseContainerViewModel(
     }
 
     fun disableTrackSelection() {
+        showTrackSelection = false
         _canShowTrackSelection.value = false
     }
 

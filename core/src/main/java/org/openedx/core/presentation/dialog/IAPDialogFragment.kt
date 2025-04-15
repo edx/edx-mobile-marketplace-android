@@ -244,7 +244,8 @@ class IAPDialogFragment : DialogFragment() {
                         if (iapViewModel.purchaseData.iapFlow == IAPFlow.TRACK_SELECTION) {
                             TrackSelectionFeature(
                                 modifier = Modifier.padding(contentPadding),
-                                price = iapViewModel.purchaseData.formattedPrice!!,
+                                courseName = iapViewModel.purchaseData.courseName!!,
+                                price = iapViewModel.purchaseData.formattedPrice?:"",
                                 selectedOption = selectedOption.apply {
                                     accessExpires = iapViewModel.purchaseData.courseExpiresDate
                                 },

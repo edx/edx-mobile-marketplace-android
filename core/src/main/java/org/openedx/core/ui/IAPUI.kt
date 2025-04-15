@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
@@ -23,13 +26,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.openedx.core.R
@@ -47,6 +50,7 @@ fun ValuePropUpgradeFeatures(modifier: Modifier = Modifier, courseName: String) 
     Column(
         modifier = modifier
             .background(color = MaterialTheme.appColors.background)
+            .verticalScroll(rememberScrollState())
             .padding(all = 16.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
@@ -91,26 +95,42 @@ fun CheckmarkView(text: String) {
 @Composable
 fun TrackSelectionFeature(
     modifier: Modifier = Modifier,
+    courseName: String,
     price: String,
     selectedOption: TrackSelection,
     onOptionSelect: (option: TrackSelection) -> Unit,
 ) {
-
     Column(
         modifier = modifier
             .background(MaterialTheme.appColors.background)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(id = R.string.iap_track_selection_title),
-            style = MaterialTheme.appTypography.headlineBold,
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .fillMaxWidth(),
+            text = stringResource(
+                id = R.string.iap_upgrade_course,
+                courseName
+            ),
             color = MaterialTheme.appColors.textPrimary,
-            textAlign = TextAlign.Start,
+            style = MaterialTheme.appTypography.headlineSmall,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(id = R.string.iap_track_selection_title),
+            color = MaterialTheme.appColors.textPrimary,
+            textAlign = TextAlign.Start,
+            style = MaterialTheme.appTypography.titleLarge,
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         TrackSelection.entries.forEach { option ->
             OptionCard(
@@ -130,9 +150,14 @@ fun OptionCard(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
+    val configuration = LocalConfiguration.current
+    val width =
+        if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) configuration.screenWidthDp
+        else (configuration.screenWidthDp / 0.33).toInt()
+
     Card(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(width.dp)
             .padding(vertical = 4.dp)
             .clickable(onClick = onClick),
         border = BorderStroke(
@@ -152,49 +177,39 @@ fun OptionCard(
                 isSelected = isSelected,
                 onClick = onClick,
             )
-
             Column(
-                modifier = Modifier.padding(start = 16.dp, end = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 8.dp),
             ) {
-                Row(
+                Text(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(trackSelection.title),
-                        color = MaterialTheme.appColors.textPrimary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 24.sp,
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = price,
-                        color = MaterialTheme.appColors.textPrimaryVariant,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Normal,
-                        lineHeight = 20.sp,
-                    )
-                }
+                    text = stringResource(id = trackSelection.title, price),
+                    color = MaterialTheme.appColors.textPrimary,
+                    style = MaterialTheme.appTypography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
                 if (trackSelection == TrackSelection.FREE && trackSelection.accessExpires != null) {
                     Text(
                         text = stringResource(
                             id = R.string.core_label_expires,
-                            trackSelection.accessExpires!!
+                            trackSelection.accessExpires ?: "date"
                         ),
                         color = MaterialTheme.appColors.textPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        lineHeight = 20.sp,
+                        style = MaterialTheme.appTypography.bodyMedium
                     )
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
                     text = stringResource(
                         trackSelection.description,
                         trackSelection.accessExpires ?: ""
                     ),
-                    style = MaterialTheme.appTypography.bodySmall,
+                    style = MaterialTheme.appTypography.bodyMedium,
                     color = MaterialTheme.appColors.textPrimaryVariant,
                 )
             }
@@ -613,12 +628,15 @@ private fun PreviewNoSkuErrorDialog() {
 }
 
 
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(device = Devices.TABLET, uiMode = Configuration.ORIENTATION_LANDSCAPE)
 @Composable
 fun TrackSelectionFeaturePreview() {
     OpenEdXTheme {
         TrackSelectionFeature(
             selectedOption = TrackSelection.CERTIFICATE,
+            courseName = "Test Course",
             price = "Free",
             onOptionSelect = { },
         )

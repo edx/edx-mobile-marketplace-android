@@ -395,7 +395,7 @@ fun CourseDashboard(
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
             if (dataReady.value.isNull()) return@Scaffold
 
-            if (dataReady.value.isTrue() && canShowTrackSelection && canShowUpgradeButton) {
+            if (dataReady.value.isTrue() && canShowTrackSelection) {
                 val courseExpiresDate =
                     viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires?.let {
                         TimeUtils.getCourseAccessFormattedDate(

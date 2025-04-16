@@ -145,6 +145,7 @@ dependencies {
     implementation project(path: ':discussion')
     implementation project(path: ':whatsnew')
     implementation project(path: ':notifications')
+    implementation project(path: ':featuremanagement')
 
     kapt "androidx.room:room-compiler:$room_version"
 

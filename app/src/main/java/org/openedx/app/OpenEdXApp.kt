@@ -8,12 +8,15 @@ import com.google.firebase.FirebaseApp
 import io.branch.referral.Branch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.openedx.app.deeplink.BranchBrazeDeeplinkHandler
 import org.openedx.app.di.appModule
 import org.openedx.app.di.networkingModule
 import org.openedx.app.di.screenModule
 import org.openedx.core.config.Config
+import org.openedx.featuremanagement.di.FeatureManagementModuleProvider
+import org.openedx.notifications.di.NotificationsModuleProvider
 
 class OpenEdXApp : Application() {
 
@@ -29,6 +32,12 @@ class OpenEdXApp : Application() {
                 screenModule
             )
         }
+        val koinProviders = listOf(
+            NotificationsModuleProvider(),
+            FeatureManagementModuleProvider(),
+        )
+        loadKoinModules(koinProviders.flatMap { it.getModules() })
+
         if (config.getFirebaseConfig().enabled) {
             FirebaseApp.initializeApp(this)
         }

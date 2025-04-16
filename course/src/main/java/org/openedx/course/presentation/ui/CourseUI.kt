@@ -1189,7 +1189,7 @@ fun ShowDeleteVideoConfirmationDialog(
     AlertDialog(
         title = {
             Text(
-                text = stringResource(id = org.openedx.core.R.string.core_warning)
+                text = stringResource(id = coreR.string.core_warning)
             )
         },
         text = {
@@ -1203,13 +1203,13 @@ fun ShowDeleteVideoConfirmationDialog(
         onDismissRequest = onDismissClick,
         confirmButton = {
             OpenEdXTertiaryButton(
-                text = stringResource(id = org.openedx.core.R.string.core_delete),
+                text = stringResource(id = coreR.string.core_delete),
                 onClick = onDownloadClick
             )
         },
         dismissButton = {
             OpenEdXTertiaryButton(
-                text = stringResource(id = org.openedx.core.R.string.core_cancel),
+                text = stringResource(id = coreR.string.core_cancel),
                 onClick = onDismissClick
             )
         }

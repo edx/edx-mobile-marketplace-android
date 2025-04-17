@@ -32,9 +32,9 @@ class OpenEdXApp : Application() {
                 screenModule
             )
         }
-        val koinProviders = listOf(
-            NotificationsModuleProvider(),
-            FeatureManagementModuleProvider(),
+        val koinProviders = listOfNotNull(
+            NotificationsModuleProvider().takeIf { config.isPushNotificationsEnabled() },
+            FeatureManagementModuleProvider().takeIf { config.getOptimizelyConfig().enabled }
         )
         loadKoinModules(koinProviders.flatMap { it.getModules() })
 

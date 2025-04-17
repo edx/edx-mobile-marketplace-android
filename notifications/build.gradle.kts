@@ -61,7 +61,11 @@ dependencies {
     implementation(project(":core"))
     implementation("androidx.activity:activity-compose:1.8.1")
 
-    testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+
+    testImplementation("junit:junit:${rootProject.extra["junit_version"]}")
+    testImplementation("io.mockk:mockk:${rootProject.extra["mockk_version"]}")
+    testImplementation("androidx.arch.core:core-testing:${rootProject.extra["android_arch_version"]}")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 }

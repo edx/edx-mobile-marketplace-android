@@ -30,11 +30,11 @@ data class CourseDatesBannerInfo(
     }
 
     private fun getCourseBannerType(): CourseBannerType = when {
-        canUpgradeToGraded() -> UPGRADE_TO_GRADED
-        canUpgradeToReset() -> UPGRADE_TO_RESET
+        canUpgradeToGraded() -> RESET_DATES
+        canUpgradeToReset() -> RESET_DATES
         canResetDates() -> RESET_DATES
-        infoBanner() -> INFO_BANNER
-        else -> BLANK
+        infoBanner() -> RESET_DATES
+        else -> RESET_DATES
     }
 
     private fun infoBanner(): Boolean = !missedDeadlines
@@ -54,9 +54,18 @@ enum class CourseBannerType(
     val buttonResId: Int = 0
 ) {
     BLANK,
-    INFO_BANNER(bodyResId = R.string.core_dates_info_banner_body),
-    UPGRADE_TO_GRADED(bodyResId = R.string.core_dates_upgrade_to_graded_banner_body),
-    UPGRADE_TO_RESET(bodyResId = R.string.core_dates_upgrade_to_reset_banner_body),
+    INFO_BANNER(
+        headerResId = R.string.core_dates_info_banner_header,
+        bodyResId = R.string.core_dates_info_banner_body
+    ),
+    UPGRADE_TO_GRADED(
+        headerResId = R.string.core_dates_upgrade_to_graded_banner_headrer,
+        bodyResId = R.string.core_dates_upgrade_to_graded_banner_body
+    ),
+    UPGRADE_TO_RESET(
+        headerResId = R.string.core_dates_upgrade_to_reset_banner_header,
+        bodyResId = R.string.core_dates_upgrade_to_reset_banner_body
+    ),
     RESET_DATES(
         headerResId = R.string.core_dates_reset_dates_banner_header,
         bodyResId = R.string.core_dates_reset_dates_banner_body,

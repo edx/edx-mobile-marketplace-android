@@ -42,7 +42,8 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         }.apply()
     }
 
-    private fun getLong(key: String): Long = sharedPreferences.getLong(key, 0L)
+    private fun getLong(key: String, defValue: Long = 0L): Long =
+        sharedPreferences.getLong(key, defValue)
 
     private fun saveBoolean(key: String, value: Boolean) {
         sharedPreferences.edit().apply {
@@ -189,6 +190,18 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
     override fun isCalendarSyncEventsDialogShown(courseName: String): Boolean =
         getBoolean(courseName.replaceSpace("_"))
 
+    override fun markPLSBannerDismissed(courseName: String) {
+        val currentTime = System.currentTimeMillis()
+        saveLong(courseName.replaceSpace("_") + "_" + PLS_BANNER_SHOWN, currentTime)
+    }
+
+    override fun canShowPLSBanner(courseName: String): Boolean {
+        val currentTime = System.currentTimeMillis()
+        val lastTime =
+            getLong(key = courseName.replaceSpace("_") + "_" + PLS_BANNER_SHOWN, defValue = 0L)
+        return (currentTime - lastTime) > MILLIS_IN_24_HOURS
+    }
+
     override var notifications: NotificationsConfiguration
         set(value) {
             val notificationsJson = Gson().toJson(value)
@@ -212,6 +225,8 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         }
 
     companion object {
+        private const val MILLIS_IN_24_HOURS = 24 * 60 * 60 * 1000
+
         private const val ACCESS_TOKEN = "access_token"
         private const val REFRESH_TOKEN = "refresh_token"
         private const val PUSH_TOKEN = "push_token"
@@ -230,5 +245,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val LAST_SIGN_IN_TYPE = "last_sign_in_type"
         private const val NOTIFICATIONS_CONFIGURATION = "notifications_configuration"
         private const val NOTIFICATIONS_PRIMER_CONFIGURATION = "notifications_primer_configuration"
+        private const val PLS_BANNER_SHOWN = "pls_banner_shown"
     }
 }

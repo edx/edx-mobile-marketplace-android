@@ -88,6 +88,7 @@ fun CourseOutlineScreen(
     val resumeBlockId by viewModel.resumeBlockId.collectAsState("")
     val uiState by viewModel.uiState.collectAsState()
     val uiMessage by viewModel.uiMessage.collectAsState(null)
+    val canShowPLSBanner by viewModel.canShowPLSBanner
     val context = LocalContext.current
 
     LaunchedEffect(resumeBlockId) {
@@ -100,6 +101,7 @@ fun CourseOutlineScreen(
         windowSize = windowSize,
         uiState = uiState,
         uiMessage = uiMessage,
+        canShowPLSBanner = canShowPLSBanner,
         onExpandClick = { block ->
             if (viewModel.switchCourseSections(block.id)) {
                 viewModel.sequentialClickedEvent(
@@ -159,6 +161,12 @@ fun CourseOutlineScreen(
             viewModel.viewCertificateTappedEvent()
             it.takeIfNotEmpty()
                 ?.let { url -> AndroidUriHandler(context).openUri(url) }
+        },
+        onPLSBannerViewed = {
+            viewModel.onPLSBannerViewed()
+        },
+        onPLSBannerDismiss = {
+            viewModel.onDismissPLSBanner()
         }
     )
 }
@@ -168,12 +176,15 @@ private fun CourseOutlineUI(
     windowSize: WindowSize,
     uiState: CourseOutlineUIState,
     uiMessage: UIMessage?,
+    canShowPLSBanner: Boolean,
     onExpandClick: (Block) -> Unit,
     onSubSectionClick: (Block) -> Unit,
     onResumeClick: (String) -> Unit,
     onDownloadClick: (blockIds: List<String>) -> Unit,
     onResetDatesClick: () -> Unit,
     onCertificateClick: (String) -> Unit,
+    onPLSBannerViewed: () -> Unit = {},
+    onPLSBannerDismiss: () -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -234,7 +245,7 @@ private fun CourseOutlineUI(
                                     modifier = Modifier.fillMaxSize(),
                                     contentPadding = listBottomPadding
                                 ) {
-                                    if (uiState.datesBannerInfo.isBannerAvailableForDashboard()) {
+                                    if (canShowPLSBanner && uiState.datesBannerInfo.isBannerAvailableForDashboard()) {
                                         item {
                                             Box(
                                                 modifier = Modifier
@@ -244,15 +255,18 @@ private fun CourseOutlineUI(
                                                     CourseDatesBannerTablet(
                                                         banner = uiState.datesBannerInfo,
                                                         resetDates = onResetDatesClick,
+                                                        onDismissClick = onPLSBannerDismiss,
                                                     )
                                                 } else {
                                                     CourseDatesBanner(
                                                         banner = uiState.datesBannerInfo,
                                                         resetDates = onResetDatesClick,
+                                                        onDismissClick = onPLSBannerDismiss,
                                                     )
                                                 }
                                             }
                                         }
+                                        onPLSBannerViewed()
                                     }
 
                                     val certificate = uiState.courseStructure.certificate
@@ -535,13 +549,15 @@ private fun CourseOutlineScreenPreview() {
                     hasEnded = false
                 )
             ),
+            canShowPLSBanner = false,
             uiMessage = null,
             onExpandClick = {},
             onSubSectionClick = {},
             onResumeClick = {},
             onDownloadClick = {},
             onResetDatesClick = {},
-            onCertificateClick = {}
+            onCertificateClick = {},
+            onPLSBannerDismiss = {},
         )
     }
 }
@@ -569,13 +585,15 @@ private fun CourseOutlineScreenTabletPreview() {
                     hasEnded = false
                 )
             ),
+            canShowPLSBanner = false,
             uiMessage = null,
             onExpandClick = {},
             onSubSectionClick = {},
             onResumeClick = {},
             onDownloadClick = {},
             onResetDatesClick = {},
-            onCertificateClick = {}
+            onCertificateClick = {},
+            onPLSBannerDismiss = {},
         )
     }
 }

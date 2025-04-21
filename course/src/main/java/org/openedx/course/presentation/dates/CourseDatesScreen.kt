@@ -105,6 +105,7 @@ fun CourseDatesScreen(
     val uiState by viewModel.uiState.observeAsState(DatesUIState.Loading)
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val calendarSyncUIState by viewModel.calendarSyncUIState.collectAsState()
+    val canShowPLSBanner by viewModel.canShowPLSBanner
     val context = LocalContext.current
 
     CourseDatesUI(
@@ -112,6 +113,7 @@ fun CourseDatesScreen(
         uiState = uiState,
         uiMessage = uiMessage,
         isSelfPaced = viewModel.isSelfPaced,
+        canShowPLSBanner = canShowPLSBanner,
         calendarSyncUIState = calendarSyncUIState,
         onItemClick = { block ->
             if (block.blockId.isNotEmpty()) {
@@ -173,6 +175,9 @@ fun CourseDatesScreen(
         onCalendarSyncSwitch = { isChecked ->
             viewModel.handleCalendarSyncState(isChecked)
         },
+        onPLSBannerDismiss = {
+            viewModel.onDismissPLSBanner()
+        },
     )
 }
 
@@ -182,11 +187,13 @@ private fun CourseDatesUI(
     uiState: DatesUIState,
     uiMessage: UIMessage?,
     isSelfPaced: Boolean,
+    canShowPLSBanner: Boolean,
     calendarSyncUIState: CalendarSyncUIState,
     onItemClick: (CourseDateBlock) -> Unit,
     onPLSBannerViewed: () -> Unit,
     onSyncDates: () -> Unit,
     onCalendarSyncSwitch: (Boolean) -> Unit = {},
+    onPLSBannerDismiss: () -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -261,19 +268,21 @@ private fun CourseDatesUI(
                                     }
                                 }
 
-                                if (courseBanner.isBannerAvailableForUserType(isSelfPaced)) {
+                                if (courseBanner.isBannerAvailableForUserType(isSelfPaced) && canShowPLSBanner) {
                                     item {
                                         if (windowSize.isTablet) {
                                             CourseDatesBannerTablet(
                                                 modifier = Modifier.padding(top = 16.dp),
                                                 banner = courseBanner,
                                                 resetDates = onSyncDates,
+                                                onDismissClick = onPLSBannerDismiss,
                                             )
                                         } else {
                                             CourseDatesBanner(
                                                 modifier = Modifier.padding(top = 16.dp),
                                                 banner = courseBanner,
-                                                resetDates = onSyncDates
+                                                resetDates = onSyncDates,
+                                                onDismissClick = onPLSBannerDismiss,
                                             )
                                         }
                                     }
@@ -585,7 +594,8 @@ private fun CourseDateItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(end = 4.dp)
-                .clickable(enabled = dateBlock.blockId.isNotEmpty() && dateBlock.learnerHasAccess,
+                .clickable(
+                    enabled = dateBlock.blockId.isNotEmpty() && dateBlock.learnerHasAccess,
                     onClick = { onItemClick(dateBlock) })
         ) {
             dateBlock.dateType.drawableResId?.let { icon ->
@@ -649,11 +659,13 @@ private fun EmptyCourseDatesScreenPreview() {
             uiState = DatesUIState.Error,
             uiMessage = null,
             isSelfPaced = true,
+            canShowPLSBanner = true,
             calendarSyncUIState = mockCalendarSyncUIState,
             onItemClick = {},
             onPLSBannerViewed = {},
             onSyncDates = {},
             onCalendarSyncSwitch = {},
+            onPLSBannerDismiss = {},
         )
     }
 }
@@ -668,11 +680,13 @@ private fun CourseDatesScreenPreview() {
             uiState = DatesUIState.Dates(CourseDatesResult(mockedResponse, mockedCourseBannerInfo)),
             uiMessage = null,
             isSelfPaced = true,
+            canShowPLSBanner = true,
             calendarSyncUIState = mockCalendarSyncUIState,
             onItemClick = {},
             onPLSBannerViewed = {},
             onSyncDates = {},
             onCalendarSyncSwitch = {},
+            onPLSBannerDismiss = {},
         )
     }
 }
@@ -687,11 +701,13 @@ private fun CourseDatesScreenTabletPreview() {
             uiState = DatesUIState.Dates(CourseDatesResult(mockedResponse, mockedCourseBannerInfo)),
             uiMessage = null,
             isSelfPaced = true,
+            canShowPLSBanner = true,
             calendarSyncUIState = mockCalendarSyncUIState,
             onItemClick = {},
             onPLSBannerViewed = {},
             onSyncDates = {},
             onCalendarSyncSwitch = {},
+            onPLSBannerDismiss = {},
         )
     }
 }

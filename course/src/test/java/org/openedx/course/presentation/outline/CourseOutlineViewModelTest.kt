@@ -58,6 +58,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseStructureUpdated
+import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseRouter
@@ -76,6 +77,7 @@ class CourseOutlineViewModelTest {
     private val resourceManager = mockk<ResourceManager>()
     private val interactor = mockk<CourseInteractor>()
     private val preferencesManager = mockk<CorePreferences>()
+    private val coursePreferences = mockk<CoursePreferences>()
     private val networkConnection = mockk<NetworkConnection>()
     private val notifier = spyk<CourseNotifier>()
     private val downloadDao = mockk<DownloadDao>()
@@ -262,6 +264,7 @@ class CourseOutlineViewModelTest {
             notifier,
             networkConnection,
             preferencesManager,
+            coursePreferences,
             analytics,
             courseRouter,
             coreAnalytics,
@@ -297,6 +300,7 @@ class CourseOutlineViewModelTest {
             notifier,
             networkConnection,
             preferencesManager,
+            coursePreferences,
             analytics,
             courseRouter,
             coreAnalytics,
@@ -342,6 +346,7 @@ class CourseOutlineViewModelTest {
             notifier,
             networkConnection,
             preferencesManager,
+            coursePreferences,
             analytics,
             courseRouter,
             coreAnalytics,
@@ -390,6 +395,7 @@ class CourseOutlineViewModelTest {
             notifier,
             networkConnection,
             preferencesManager,
+            coursePreferences,
             analytics,
             courseRouter,
             coreAnalytics,
@@ -437,6 +443,7 @@ class CourseOutlineViewModelTest {
             notifier,
             networkConnection,
             preferencesManager,
+            coursePreferences,
             analytics,
             courseRouter,
             coreAnalytics,
@@ -471,6 +478,7 @@ class CourseOutlineViewModelTest {
             notifier,
             networkConnection,
             preferencesManager,
+            coursePreferences,
             analytics,
             courseRouter,
             coreAnalytics,
@@ -520,6 +528,7 @@ class CourseOutlineViewModelTest {
             notifier,
             networkConnection,
             preferencesManager,
+            coursePreferences,
             analytics,
             courseRouter,
             coreAnalytics,
@@ -564,6 +573,7 @@ class CourseOutlineViewModelTest {
             notifier,
             networkConnection,
             preferencesManager,
+            coursePreferences,
             analytics,
             courseRouter,
             coreAnalytics,
@@ -600,6 +610,7 @@ class CourseOutlineViewModelTest {
             notifier,
             networkConnection,
             preferencesManager,
+            coursePreferences,
             analytics,
             courseRouter,
             coreAnalytics,

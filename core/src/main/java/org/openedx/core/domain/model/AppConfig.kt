@@ -6,6 +6,7 @@ data class AppConfig(
     val courseDatesCalendarSync: CourseDatesCalendarSync = CourseDatesCalendarSync(),
     val iapConfig: IAPConfig = IAPConfig(),
     val feedbackFormUrl: String = "",
+    val canShowPLSBanner: Boolean = false,
 ) : Serializable
 
 data class CourseDatesCalendarSync(

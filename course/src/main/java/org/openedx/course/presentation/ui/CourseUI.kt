@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -972,6 +973,7 @@ fun CourseDatesBanner(
     modifier: Modifier = Modifier,
     banner: CourseDatesBannerInfo,
     resetDates: () -> Unit,
+    onDismissClick: () -> Unit = {},
 ) {
     val cardModifier = modifier
         .background(
@@ -986,12 +988,27 @@ fun CourseDatesBanner(
         .padding(16.dp)
 
     Column(modifier = cardModifier) {
-        banner.bannerType.headerResId.nonZero()?.let {
-            Text(
-                modifier = Modifier.padding(bottom = 8.dp),
-                text = stringResource(id = it),
-                style = MaterialTheme.appTypography.titleMedium,
-                color = MaterialTheme.appColors.textDark
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        ) {
+            banner.bannerType.headerResId.nonZero()?.let {
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = stringResource(id = it),
+                    style = MaterialTheme.appTypography.titleMedium,
+                    color = MaterialTheme.appColors.textDark,
+                )
+            }
+            Icon(
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable { onDismissClick() },
+                imageVector = Icons.Filled.Close,
+                contentDescription = stringResource(id = org.openedx.core.R.string.core_cancel),
+                tint = MaterialTheme.appColors.primary,
             )
         }
 
@@ -1018,6 +1035,7 @@ fun CourseDatesBannerTablet(
     modifier: Modifier = Modifier,
     banner: CourseDatesBannerInfo,
     resetDates: () -> Unit,
+    onDismissClick: () -> Unit = {},
 ) {
     val cardModifier = modifier
         .background(
@@ -1029,10 +1047,13 @@ fun CourseDatesBannerTablet(
             MaterialTheme.appColors.cardViewBorder,
             MaterialTheme.appShapes.material.medium
         )
+        .width(560.dp)
         .padding(16.dp)
 
     Row(
-        modifier = cardModifier.fillMaxWidth(),
+        modifier = cardModifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -1058,12 +1079,31 @@ fun CourseDatesBannerTablet(
                 )
             }
         }
-        banner.bannerType.buttonResId.nonZero()?.let {
-            OpenEdXPrimaryButton(
-                modifier = Modifier.width(210.dp),
-                text = stringResource(id = it),
-                onClick = resetDates,
+
+        Column(
+            modifier = Modifier
+                .width(210.dp)
+                .fillMaxHeight()
+        ) {
+            Icon(
+                modifier = Modifier
+                    .size(20.dp)
+                    .align(Alignment.End)
+                    .clickable { onDismissClick() },
+                imageVector = Icons.Filled.Close,
+                contentDescription = stringResource(id = org.openedx.core.R.string.core_cancel),
+                tint = MaterialTheme.appColors.primary
             )
+            Spacer(modifier = Modifier.weight(1f))
+            banner.bannerType.buttonResId.nonZero()?.let {
+                OpenEdXPrimaryButton(
+                    modifier = Modifier
+                        .width(210.dp)
+                        .align(Alignment.CenterHorizontally),
+                    text = stringResource(id = it),
+                    onClick = resetDates,
+                )
+            }
         }
     }
 }
@@ -1239,6 +1279,7 @@ private fun CourseDatesBannerPreview() {
         CourseDatesBanner(
             modifier = Modifier,
             banner = mockedCourseBannerInfo,
+            onDismissClick = {},
             resetDates = {}
         )
     }

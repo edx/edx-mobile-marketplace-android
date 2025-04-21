@@ -5,6 +5,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -179,6 +180,7 @@ class CourseDatesViewModelTest {
 
     @Test
     fun `getCourseDates no internet connection exception`() = runTest(UnconfinedTestDispatcher()) {
+        every { coursePreferences.canShowPLSBanner("") } returns true
         val viewModel = CourseDatesViewModel(
             "id",
             "",
@@ -202,13 +204,14 @@ class CourseDatesViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getCourseDates(any()) }
-
+        verify { coursePreferences.canShowPLSBanner("") }
         Assert.assertEquals(noInternet, message.await()?.message)
         assert(viewModel.uiState.value is DatesUIState.Error)
     }
 
     @Test
     fun `getCourseDates unknown exception`() = runTest(UnconfinedTestDispatcher()) {
+        every { coursePreferences.canShowPLSBanner("") } returns true
         val viewModel = CourseDatesViewModel(
             "id",
             "",
@@ -232,6 +235,7 @@ class CourseDatesViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getCourseDates(any()) }
+        verify { coursePreferences.canShowPLSBanner("") }
 
         assert(message.await()?.message.isNullOrEmpty())
         assert(viewModel.uiState.value is DatesUIState.Error)
@@ -239,6 +243,7 @@ class CourseDatesViewModelTest {
 
     @Test
     fun `getCourseDates success with internet`() = runTest(UnconfinedTestDispatcher()) {
+        every { coursePreferences.canShowPLSBanner("") } returns true
         val viewModel = CourseDatesViewModel(
             "id",
             "",
@@ -262,6 +267,7 @@ class CourseDatesViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getCourseDates(any()) }
+        verify { coursePreferences.canShowPLSBanner("") }
 
         assert(message.await()?.message.isNullOrEmpty())
         assert(viewModel.uiState.value is DatesUIState.Dates)
@@ -269,6 +275,7 @@ class CourseDatesViewModelTest {
 
     @Test
     fun `getCourseDates success with EmptyList`() = runTest(UnconfinedTestDispatcher()) {
+        every { coursePreferences.canShowPLSBanner("") } returns true
         val viewModel = CourseDatesViewModel(
             "id",
             "",
@@ -295,6 +302,7 @@ class CourseDatesViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getCourseDates(any()) }
+        verify { coursePreferences.canShowPLSBanner("") }
 
         assert(message.await()?.message.isNullOrEmpty())
         assert(viewModel.uiState.value is DatesUIState.Error)

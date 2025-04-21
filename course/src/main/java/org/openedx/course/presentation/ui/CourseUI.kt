@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
@@ -91,6 +92,7 @@ import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.IconText
 import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.OpenEdXPrimaryButton
+import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -601,6 +603,20 @@ fun CourseSection(
         else -> DownloadedState.NOT_DOWNLOADED
     }
     val downloadBlockIds = downloadedStateMap.keys.filter { it in block.descendants }
+    var showDeleteVideoDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteVideoDialog) {
+        ShowDeleteVideoConfirmationDialog(
+            blockTitle = block.displayName,
+            onDismissClick = {
+                showDeleteVideoDialog = false
+            },
+            onDownloadClick = {
+                showDeleteVideoDialog = false
+                onDownloadClick(downloadBlockIds)
+            },
+        )
+    }
 
     Column(modifier = modifier
         .clip(MaterialTheme.appShapes.cardShape)
@@ -617,7 +633,12 @@ fun CourseSection(
             arrowDegrees = arrowRotation,
             downloadedState = downloadedState,
             onDownloadClick = {
-                onDownloadClick(downloadBlockIds)
+                if (downloadedState == DownloadedState.DOWNLOADED) {
+                    showDeleteVideoDialog = true
+                } else {
+                    showDeleteVideoDialog = false
+                    onDownloadClick(downloadBlockIds)
+                }
             }
         )
         courseSubSections?.forEach { subSectionBlock ->
@@ -1159,6 +1180,42 @@ fun CourseMessage(
 
 }
 
+@Composable
+fun ShowDeleteVideoConfirmationDialog(
+    blockTitle: String = "",
+    onDismissClick: () -> Unit,
+    onDownloadClick: () -> Unit,
+) {
+    AlertDialog(
+        title = {
+            Text(
+                text = stringResource(id = coreR.string.core_warning)
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(
+                    id = R.string.course_delete_download_confirmation_text,
+                    blockTitle
+                )
+            )
+        },
+        onDismissRequest = onDismissClick,
+        confirmButton = {
+            OpenEdXTertiaryButton(
+                text = stringResource(id = coreR.string.core_delete),
+                onClick = onDownloadClick
+            )
+        },
+        dismissButton = {
+            OpenEdXTertiaryButton(
+                text = stringResource(id = coreR.string.core_cancel),
+                onClick = onDismissClick
+            )
+        }
+    )
+}
+
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -1328,6 +1385,19 @@ private fun CourseSubSectionItemPreview() {
         CourseSubSectionItem(
             block = mockChapterBlock,
             onClick = {}
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ShowVideoDeleteConfirmationDialogPreview() {
+    OpenEdXTheme {
+        ShowDeleteVideoConfirmationDialog(
+            blockTitle = "Demo Course",
+            onDismissClick = {},
+            onDownloadClick = {}
         )
     }
 }

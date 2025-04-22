@@ -27,7 +27,7 @@ import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.extractor.DefaultExtractorsFactory
-import com.google.android.gms.cast.framework.CastContext
+import com.google.android.gms.cast.framework.CastState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -37,23 +37,25 @@ import kotlinx.coroutines.flow.update
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.VideoPlaybackSpeed
 import org.openedx.core.domain.model.VideoQuality
-import org.openedx.core.extension.isTrue
 import org.openedx.core.module.TranscriptManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.utils.LocaleUtils
-import org.openedx.core.utils.Logger
 import org.openedx.course.data.repository.CourseRepository
+import org.openedx.course.extension.matches
+import org.openedx.course.module.CastManager
 import org.openedx.course.presentation.CourseAnalytics
-import java.util.concurrent.Executors
+import org.openedx.course.presentation.CourseAnalyticsEvent
 
 @SuppressLint("StaticFieldLeak")
+@androidx.annotation.OptIn(UnstableApi::class)
 class EncodedVideoUnitViewModel(
     courseId: String,
     blockId: String,
     val title: String,
     private val context: Context,
     private val preferencesManager: CorePreferences,
+    private val castManager: CastManager,
     courseRepository: CourseRepository,
     notifier: CourseNotifier,
     networkConnection: NetworkConnection,
@@ -68,17 +70,13 @@ class EncodedVideoUnitViewModel(
     transcriptManager,
     courseAnalytics
 ) {
-    private val logger = Logger(TAG)
 
     var exoPlayer: ExoPlayer? = null
         private set
 
-    @SuppressLint("UnsafeOptInUsageError")
-    var castPlayer: CastPlayer? = null
-        private set
-
     private val _state = MutableStateFlow(PlayerState())
-    internal val state: StateFlow<PlayerState> = _state
+    internal val state: StateFlow<PlayerState>
+        get() = _state
 
     init {
         transcriptObject.asFlow().distinctUntilChanged().mapNotNull {
@@ -86,9 +84,8 @@ class EncodedVideoUnitViewModel(
                 exoPlayer?.currentMediaItem?.buildUpon()
                     ?.setSubtitleConfigurations(subtitleConfigurations)?.build()
                     ?.let { mediaItem ->
-                        exoPlayer?.clearMediaItems()
-                        exoPlayer?.addMediaItem(mediaItem)
-                        exoPlayer?.seekTo(getCurrentVideoTime())
+                        exoPlayer?.setMediaItem(mediaItem, getCurrentVideoTime())
+                        exoPlayer?.playWhenReady = true
                         _state.update { it.copy(isSubtitlesReady = true) }
                     }
             }
@@ -128,6 +125,7 @@ class EncodedVideoUnitViewModel(
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
+            this@EncodedVideoUnitViewModel.isPlaying = isPlaying
             logPlayPauseEvent(
                 videoUrl,
                 isPlaying,
@@ -163,60 +161,61 @@ class EncodedVideoUnitViewModel(
         }
     }
 
-    @UnstableApi
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
         if (exoPlayer != null) {
             return
         }
         initPlayer()
-
-        val executor = Executors.newSingleThreadExecutor()
-        CastContext.getSharedInstance(context, executor).addOnSuccessListener { castContext ->
-            castPlayer = CastPlayer(castContext)
-            _isUpdated.value = true
-        }.addOnFailureListener {
-            logger.e(it, true)
-        }
     }
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
+        castManager.attachCastPlayer { state ->
+            when (state) {
+                CastState.CONNECTED -> {
+                    logCastConnection(CourseAnalyticsEvent.CAST_CONNECTED)
+                    exoPlayer?.pause()
+                    castManager.setMediaItem(
+                        getMediaItem(),
+                        getCurrentVideoTime()
+                    )
+                    changeCastState(true)
+                }
+
+                CastState.NOT_CONNECTED -> {
+                    logCastConnection(CourseAnalyticsEvent.CAST_DISCONNECTED)
+                    exoPlayer?.seekTo(castManager.getCurrentPosition())
+                    castManager.stopPlayer()
+                    exoPlayer?.play()
+                    changeCastState(false)
+                }
+            }
+        }
         exoPlayer?.addListener(exoPlayerListener)
-        getActivePlayer()?.playWhenReady = true
+        if (_state.value.activePlayerType == PlayerType.EXO_REGULAR || _state.value.activePlayerType == PlayerType.EXO_FULL_SCREEN) {
+            setPlayerMedia(getMediaItem())
+            exoPlayer?.prepare()
+            exoPlayer?.playWhenReady = isPlaying
+        }
     }
 
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
-        if (!state.value.isCastActive) {
+        castManager.detachCastPlayer()
+        if (state.value.activePlayerType != PlayerType.CHROME_CAST) {
             exoPlayer?.removeListener(exoPlayerListener)
         }
         getActivePlayer()?.pause()
     }
 
-    fun getActivePlayer(): Player? {
-        return if (state.value.isCastActive) {
-            castPlayer
-        } else {
-            exoPlayer
-        }
-    }
-
-    @UnstableApi
-    fun releasePlayers() {
-        _state.update { it.copy(isPlayerSetUp = false) }
-        exoPlayer?.release()
-        castPlayer?.release()
-        exoPlayer = null
-        castPlayer = null
-    }
-
-    @UnstableApi
-    fun initPlayer() {
+    private fun initPlayer() {
         val selector = applyTrackSelector(isSubtitlesDisabled = true)
+        val renderersFactory = DefaultRenderersFactory(context)
+            .setEnableDecoderFallback(true) // Use software if hardware fails
         exoPlayer = ExoPlayer.Builder(
             context,
-            DefaultRenderersFactory(context),
+            renderersFactory,
             DefaultMediaSourceFactory(context, DefaultExtractorsFactory()),
             selector,
             DefaultLoadControl(),
@@ -225,10 +224,18 @@ class EncodedVideoUnitViewModel(
         ).build().apply {
             setPlaybackSpeed(preferencesManager.videoSettings.videoPlaybackSpeed.speedValue)
         }
+        _state.update { it.copy(activePlayerType = PlayerType.EXO_REGULAR) }
         logVideoLoadedEvent(videoUrl)
     }
 
-    @UnstableApi
+    fun getActivePlayer(): Player? {
+        return if (state.value.activePlayerType == PlayerType.CHROME_CAST) {
+            castManager.castPlayer
+        } else {
+            exoPlayer
+        }
+    }
+
     private fun applyTrackSelector(isSubtitlesDisabled: Boolean): DefaultTrackSelector {
         val videoQuality = getVideoQuality()
         val params = DefaultTrackSelector.Parameters.Builder(context)
@@ -248,57 +255,64 @@ class EncodedVideoUnitViewModel(
         return selector
     }
 
-    @UnstableApi
-    fun applyPlayerMedia() {
-        if (!state.value.isPlayerSetUp) {
-            setPlayerMedia(getMediaItem())
-            getActivePlayer()?.prepare()
-            _state.update { it.copy(isPlayerSetUp = true) }
-        }
-    }
-
-    fun getMediaItem() = MediaItem.Builder().setMediaMetadata(movieMetadata)
-        .setUri(videoUrl)
-        .setMimeType(if (videoUrl.endsWith(HLS_EXT)) MimeTypes.APPLICATION_M3U8 else VIDEO_MIME_TYPE)
-        .build()
-
-    @UnstableApi
     fun enterFullscreen(): Boolean {
-        if (state.value.isCastActive) return false
-        isPlaying = getActivePlayer()?.isPlaying.isTrue()
+        if (state.value.activePlayerType == PlayerType.CHROME_CAST) return false
         applyTrackSelector(isSubtitlesDisabled = false)
+        _state.update { it.copy(activePlayerType = PlayerType.EXO_FULL_SCREEN) }
         return true
     }
 
-    @UnstableApi
     fun leaveFullscreen() {
         applyTrackSelector(isSubtitlesDisabled = true)
-        _isUpdated.value = true
+        _state.update { it.copy(activePlayerType = PlayerType.EXO_REGULAR) }
     }
 
-    fun changeCastState(isActive: Boolean) {
-        _state.update { it.copy(isCastActive = isActive) }
+    private fun changeCastState(isActive: Boolean) {
+        _state.update {
+            it.copy(
+                activePlayerType = if (isActive) PlayerType.CHROME_CAST else PlayerType.EXO_REGULAR
+            )
+        }
     }
 
-    @UnstableApi
     private fun setPlayerMedia(mediaItem: MediaItem) {
+        val currentItem = exoPlayer?.currentMediaItem
+
+        if (currentItem != null && mediaItem.matches(currentItem)) {
+            exoPlayer?.seekTo(getCurrentVideoTime())
+            exoPlayer?.playWhenReady = true
+            return
+        }
         if (videoUrl.endsWith(HLS_EXT)) {
             val factory = DefaultDataSource.Factory(context)
             val mediaSource: HlsMediaSource =
                 HlsMediaSource.Factory(factory).createMediaSource(mediaItem)
             exoPlayer?.setMediaSource(mediaSource, getCurrentVideoTime())
         } else {
-            getActivePlayer()?.setMediaItem(
+            exoPlayer?.setMediaItem(
                 mediaItem,
                 getCurrentVideoTime()
             )
         }
     }
 
+    fun releasePlayers() {
+        _state.update { it.copy(activePlayerType = PlayerType.NONE) }
+        exoPlayer?.release()
+        exoPlayer = null
+        castManager.stopPlayer()
+    }
+
+    private fun getMediaItem() = MediaItem.Builder().setMediaMetadata(movieMetadata)
+        .setUri(videoUrl)
+        .setMimeType(if (videoUrl.endsWith(HLS_EXT)) MimeTypes.APPLICATION_M3U8 else VIDEO_MIME_TYPE)
+        .build()
+
+    fun getCastPlayer(): CastPlayer? = castManager.castPlayer
+
     private fun getVideoQuality() = preferencesManager.videoSettings.videoStreamingQuality
 
     private companion object {
-        private const val TAG = "EncodedVideoUnitViewModel"
         private const val HLS_EXT = ".m3u8"
         private const val VIDEO_MIME_TYPE = "video/*"
     }

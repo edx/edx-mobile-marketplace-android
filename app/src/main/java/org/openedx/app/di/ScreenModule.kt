@@ -382,6 +382,7 @@ val screenModule = module {
             title = title,
             context = get(),
             preferencesManager = get(),
+            castManager = get(),
             courseRepository = get(),
             notifier = get(),
             networkConnection = get(),

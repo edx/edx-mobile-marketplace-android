@@ -40,12 +40,12 @@ import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.extension.parcelable
+import org.openedx.core.presentation.iap.CourseTrack
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPLoaderType
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.presentation.iap.IAPViewModel
-import org.openedx.core.presentation.iap.TrackSelection
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OpenEdXBrandButton
@@ -75,7 +75,7 @@ class IAPDialogFragment : DialogFragment() {
                 val uiMessage by iapViewModel.uiMessage.collectAsState(null)
                 val scaffoldState = rememberScaffoldState()
 
-                var selectedOption by remember { mutableStateOf(TrackSelection.FREE) }
+                var selectedOption by remember { mutableStateOf(CourseTrack.FREE) }
 
                 val isFullScreenLoader =
                     (iapState as? IAPUIState.Loading)?.loaderType == IAPLoaderType.FULL_SCREEN
@@ -117,7 +117,7 @@ class IAPDialogFragment : DialogFragment() {
                                             iapViewModel.purchaseData.formattedPrice.isNotNullOrEmpty() -> {
                                         if (iapViewModel.purchaseData.iapFlow == IAPFlow.TRACK_SELECTION) {
                                             val buttonText =
-                                                if (selectedOption == TrackSelection.CERTIFICATE) {
+                                                if (selectedOption == CourseTrack.CERTIFICATE) {
                                                     stringResource(
                                                         id = R.string.iap_continue_to_payment,
                                                         iapViewModel.purchaseData.formattedPrice!!,
@@ -128,7 +128,7 @@ class IAPDialogFragment : DialogFragment() {
                                             OpenEdXBrandButton(
                                                 text = buttonText,
                                                 onClick = {
-                                                    if (selectedOption == TrackSelection.CERTIFICATE) {
+                                                    if (selectedOption == CourseTrack.CERTIFICATE) {
                                                         iapViewModel.startPurchaseFlow()
                                                     } else {
                                                         iapViewModel.eventLogger.logContinueToFreeTrackClickedEvent()
@@ -246,10 +246,9 @@ class IAPDialogFragment : DialogFragment() {
                                 modifier = Modifier.padding(contentPadding),
                                 courseName = iapViewModel.purchaseData.courseName!!,
                                 price = iapViewModel.purchaseData.formattedPrice?:"",
-                                selectedOption = selectedOption.apply {
-                                    accessExpires = iapViewModel.purchaseData.courseExpiresDate
-                                },
-                                onOptionSelect = { option ->
+                                expiryDate = iapViewModel.purchaseData.courseExpiresDate ?: "",
+                                selectedTrack = selectedOption,
+                                onTrackSelection = { option ->
                                     selectedOption = option
                                 },
                             )

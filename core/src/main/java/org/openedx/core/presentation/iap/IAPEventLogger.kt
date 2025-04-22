@@ -132,7 +132,7 @@ class IAPEventLogger(
     }
 
     fun logContinueToFreeTrackClickedEvent() {
-        logIAPEvent(IAPAnalyticsEvent.IAP_CONTINUE_TO_FREE_TRACK_CLICKED)
+        logIAPEvent(IAPAnalyticsEvent.IAP_CONTINUE_WITH_FREE_TRACK_CLICKED)
     }
 
     private fun getIAPEventParams(): Map<String, Any?> {

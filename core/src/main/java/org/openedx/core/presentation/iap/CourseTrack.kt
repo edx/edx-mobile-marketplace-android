@@ -3,10 +3,9 @@ package org.openedx.core.presentation.iap
 import androidx.annotation.StringRes
 import org.openedx.core.R
 
-enum class TrackSelection(
+enum class CourseTrack(
     @StringRes val title: Int,
     @StringRes val description: Int,
-    var accessExpires: String? = null,
 ) {
     CERTIFICATE(
         title = R.string.iap_earn_a_certificate,

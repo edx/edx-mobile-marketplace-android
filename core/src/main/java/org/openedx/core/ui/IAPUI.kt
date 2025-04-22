@@ -37,9 +37,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.openedx.core.R
 import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.extension.isNotNullOrEmpty
+import org.openedx.core.presentation.iap.CourseTrack
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPErrorDialogType
-import org.openedx.core.presentation.iap.TrackSelection
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -97,8 +98,9 @@ fun TrackSelectionFeature(
     modifier: Modifier = Modifier,
     courseName: String,
     price: String,
-    selectedOption: TrackSelection,
-    onOptionSelect: (option: TrackSelection) -> Unit,
+    expiryDate: String = "",
+    selectedTrack: CourseTrack,
+    onTrackSelection: (option: CourseTrack) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -132,12 +134,13 @@ fun TrackSelectionFeature(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TrackSelection.entries.forEach { option ->
+        CourseTrack.entries.forEach { option ->
             OptionCard(
-                trackSelection = option,
-                price = if (option == TrackSelection.FREE) stringResource(R.string.iap_access_this_course_free) else price,
-                isSelected = selectedOption == option,
-                onClick = { onOptionSelect(option) },
+                courseTrack = option,
+                price = price,
+                expiryDate = expiryDate,
+                isSelected = selectedTrack == option,
+                onClick = { onTrackSelection(option) },
             )
         }
     }
@@ -145,8 +148,9 @@ fun TrackSelectionFeature(
 
 @Composable
 fun OptionCard(
-    trackSelection: TrackSelection,
-    price: String = stringResource(R.string.iap_access_this_course_free),
+    courseTrack: CourseTrack,
+    price: String = "",
+    expiryDate: String = "",
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -174,6 +178,7 @@ fun OptionCard(
             horizontalArrangement = Arrangement.Start
         ) {
             OpenEdxRadioButton(
+                contentDescription = stringResource(id = courseTrack.title, price),
                 isSelected = isSelected,
                 onClick = onClick,
             )
@@ -184,19 +189,16 @@ fun OptionCard(
             ) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(id = trackSelection.title, price),
+                    text = stringResource(id = courseTrack.title, price),
                     color = MaterialTheme.appColors.textPrimary,
                     style = MaterialTheme.appTypography.titleMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                if (trackSelection == TrackSelection.FREE && trackSelection.accessExpires != null) {
+                if (courseTrack == CourseTrack.FREE && expiryDate.isNotNullOrEmpty()) {
                     Text(
-                        text = stringResource(
-                            id = R.string.core_label_expires,
-                            trackSelection.accessExpires ?: "date"
-                        ),
+                        text = stringResource(id = R.string.core_label_expires, expiryDate),
                         color = MaterialTheme.appColors.textPrimary,
                         style = MaterialTheme.appTypography.bodyMedium
                     )
@@ -205,10 +207,7 @@ fun OptionCard(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = stringResource(
-                        trackSelection.description,
-                        trackSelection.accessExpires ?: ""
-                    ),
+                    text = stringResource(courseTrack.description, expiryDate),
                     style = MaterialTheme.appTypography.bodyMedium,
                     color = MaterialTheme.appColors.textPrimaryVariant,
                 )
@@ -630,15 +629,15 @@ private fun PreviewNoSkuErrorDialog() {
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(device = Devices.TABLET, uiMode = Configuration.ORIENTATION_LANDSCAPE)
+@Preview(device = Devices.NEXUS_9, uiMode = Configuration.ORIENTATION_LANDSCAPE)
 @Composable
 fun TrackSelectionFeaturePreview() {
     OpenEdXTheme {
         TrackSelectionFeature(
-            selectedOption = TrackSelection.CERTIFICATE,
+            selectedTrack = CourseTrack.CERTIFICATE,
             courseName = "Test Course",
             price = "Free",
-            onOptionSelect = { },
+            onTrackSelection = { },
         )
     }
 }

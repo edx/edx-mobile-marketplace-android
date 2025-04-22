@@ -234,7 +234,6 @@
     <string name="iap_earn_a_certificate">Earn a certificate for %s</string>
     <string name="iap_earn_a_certificate_description">Get access to all graded course activities and course materials, even after the course ends.\n\nEarn a verified certificate of completion.</string>
     <string name="iap_access_this_course">Access this course for free</string>
-    <string name="iap_access_this_course_free">FREE</string>
     <string name="iap_access_this_course_description">Limited access to non-graded activities and course material.\n\nYour progress and all access will be lost after %s.</string>
     <string name="iap_continue_to_payment">Continue to payment (%s)</string>
     <string name="iap_continue_with_free_track">Continue with free track</string>

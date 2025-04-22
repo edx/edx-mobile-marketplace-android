@@ -140,7 +140,8 @@ fun StaticSearchBar(
     Row(
         modifier = modifier
             .testTag("tf_search")
-            .then(Modifier
+            .then(
+                Modifier
                 .background(
                     MaterialTheme.appColors.textFieldBackground,
                     MaterialTheme.appShapes.textFieldShape
@@ -1591,6 +1592,7 @@ fun OpenEdxAlertDialog(
 
 @Composable
 fun OpenEdxRadioButton(
+    contentDescription: String = "",
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -1598,7 +1600,7 @@ fun OpenEdxRadioButton(
 
     Image(
         painter = painterResource(id = imageRes),
-        contentDescription = "Radio button",
+        contentDescription = contentDescription,
         modifier = Modifier
             .size(24.dp)
             .clickable(onClick = onClick)

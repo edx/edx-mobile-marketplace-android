@@ -52,9 +52,9 @@ enum class IAPAnalyticsEvent(val eventName: String, val biValue: String) {
         "Payments:Track Selection Viewed",
         "edx.bi.app.payments.track_selection.viewed"
     ),
-    IAP_CONTINUE_TO_FREE_TRACK_CLICKED(
-        "Payments:Continue to Free Track Clicked",
-        "edx.bi.app.payments.continue_to_free_track.clicked"
+    IAP_CONTINUE_WITH_FREE_TRACK_CLICKED(
+        "Payments:Continue With Free Track Clicked",
+        "edx.bi.app.payments.continue_with_free_track.clicked"
     ),
 }
 

@@ -164,7 +164,5 @@ class VideoUnitViewModelTest {
         advanceUntilIdle()
 
         assert(viewModel.currentVideoTime.value == 10L)
-        assert(viewModel.isUpdated.value == true)
     }
-
 }

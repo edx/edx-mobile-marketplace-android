@@ -71,6 +71,7 @@ import org.openedx.core.domain.model.CourseDatesBannerInfo
 import org.openedx.core.domain.model.CourseDatesResult
 import org.openedx.core.domain.model.DatesSection
 import org.openedx.core.extension.isNotEmptyThenLet
+import org.openedx.core.extension.isTrue
 import org.openedx.core.presentation.CoreAnalyticsScreen
 import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
@@ -175,8 +176,8 @@ fun CourseDatesScreen(
         onCalendarSyncSwitch = { isChecked ->
             viewModel.handleCalendarSyncState(isChecked)
         },
-        onPLSBannerDismiss = {
-            viewModel.onDismissPLSBanner()
+        onPLSBannerDismiss = { bannerType ->
+            viewModel.onDismissPLSBanner(bannerType)
         },
     )
 }
@@ -193,7 +194,7 @@ private fun CourseDatesUI(
     onPLSBannerViewed: () -> Unit,
     onSyncDates: () -> Unit,
     onCalendarSyncSwitch: (Boolean) -> Unit = {},
-    onPLSBannerDismiss: () -> Unit = {},
+    onPLSBannerDismiss: (String) -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -228,7 +229,7 @@ private fun CourseDatesUI(
             ?.isBannerAvailableForUserType(isSelfPaced)
 
         LaunchedEffect(key1 = isPLSBannerAvailable) {
-            if (isPLSBannerAvailable == true) {
+            if (isPLSBannerAvailable.isTrue() && canShowPLSBanner) {
                 onPLSBannerViewed()
             }
         }
@@ -273,14 +274,14 @@ private fun CourseDatesUI(
                                         if (windowSize.isTablet) {
                                             CourseDatesBannerTablet(
                                                 modifier = Modifier.padding(top = 16.dp),
-                                                banner = courseBanner,
+                                                bannerType = courseBanner.bannerType,
                                                 resetDates = onSyncDates,
                                                 onDismissClick = onPLSBannerDismiss,
                                             )
                                         } else {
                                             CourseDatesBanner(
                                                 modifier = Modifier.padding(top = 16.dp),
-                                                banner = courseBanner,
+                                                bannerType = courseBanner.bannerType,
                                                 resetDates = onSyncDates,
                                                 onDismissClick = onPLSBannerDismiss,
                                             )

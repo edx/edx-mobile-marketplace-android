@@ -85,8 +85,7 @@ class CourseOutlineViewModel(
     val resumeBlockId: SharedFlow<String>
         get() = _resumeBlockId.asSharedFlow()
 
-    private val _canShowPLSBanner =
-        mutableStateOf(coursePreferences.canShowPLSBanner(courseTitle))
+    private val _canShowPLSBanner = mutableStateOf(false)
     val canShowPLSBanner: State<Boolean> = _canShowPLSBanner
 
     private var resumeSectionBlock: Block? = null
@@ -112,7 +111,8 @@ class CourseOutlineViewModel(
                         _resumeBlockId.emit(event.blockId)
                     }
                     is RefreshPLSBanner -> {
-                        _canShowPLSBanner.value = coursePreferences.canShowPLSBanner(courseTitle)
+                        _canShowPLSBanner.value =
+                            coursePreferences.canShowPLSBanner(courseId, event.bannerType)
                     }
                 }
             }
@@ -185,12 +185,10 @@ class CourseOutlineViewModel(
         logPLSBannerEvents(CourseAnalyticsEvent.PLS_BANNER_VIEWED)
     }
 
-    fun onDismissPLSBanner() {
+    fun onDismissPLSBanner(bannerType: String) {
         _canShowPLSBanner.value = false
-        coursePreferences.markPLSBannerDismissed(courseTitle)
-        viewModelScope.launch {
-            courseNotifier.send(RefreshPLSBanner)
-        }
+        coursePreferences.markPLSBannerDismissed(courseTitle, bannerType)
+        viewModelScope.launch { courseNotifier.send(RefreshPLSBanner(bannerType)) }
         logPLSBannerEvents(CourseAnalyticsEvent.PLS_BANNER_DISMISSED)
     }
 

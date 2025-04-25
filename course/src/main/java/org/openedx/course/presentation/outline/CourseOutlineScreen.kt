@@ -165,8 +165,8 @@ fun CourseOutlineScreen(
         onPLSBannerViewed = {
             viewModel.onPLSBannerViewed()
         },
-        onPLSBannerDismiss = {
-            viewModel.onDismissPLSBanner()
+        onPLSBannerDismiss = {bannerType ->
+            viewModel.onDismissPLSBanner(bannerType)
         }
     )
 }
@@ -184,7 +184,7 @@ private fun CourseOutlineUI(
     onResetDatesClick: () -> Unit,
     onCertificateClick: (String) -> Unit,
     onPLSBannerViewed: () -> Unit = {},
-    onPLSBannerDismiss: () -> Unit = {},
+    onPLSBannerDismiss: (String) -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -253,13 +253,13 @@ private fun CourseOutlineUI(
                                             ) {
                                                 if (windowSize.isTablet) {
                                                     CourseDatesBannerTablet(
-                                                        banner = uiState.datesBannerInfo,
+                                                        bannerType = uiState.datesBannerInfo.bannerType,
                                                         resetDates = onResetDatesClick,
                                                         onDismissClick = onPLSBannerDismiss,
                                                     )
                                                 } else {
                                                     CourseDatesBanner(
-                                                        banner = uiState.datesBannerInfo,
+                                                        bannerType = uiState.datesBannerInfo.bannerType,
                                                         resetDates = onResetDatesClick,
                                                         onDismissClick = onPLSBannerDismiss,
                                                     )

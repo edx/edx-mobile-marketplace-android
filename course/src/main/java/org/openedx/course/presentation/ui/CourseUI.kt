@@ -81,6 +81,7 @@ import org.openedx.core.BlockType
 import org.openedx.core.domain.model.AssignmentProgress
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
+import org.openedx.core.domain.model.CourseBannerType
 import org.openedx.core.domain.model.CourseDatesBannerInfo
 import org.openedx.core.extension.nonZero
 import org.openedx.core.extension.toFileSize
@@ -971,9 +972,9 @@ fun SubSectionUnitsList(
 @Composable
 fun CourseDatesBanner(
     modifier: Modifier = Modifier,
-    banner: CourseDatesBannerInfo,
+    bannerType: CourseBannerType,
     resetDates: () -> Unit,
-    onDismissClick: () -> Unit = {},
+    onDismissClick: (String) -> Unit = {},
 ) {
     val cardModifier = modifier
         .background(
@@ -988,13 +989,12 @@ fun CourseDatesBanner(
         .padding(16.dp)
 
     Column(modifier = cardModifier) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
         ) {
-            banner.bannerType.headerResId.nonZero()?.let {
+            bannerType.headerResId.nonZero()?.let {
                 Text(
                     modifier = Modifier.weight(1f),
                     text = stringResource(id = it),
@@ -1005,14 +1005,14 @@ fun CourseDatesBanner(
             Icon(
                 modifier = Modifier
                     .size(20.dp)
-                    .clickable { onDismissClick() },
+                    .clickable { onDismissClick(bannerType.name) },
                 imageVector = Icons.Filled.Close,
                 contentDescription = stringResource(id = org.openedx.core.R.string.core_cancel),
                 tint = MaterialTheme.appColors.primary,
             )
         }
 
-        banner.bannerType.bodyResId.nonZero()?.let {
+        bannerType.bodyResId.nonZero()?.let {
             Text(
                 modifier = Modifier.padding(bottom = 8.dp),
                 text = stringResource(id = it),
@@ -1021,7 +1021,7 @@ fun CourseDatesBanner(
             )
         }
 
-        banner.bannerType.buttonResId.nonZero()?.let {
+        bannerType.buttonResId.nonZero()?.let {
             OpenEdXPrimaryButton(
                 text = stringResource(id = it),
                 onClick = resetDates,
@@ -1033,9 +1033,9 @@ fun CourseDatesBanner(
 @Composable
 fun CourseDatesBannerTablet(
     modifier: Modifier = Modifier,
-    banner: CourseDatesBannerInfo,
+    bannerType: CourseBannerType,
     resetDates: () -> Unit,
-    onDismissClick: () -> Unit = {},
+    onDismissClick: (String) -> Unit = {},
 ) {
     val cardModifier = modifier
         .background(
@@ -1062,7 +1062,7 @@ fun CourseDatesBannerTablet(
                 .weight(1f)
                 .padding(end = 16.dp)
         ) {
-            banner.bannerType.headerResId.nonZero()?.let {
+            bannerType.headerResId.nonZero()?.let {
                 Text(
                     modifier = Modifier.padding(bottom = 8.dp),
                     text = stringResource(id = it),
@@ -1071,7 +1071,7 @@ fun CourseDatesBannerTablet(
                 )
             }
 
-            banner.bannerType.bodyResId.nonZero()?.let {
+            bannerType.bodyResId.nonZero()?.let {
                 Text(
                     text = stringResource(id = it),
                     style = MaterialTheme.appTypography.bodyMedium,
@@ -1089,13 +1089,13 @@ fun CourseDatesBannerTablet(
                 modifier = Modifier
                     .size(20.dp)
                     .align(Alignment.End)
-                    .clickable { onDismissClick() },
+                    .clickable { onDismissClick(bannerType.name) },
                 imageVector = Icons.Filled.Close,
                 contentDescription = stringResource(id = org.openedx.core.R.string.core_cancel),
                 tint = MaterialTheme.appColors.primary
             )
             Spacer(modifier = Modifier.weight(1f))
-            banner.bannerType.buttonResId.nonZero()?.let {
+            bannerType.buttonResId.nonZero()?.let {
                 OpenEdXPrimaryButton(
                     modifier = Modifier
                         .width(210.dp)
@@ -1278,7 +1278,7 @@ private fun CourseDatesBannerPreview() {
     OpenEdXTheme {
         CourseDatesBanner(
             modifier = Modifier,
-            banner = mockedCourseBannerInfo,
+            bannerType = mockedCourseBannerInfo.bannerType,
             onDismissClick = {},
             resetDates = {}
         )
@@ -1292,7 +1292,7 @@ private fun CourseDatesBannerTabletPreview() {
     OpenEdXTheme {
         CourseDatesBannerTablet(
             modifier = Modifier,
-            banner = mockedCourseBannerInfo,
+            bannerType = mockedCourseBannerInfo.bannerType,
             resetDates = {}
         )
     }

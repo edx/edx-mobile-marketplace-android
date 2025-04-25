@@ -19,6 +19,7 @@ import org.openedx.notifications.domain.model.NotificationsPrimerConfiguration
 import org.openedx.profile.data.model.Account
 import org.openedx.profile.data.storage.ProfilePreferences
 import org.openedx.whatsnew.data.storage.WhatsNewPreferences
+import java.util.concurrent.TimeUnit
 
 class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences,
     WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences {
@@ -42,8 +43,9 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         }.apply()
     }
 
-    private fun getLong(key: String, defValue: Long = 0L): Long =
-        sharedPreferences.getLong(key, defValue)
+    private fun getLong(key: String, defValue: Long = 0L): Long {
+        return sharedPreferences.getLong(key, defValue)
+    }
 
     private fun saveBoolean(key: String, value: Boolean) {
         sharedPreferences.edit().apply {
@@ -190,16 +192,17 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
     override fun isCalendarSyncEventsDialogShown(courseName: String): Boolean =
         getBoolean(courseName.replaceSpace("_"))
 
-    override fun markPLSBannerDismissed(courseName: String) {
+    override fun markPLSBannerDismissed(courseId: String, bannerType: String) {
+        val key = courseId + "_" + PLS_BANNER_SHOWN + "_" + bannerType
         val currentTime = System.currentTimeMillis()
-        saveLong(courseName.replaceSpace("_") + "_" + PLS_BANNER_SHOWN, currentTime)
+        saveLong(key, currentTime)
     }
 
-    override fun canShowPLSBanner(courseName: String): Boolean {
+    override fun canShowPLSBanner(courseId: String, bannerType: String): Boolean {
+        val key = courseId + "_" + PLS_BANNER_SHOWN + "_" + bannerType
         val currentTime = System.currentTimeMillis()
-        val lastTime =
-            getLong(key = courseName.replaceSpace("_") + "_" + PLS_BANNER_SHOWN, defValue = 0L)
-        return (currentTime - lastTime) > MILLIS_IN_24_HOURS
+        val lastTime = getLong(key, 0L)
+        return (currentTime - lastTime) > TimeUnit.DAYS.toMillis(1)
     }
 
     override var notifications: NotificationsConfiguration
@@ -225,8 +228,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         }
 
     companion object {
-        private const val MILLIS_IN_24_HOURS = 24 * 60 * 60 * 1000
-
         private const val ACCESS_TOKEN = "access_token"
         private const val REFRESH_TOKEN = "refresh_token"
         private const val PUSH_TOKEN = "push_token"

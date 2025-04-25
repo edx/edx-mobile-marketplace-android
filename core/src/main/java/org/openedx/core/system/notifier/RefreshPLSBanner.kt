@@ -1,3 +1,3 @@
 package org.openedx.core.system.notifier
 
-object RefreshPLSBanner : CourseEvent
+data class RefreshPLSBanner(val bannerType: String) : CourseEvent

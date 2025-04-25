@@ -79,8 +79,7 @@ class CourseDatesViewModel(
     val calendarSyncUIState: StateFlow<CalendarSyncUIState> =
         _calendarSyncUIState.asStateFlow()
 
-    private val _canShowPLSBanner =
-        mutableStateOf(coursePreferences.canShowPLSBanner(courseTitle))
+    private val _canShowPLSBanner = mutableStateOf(false)
     val canShowPLSBanner: State<Boolean> = _canShowPLSBanner
 
     private var courseBannerType: CourseBannerType = CourseBannerType.BLANK
@@ -101,7 +100,8 @@ class CourseDatesViewModel(
                     }
 
                     is RefreshPLSBanner -> {
-                        _canShowPLSBanner.value = coursePreferences.canShowPLSBanner(courseTitle)
+                        _canShowPLSBanner.value =
+                            coursePreferences.canShowPLSBanner(courseTitle, event.bannerType)
                     }
                 }
             }
@@ -122,6 +122,8 @@ class CourseDatesViewModel(
                 } else {
                     _uiState.value = DatesUIState.Dates(datesResponse)
                     courseBannerType = datesResponse.courseBanner.bannerType
+                    _canShowPLSBanner.value =
+                        coursePreferences.canShowPLSBanner(courseTitle, courseBannerType.name)
                     checkIfCalendarOutOfDate()
                 }
             } catch (e: Exception) {
@@ -182,12 +184,10 @@ class CourseDatesViewModel(
         )
     }
 
-    fun onDismissPLSBanner() {
+    fun onDismissPLSBanner(bannerType: String) {
         _canShowPLSBanner.value = false
-        coursePreferences.markPLSBannerDismissed(courseTitle)
-        viewModelScope.launch {
-            courseNotifier.send(RefreshPLSBanner)
-        }
+        coursePreferences.markPLSBannerDismissed(courseTitle, bannerType)
+        viewModelScope.launch { courseNotifier.send(RefreshPLSBanner(bannerType)) }
         logPlsBannerDismissed()
     }
 

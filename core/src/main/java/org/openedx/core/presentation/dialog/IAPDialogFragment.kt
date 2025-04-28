@@ -245,7 +245,7 @@ class IAPDialogFragment : DialogFragment() {
                             TrackSelectionFeature(
                                 modifier = Modifier.padding(contentPadding),
                                 courseName = iapViewModel.purchaseData.courseName!!,
-                                price = iapViewModel.purchaseData.formattedPrice?:"",
+                                price = iapViewModel.purchaseData.formattedPrice ?: "",
                                 expiryDate = iapViewModel.purchaseData.courseExpiresDate ?: "",
                                 selectedTrack = selectedOption,
                                 onTrackSelection = { option ->

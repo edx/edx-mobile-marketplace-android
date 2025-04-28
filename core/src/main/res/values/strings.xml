@@ -228,7 +228,6 @@
     <string name="iap_course_not_fullfilled">Something happened when we tried to update your course experience. If this error continues, reach out to Support for help.</string>
     <string name="iap_payment_could_not_be_processed">Your payment could not be processed at this time. Please try again. For additional help, reach out to Support.</string>
 
-
     <!--  Track Selection  -->
     <string name="iap_track_selection_title">Choose a path.</string>
     <string name="iap_earn_a_certificate">Earn a certificate for %s</string>

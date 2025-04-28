@@ -82,7 +82,6 @@ import org.openedx.core.domain.model.AssignmentProgress
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseBannerType
-import org.openedx.core.domain.model.CourseDatesBannerInfo
 import org.openedx.core.extension.nonZero
 import org.openedx.core.extension.toFileSize
 import org.openedx.core.module.db.DownloadModel
@@ -175,7 +174,8 @@ fun CourseSectionCard(
                         } else {
                             stringResource(id = R.string.course_accessibility_download_course_section)
                         }
-                    IconButton(modifier = iconModifier,
+                    IconButton(
+                        modifier = iconModifier,
                         onClick = { onDownloadClick(block) }) {
                         Icon(
                             painter = downloadIconPainter,
@@ -604,15 +604,16 @@ fun CourseSection(
     }
     val downloadBlockIds = downloadedStateMap.keys.filter { it in block.descendants }
 
-    Column(modifier = modifier
-        .clip(MaterialTheme.appShapes.cardShape)
-        .noRippleClickable { onItemClick(block) }
-        .background(MaterialTheme.appColors.cardViewBackground)
-        .border(
-            1.dp,
-            MaterialTheme.appColors.cardViewBorder,
-            MaterialTheme.appShapes.cardShape
-        )
+    Column(
+        modifier = modifier
+            .clip(MaterialTheme.appShapes.cardShape)
+            .noRippleClickable { onItemClick(block) }
+            .background(MaterialTheme.appColors.cardViewBackground)
+            .border(
+                1.dp,
+                MaterialTheme.appColors.cardViewBorder,
+                MaterialTheme.appShapes.cardShape
+            )
     ) {
         CourseExpandableChapterCard(
             block = block,
@@ -697,7 +698,8 @@ fun CourseExpandableChapterCard(
                     } else {
                         MaterialTheme.appColors.textPrimary
                     }
-                IconButton(modifier = iconModifier,
+                IconButton(
+                    modifier = iconModifier,
                     onClick = { onDownloadClick() }) {
                     Icon(
                         painter = downloadIconPainter,
@@ -1007,7 +1009,7 @@ fun CourseDatesBanner(
                     .size(20.dp)
                     .clickable { onDismissClick(bannerType.name) },
                 imageVector = Icons.Filled.Close,
-                contentDescription = stringResource(id = org.openedx.core.R.string.core_cancel),
+                contentDescription = stringResource(id = coreR.string.core_cancel),
                 tint = MaterialTheme.appColors.primary,
             )
         }
@@ -1091,7 +1093,7 @@ fun CourseDatesBannerTablet(
                     .align(Alignment.End)
                     .clickable { onDismissClick(bannerType.name) },
                 imageVector = Icons.Filled.Close,
-                contentDescription = stringResource(id = org.openedx.core.R.string.core_cancel),
+                contentDescription = stringResource(id = coreR.string.core_cancel),
                 tint = MaterialTheme.appColors.primary
             )
             Spacer(modifier = Modifier.weight(1f))

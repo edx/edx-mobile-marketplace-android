@@ -88,7 +88,7 @@ fun CourseOutlineScreen(
     val resumeBlockId by viewModel.resumeBlockId.collectAsState("")
     val uiState by viewModel.uiState.collectAsState()
     val uiMessage by viewModel.uiMessage.collectAsState(null)
-    val canShowPLSBanner by viewModel.canShowPLSBanner
+    val canShowPLSBanner by viewModel.canShowPLSBanner.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(resumeBlockId) {
@@ -165,7 +165,7 @@ fun CourseOutlineScreen(
         onPLSBannerViewed = {
             viewModel.onPLSBannerViewed()
         },
-        onPLSBannerDismiss = {bannerType ->
+        onPLSBannerDismiss = { bannerType ->
             viewModel.onDismissPLSBanner(bannerType)
         }
     )
@@ -359,7 +359,7 @@ private fun CourseOutlineUI(
                         CourseOutlineUIState.Error -> {
                             NoContentScreen(noContentScreenType = NoContentScreenType.COURSE_OUTLINE)
                         }
-                        
+
                         CourseOutlineUIState.Loading -> {
                             CircularProgress()
                         }

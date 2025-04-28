@@ -1,8 +1,6 @@
 package org.openedx.course.presentation.outline
 
 import android.content.Context
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -85,8 +83,8 @@ class CourseOutlineViewModel(
     val resumeBlockId: SharedFlow<String>
         get() = _resumeBlockId.asSharedFlow()
 
-    private val _canShowPLSBanner = mutableStateOf(false)
-    val canShowPLSBanner: State<Boolean> = _canShowPLSBanner
+    private val _canShowPLSBanner = MutableStateFlow(false)
+    val canShowPLSBanner: StateFlow<Boolean> = _canShowPLSBanner
 
     private var resumeSectionBlock: Block? = null
     private var resumeVerticalBlock: Block? = null
@@ -110,6 +108,7 @@ class CourseOutlineViewModel(
                     is CourseOpenBlock -> {
                         _resumeBlockId.emit(event.blockId)
                     }
+
                     is RefreshPLSBanner -> {
                         _canShowPLSBanner.value =
                             coursePreferences.canShowPLSBanner(courseId, event.bannerType)
@@ -187,7 +186,7 @@ class CourseOutlineViewModel(
 
     fun onDismissPLSBanner(bannerType: String) {
         _canShowPLSBanner.value = false
-        coursePreferences.markPLSBannerDismissed(courseTitle, bannerType)
+        coursePreferences.markPLSBannerDismissed(courseId, bannerType)
         viewModelScope.launch { courseNotifier.send(RefreshPLSBanner(bannerType)) }
         logPLSBannerEvents(CourseAnalyticsEvent.PLS_BANNER_DISMISSED)
     }
@@ -241,6 +240,8 @@ class CourseOutlineViewModel(
                     subSectionsDownloadsCount = subSectionsDownloadsCount,
                     datesBannerInfo = datesBannerInfo
                 )
+                _canShowPLSBanner.value =
+                    coursePreferences.canShowPLSBanner(courseId, datesBannerInfo.bannerType.name)
             } catch (e: Exception) {
                 _uiState.value = CourseOutlineUIState.Error
                 if (e.isInternetError()) {

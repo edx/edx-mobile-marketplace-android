@@ -241,6 +241,7 @@ class CourseOutlineViewModelTest {
         every { config.getApiHostURL() } returns "http://localhost:8000"
 
         coEvery { interactor.getCourseDates(any()) } returns mockedCourseDatesResult
+        every { coursePreferences.canShowPLSBanner(any(), any()) } returns true
     }
 
     @After
@@ -254,7 +255,6 @@ class CourseOutlineViewModelTest {
         every { networkConnection.isOnline() } returns true
         every { downloadDao.readAllData() } returns flow { emit(emptyList()) }
         coEvery { interactor.getCourseStatus(any()) } throws UnknownHostException()
-        every { coursePreferences.canShowPLSBanner("") } returns true
 
         val viewModel = CourseOutlineViewModel(
             "",
@@ -281,7 +281,6 @@ class CourseOutlineViewModelTest {
 
         coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
         coVerify(exactly = 2) { interactor.getCourseStatus(any()) }
-        verify { coursePreferences.canShowPLSBanner("") }
 
         assertEquals(noInternet, message.await()?.message)
         assert(viewModel.uiState.value is CourseOutlineUIState.Error)
@@ -293,7 +292,6 @@ class CourseOutlineViewModelTest {
         every { networkConnection.isOnline() } returns true
         every { downloadDao.readAllData() } returns flow { emit(emptyList()) }
         coEvery { interactor.getCourseStatus(any()) } throws Exception()
-        every { coursePreferences.canShowPLSBanner("") } returns true
         val viewModel = CourseOutlineViewModel(
             "",
             "",
@@ -319,7 +317,6 @@ class CourseOutlineViewModelTest {
 
         coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
         coVerify(exactly = 2) { interactor.getCourseStatus(any()) }
-        verify { coursePreferences.canShowPLSBanner("") }
 
         assertEquals(somethingWrong, message.await()?.message)
         assert(viewModel.uiState.value is CourseOutlineUIState.Error)
@@ -340,7 +337,6 @@ class CourseOutlineViewModelTest {
         }
         coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
-        every { coursePreferences.canShowPLSBanner("") } returns true
 
         val viewModel = CourseOutlineViewModel(
             "",
@@ -370,7 +366,6 @@ class CourseOutlineViewModelTest {
 
         coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
         coVerify(exactly = 2) { interactor.getCourseStatus(any()) }
-        verify { coursePreferences.canShowPLSBanner("") }
 
         assert(message.await() == null)
         assert(viewModel.uiState.value is CourseOutlineUIState.CourseData)
@@ -391,7 +386,6 @@ class CourseOutlineViewModelTest {
         }
         coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
-        every { coursePreferences.canShowPLSBanner("") } returns true
 
         val viewModel = CourseOutlineViewModel(
             "",
@@ -420,7 +414,6 @@ class CourseOutlineViewModelTest {
 
         coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
         coVerify(exactly = 0) { interactor.getCourseStatus(any()) }
-        verify { coursePreferences.canShowPLSBanner("") }
 
         assert(message.await() == null)
         assert(viewModel.uiState.value is CourseOutlineUIState.CourseData)
@@ -441,7 +434,6 @@ class CourseOutlineViewModelTest {
         }
         coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
-        every { coursePreferences.canShowPLSBanner("") } returns true
 
         val viewModel = CourseOutlineViewModel(
             "",
@@ -470,7 +462,6 @@ class CourseOutlineViewModelTest {
 
         coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
         coVerify(exactly = 2) { interactor.getCourseStatus(any()) }
-        verify { coursePreferences.canShowPLSBanner("") }
 
         assert(message.await() == null)
         assert(viewModel.uiState.value is CourseOutlineUIState.CourseData)
@@ -479,7 +470,6 @@ class CourseOutlineViewModelTest {
     @Test
     fun `CourseStructureUpdated notifier test`() = runTest(UnconfinedTestDispatcher()) {
         coEvery { downloadDao.readAllData() } returns flow { emit(emptyList()) }
-        every { coursePreferences.canShowPLSBanner("") } returns true
         val viewModel = CourseOutlineViewModel(
             "",
             "",
@@ -511,7 +501,6 @@ class CourseOutlineViewModelTest {
 
         coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
         coVerify(exactly = 1) { interactor.getCourseStatus(any()) }
-        verify { coursePreferences.canShowPLSBanner("") }
     }
 
     @Test
@@ -530,7 +519,6 @@ class CourseOutlineViewModelTest {
         coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
         coEvery { downloadDao.readAllData() } returns flow { emit(emptyList()) }
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
-        every { coursePreferences.canShowPLSBanner("") } returns true
 
         val viewModel = CourseOutlineViewModel(
             "",
@@ -561,7 +549,6 @@ class CourseOutlineViewModelTest {
                 any()
             )
         }
-        verify { coursePreferences.canShowPLSBanner("") }
 
         assert(message.await()?.message.isNullOrEmpty())
     }
@@ -577,7 +564,6 @@ class CourseOutlineViewModelTest {
         coEvery { downloadDao.readAllData() } returns flow { emit(emptyList()) }
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
         every { coreAnalytics.logEvent(any(), any()) } returns Unit
-        every { coursePreferences.canShowPLSBanner("") } returns true
 
         val viewModel = CourseOutlineViewModel(
             "",
@@ -603,7 +589,6 @@ class CourseOutlineViewModelTest {
         viewModel.saveDownloadModels("", "")
         advanceUntilIdle()
 
-        verify { coursePreferences.canShowPLSBanner("") }
         assert(message.await()?.message.isNullOrEmpty())
     }
 
@@ -616,7 +601,6 @@ class CourseOutlineViewModelTest {
         coEvery { workerController.saveModels(any()) } returns Unit
         coEvery { downloadDao.readAllData() } returns flow { emit(emptyList()) }
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
-        every { coursePreferences.canShowPLSBanner("") } returns true
 
         val viewModel = CourseOutlineViewModel(
             "",
@@ -642,7 +626,6 @@ class CourseOutlineViewModelTest {
         viewModel.saveDownloadModels("", "")
 
         advanceUntilIdle()
-        verify { coursePreferences.canShowPLSBanner("") }
         assert(message.await()?.message.isNullOrEmpty())
     }
 }

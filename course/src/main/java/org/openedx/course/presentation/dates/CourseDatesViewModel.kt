@@ -1,7 +1,5 @@
 package org.openedx.course.presentation.dates
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -79,8 +77,8 @@ class CourseDatesViewModel(
     val calendarSyncUIState: StateFlow<CalendarSyncUIState> =
         _calendarSyncUIState.asStateFlow()
 
-    private val _canShowPLSBanner = mutableStateOf(false)
-    val canShowPLSBanner: State<Boolean> = _canShowPLSBanner
+    private val _canShowPLSBanner = MutableStateFlow(false)
+    val canShowPLSBanner: StateFlow<Boolean> = _canShowPLSBanner
 
     private var courseBannerType: CourseBannerType = CourseBannerType.BLANK
     private var courseStructure: CourseStructure? = null
@@ -101,7 +99,7 @@ class CourseDatesViewModel(
 
                     is RefreshPLSBanner -> {
                         _canShowPLSBanner.value =
-                            coursePreferences.canShowPLSBanner(courseTitle, event.bannerType)
+                            coursePreferences.canShowPLSBanner(courseId, event.bannerType)
                     }
                 }
             }
@@ -123,7 +121,7 @@ class CourseDatesViewModel(
                     _uiState.value = DatesUIState.Dates(datesResponse)
                     courseBannerType = datesResponse.courseBanner.bannerType
                     _canShowPLSBanner.value =
-                        coursePreferences.canShowPLSBanner(courseTitle, courseBannerType.name)
+                        coursePreferences.canShowPLSBanner(courseId, courseBannerType.name)
                     checkIfCalendarOutOfDate()
                 }
             } catch (e: Exception) {
@@ -186,7 +184,7 @@ class CourseDatesViewModel(
 
     fun onDismissPLSBanner(bannerType: String) {
         _canShowPLSBanner.value = false
-        coursePreferences.markPLSBannerDismissed(courseTitle, bannerType)
+        coursePreferences.markPLSBannerDismissed(courseId, bannerType)
         viewModelScope.launch { courseNotifier.send(RefreshPLSBanner(bannerType)) }
         logPlsBannerDismissed()
     }

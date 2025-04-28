@@ -101,12 +101,12 @@ fun CourseDatesScreen(
     viewModel: CourseDatesViewModel,
     fragmentManager: FragmentManager,
     isFragmentResumed: Boolean,
-    updateCourseStructure: () -> Unit
+    updateCourseStructure: () -> Unit,
 ) {
     val uiState by viewModel.uiState.observeAsState(DatesUIState.Loading)
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val calendarSyncUIState by viewModel.calendarSyncUIState.collectAsState()
-    val canShowPLSBanner by viewModel.canShowPLSBanner
+    val canShowPLSBanner by viewModel.canShowPLSBanner.collectAsState()
     val context = LocalContext.current
 
     CourseDatesUI(
@@ -424,10 +424,11 @@ fun ExpandableView(
             .background(MaterialTheme.appColors.cardViewBackground, MaterialTheme.shapes.medium)
             .border(0.75.dp, MaterialTheme.appColors.cardViewBorder, MaterialTheme.shapes.medium)
     ) {
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, start = 16.dp, end = 8.dp, bottom = 8.dp)
-            .clickable { expanded = !expanded }) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, start = 16.dp, end = 8.dp, bottom = 8.dp)
+                .clickable { expanded = !expanded }) {
             Column(
                 modifier = Modifier
                     .weight(1f)

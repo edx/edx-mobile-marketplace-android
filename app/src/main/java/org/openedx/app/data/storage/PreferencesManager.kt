@@ -12,6 +12,7 @@ import org.openedx.core.domain.model.VideoPlaybackSpeed
 import org.openedx.core.domain.model.VideoQuality
 import org.openedx.core.domain.model.VideoSettings
 import org.openedx.core.extension.replaceSpace
+import org.openedx.core.utils.TimeUtils
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.model.NotificationsConfiguration
@@ -194,13 +195,13 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
 
     override fun markPLSBannerDismissed(courseId: String, bannerType: String) {
         val key = courseId + "_" + PLS_BANNER_SHOWN + "_" + bannerType
-        val currentTime = System.currentTimeMillis()
+        val currentTime = TimeUtils.getCurrentTime()
         saveLong(key, currentTime)
     }
 
     override fun canShowPLSBanner(courseId: String, bannerType: String): Boolean {
         val key = courseId + "_" + PLS_BANNER_SHOWN + "_" + bannerType
-        val currentTime = System.currentTimeMillis()
+        val currentTime = TimeUtils.getCurrentTime()
         val lastTime = getLong(key, 0L)
         return (currentTime - lastTime) > TimeUnit.DAYS.toMillis(1)
     }

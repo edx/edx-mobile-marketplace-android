@@ -2,8 +2,6 @@ package org.openedx.course.presentation.unit.video
 
 import android.content.res.Configuration
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -55,27 +53,10 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     private var windowSize: WindowSize? = null
 
-    private val handler = Handler(Looper.getMainLooper())
-    private var videoTimeRunnable: Runnable = object : Runnable {
-        override fun run() {
-            viewModel.getActivePlayer()?.let {
-                if (it.isPlaying) {
-                    viewModel.setCurrentVideoTime(it.currentPosition)
-                }
-                val completePercentage = it.currentPosition.toDouble() / it.duration.toDouble()
-                if (completePercentage >= 0.8f) {
-                    viewModel.markBlockCompleted(viewModel.blockId)
-                }
-            }
-            handler.postDelayed(this, 200)
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         windowSize = computeWindowSizeClasses()
         lifecycle.addObserver(viewModel)
-        handler.post(videoTimeRunnable)
         requireArguments().apply {
             viewModel.videoUrl = getString(ARG_VIDEO_URL, "")
             viewModel.transcripts = stringToObject<Map<String, String>>(
@@ -208,7 +189,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         if (!requireActivity().isChangingConfigurations) {
             viewModel.releasePlayers()
         }
-        handler.removeCallbacks(videoTimeRunnable)
         super.onDestroy()
     }
 

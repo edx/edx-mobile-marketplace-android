@@ -116,13 +116,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     showSubtitleLanguage = viewModel.transcripts.size > 1,
                     currentIndex = currentIndex,
                     onTranscriptClick = {
-                        viewModel.getActivePlayer()?.apply {
+                        binding.playerView.player?.apply {
                             seekTo(it.start.mseconds.toLong())
                             play()
                         }
                     },
                     onSettingsClick = {
-                        viewModel.getActivePlayer()?.pause()
+                        binding.playerView.player?.pause()
                         val dialog = SelectBottomDialogFragment.newInstance(
                             LocaleUtils.getLanguages(viewModel.transcripts.keys.toList())
                         )

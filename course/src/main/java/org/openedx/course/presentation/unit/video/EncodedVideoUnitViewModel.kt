@@ -206,7 +206,7 @@ class EncodedVideoUnitViewModel(
         if (state.value.activePlayerType != PlayerType.CHROME_CAST) {
             exoPlayer?.removeListener(exoPlayerListener)
         }
-        getActivePlayer()?.pause()
+        exoPlayer?.pause()
     }
 
     private fun initPlayer() {

@@ -56,6 +56,7 @@ import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.domain.model.Progress
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.ui.CircularProgress
@@ -224,6 +225,16 @@ private fun CourseOutlineUI(
 
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
+        val isPLSBannerAvailable = (uiState as? CourseOutlineUIState.CourseData)
+            ?.datesBannerInfo
+            ?.isBannerAvailableForDashboard()
+
+        LaunchedEffect(key1 = isPLSBannerAvailable) {
+            if (isPLSBannerAvailable.isTrue() && canShowPLSBanner) {
+                onPLSBannerViewed()
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -266,7 +277,6 @@ private fun CourseOutlineUI(
                                                 }
                                             }
                                         }
-                                        onPLSBannerViewed()
                                     }
 
                                     val certificate = uiState.courseStructure.certificate

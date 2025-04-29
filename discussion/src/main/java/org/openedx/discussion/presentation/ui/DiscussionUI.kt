@@ -231,7 +231,7 @@ fun CommentItem(
     }
 
     val backgroundColor = if (comment.shouldHighlight) {
-        MaterialTheme.appColors.primaryCardInfoBackground
+        MaterialTheme.appColors.highlightDiscussionResponse
     } else {
         MaterialTheme.appColors.cardViewBackground
     }

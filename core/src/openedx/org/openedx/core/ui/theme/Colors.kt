@@ -80,6 +80,7 @@ val light_social_auth_divider = light_divider
 val light_inbox_time_marker_color = Color(0xFF707070)
 val light_notification_primer_badge = Color(0xFF132D26)
 val light_notification_primer_card_background = light_primary_card_info_background
+val light_highlight_discussion_response = light_card_view_background
 
 
 val dark_primary = Color(0xFF3F68F8)
@@ -160,3 +161,4 @@ val dark_social_auth_divider = dark_divider
 val dark_inbox_time_marker_color = Color(0xFFADADAD)
 val dark_notification_primer_badge = Color(0xFF5DE3C0)
 val dark_notification_primer_card_background = Color(0xFF132925)
+val dark_highlight_discussion_response = dark_card_view_background

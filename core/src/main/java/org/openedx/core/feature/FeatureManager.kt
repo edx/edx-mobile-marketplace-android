@@ -1,11 +1,15 @@
 package org.openedx.core.feature
 
+/**
+ * High-level API for consumers to request feature decisions.
+ * Internally it delegates to one or more FeatureService implementations.
+ */
 interface FeatureManager {
     /**
-     * Evaluates a feature decision based on the provided typed [FeatureRequest].
+     * Synchronously returns a feature decision or null if unavailable.
      *
-     * @param request The feature request to evaluate.
+     * @param featureKey The feature identifier (use FeatureKeys).
      * @return The feature decision, or null if not available.
      */
-    fun <T> getDecision(request: FeatureRequest<T>): FeatureDecision<T>?
+    fun getDecision(featureKey: FeatureKey): FeatureDecision?
 }

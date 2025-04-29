@@ -1,51 +1,33 @@
 package org.openedx.core.feature
 
 /**
- * Represents the result of evaluating a feature decision.
+ * Represents the result of evaluating a feature toggle, experiment, or remote
+ * configuration value.
+ *
+ * @property key       The unique identifier of the feature or experiment.
+ * @property isEnabled True if the feature is enabled; false otherwise.
+ * @property variation The variation key for A/B tests, or null for simple flags.
+ * @property metadata  Any additional data returned by the SDK (e.g., variables).
  */
-sealed class FeatureDecision<T> {
-    abstract val key: String
-    abstract val value: T?
-    abstract val metadata: Map<String, Any>
-}
+data class FeatureDecision(
+    val key: String,
+    val isEnabled: Boolean,
+    val variation: String?,
+    val metadata: Map<String, Any>,
+) {
+    fun getString(key: String, default: String = ""): String {
+        return metadata[key] as? String ?: default
+    }
 
-/**
- * Decision for a feature flag.
- */
-data class FeatureFlagDecision(
-    override val key: String,
-    private val enabled: Boolean,
-    override val metadata: Map<String, Any> = emptyMap(),
-) : FeatureDecision<Boolean>() {
+    fun getInt(key: String, default: Int = 0): Int {
+        return metadata[key] as? Int ?: default
+    }
 
-    override val value: Boolean
-        get() = enabled
-}
+    fun getBoolean(key: String, default: Boolean = false): Boolean {
+        return metadata[key] as? Boolean ?: default
+    }
 
-/**
- * Decision for an A/B test.
- */
-data class AbTestDecision(
-    override val key: String,
-    private val variationKey: String,
-    override val metadata: Map<String, Any> = emptyMap(),
-) : FeatureDecision<String>() {
-
-    override val value: String
-        get() = variationKey
-}
-
-
-/**
- * Decision for a remote config value.
- */
-data class RemoteConfigDecision(
-    override val key: String,
-    val flagKey: String,
-    private val data: String,
-    override val metadata: Map<String, Any> = emptyMap(),
-) : FeatureDecision<String>() {
-
-    override val value: String
-        get() = data
+    fun getDouble(key: String, default: Double = 0.0): Double {
+        return metadata[key] as? Double ?: default
+    }
 }

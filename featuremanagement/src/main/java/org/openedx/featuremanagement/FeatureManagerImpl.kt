@@ -1,17 +1,21 @@
 package org.openedx.featuremanagement
 
 import org.openedx.core.feature.FeatureDecision
-import org.openedx.core.feature.FeatureManagementService
+import org.openedx.core.feature.FeatureKey
 import org.openedx.core.feature.FeatureManager
 import org.openedx.core.feature.FeatureRequest
+import org.openedx.core.feature.FeatureService
 
 internal class FeatureManagerImpl(
-    private val services: List<FeatureManagementService>
+    private val services: List<FeatureService>
 ) : FeatureManager {
 
-    override fun <T> getDecision(request: FeatureRequest<T>): FeatureDecision<T>? {
+    /**
+     * Aggregates multiple FeatureService instances, returning the first available decision.
+     */
+    override fun getDecision(featureKey: FeatureKey): FeatureDecision? {
         return services.asSequence()
-            .mapNotNull { it.getDecision(request) }
+            .mapNotNull { it.evaluate(FeatureRequest(featureKey.key)) }
             .firstOrNull()
     }
 }

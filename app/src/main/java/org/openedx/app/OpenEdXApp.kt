@@ -15,7 +15,7 @@ import org.openedx.app.di.appModule
 import org.openedx.app.di.networkingModule
 import org.openedx.app.di.screenModule
 import org.openedx.core.config.Config
-import org.openedx.featuremanagement.di.FeatureManagementModuleProvider
+import org.openedx.featuremanagement.di.FeatureModuleProvider
 import org.openedx.notifications.di.NotificationsModuleProvider
 
 class OpenEdXApp : Application() {
@@ -24,19 +24,8 @@ class OpenEdXApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        startKoin {
-            androidContext(this@OpenEdXApp)
-            modules(
-                appModule,
-                networkingModule,
-                screenModule
-            )
-        }
-        val koinProviders = listOfNotNull(
-            NotificationsModuleProvider().takeIf { config.isPushNotificationsEnabled() },
-            FeatureManagementModuleProvider().takeIf { config.getOptimizelyConfig().enabled }
-        )
-        loadKoinModules(koinProviders.flatMap { it.getModules() })
+
+        initializeKoinModules()
 
         if (config.getFirebaseConfig().enabled) {
             FirebaseApp.initializeApp(this)
@@ -67,5 +56,26 @@ class OpenEdXApp : Application() {
                 BrazeDeeplinkHandler.setBrazeDeeplinkHandler(BranchBrazeDeeplinkHandler())
             }
         }
+    }
+
+    private fun initializeKoinModules() {
+        startKoin {
+            androidContext(this@OpenEdXApp)
+            modules(
+                appModule,
+                networkingModule,
+                screenModule
+            )
+        }
+
+        val koinModules = listOfNotNull(
+            NotificationsModuleProvider()
+                .takeIf { config.isPushNotificationsEnabled() }
+                ?.getModules(),
+            FeatureModuleProvider()
+                .takeIf { config.getOptimizelyConfig().enabled }
+                ?.getModules()
+        ).flatten()
+        loadKoinModules(koinModules)
     }
 }

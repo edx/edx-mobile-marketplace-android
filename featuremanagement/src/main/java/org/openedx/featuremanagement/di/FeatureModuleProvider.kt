@@ -5,29 +5,38 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.openedx.core.config.Config
 import org.openedx.core.di.KoinModuleProvider
-import org.openedx.core.feature.FeatureManagementService
 import org.openedx.core.feature.FeatureManager
+import org.openedx.core.feature.FeatureService
 import org.openedx.featuremanagement.FeatureManagerImpl
-import org.openedx.featuremanagement.OptimizelyFeatureManagementService
+import org.openedx.featuremanagement.OptimizelyFeatureService
+
+internal val OptimizelyQualifier = named("optimizely")
 
 /**
  * A provider for feature management DI modules.
- * It conditionally registers multiple vendor-specific FeatureManagementService implementations
+ * It conditionally registers multiple vendor-specific FeatureService implementations
  * based on configuration and aggregates them into a single FeatureManager.
  */
-class FeatureManagementModuleProvider : KoinModuleProvider {
+class FeatureModuleProvider : KoinModuleProvider {
     private val module: Module = module {
 
-        single<FeatureManagementService>(named("optimizely")) {
-            OptimizelyFeatureManagementService(get(), get(), get())
+        single<FeatureService>(
+            qualifier = OptimizelyQualifier,
+            createdAtStart = false,
+        ) {
+            OptimizelyFeatureService(
+                context = get(),
+                config = get(),
+                preferences = get()
+            )
         }
 
         single<FeatureManager> {
-            val config = this.get<Config>()
-            val services = mutableListOf<FeatureManagementService>()
+            val config = get<Config>()
+            val services = mutableListOf<FeatureService>()
 
             if (config.getOptimizelyConfig().enabled) {
-                services.add(get(named("optimizely")))
+                services.add(get(OptimizelyQualifier))
             }
             FeatureManagerImpl(services)
         }

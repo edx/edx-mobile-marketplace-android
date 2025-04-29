@@ -3,9 +3,9 @@ package org.openedx.core.feature
 /**
  * A vendor-agnostic interface for feature management.
  */
-interface FeatureManagementService {
+interface FeatureService {
     /**
      * Evaluates a feature decision based on the provided typed [FeatureRequest].
      */
-    fun <T> getDecision(request: FeatureRequest<T>): FeatureDecision<T>?
+    fun evaluate(request: FeatureRequest): FeatureDecision?
 }

@@ -1,17 +1,31 @@
 # Feature Management Module
 
-A standalone Gradle module providing a vendor-agnostic feature-flag, A/B-test, and remote-config framework for your Android app.
+A standalone Gradle module providing a vendor-agnostic feature-flag, A/B-test, and remote-config
+framework for your Android app.
 
 ## Features
 
-- **Type-safe Requests & Responses**
-    - Sealed `FeatureRequest<T>` and `FeatureDecision<T>` ensure compile-time safety for Boolean, String, or numeric returns.
+- **Compile-Time Safe Keys**
+    - Wrap your string literals in a `FeatureKey` value class.
+    - All keys live in `FeatureKeys` for IDE autocompletion and typo protection.
+
+- **Unified Request & Response**
+    - Single `FeatureRequest` and `FeatureDecision` model handles flags, experiments, and configs.
+    - `FeatureDecision` exposes `.isEnabled`, `.variation`, and a rich `metadata` map.
+
 - **Pluggable Back-Ends**
-    - Implement `FeatureManagementService` for any SDK. Out-of-the-box Optimizely support included.
+    - Implement `FeatureService` for any SDK (Optimizely support included).
+    - Each service returns `FeatureDecision?` or `null` if it can’t answer.
+
 - **Aggregator Facade**
-    - `FeatureManagerImpl` holds one or more services and returns the first non-null decision.
-- **Zero SDK Footprint in Feature Modules**
-    - UI code depends only on core abstractions—no direct references to Optimizely or other SDKs.
+    - `FeatureManagerImpl` takes a list of `FeatureService` instances and returns the first non-null
+      decision.
+    - Easily prioritize or combine multiple vendors.
+
+- **Zero SDK Footprint**
+    - App/UI code only depends on core abstractions (`FeatureKey`, `FeatureManager`,
+      `FeatureDecision`).
+    - No direct references to Optimizely or other SDKs in your feature-flag logic.
 
 ## Setup
 
@@ -19,17 +33,17 @@ A standalone Gradle module providing a vendor-agnostic feature-flag, A/B-test, a
    ```groovy
    include ':featuremanagement'
    ```
-2. **Add dependencies** in `app/build.gradle`:
+2. **Add dependencies** in your `app/build.gradle`:
    ```groovy
    dependencies {
      implementation project(path: ':core')
      implementation project(path: ':featuremanagement')
    }
    ```
-3. **Provide your configuration** (in Core or App):
+3. **Provide your configuration** in `core`:
    ```kotlin
    data class Config(
-     val optimizelyConfig: OptimizelyConfig,
+     val optimizelyConfig: OptimizelyConfig
    )
    data class OptimizelyConfig(
      val enabled: Boolean,
@@ -40,49 +54,64 @@ A standalone Gradle module providing a vendor-agnostic feature-flag, A/B-test, a
    ```kotlin
    class MyApplication : Application() {
      override fun onCreate() {
-       super.onCreate()
-       val koinProviders = listOfNotNull(
-         FeatureManagementModuleProvider().takeIf { config.getOptimizelyConfig().enabled }
-       )
-       loadKoinModules(koinProviders.flatMap { it.getModules() })
+      super.onCreate()
+         val koinModules = listOfNotNull(
+         FeatureModuleProvider()
+           .takeIf { config.getOptimizelyConfig().enabled }
+           .getModules()
+         ).flatten()
+         loadKoinModules(koinModules)
      }
    }
    ```
 
 ## Usage
 
-Inject and use the **core** façade (`FeatureManager`) anywhere—no SDK references:
+Inject and use the **core** façade (`FeatureManager`) with `FeatureKey`—no SDK references:
 
 ```kotlin
 class MyViewModel(
-  private val featureManager: FeatureManager,
-) : ViewModel() {
+    private val featureManager: FeatureManager,
+) : BaseViewModel() {
 
-  fun isBannerEnabled(): Boolean =
-    featureManager
-      .getDecision(FeatureFlagRequest("show_banner"))
-      ?.value
-      ?: false
+    fun isDemoFeatureEnabled(): Boolean =
+        featureManager
+            .getDecision(FeatureKeys.DemoFeature)
+            ?.isEnabled
+            ?: false
 
-  fun bannerVariant(): String =
-    featureManager
-      .getDecision(AbTestRequest("banner_color_test"))
-      ?.value
-      ?: "A"
+    fun onboardingVariant(): String =
+        featureManager
+            .getDecision(FeatureKeys.OnboardingExperiment)
+            ?.variation
+            ?: "control"
 
-  fun refreshInterval(): Int =
-    featureManager
-       .getDecision(RemoteConfigRequest("refresh_interval", flagKey = "beta"))
-       ?.value
-       ?.toInt() 
-       ?: 60
+    fun refreshInterval(): Int =
+        featureManager
+            .getDecision(FeatureKeys.RefreshIntervalConfig)
+            ?.metadata
+            ?.get(FeatureKeys.RefreshIntervalBeta.key)
+            ?.toString()
+            ?.toIntOrNull()
+            ?: 60
 }
 ```
 
+> **Tip:** Always use `FeatureKeys.YourKey` rather than raw strings for safety and discoverability.
+
 ## Extending
 
-1. **Add a new back-end**:
-    - Implement `FeatureManagementService` in this module (e.g., `FirebaseFeatureManagementService`).
-    - Register it in `FeatureManagementModuleProvider` and include it in `FeatureManagerImpl`.
-2. **Enrich Metadata**:
-    - Add fields to your `FeatureDecision` subclasses and populate `metadata` in your implementation.
+1. **Add a new back-end**
+    - Implement `FeatureService` in this module (e.g. `FirebaseFeatureService`).
+    - Register it in `FeatureModuleProvider` (with a qualifier and `createdAtStart = false`).
+    - Include it in the `services` list of `FeatureManagerImpl`.
+
+2. **Enrich Metadata**
+    - Add extra properties to your `FeatureDecision` data class.
+    - In your `FeatureService` implementation, populate the `metadata` map with SDK-specific
+      details (e.g. reasons, rule keys).
+
+3. **Add more keys**
+    - Define new `FeatureKey(...)` entries in `FeatureKeys`.
+    - Use them everywhere—IDE autocomplete will guide usage.
+```

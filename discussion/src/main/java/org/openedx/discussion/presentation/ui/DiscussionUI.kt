@@ -2,6 +2,8 @@ package org.openedx.discussion.presentation.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.animation.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,6 +33,8 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -230,10 +234,20 @@ fun CommentItem(
         Icons.Outlined.ThumbUp
     }
 
-    val backgroundColor = if (comment.shouldHighlight) {
-        MaterialTheme.appColors.highlightDiscussionResponse
-    } else {
-        MaterialTheme.appColors.cardViewBackground
+    val highlightColor = MaterialTheme.appColors.highlightDiscussionResponse
+    val normalColor = MaterialTheme.appColors.cardViewBackground
+
+    val backgroundColor = remember { Animatable(normalColor) }
+
+    LaunchedEffect(comment.shouldHighlight) {
+        if (comment.shouldHighlight) {
+            repeat(6) { // 3 full blinks (on + off = 2)
+                backgroundColor.animateTo(highlightColor, animationSpec = tween(250))
+                backgroundColor.animateTo(normalColor, animationSpec = tween(250))
+            }
+        } else {
+            backgroundColor.snapTo(normalColor)
+        }
     }
 
     val context = LocalContext.current
@@ -247,7 +261,7 @@ fun CommentItem(
                 shape
             )
         ),
-        backgroundColor = backgroundColor,
+        backgroundColor = backgroundColor.value,
         elevation = 0.dp
     ) {
         Column(

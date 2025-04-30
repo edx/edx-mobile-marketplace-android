@@ -7,7 +7,7 @@ framework for your Android app.
 
 - **Compile-Time Safe Keys**
     - Wrap your string literals in a `FeatureRequest` value class.
-    - All keys live in `FeatureKeys` for IDE autocompletion and typo protection.
+    - All keys live in `FeatureRequests` for IDE autocompletion and typo protection.
 
 - **Unified Request & Response**
     - Single `FeatureRequest` and `FeatureDecision` model handles flags, experiments, and configs.
@@ -76,28 +76,28 @@ class MyViewModel(
 
     fun isDemoFeatureEnabled(): Boolean =
         featureManager
-            .getDecision(FeatureKeys.DemoFeature)
+            .getDecision(FeatureRequests.DemoFeature)
             ?.isEnabled
             ?: false
 
     fun onboardingVariant(): String =
         featureManager
-            .getDecision(FeatureKeys.OnboardingExperiment)
+            .getDecision(FeatureRequests.OnboardingExperiment)
             ?.variation
             ?: "control"
 
     fun refreshInterval(): Int =
         featureManager
-            .getDecision(FeatureKeys.RefreshIntervalConfig)
+            .getDecision(FeatureRequests.RefreshIntervalConfig)
             ?.metadata
-            ?.get(FeatureKeys.RefreshIntervalBeta.key)
+            ?.get(FeatureRequests.RefreshIntervalBeta.key)
             ?.toString()
             ?.toIntOrNull()
             ?: 60
 }
 ```
 
-> **Tip:** Always use `FeatureKeys.YourKey` rather than raw strings for safety and discoverability.
+> **Tip:** Always use `FeatureRequests.YourKey` rather than raw strings for safety and discoverability.
 
 ## Extending
 
@@ -112,6 +112,6 @@ class MyViewModel(
       details (e.g. reasons, rule keys).
 
 3. **Add more keys**
-    - Define new `FeatureRequest(...)` entries in `FeatureKeys`.
+    - Define new `FeatureRequest(...)` entries in `FeatureRequests`.
     - Use them everywhere—IDE autocomplete will guide usage.
 ```

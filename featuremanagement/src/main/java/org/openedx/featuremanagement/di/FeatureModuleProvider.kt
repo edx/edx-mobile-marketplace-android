@@ -14,8 +14,8 @@ internal val OptimizelyQualifier = named("optimizely")
 
 /**
  * A provider for feature management DI modules.
- * It conditionally registers multiple vendor-specific FeatureService implementations
- * based on configuration and aggregates them into a single FeatureManager.
+ * It conditionally registers multiple vendor-specific [FeatureService] implementations
+ * based on configuration and aggregates them into a single [FeatureManager].
  */
 class FeatureModuleProvider : KoinModuleProvider {
     private val module: Module = module {

@@ -8,8 +8,8 @@ interface FeatureManager {
     /**
      * Synchronously returns a feature decision or null if unavailable.
      *
-     * @param featureKey The feature identifier (use FeatureKeys).
+     * @param featureRequest The feature identifier (use FeatureKeys).
      * @return The feature decision, or null if not available.
      */
-    fun getDecision(featureKey: FeatureKey): FeatureDecision?
+    fun getDecision(featureRequest: FeatureRequest): FeatureDecision?
 }

@@ -6,7 +6,7 @@ framework for your Android app.
 ## Features
 
 - **Compile-Time Safe Keys**
-    - Wrap your string literals in a `FeatureKey` value class.
+    - Wrap your string literals in a `FeatureRequest` value class.
     - All keys live in `FeatureKeys` for IDE autocompletion and typo protection.
 
 - **Unified Request & Response**
@@ -23,7 +23,7 @@ framework for your Android app.
     - Easily prioritize or combine multiple vendors.
 
 - **Zero SDK Footprint**
-    - App/UI code only depends on core abstractions (`FeatureKey`, `FeatureManager`,
+    - App/UI code only depends on core abstractions (`FeatureRequest`, `FeatureManager`,
       `FeatureDecision`).
     - No direct references to Optimizely or other SDKs in your feature-flag logic.
 
@@ -67,7 +67,7 @@ framework for your Android app.
 
 ## Usage
 
-Inject and use the **core** façade (`FeatureManager`) with `FeatureKey`—no SDK references:
+Inject and use the **core** façade (`FeatureManager`) with `FeatureRequest`—no SDK references:
 
 ```kotlin
 class MyViewModel(
@@ -112,6 +112,6 @@ class MyViewModel(
       details (e.g. reasons, rule keys).
 
 3. **Add more keys**
-    - Define new `FeatureKey(...)` entries in `FeatureKeys`.
+    - Define new `FeatureRequest(...)` entries in `FeatureKeys`.
     - Use them everywhere—IDE autocomplete will guide usage.
 ```

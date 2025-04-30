@@ -6,6 +6,7 @@ package org.openedx.core.feature
  *
  * @property key The feature identifier to evaluate.
  */
-data class FeatureRequest(
+@JvmInline
+value class FeatureRequest(
     val key: String,
 )

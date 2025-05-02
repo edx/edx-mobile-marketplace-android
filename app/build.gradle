@@ -49,8 +49,8 @@ android {
         applicationId appId
         minSdk 24
         targetSdk 34
-        versionCode 6000007
-        versionName "6.0.7"
+        versionCode 6000013
+        versionName "6.0.13"
 
         resourceConfigurations += ["en", "uk"]
 

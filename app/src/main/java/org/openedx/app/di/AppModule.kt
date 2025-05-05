@@ -58,6 +58,7 @@ import org.openedx.core.system.notifier.VideoNotifier
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.utils.FileUtil
 import org.openedx.course.data.storage.CoursePreferences
+import org.openedx.course.module.CastManager
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.dashboard.presentation.DashboardAnalytics
@@ -196,6 +197,7 @@ val appModule = module {
     factory { (activity: AppCompatActivity) -> AppReviewManager(activity, get(), get()) }
 
     single { TranscriptManager(get()) }
+    single { CastManager(get()) }
     single { WhatsNewManager(get(), get(), get(), get()) }
     single<WhatsNewGlobalManager> { get<WhatsNewManager>() }
 

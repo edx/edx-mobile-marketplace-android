@@ -12,12 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
@@ -80,7 +83,16 @@ class VideoFullScreenFragment : DialogFragment() {
     @Composable
     private fun PlayerComposeView() {
         val currentView = LocalView.current
+        val lifecycleOwner = LocalLifecycleOwner.current
+
         DisposableEffect(Unit) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    viewModel.enterFullscreen()
+                }
+            }
+
+            lifecycleOwner.lifecycle.addObserver(observer)
             onDispose {
                 currentView.keepScreenOn = false
                 viewModel.leaveFullscreen()
@@ -108,9 +120,6 @@ class VideoFullScreenFragment : DialogFragment() {
     override fun onPause() {
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         viewModel.exoPlayer?.removeListener(exoPlayerListener)
-        if (!requireActivity().isChangingConfigurations) {
-            viewModel.exoPlayer?.pause()
-        }
         super.onPause()
     }
 

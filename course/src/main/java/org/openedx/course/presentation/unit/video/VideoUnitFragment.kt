@@ -2,11 +2,10 @@ package org.openedx.course.presentation.unit.video
 
 import android.content.res.Configuration
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
+import androidx.annotation.OptIn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -15,7 +14,7 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.media3.cast.SessionAvailabilityListener
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.window.layout.WindowMetricsCalculator
 import kotlinx.coroutines.flow.launchIn
@@ -36,7 +35,6 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
 import org.openedx.course.databinding.FragmentVideoUnitBinding
-import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
 import kotlin.math.roundToInt
@@ -48,33 +46,17 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
             requireArguments().getString(ARG_BLOCK_ID, ""),
+            requireArguments().getString(ARG_TITLE, ""),
         )
     }
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
 
     private var windowSize: WindowSize? = null
 
-    private val handler = Handler(Looper.getMainLooper())
-    private var videoTimeRunnable: Runnable = object : Runnable {
-        override fun run() {
-            viewModel.getActivePlayer()?.let {
-                if (it.isPlaying) {
-                    viewModel.setCurrentVideoTime(it.currentPosition)
-                }
-                val completePercentage = it.currentPosition.toDouble() / it.duration.toDouble()
-                if (completePercentage >= 0.8f) {
-                    viewModel.markBlockCompleted(viewModel.blockId)
-                }
-            }
-            handler.postDelayed(this, 200)
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         windowSize = computeWindowSizeClasses()
         lifecycle.addObserver(viewModel)
-        handler.post(videoTimeRunnable)
         requireArguments().apply {
             viewModel.videoUrl = getString(ARG_VIDEO_URL, "")
             viewModel.transcripts = stringToObject<Map<String, String>>(
@@ -85,11 +67,12 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         viewModel.downloadSubtitles()
     }
 
+    @OptIn(UnstableApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.cvVideoTitle?.setContent {
             OpenEdXTheme {
-                VideoTitle(text = requireArguments().getString(ARG_TITLE) ?: "")
+                VideoTitle(text = viewModel.title)
             }
         }
 
@@ -114,13 +97,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     showSubtitleLanguage = viewModel.transcripts.size > 1,
                     currentIndex = currentIndex,
                     onTranscriptClick = {
-                        viewModel.getActivePlayer()?.apply {
+                        binding.playerView.player?.apply {
                             seekTo(it.start.mseconds.toLong())
                             play()
                         }
                     },
                     onSettingsClick = {
-                        viewModel.getActivePlayer()?.pause()
+                        binding.playerView.player?.pause()
                         val dialog = SelectBottomDialogFragment.newInstance(
                             LocaleUtils.getLanguages(viewModel.transcripts.keys.toList())
                         )
@@ -156,59 +139,36 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
         binding.playerView.layoutParams = layoutParams
 
-        viewModel.isUpdated.observe(viewLifecycleOwner) { isUpdated ->
-            if (isUpdated) {
-                initPlayer()
-            }
-        }
-
         viewModel.state.onEach {
-            if (it.isVideoEnded && !appReviewManager.isDialogShowed) {
-                appReviewManager.tryToOpenRateDialog()
+            when {
+                it.activePlayerType == PlayerType.EXO_REGULAR -> {
+                    updatePlayerType(viewModel.exoPlayer)
+                    showVideoControllerIndefinitely(false)
+                }
+
+                it.activePlayerType == PlayerType.CHROME_CAST -> {
+                    updatePlayerType(viewModel.getCastPlayer())
+                    showVideoControllerIndefinitely(true)
+                }
+
+                it.isVideoEnded && !appReviewManager.isDialogShowed -> {
+                    appReviewManager.tryToOpenRateDialog()
+                }
             }
         }.launchIn(lifecycleScope)
     }
 
-    @androidx.annotation.OptIn(UnstableApi::class)
-    private fun initPlayer() {
-        with(binding) {
-            playerView.player = null
-            playerView.player = viewModel.getActivePlayer()
-            playerView.setShowNextButton(false)
-            playerView.setShowPreviousButton(false)
-            showVideoControllerIndefinitely(false)
-            viewModel.applyPlayerMedia()
-            viewModel.exoPlayer?.playWhenReady = viewModel.isPlaying
-            viewModel.castPlayer?.setSessionAvailabilityListener(
-                object : SessionAvailabilityListener {
-                    override fun onCastSessionAvailable() {
-                        viewModel.logCastConnection(CourseAnalyticsEvent.CAST_CONNECTED)
-                        viewModel.changeCastState(true)
-                        viewModel.exoPlayer?.pause()
-                        playerView.player = viewModel.castPlayer
-                        viewModel.castPlayer?.setMediaItem(
-                            viewModel.getMediaItem(),
-                            viewModel.getCurrentVideoTime()
-                        )
-                        viewModel.castPlayer?.playWhenReady = true
-                        showVideoControllerIndefinitely(true)
-                    }
-
-                    override fun onCastSessionUnavailable() {
-                        viewModel.logCastConnection(CourseAnalyticsEvent.CAST_DISCONNECTED)
-                        viewModel.changeCastState(false)
-                        playerView.player = viewModel.exoPlayer
-                        viewModel.exoPlayer?.seekTo(viewModel.castPlayer?.currentPosition ?: 0L)
-                        viewModel.castPlayer?.stop()
-                        viewModel.exoPlayer?.play()
-                        showVideoControllerIndefinitely(false)
-                    }
-                }
-            )
-
-            playerView.setFullscreenButtonClickListener {
+    @OptIn(UnstableApi::class)
+    private fun updatePlayerType(player: Player?) {
+        with(binding.playerView) {
+            this.player = null
+            this.player = player
+            this.setShowNextButton(false)
+            this.setShowPreviousButton(false)
+            this.setFullscreenButtonClickListener {
                 if (viewModel.enterFullscreen()) {
-                    VideoFullScreenFragment.newInstance().show(childFragmentManager, VideoFullScreenFragment.TAG)
+                    VideoFullScreenFragment.newInstance()
+                        .show(childFragmentManager, VideoFullScreenFragment.TAG)
                 }
             }
         }
@@ -229,7 +189,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         if (!requireActivity().isChangingConfigurations) {
             viewModel.releasePlayers()
         }
-        handler.removeCallbacks(videoTimeRunnable)
         super.onDestroy()
     }
 
@@ -238,11 +197,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         if (show) {
             binding.playerView.controllerAutoShow = false
             binding.playerView.controllerShowTimeoutMs = 0
-            binding.playerView.showController()
         } else {
             binding.playerView.controllerAutoShow = true
             binding.playerView.controllerShowTimeoutMs = 2000
         }
+        binding.playerView.showController()
     }
 
     companion object {

@@ -375,17 +375,19 @@ val screenModule = module {
             get()
         )
     }
-    viewModel { (courseId: String, blockId: String) ->
+    viewModel { (courseId: String, blockId: String, title: String) ->
         EncodedVideoUnitViewModel(
-            courseId,
-            blockId,
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
+            courseId = courseId,
+            blockId = blockId,
+            title = title,
+            context = get(),
+            preferencesManager = get(),
+            castManager = get(),
+            courseRepository = get(),
+            notifier = get(),
+            networkConnection = get(),
+            transcriptManager = get(),
+            courseAnalytics = get(),
         )
     }
     viewModel { (courseId: String, courseTitle: String, enrollmentMode: String) ->

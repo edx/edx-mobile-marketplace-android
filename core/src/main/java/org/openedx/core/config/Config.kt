@@ -123,6 +123,10 @@ class Config(context: Context) {
         return getObjectOrNewInstance(UI_COMPONENTS, UIConfig::class.java)
     }
 
+    fun getOptimizelyConfig(): OptimizelyConfig {
+        return getObjectOrNewInstance(OPTIMIZELY, OptimizelyConfig::class.java)
+    }
+
     private fun getString(key: String, defaultValue: String = ""): String {
         val element = getObject(key)
         return if (element != null) {
@@ -184,6 +188,7 @@ class Config(context: Context) {
         private const val BRANCH = "BRANCH"
         private const val UI_COMPONENTS = "UI_COMPONENTS"
         private const val PLATFORM_NAME = "PLATFORM_NAME"
+        private const val OPTIMIZELY = "OPTIMIZELY"
     }
 
     enum class ViewType {

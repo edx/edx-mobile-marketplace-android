@@ -58,11 +58,6 @@ import org.openedx.discussion.presentation.threads.DiscussionAddThreadViewModel
 import org.openedx.discussion.presentation.threads.DiscussionThreadsViewModel
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
 import org.openedx.learn.presentation.LearnViewModel
-import org.openedx.notifications.data.repository.NotificationsRepository
-import org.openedx.notifications.domain.interactor.NotificationsInteractor
-import org.openedx.notifications.presentation.inbox.NotificationsInboxViewModel
-import org.openedx.notifications.presentation.primer.NotificationsPrimerViewModel
-import org.openedx.notifications.presentation.settings.NotificationsSettingsViewModel
 import org.openedx.profile.data.repository.ProfileRepository
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Account
@@ -500,13 +495,6 @@ val screenModule = module {
             get(),
         )
     }
-
-    single { NotificationsRepository(get(), get()) }
-    factory { NotificationsInteractor(get()) }
-
-    viewModel { NotificationsInboxViewModel(get(), get(), get(), get()) }
-    viewModel { NotificationsSettingsViewModel(get(), get(), get(), get()) }
-    viewModel { NotificationsPrimerViewModel(get(), get(), get()) }
 
     single { IAPRepository(get()) }
     factory { IAPInteractor(get(), get(), get(), get(), get()) }

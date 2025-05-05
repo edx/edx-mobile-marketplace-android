@@ -31,11 +31,6 @@ class SignUpFragment : Fragment() {
     }
     private val router by inject<AuthRouter>()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel.getRegistrationFields()
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

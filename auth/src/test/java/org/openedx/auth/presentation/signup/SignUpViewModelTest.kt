@@ -332,7 +332,7 @@ class SignUpViewModelTest {
         coEvery { interactor.getRegistrationFields() } throws UnknownHostException()
         viewModel.getRegistrationFields()
         advanceUntilIdle()
-        coVerify(exactly = 1) { interactor.getRegistrationFields() }
+        coVerify(exactly = 2) { interactor.getRegistrationFields() }
         verify(exactly = 1) { appNotifier.notifier }
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -359,7 +359,7 @@ class SignUpViewModelTest {
         coEvery { interactor.getRegistrationFields() } throws Exception()
         viewModel.getRegistrationFields()
         advanceUntilIdle()
-        coVerify(exactly = 1) { interactor.getRegistrationFields() }
+        coVerify(exactly = 2) { interactor.getRegistrationFields() }
         verify(exactly = 1) { appNotifier.notifier }
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -384,7 +384,7 @@ class SignUpViewModelTest {
         coEvery { interactor.getRegistrationFields() } returns listOfFields
         viewModel.getRegistrationFields()
         advanceUntilIdle()
-        coVerify(exactly = 1) { interactor.getRegistrationFields() }
+        coVerify(exactly = 2) { interactor.getRegistrationFields() }
         verify(exactly = 1) { appNotifier.notifier }
 
         //val fields = viewModel.uiState.value as? SignUpUIState.Fields

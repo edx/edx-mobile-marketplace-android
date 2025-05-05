@@ -126,6 +126,10 @@ enum class CourseAnalyticsEvent(val eventName: String, val biValue: String) {
         "PLS:Banner Viewed",
         "edx.bi.app.dates.pls_banner.viewed"
     ),
+    PLS_BANNER_DISMISSED(
+        "PLS:Banner Dismissed",
+        "edx.bi.app.dates.pls_banner.dismissed"
+    ),
     PLS_SHIFT_BUTTON_CLICKED(
         "PLS:Shift Button Clicked",
         "edx.bi.app.dates.pls_banner.shift_dates.clicked"
@@ -178,6 +182,7 @@ enum class CourseAnalyticsKey(val key: String) {
     OFF("off"),
     SNACKBAR_TYPE("snackbar_type"),
     COURSE_DATES("course_dates"),
+    COURSE_DASHBOARD("course_dashboard"),
     SELF_PACED("self"),
     INSTRUCTOR_PACED("instructor"),
 }

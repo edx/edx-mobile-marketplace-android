@@ -16,6 +16,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
+import org.openedx.core.domain.model.CourseBannerType
 import org.openedx.core.domain.model.CourseComponentStatus
 import org.openedx.core.domain.model.CourseDateBlock
 import org.openedx.core.domain.model.CourseDatesBannerInfo
@@ -36,7 +37,9 @@ import org.openedx.core.system.notifier.CourseDatesShifted
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseOpenBlock
 import org.openedx.core.system.notifier.CourseStructureUpdated
+import org.openedx.core.system.notifier.RefreshPLSBanner
 import org.openedx.core.utils.FileUtil
+import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -53,6 +56,7 @@ class CourseOutlineViewModel(
     private val courseNotifier: CourseNotifier,
     private val networkConnection: NetworkConnection,
     private val preferencesManager: CorePreferences,
+    private val coursePreferences: CoursePreferences,
     private val analytics: CourseAnalytics,
     val courseRouter: CourseRouter,
     coreAnalytics: CoreAnalytics,
@@ -79,6 +83,9 @@ class CourseOutlineViewModel(
     val resumeBlockId: SharedFlow<String>
         get() = _resumeBlockId.asSharedFlow()
 
+    private val _canShowPLSBanner = MutableStateFlow(false)
+    val canShowPLSBanner: StateFlow<Boolean> = _canShowPLSBanner
+
     private var resumeSectionBlock: Block? = null
     private var resumeVerticalBlock: Block? = null
 
@@ -100,6 +107,11 @@ class CourseOutlineViewModel(
 
                     is CourseOpenBlock -> {
                         _resumeBlockId.emit(event.blockId)
+                    }
+
+                    is RefreshPLSBanner -> {
+                        _canShowPLSBanner.value =
+                            coursePreferences.canShowPLSBanner(courseId, event.bannerType)
                     }
                 }
             }
@@ -168,6 +180,17 @@ class CourseOutlineViewModel(
         }
     }
 
+    fun onPLSBannerViewed() {
+        logPLSBannerEvents(CourseAnalyticsEvent.PLS_BANNER_VIEWED)
+    }
+
+    fun onDismissPLSBanner(bannerType: String) {
+        _canShowPLSBanner.value = false
+        coursePreferences.markPLSBannerDismissed(courseId, bannerType)
+        viewModelScope.launch { courseNotifier.send(RefreshPLSBanner(bannerType)) }
+        logPLSBannerEvents(CourseAnalyticsEvent.PLS_BANNER_DISMISSED)
+    }
+
     private fun getCourseDataInternal() {
         viewModelScope.launch {
             try {
@@ -217,6 +240,8 @@ class CourseOutlineViewModel(
                     subSectionsDownloadsCount = subSectionsDownloadsCount,
                     datesBannerInfo = datesBannerInfo
                 )
+                _canShowPLSBanner.value =
+                    coursePreferences.canShowPLSBanner(courseId, datesBannerInfo.bannerType.name)
             } catch (e: Exception) {
                 _uiState.value = CourseOutlineUIState.Error
                 if (e.isInternetError()) {
@@ -401,5 +426,18 @@ class CourseOutlineViewModel(
                 )
             }
         }
+    }
+
+    private fun logPLSBannerEvents(event: CourseAnalyticsEvent) {
+        analytics.logEvent(
+            event.eventName,
+            buildMap {
+                put(CourseAnalyticsKey.NAME.key, event.biValue)
+                put(CourseAnalyticsKey.COURSE_ID.key, courseId)
+                put(CourseAnalyticsKey.COURSE_NAME.key, courseTitle)
+                put(CourseAnalyticsKey.BANNER_TYPE.key, CourseBannerType.RESET_DATES.name)
+                put(CourseAnalyticsKey.SCREEN_NAME.key, CourseAnalyticsKey.COURSE_DASHBOARD.key)
+            }
+        )
     }
 }

@@ -56,6 +56,7 @@ import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.domain.model.Progress
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.ui.CircularProgress
@@ -88,6 +89,7 @@ fun CourseOutlineScreen(
     val resumeBlockId by viewModel.resumeBlockId.collectAsState("")
     val uiState by viewModel.uiState.collectAsState()
     val uiMessage by viewModel.uiMessage.collectAsState(null)
+    val canShowPLSBanner by viewModel.canShowPLSBanner.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(resumeBlockId) {
@@ -100,6 +102,7 @@ fun CourseOutlineScreen(
         windowSize = windowSize,
         uiState = uiState,
         uiMessage = uiMessage,
+        canShowPLSBanner = canShowPLSBanner,
         onExpandClick = { block ->
             if (viewModel.switchCourseSections(block.id)) {
                 viewModel.sequentialClickedEvent(
@@ -159,6 +162,12 @@ fun CourseOutlineScreen(
             viewModel.viewCertificateTappedEvent()
             it.takeIfNotEmpty()
                 ?.let { url -> AndroidUriHandler(context).openUri(url) }
+        },
+        onPLSBannerViewed = {
+            viewModel.onPLSBannerViewed()
+        },
+        onPLSBannerDismiss = { bannerType ->
+            viewModel.onDismissPLSBanner(bannerType)
         }
     )
 }
@@ -168,12 +177,15 @@ private fun CourseOutlineUI(
     windowSize: WindowSize,
     uiState: CourseOutlineUIState,
     uiMessage: UIMessage?,
+    canShowPLSBanner: Boolean,
     onExpandClick: (Block) -> Unit,
     onSubSectionClick: (Block) -> Unit,
     onResumeClick: (String) -> Unit,
     onDownloadClick: (blockIds: List<String>) -> Unit,
     onResetDatesClick: () -> Unit,
     onCertificateClick: (String) -> Unit,
+    onPLSBannerViewed: () -> Unit = {},
+    onPLSBannerDismiss: (String) -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -213,6 +225,16 @@ private fun CourseOutlineUI(
 
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
+        val isPLSBannerAvailable = (uiState as? CourseOutlineUIState.CourseData)
+            ?.datesBannerInfo
+            ?.isBannerAvailableForDashboard()
+
+        LaunchedEffect(key1 = isPLSBannerAvailable) {
+            if (isPLSBannerAvailable.isTrue() && canShowPLSBanner) {
+                onPLSBannerViewed()
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -234,7 +256,7 @@ private fun CourseOutlineUI(
                                     modifier = Modifier.fillMaxSize(),
                                     contentPadding = listBottomPadding
                                 ) {
-                                    if (uiState.datesBannerInfo.isBannerAvailableForDashboard()) {
+                                    if (canShowPLSBanner && uiState.datesBannerInfo.isBannerAvailableForDashboard()) {
                                         item {
                                             Box(
                                                 modifier = Modifier
@@ -242,13 +264,15 @@ private fun CourseOutlineUI(
                                             ) {
                                                 if (windowSize.isTablet) {
                                                     CourseDatesBannerTablet(
-                                                        banner = uiState.datesBannerInfo,
+                                                        bannerType = uiState.datesBannerInfo.bannerType,
                                                         resetDates = onResetDatesClick,
+                                                        onDismissClick = onPLSBannerDismiss,
                                                     )
                                                 } else {
                                                     CourseDatesBanner(
-                                                        banner = uiState.datesBannerInfo,
+                                                        bannerType = uiState.datesBannerInfo.bannerType,
                                                         resetDates = onResetDatesClick,
+                                                        onDismissClick = onPLSBannerDismiss,
                                                     )
                                                 }
                                             }
@@ -345,7 +369,7 @@ private fun CourseOutlineUI(
                         CourseOutlineUIState.Error -> {
                             NoContentScreen(noContentScreenType = NoContentScreenType.COURSE_OUTLINE)
                         }
-                        
+
                         CourseOutlineUIState.Loading -> {
                             CircularProgress()
                         }
@@ -535,13 +559,15 @@ private fun CourseOutlineScreenPreview() {
                     hasEnded = false
                 )
             ),
+            canShowPLSBanner = false,
             uiMessage = null,
             onExpandClick = {},
             onSubSectionClick = {},
             onResumeClick = {},
             onDownloadClick = {},
             onResetDatesClick = {},
-            onCertificateClick = {}
+            onCertificateClick = {},
+            onPLSBannerDismiss = {},
         )
     }
 }
@@ -569,13 +595,15 @@ private fun CourseOutlineScreenTabletPreview() {
                     hasEnded = false
                 )
             ),
+            canShowPLSBanner = false,
             uiMessage = null,
             onExpandClick = {},
             onSubSectionClick = {},
             onResumeClick = {},
             onDownloadClick = {},
             onResetDatesClick = {},
-            onCertificateClick = {}
+            onCertificateClick = {},
+            onPLSBannerDismiss = {},
         )
     }
 }

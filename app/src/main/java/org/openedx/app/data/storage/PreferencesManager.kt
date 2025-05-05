@@ -12,6 +12,7 @@ import org.openedx.core.domain.model.VideoPlaybackSpeed
 import org.openedx.core.domain.model.VideoQuality
 import org.openedx.core.domain.model.VideoSettings
 import org.openedx.core.extension.replaceSpace
+import org.openedx.core.utils.TimeUtils
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.model.NotificationsConfiguration
@@ -19,6 +20,7 @@ import org.openedx.notifications.domain.model.NotificationsPrimerConfiguration
 import org.openedx.profile.data.model.Account
 import org.openedx.profile.data.storage.ProfilePreferences
 import org.openedx.whatsnew.data.storage.WhatsNewPreferences
+import java.util.concurrent.TimeUnit
 
 class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences,
     WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences {
@@ -42,7 +44,9 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         }.apply()
     }
 
-    private fun getLong(key: String): Long = sharedPreferences.getLong(key, 0L)
+    private fun getLong(key: String, defValue: Long = 0L): Long {
+        return sharedPreferences.getLong(key, defValue)
+    }
 
     private fun saveBoolean(key: String, value: Boolean) {
         sharedPreferences.edit().apply {
@@ -189,6 +193,19 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
     override fun isCalendarSyncEventsDialogShown(courseName: String): Boolean =
         getBoolean(courseName.replaceSpace("_"))
 
+    override fun markPLSBannerDismissed(courseId: String, bannerType: String) {
+        val key = courseId + "_" + PLS_BANNER_SHOWN + "_" + bannerType
+        val currentTime = TimeUtils.getCurrentTime()
+        saveLong(key, currentTime)
+    }
+
+    override fun canShowPLSBanner(courseId: String, bannerType: String): Boolean {
+        val key = courseId + "_" + PLS_BANNER_SHOWN + "_" + bannerType
+        val currentTime = TimeUtils.getCurrentTime()
+        val lastTime = getLong(key, 0L)
+        return (currentTime - lastTime) > TimeUnit.DAYS.toMillis(1)
+    }
+
     override var notifications: NotificationsConfiguration
         set(value) {
             val notificationsJson = Gson().toJson(value)
@@ -230,5 +247,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val LAST_SIGN_IN_TYPE = "last_sign_in_type"
         private const val NOTIFICATIONS_CONFIGURATION = "notifications_configuration"
         private const val NOTIFICATIONS_PRIMER_CONFIGURATION = "notifications_primer_configuration"
+        private const val PLS_BANNER_SHOWN = "pls_banner_shown"
     }
 }

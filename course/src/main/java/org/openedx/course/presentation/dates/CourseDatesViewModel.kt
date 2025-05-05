@@ -33,6 +33,8 @@ import org.openedx.core.system.notifier.CourseDatesShifted
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.RefreshDates
+import org.openedx.core.system.notifier.RefreshPLSBanner
+import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -42,16 +44,17 @@ import org.openedx.core.R as CoreR
 
 class CourseDatesViewModel(
     val courseId: String,
-    courseTitle: String,
+    val courseTitle: String,
     private val enrollmentMode: String,
     private val courseNotifier: CourseNotifier,
     private val interactor: CourseInteractor,
     private val calendarManager: CalendarManager,
     private val resourceManager: ResourceManager,
     private val corePreferences: CorePreferences,
+    private val coursePreferences: CoursePreferences,
     private val courseAnalytics: CourseAnalytics,
     private val config: Config,
-    val courseRouter: CourseRouter
+    val courseRouter: CourseRouter,
 ) : BaseViewModel() {
 
     var isSelfPaced = true
@@ -74,6 +77,9 @@ class CourseDatesViewModel(
     val calendarSyncUIState: StateFlow<CalendarSyncUIState> =
         _calendarSyncUIState.asStateFlow()
 
+    private val _canShowPLSBanner = MutableStateFlow(false)
+    val canShowPLSBanner: StateFlow<Boolean> = _canShowPLSBanner
+
     private var courseBannerType: CourseBannerType = CourseBannerType.BLANK
     private var courseStructure: CourseStructure? = null
 
@@ -89,6 +95,11 @@ class CourseDatesViewModel(
 
                     is RefreshDates -> {
                         loadingCourseDatesInternal()
+                    }
+
+                    is RefreshPLSBanner -> {
+                        _canShowPLSBanner.value =
+                            coursePreferences.canShowPLSBanner(courseId, event.bannerType)
                     }
                 }
             }
@@ -109,6 +120,8 @@ class CourseDatesViewModel(
                 } else {
                     _uiState.value = DatesUIState.Dates(datesResponse)
                     courseBannerType = datesResponse.courseBanner.bannerType
+                    _canShowPLSBanner.value =
+                        coursePreferences.canShowPLSBanner(courseId, courseBannerType.name)
                     checkIfCalendarOutOfDate()
                 }
             } catch (e: Exception) {
@@ -169,6 +182,13 @@ class CourseDatesViewModel(
         )
     }
 
+    fun onDismissPLSBanner(bannerType: String) {
+        _canShowPLSBanner.value = false
+        coursePreferences.markPLSBannerDismissed(courseId, bannerType)
+        viewModelScope.launch { courseNotifier.send(RefreshPLSBanner(bannerType)) }
+        logPlsBannerDismissed()
+    }
+
     private fun updateAndFetchCalendarSyncState(): Boolean {
         val isCalendarSynced = calendarManager.isCalendarExists(
             calendarTitle = _calendarSyncUIState.value.calendarTitle
@@ -215,6 +235,10 @@ class CourseDatesViewModel(
 
     fun logPlsBannerViewed() {
         logPLSBannerEvent(CourseAnalyticsEvent.PLS_BANNER_VIEWED)
+    }
+
+    private fun logPlsBannerDismissed() {
+        logPLSBannerEvent(CourseAnalyticsEvent.PLS_BANNER_DISMISSED)
     }
 
     fun logPlsShiftButtonClicked() {

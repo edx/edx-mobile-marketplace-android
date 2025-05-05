@@ -44,6 +44,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CalendarSyncEvent.CreateCalendarSyncEvent
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
+import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseRouter
@@ -62,6 +63,7 @@ class CourseDatesViewModelTest {
     private val interactor = mockk<CourseInteractor>()
     private val calendarManager = mockk<CalendarManager>()
     private val corePreferences = mockk<CorePreferences>()
+    private val coursePreferences = mockk<CoursePreferences>()
     private val analytics = mockk<CourseAnalytics>()
     private val config = mockk<Config>()
     private val courseRouter = mockk<CourseRouter>()
@@ -134,13 +136,14 @@ class CourseDatesViewModelTest {
             isStaff = false,
             auditAccessExpires = Date(),
             coursewareAccess = CoursewareAccess(
-            true,
-            "",
-            "",
-            "",
-            "",
-            ""
-        )),
+                true,
+                "",
+                "",
+                "",
+                "",
+                ""
+            )
+        ),
         certificate = null,
         isSelfPaced = true,
         progress = null,
@@ -168,6 +171,7 @@ class CourseDatesViewModelTest {
         coEvery { notifier.send(any<CreateCalendarSyncEvent>()) } returns Unit
         coEvery { notifier.send(any<CourseLoading>()) } returns Unit
         coEvery { notifier.send(any<CourseLoading>()) } returns Unit
+        every { coursePreferences.canShowPLSBanner(any(), any()) } returns true
     }
 
     @After
@@ -186,6 +190,7 @@ class CourseDatesViewModelTest {
             calendarManager,
             resourceManager,
             corePreferences,
+            coursePreferences,
             analytics,
             config,
             courseRouter
@@ -199,7 +204,6 @@ class CourseDatesViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getCourseDates(any()) }
-
         Assert.assertEquals(noInternet, message.await()?.message)
         assert(viewModel.uiState.value is DatesUIState.Error)
     }
@@ -215,6 +219,7 @@ class CourseDatesViewModelTest {
             calendarManager,
             resourceManager,
             corePreferences,
+            coursePreferences,
             analytics,
             config,
             courseRouter
@@ -244,6 +249,7 @@ class CourseDatesViewModelTest {
             calendarManager,
             resourceManager,
             corePreferences,
+            coursePreferences,
             analytics,
             config,
             courseRouter
@@ -273,6 +279,7 @@ class CourseDatesViewModelTest {
             calendarManager,
             resourceManager,
             corePreferences,
+            coursePreferences,
             analytics,
             config,
             courseRouter

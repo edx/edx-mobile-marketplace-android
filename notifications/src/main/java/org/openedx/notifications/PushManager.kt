@@ -145,8 +145,7 @@ class PushManager(
                 ?: return
         } catch (e: Exception) {
             logger.e(
-                throwable = IllegalArgumentException("$EXCEPTION_MESSAGE $data", e),
-                submitCrashReport = true
+                throwable = IllegalArgumentException("$EXCEPTION_MESSAGE $data", e)
             )
             return
         }

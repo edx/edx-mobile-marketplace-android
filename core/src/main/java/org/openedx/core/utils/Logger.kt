@@ -13,11 +13,7 @@ class Logger(private val tag: String) {
         if (BuildConfig.DEBUG) Log.e(tag, message())
     }
 
-    fun e(
-        throwable: Throwable,
-        submitCrashReport: Boolean = false,
-        metadata: Map<String, Any> = emptyMap()
-    ) {
+    fun e(throwable: Throwable, metadata: Map<String, Any> = emptyMap()) {
         if (BuildConfig.DEBUG) throwable.printStackTrace()
 
         CrashlyticsHelper.setKey(SOURCE, tag)

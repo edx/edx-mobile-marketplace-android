@@ -77,7 +77,7 @@ class TranscriptManager(
                     try {
                         transcriptObject = convertIntoTimedTextObject(it)
                     } catch (e: NullPointerException) {
-                        logger.e(throwable = e, submitCrashReport = true)
+                        logger.e(throwable = e)
                     }
                 }
             }
@@ -92,7 +92,7 @@ class TranscriptManager(
             try {
                 transcriptObject = convertIntoTimedTextObject(transcriptInputStream)
             } catch (e: Exception) {
-                logger.e(throwable = e, submitCrashReport = true)
+                logger.e(throwable = e)
             }
         } else {
             startTranscriptDownload(transcriptUrl)

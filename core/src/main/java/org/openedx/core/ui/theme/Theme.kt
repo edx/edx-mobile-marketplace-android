@@ -105,6 +105,8 @@ private val DarkColorPalette = AppColors(
     inboxTimeMarkerColor = dark_inbox_time_marker_color,
     notificationPrimerBadge = dark_notification_primer_badge,
     notificationPrimerCardBackground = dark_notification_primer_card_background,
+
+    highlightDiscussionResponse = dark_highlight_discussion_response,
 )
 
 private val LightColorPalette = AppColors(
@@ -202,6 +204,8 @@ private val LightColorPalette = AppColors(
     inboxTimeMarkerColor = light_inbox_time_marker_color,
     notificationPrimerBadge = light_notification_primer_badge,
     notificationPrimerCardBackground = light_notification_primer_card_background,
+
+    highlightDiscussionResponse = light_highlight_discussion_response,
 )
 
 val MaterialTheme.appColors: AppColors

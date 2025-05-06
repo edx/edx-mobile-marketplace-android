@@ -9,9 +9,11 @@ import org.jsoup.select.Elements
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.openedx.core.config.Config
+import org.openedx.core.utils.Logger
 
 object TextConverter : KoinComponent {
 
+    private const val TAG = "TextConverter"
     private val config by inject<Config>()
 
     fun htmlTextToLinkedText(html: String): LinkedText {
@@ -89,7 +91,7 @@ object TextConverter : KoinComponent {
                 result = text.replaceRange(startIndex, endIndex, it + "\n")
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger(TAG).e(throwable = e, metadata = mapOf("text" to text))
         }
         return result
     }

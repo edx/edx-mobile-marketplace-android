@@ -68,6 +68,7 @@ import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.RefreshDates
 import org.openedx.core.system.notifier.RefreshDiscussions
 import org.openedx.core.system.notifier.UpdateCourseData
+import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.DatesShiftedSnackBar
 import org.openedx.course.data.storage.CoursePreferences
@@ -313,7 +314,13 @@ class CourseContainerViewModel(
                     _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Logger(TAG).e(
+                    throwable = e, metadata = mapOf(
+                        "courseId" to courseId,
+                        "isIAPFlow" to isIAPFlow,
+                        "isExpiredCoursePurchase" to isExpiredCoursePurchase
+                    )
+                )
                 _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 _showProgress.value = false
             }
@@ -779,5 +786,9 @@ class CourseContainerViewModel(
                 putAll(param)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "CourseContainerViewModel"
     }
 }

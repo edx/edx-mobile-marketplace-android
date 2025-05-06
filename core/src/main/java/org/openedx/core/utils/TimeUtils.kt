@@ -17,6 +17,7 @@ import kotlin.math.ceil
 
 object TimeUtils {
 
+    private const val TAG = "TimeUtils"
     private const val FORMAT_ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss'Z'"
     private const val FORMAT_ISO_8601_WITH_TIME_ZONE = "yyyy-MM-dd'T'HH:mm:ssXXX"
 
@@ -52,7 +53,7 @@ object TimeUtils {
             )
             applicationDateFormat.format(courseDateFormat.parse(text)!!)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger(TAG).e(throwable = e, metadata = mapOf("time" to text))
             ""
         }
     }

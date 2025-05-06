@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.openedx.core.R
 import org.openedx.core.ui.theme.OpenEdXTheme
+import org.openedx.core.utils.Logger
 
 class ThankYouDialogFragment : BaseAppReviewDialogFragment() {
 
@@ -80,7 +81,7 @@ class ThankYouDialogFragment : BaseAppReviewDialogFragment() {
                     onRateAppClick()
                 }
             } catch (e: ReviewException) {
-                e.printStackTrace()
+                Logger(TAG).e(throwable = e)
             }
         }
     }
@@ -91,6 +92,7 @@ class ThankYouDialogFragment : BaseAppReviewDialogFragment() {
 
     companion object {
 
+        private const val TAG = "ThankYouDialogFragment"
         private const val ARG_IS_FEEDBACK_POSITIVE = "is_feedback_positive"
 
         fun newInstance(

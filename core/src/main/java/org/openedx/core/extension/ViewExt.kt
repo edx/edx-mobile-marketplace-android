@@ -14,6 +14,7 @@ import androidx.webkit.WebViewFeature
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.openedx.core.system.AppCookieManager
+import org.openedx.core.utils.Logger
 
 fun Context.dpToPixel(dp: Int): Float {
     return dp * (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)
@@ -69,7 +70,7 @@ fun WebView.applyDarkModeIfEnabled(isDarkTheme: Boolean) {
         try {
             WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger("ViewExt").e(throwable = e)
         }
     }
 }

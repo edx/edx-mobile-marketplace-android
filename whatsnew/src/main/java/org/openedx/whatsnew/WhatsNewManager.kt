@@ -6,6 +6,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.domain.model.Version
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.WhatsNewGlobalManager
+import org.openedx.core.utils.Logger
 import org.openedx.whatsnew.data.model.WhatsNewItem
 import org.openedx.whatsnew.data.storage.WhatsNewPreferences
 
@@ -35,8 +36,12 @@ class WhatsNewManager(
                         appVersion.hasSameMajorMinorVersion(dataVersion)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger(TAG).e(throwable = e)
             false
         }
+    }
+
+    companion object {
+        private const val TAG = "WhatsNewManager"
     }
 }

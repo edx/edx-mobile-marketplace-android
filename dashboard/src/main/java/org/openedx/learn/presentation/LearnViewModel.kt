@@ -14,6 +14,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.PushEvent
 import org.openedx.core.system.notifier.PushNotifier
+import org.openedx.core.utils.Logger
 import org.openedx.dashboard.presentation.DashboardAnalytics
 import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
 import org.openedx.dashboard.presentation.DashboardAnalyticsKey
@@ -77,7 +78,7 @@ class LearnViewModel(
                     val unreadNotifications = pushManager.getUnreadNotificationsCount()
                     _uiState.update { it.copy(hasUnreadNotifications = unreadNotifications > 0) }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Logger(TAG).e(throwable = e)
                 }
             }
         }
@@ -104,5 +105,9 @@ class LearnViewModel(
                 put(DashboardAnalyticsKey.CATEGORY.key, DashboardAnalyticsKey.LEARN.key)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "LearnViewModel"
     }
 }

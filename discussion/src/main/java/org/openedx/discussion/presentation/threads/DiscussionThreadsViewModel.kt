@@ -17,6 +17,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
@@ -203,7 +204,7 @@ class DiscussionThreadsViewModel(
                 interactor.markBlocksCompletion(courseId, listOf(blockId))
             } catch (e: Exception) {
                 isBlockAlreadyCompleted = false
-                e.printStackTrace()
+                Logger(TAG).e(throwable = e)
             }
         }
     }
@@ -212,5 +213,9 @@ class DiscussionThreadsViewModel(
         if (config.isPushNotificationsEnabled()) {
             pushGlobalManager.showNotificationsPrimer(context, fm)
         }
+    }
+
+    companion object {
+        private const val TAG = "DiscussionThreadsViewModel"
     }
 }

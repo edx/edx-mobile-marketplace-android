@@ -13,6 +13,7 @@ import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadModelEntity
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.download.FileDownloader
+import org.openedx.core.utils.Logger
 import java.io.File
 import java.util.concurrent.ExecutionException
 
@@ -21,6 +22,7 @@ class DownloadWorkerController(
     private val downloadDao: DownloadDao,
     private val fileDownloader: FileDownloader
 ) {
+    private val logger = Logger(TAG)
 
     private val workManager = WorkManager.getInstance(context)
 
@@ -77,13 +79,16 @@ class DownloadWorkerController(
             try {
                 File(downloadModel.path).delete()
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(
+                    throwable = e,
+                    metadata = mapOf("download_model_path" to downloadModel.path)
+                )
             }
             downloadModel.transcriptPaths.values.forEach { path ->
                 try {
                     File(path).delete()
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    logger.e(throwable = e, metadata = mapOf("transcript_path" to path))
                 }
             }
         }
@@ -113,15 +118,19 @@ class DownloadWorkerController(
             }
             workInfo != null
         } catch (e: ExecutionException) {
-            e.printStackTrace()
+            logger.e(throwable = e, metadata = mapOf("tag" to tag))
             false
         } catch (e: InterruptedException) {
-            e.printStackTrace()
+            logger.e(throwable = e, metadata = mapOf("tag" to tag))
             false
         }
     }
 
     private suspend fun getDownloadModelsById(ids: List<String>): List<DownloadModel> {
         return downloadDao.readAllDataByIds(ids).first().map { it.mapToDomain() }
+    }
+
+    companion object {
+        private const val TAG = "DownloadWorkerController"
     }
 }

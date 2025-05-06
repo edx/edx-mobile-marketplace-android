@@ -5,15 +5,18 @@ import okhttp3.Cookie
 import okhttp3.RequestBody
 import org.openedx.core.config.Config
 import org.openedx.core.data.api.CookiesApi
+import org.openedx.core.utils.Logger
 import retrofit2.Response
 import java.util.concurrent.TimeUnit
 
 class AppCookieManager(private val config: Config, private val api: CookiesApi) {
 
     companion object {
+        private const val TAG = "AppCookieManager"
         private val FRESHNESS_INTERVAL = TimeUnit.HOURS.toMillis(1)
     }
 
+    private val logger = Logger(TAG)
     private var authSessionCookieExpiration: Long = -1
     private var response: Response<RequestBody>? = null
 
@@ -27,7 +30,10 @@ class AppCookieManager(private val config: Config, private val api: CookiesApi) 
             }
             authSessionCookieExpiration = System.currentTimeMillis() + FRESHNESS_INTERVAL
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(
+                throwable = e,
+                metadata = mapOf("url" to response!!.raw().request.url.toString())
+            )
         }
     }
 

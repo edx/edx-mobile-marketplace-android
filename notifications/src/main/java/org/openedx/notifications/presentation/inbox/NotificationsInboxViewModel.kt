@@ -13,6 +13,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.InboxSection
 import org.openedx.notifications.domain.model.NotificationItem
@@ -29,6 +30,8 @@ class NotificationsInboxViewModel(
     private val resourceManager: ResourceManager,
     private val analytics: NotificationsAnalytics,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableStateFlow<InboxUIState>(InboxUIState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -68,7 +71,7 @@ class NotificationsInboxViewModel(
             try {
                 interactor.markNotificationsAsSeen()
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e)
             }
         }
     }
@@ -173,7 +176,10 @@ class NotificationsInboxViewModel(
                 }
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(
+                    throwable = e,
+                    metadata = mapOf("notification_id" to notification.id.toString())
+                )
                 emitErrorMessage(e)
             }
         }
@@ -202,7 +208,7 @@ class NotificationsInboxViewModel(
                     _uiState.value = InboxUIState.Data(notifications = notifications.toMap())
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e)
                 emitErrorMessage(e)
             }
         }
@@ -275,5 +281,9 @@ class NotificationsInboxViewModel(
                 putAll(params)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "NotificationsInboxViewModel"
     }
 }

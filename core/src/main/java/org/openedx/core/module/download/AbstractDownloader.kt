@@ -6,12 +6,15 @@ import okhttp3.OkHttpClient
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.openedx.core.config.Config
+import org.openedx.core.utils.Logger
 import retrofit2.Retrofit
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
 abstract class AbstractDownloader : KoinComponent {
+
+    private val logger = Logger(TAG)
 
     private val config by inject<Config>()
 
@@ -61,7 +64,7 @@ abstract class AbstractDownloader : KoinComponent {
                 false
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e)
             false
         } finally {
             fos?.close()
@@ -77,7 +80,7 @@ abstract class AbstractDownloader : KoinComponent {
                 fos?.close()
                 input?.close()
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e)
             }
         }
         currentDownloadingFilePath?.let {
@@ -88,4 +91,7 @@ abstract class AbstractDownloader : KoinComponent {
         }
     }
 
+    companion object {
+        private const val TAG = "AbstractDownloader"
+    }
 }

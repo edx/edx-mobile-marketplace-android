@@ -130,7 +130,7 @@ class TranscriptManager(
                 return response
             }
         } catch (e: IOException) {
-            e.printStackTrace()
+            logger.e(throwable = e, metadata = mapOf("url" to url))
         }
         return null
     }

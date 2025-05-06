@@ -9,7 +9,6 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONException
 import org.json.JSONObject
-import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.auth.data.api.AuthApi
 import org.openedx.auth.domain.model.AuthResponse
 import org.openedx.core.ApiConstants
@@ -18,6 +17,8 @@ import org.openedx.core.BuildConfig
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.notifier.app.AppNotifier
+import org.openedx.core.system.notifier.app.LogoutEvent
+import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -29,6 +30,8 @@ class OauthRefreshTokenAuthenticator(
     private val preferencesManager: CorePreferences,
     private val appNotifier: AppNotifier,
 ) : Authenticator, Interceptor {
+
+    private val logger = Logger(TAG)
 
     private val authApi: AuthApi
     private var lastTokenRefreshRequestTime = 0L
@@ -73,7 +76,7 @@ class OauthRefreshTokenAuthenticator(
             when (errorCode) {
                 TOKEN_EXPIRED_ERROR_MESSAGE,
                 JWT_TOKEN_EXPIRED,
-                -> {
+                    -> {
                     try {
                         val newAuth = refreshAccessToken(refreshToken)
                         if (newAuth != null) {
@@ -96,6 +99,7 @@ class OauthRefreshTokenAuthenticator(
                             return null
                         }
                     } catch (e: Exception) {
+                        logger.e(throwable = e, metadata = mapOf("errorCode" to errorCode))
                         return null
                     }
                 }
@@ -103,7 +107,7 @@ class OauthRefreshTokenAuthenticator(
                 TOKEN_NONEXISTENT_ERROR_MESSAGE,
                 TOKEN_INVALID_GRANT_ERROR_MESSAGE,
                 JWT_INVALID_TOKEN,
-                -> {
+                    -> {
                     // Retry request with the current access_token if the original access_token used in
                     // request does not match the current access_token. This case can occur when
                     // asynchronous calls are made and are attempting to refresh the access_token where
@@ -126,7 +130,7 @@ class OauthRefreshTokenAuthenticator(
                 DISABLED_USER_ERROR_MESSAGE,
                 JWT_DISABLED_USER_ERROR_MESSAGE,
                 JWT_USER_EMAIL_MISMATCH,
-                -> {
+                    -> {
                     runBlocking {
                         appNotifier.send(LogoutEvent(true))
                     }
@@ -200,6 +204,7 @@ class OauthRefreshTokenAuthenticator(
             }
         } catch (ex: JSONException) {
             Log.d("OauthRefreshTokenAuthenticator", "Unable to get error_code from 401 response")
+            logger.e(throwable = ex, metadata = mapOf("responseBody" to responseBody))
             return null
         }
     }
@@ -240,6 +245,7 @@ class OauthRefreshTokenAuthenticator(
     }
 
     companion object {
+        private const val TAG = "OauthRefreshTokenAuthenticator"
         private const val HEADER_AUTHORIZATION = "Authorization"
 
         private const val TOKEN_EXPIRED_ERROR_MESSAGE = "token_expired"

@@ -1,15 +1,9 @@
 package org.openedx.core.utils
 
 import android.util.Log
-import com.google.firebase.crashlytics.FirebaseCrashlytics
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.openedx.core.BuildConfig
-import org.openedx.core.config.Config
 
-class Logger(private val tag: String) : KoinComponent {
-
-    private val config by inject<Config>()
+class Logger(private val tag: String) {
 
     fun d(message: () -> String) {
         if (BuildConfig.DEBUG) Log.d(tag, message())
@@ -19,11 +13,15 @@ class Logger(private val tag: String) : KoinComponent {
         if (BuildConfig.DEBUG) Log.e(tag, message())
     }
 
-    fun e(throwable: Throwable, submitCrashReport: Boolean = false) {
+    fun e(
+        throwable: Throwable,
+        submitCrashReport: Boolean = false,
+        metadata: Map<String, Any> = emptyMap()
+    ) {
         if (BuildConfig.DEBUG) throwable.printStackTrace()
-        if (submitCrashReport && config.getFirebaseConfig().enabled) {
-            FirebaseCrashlytics.getInstance().recordException(throwable)
-        }
+
+        CrashlyticsHelper.setKey(SOURCE, tag)
+        CrashlyticsHelper.reportException(throwable, metadata)
     }
 
     fun i(message: () -> String) {
@@ -32,5 +30,9 @@ class Logger(private val tag: String) : KoinComponent {
 
     fun w(message: () -> String) {
         if (BuildConfig.DEBUG) Log.w(tag, message())
+    }
+
+    companion object {
+        private const val SOURCE = "source"
     }
 }

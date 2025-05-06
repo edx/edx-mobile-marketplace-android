@@ -241,7 +241,7 @@ fun CommentItem(
 
     LaunchedEffect(comment.shouldHighlight) {
         if (comment.shouldHighlight) {
-            repeat(6) { // 3 full blinks (on + off = 2)
+            repeat(3) {
                 backgroundColor.animateTo(highlightColor, animationSpec = tween(250))
                 backgroundColor.animateTo(normalColor, animationSpec = tween(250))
             }

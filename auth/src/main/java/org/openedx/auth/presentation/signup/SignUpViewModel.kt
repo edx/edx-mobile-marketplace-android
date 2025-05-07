@@ -78,6 +78,7 @@ class SignUpViewModel(
     init {
         collectAppUpgradeEvent()
         logRegisterScreenEvent()
+        getRegistrationFields()
     }
 
     fun getRegistrationFields() {

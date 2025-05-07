@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,6 +34,7 @@ import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
+import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.FileUtil
 
 @ExperimentalCoroutinesApi
@@ -62,6 +64,8 @@ class AppViewModelTest {
         every { analytics.logEvent(any(), any()) } returns Unit
         every { preferencesManager.user } returns user
         every { preferencesManager.appThemeMode } returns appThemeMode
+        mockkObject(CrashlyticsHelper)
+        every { CrashlyticsHelper.setUserId(any()) } returns Unit
     }
 
     @After

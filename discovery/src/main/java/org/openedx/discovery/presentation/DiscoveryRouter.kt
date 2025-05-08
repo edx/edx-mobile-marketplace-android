@@ -8,6 +8,7 @@ interface DiscoveryRouter {
         fm: FragmentManager,
         courseId: String,
         courseTitle: String,
+        showTrackSelection: Boolean,
     )
 
     fun navigateToLogistration(fm: FragmentManager, courseId: String?)

@@ -301,6 +301,7 @@ class DeepLinkRouter(
                 fm = fm,
                 courseId = courseId,
                 courseTitle = courseTitle,
+                showTrackSelection = false,
             )
         }
     }

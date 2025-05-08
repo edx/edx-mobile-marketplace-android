@@ -116,7 +116,11 @@ class IAPEventLogger(
     }
 
     fun loadIAPScreenEvent() {
-        val event = IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED
+        val event =
+            if (purchaseFlowData?.iapFlow == IAPFlow.TRACK_SELECTION)
+                IAPAnalyticsEvent.IAP_TRACK_SELECTION_VIEWED
+            else
+                IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED
         val params = buildMap {
             put(IAPAnalyticsKeys.NAME.key, event.biValue)
             purchaseFlowData?.screenName?.takeIfNotEmpty()?.let { screenName ->
@@ -125,6 +129,10 @@ class IAPEventLogger(
             putAll(getIAPEventParams())
         }
         analytics.logScreenEvent(screenName = event.eventName, params = params)
+    }
+
+    fun logContinueToFreeTrackClickedEvent() {
+        logIAPEvent(IAPAnalyticsEvent.IAP_CONTINUE_WITH_FREE_TRACK_CLICKED)
     }
 
     private fun getIAPEventParams(): Map<String, Any?> {

@@ -47,7 +47,15 @@ enum class IAPAnalyticsEvent(val eventName: String, val biValue: String) {
     IAP_VALUE_PROP_VIEWED(
         "Payments:Value Prop Viewed",
         "edx.bi.app.payments.value_prop.viewed"
-    )
+    ),
+    IAP_TRACK_SELECTION_VIEWED(
+        "Payments:Track Selection Viewed",
+        "edx.bi.app.payments.track_selection.viewed"
+    ),
+    IAP_CONTINUE_WITH_FREE_TRACK_CLICKED(
+        "Payments:Continue With Free Track Clicked",
+        "edx.bi.app.payments.continue_with_free_track.clicked"
+    ),
 }
 
 enum class IAPAnalyticsKeys(val key: String) {

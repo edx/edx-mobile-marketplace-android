@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -139,7 +140,8 @@ fun StaticSearchBar(
     Row(
         modifier = modifier
             .testTag("tf_search")
-            .then(Modifier
+            .then(
+                Modifier
                 .background(
                     MaterialTheme.appColors.textFieldBackground,
                     MaterialTheme.appShapes.textFieldShape
@@ -1585,6 +1587,23 @@ fun OpenEdxAlertDialog(
                 )
             }
         },
+    )
+}
+
+@Composable
+fun OpenEdxRadioButton(
+    contentDescription: String = "",
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val imageRes = if (isSelected) R.drawable.core_ic_radio_checked else R.drawable.core_ic_radio_unchecked
+
+    Image(
+        painter = painterResource(id = imageRes),
+        contentDescription = contentDescription,
+        modifier = Modifier
+            .size(24.dp)
+            .clickable(onClick = onClick)
     )
 }
 

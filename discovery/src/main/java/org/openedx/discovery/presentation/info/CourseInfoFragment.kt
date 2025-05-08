@@ -121,6 +121,7 @@ class CourseInfoFragment : Fragment() {
                         viewModel.onSuccessfulCourseEnrollment(
                             fragmentManager = requireActivity().supportFragmentManager,
                             courseId = (uiState as CourseInfoUIState.CourseInfo).enrollmentSuccess.get(),
+                            showTrackSelection = true,
                         )
                         // Clear after navigation
                         (uiState as CourseInfoUIState.CourseInfo).enrollmentSuccess.set("")

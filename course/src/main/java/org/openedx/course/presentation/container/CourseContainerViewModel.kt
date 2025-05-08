@@ -84,6 +84,7 @@ import org.openedx.core.R as CoreR
 class CourseContainerViewModel(
     val courseId: String,
     var courseName: String,
+    var showTrackSelection: Boolean,
     private var resumeBlockId: String,
     private val config: Config,
     private val interactor: CourseInteractor,
@@ -165,6 +166,10 @@ class CourseContainerViewModel(
 
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
+
+    private var _canShowTrackSelection = MutableStateFlow(false)
+    val canShowTrackSelection: StateFlow<Boolean>
+        get() = _canShowTrackSelection.asStateFlow()
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
@@ -248,6 +253,7 @@ class CourseContainerViewModel(
                     courseName = courseInfoOverview.name
                     _canShowUpgradeButton.value =
                         iapInteractor.isIAPEnabled && courseDetails.isUpgradeable
+                    _canShowTrackSelection.value = showTrackSelection && _canShowUpgradeButton.value
                     loadCourseImage(courseInfoOverview.media?.image?.large)
                     _showProgress.value = false
                     if (courseDetails.hasAccess.isFalse()) {
@@ -470,6 +476,11 @@ class CourseContainerViewModel(
                 )
             }
         }
+    }
+
+    fun disableTrackSelection() {
+        showTrackSelection = false
+        _canShowTrackSelection.value = false
     }
 
     fun showFeedbackScreen(context: Context, flowType: String, message: String) {

@@ -1,13 +1,21 @@
 package org.openedx.core.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -18,14 +26,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.openedx.core.R
 import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.extension.isNotNullOrEmpty
+import org.openedx.core.presentation.iap.CourseTrack
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPErrorDialogType
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -38,6 +51,7 @@ fun ValuePropUpgradeFeatures(modifier: Modifier = Modifier, courseName: String) 
     Column(
         modifier = modifier
             .background(color = MaterialTheme.appColors.background)
+            .verticalScroll(rememberScrollState())
             .padding(all = 16.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
@@ -76,6 +90,129 @@ fun CheckmarkView(text: String) {
             color = MaterialTheme.appColors.textPrimary,
             style = MaterialTheme.appTypography.labelLarge
         )
+    }
+}
+
+@Composable
+fun TrackSelectionFeature(
+    modifier: Modifier = Modifier,
+    courseName: String,
+    price: String,
+    expiryDate: String = "",
+    selectedTrack: CourseTrack,
+    onTrackSelection: (option: CourseTrack) -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .background(MaterialTheme.appColors.background)
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .fillMaxWidth(),
+            text = stringResource(
+                id = R.string.iap_upgrade_course,
+                courseName
+            ),
+            color = MaterialTheme.appColors.textPrimary,
+            style = MaterialTheme.appTypography.headlineSmall,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(id = R.string.iap_track_selection_title),
+            color = MaterialTheme.appColors.textPrimary,
+            textAlign = TextAlign.Start,
+            style = MaterialTheme.appTypography.titleLarge,
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        CourseTrack.entries.forEach { option ->
+            OptionCard(
+                courseTrack = option,
+                price = price,
+                expiryDate = expiryDate,
+                isSelected = selectedTrack == option,
+                onClick = { onTrackSelection(option) },
+            )
+        }
+    }
+}
+
+@Composable
+fun OptionCard(
+    courseTrack: CourseTrack,
+    price: String = "",
+    expiryDate: String = "",
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val configuration = LocalConfiguration.current
+    val width =
+        if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) configuration.screenWidthDp
+        else (configuration.screenWidthDp / 0.33).toInt()
+
+    Card(
+        modifier = Modifier
+            .width(width.dp)
+            .padding(vertical = 4.dp)
+            .clickable(onClick = onClick),
+        border = BorderStroke(
+            1.dp,
+            if (isSelected) MaterialTheme.appColors.primary
+            else MaterialTheme.appColors.textFieldBorder
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 20.dp, horizontal = 16.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            OpenEdxRadioButton(
+                contentDescription = stringResource(id = courseTrack.title, price),
+                isSelected = isSelected,
+                onClick = onClick,
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 8.dp),
+            ) {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(id = courseTrack.title, price),
+                    color = MaterialTheme.appColors.textPrimary,
+                    style = MaterialTheme.appTypography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                if (courseTrack == CourseTrack.FREE && expiryDate.isNotNullOrEmpty()) {
+                    Text(
+                        text = stringResource(id = R.string.core_label_expires, expiryDate),
+                        color = MaterialTheme.appColors.textPrimary,
+                        style = MaterialTheme.appTypography.bodyMedium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(courseTrack.description, expiryDate),
+                    style = MaterialTheme.appTypography.bodyMedium,
+                    color = MaterialTheme.appColors.textPrimaryVariant,
+                )
+            }
+        }
     }
 }
 
@@ -486,5 +623,21 @@ private fun PreviewCourseAlreadyPurchasedExecuteErrorDialog() {
 private fun PreviewNoSkuErrorDialog() {
     OpenEdXTheme {
         NoSkuErrorDialog(onConfirm = {})
+    }
+}
+
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(device = Devices.NEXUS_9, uiMode = Configuration.ORIENTATION_LANDSCAPE)
+@Composable
+fun TrackSelectionFeaturePreview() {
+    OpenEdXTheme {
+        TrackSelectionFeature(
+            selectedTrack = CourseTrack.CERTIFICATE,
+            courseName = "Test Course",
+            price = "Free",
+            onTrackSelection = { },
+        )
     }
 }

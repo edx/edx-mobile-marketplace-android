@@ -9,6 +9,7 @@ data class PurchaseFlowData(
     var screenName: String? = null,
     var courseId: String? = null,
     var courseName: String? = null,
+    var courseExpiresDate: String? = null,
     var isSelfPaced: Boolean? = null,
     var componentId: String? = null,
     var productInfo: ProductInfo? = null,
@@ -56,7 +57,8 @@ data class PurchaseFlowData(
 enum class IAPFlow(val value: String) {
     RESTORE("restore"),
     SILENT("silent"),
-    USER_INITIATED("user_initiated");
+    USER_INITIATED("user_initiated"),
+    TRACK_SELECTION("track_selection");
 
     fun value(): String {
         return this.name.lowercase()

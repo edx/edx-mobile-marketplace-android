@@ -157,7 +157,7 @@ fun OptionCard(
     val configuration = LocalConfiguration.current
     val width =
         if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) configuration.screenWidthDp
-        else (configuration.screenWidthDp / 0.33).toInt()
+        else (configuration.screenWidthDp * 0.5).toInt()
 
     Card(
         modifier = Modifier

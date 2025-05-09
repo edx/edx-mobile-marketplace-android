@@ -46,6 +46,7 @@ import org.openedx.core.presentation.global.WhatsNewGlobalManager
 import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRouter
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.CalendarManager
+import org.openedx.core.system.DummyPushManager
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
@@ -217,8 +218,11 @@ val appModule = module {
     single<IAPAnalytics> { get<AnalyticsManager>() }
     single<NotificationsAnalytics> { get<AnalyticsManager>() }
 
-    single { PushManager(get(), get(), get()) }
-    single<PushGlobalManager> { get<PushManager>() }
+    single { DummyPushManager() }
+    single<PushGlobalManager> {
+        if (get<Config>().isPushNotificationsEnabled()) get<PushManager>()
+        else get<DummyPushManager>()
+    }
 
     factory { AgreementProvider(get(), get()) }
     factory { FacebookAuthHelper() }

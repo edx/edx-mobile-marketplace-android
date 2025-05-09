@@ -18,3 +18,13 @@ interface PushGlobalManager {
 
     fun logNotificationTappedEvent(data: Map<String, String>)
 }
+
+class DummyPushManager : PushGlobalManager {
+    override suspend fun getUnreadNotificationsCount() = 0
+    override suspend fun markNotificationAsRead(notificationId: Int) {}
+    override fun showNotificationsPrimer(context: Context, fragmentManager: FragmentManager) {}
+    override fun logNotificationPermissionStatusEvent(context: Context) {}
+    override fun logNotificationBellClickedEvent(hasUnreadNotifications: Boolean) {}
+    override fun logNotificationReceivedEvent(data: Map<String, String>) {}
+    override fun logNotificationTappedEvent(data: Map<String, String>) {}
+}

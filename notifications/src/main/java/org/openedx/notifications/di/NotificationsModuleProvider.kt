@@ -4,6 +4,7 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.openedx.core.di.KoinModuleProvider
+import org.openedx.notifications.PushManager
 import org.openedx.notifications.data.repository.NotificationsRepository
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.presentation.inbox.NotificationsInboxViewModel
@@ -13,6 +14,8 @@ import org.openedx.notifications.presentation.settings.NotificationsSettingsView
 class NotificationsModuleProvider : KoinModuleProvider {
 
     private val notificationsModule = module {
+        single { PushManager(get(), get(), get()) }
+
         single { NotificationsRepository(get(), get()) }
         factory { NotificationsInteractor(get()) }
 

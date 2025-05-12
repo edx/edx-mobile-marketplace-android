@@ -16,6 +16,9 @@ class WhatsNewManager(
     private val whatsNewPreferences: WhatsNewPreferences,
     private val appData: AppData
 ) : WhatsNewGlobalManager {
+
+    private val logger = Logger(TAG)
+
     fun getNewestData(): org.openedx.whatsnew.domain.model.WhatsNewItem {
         val jsonString = context.resources.openRawResource(R.raw.whats_new)
             .bufferedReader()
@@ -36,7 +39,7 @@ class WhatsNewManager(
                         appVersion.hasSameMajorMinorVersion(dataVersion)
             }
         } catch (e: Exception) {
-            Logger(TAG).e(throwable = e)
+            logger.e(throwable = e)
             false
         }
     }

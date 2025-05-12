@@ -14,6 +14,7 @@ import org.openedx.core.utils.Logger
 object TextConverter : KoinComponent {
 
     private const val TAG = "TextConverter"
+    private val logger = Logger(TAG)
     private val config by inject<Config>()
 
     fun htmlTextToLinkedText(html: String): LinkedText {
@@ -91,7 +92,7 @@ object TextConverter : KoinComponent {
                 result = text.replaceRange(startIndex, endIndex, it + "\n")
             }
         } catch (e: Exception) {
-            Logger(TAG).e(throwable = e, metadata = mapOf("text" to text))
+            logger.e(throwable = e, metadata = mapOf("text" to text))
         }
         return result
     }

@@ -23,6 +23,8 @@ object TimeUtils {
 
     private const val SEVEN_DAYS_IN_MILLIS = 604800000L
 
+    private val logger = Logger(TAG)
+
     fun getCurrentTime(): Long {
         return Calendar.getInstance().timeInMillis
     }
@@ -53,7 +55,7 @@ object TimeUtils {
             )
             applicationDateFormat.format(courseDateFormat.parse(text)!!)
         } catch (e: Exception) {
-            Logger(TAG).e(throwable = e, metadata = mapOf("time" to text))
+            logger.e(throwable = e, metadata = mapOf("time" to text))
             ""
         }
     }

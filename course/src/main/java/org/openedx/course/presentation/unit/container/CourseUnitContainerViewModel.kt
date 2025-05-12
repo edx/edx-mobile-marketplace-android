@@ -38,6 +38,8 @@ class CourseUnitContainerViewModel(
     private val corePreferences: CorePreferences,
 ) : BaseViewModel() {
 
+    private val logger = Logger(TAG)
+
     private val blocks = ArrayList<Block>()
 
     val isCourseExpandableSectionsEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
@@ -102,7 +104,7 @@ class CourseUnitContainerViewModel(
 
                 setupCurrentIndex(componentId)
             } catch (e: Exception) {
-                Logger(TAG).e(throwable = e)
+                logger.e(throwable = e)
             }
         }
     }

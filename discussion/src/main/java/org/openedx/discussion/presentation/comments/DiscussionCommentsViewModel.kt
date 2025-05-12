@@ -37,6 +37,8 @@ class DiscussionCommentsViewModel(
     analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, thread.id, analytics) {
 
+    private val logger = Logger(TAG)
+
     val title = resourceManager.getString(thread.type.resId)
 
     var thread: Thread
@@ -154,7 +156,7 @@ class DiscussionCommentsViewModel(
                 )
                 sendThreadUpdated()
             } catch (e: Exception) {
-                Logger(TAG).e(throwable = e)
+                logger.e(throwable = e)
             }
         }
     }

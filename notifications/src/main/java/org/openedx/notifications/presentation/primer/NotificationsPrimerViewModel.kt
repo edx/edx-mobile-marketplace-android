@@ -20,6 +20,8 @@ class NotificationsPrimerViewModel(
     private val analytics: NotificationsAnalytics,
 ) : BaseViewModel() {
 
+    private val logger = Logger(TAG)
+
     private val _uiState = MutableStateFlow<PrimerUIState>(PrimerUIState.ShowDialog)
     val uiState: StateFlow<PrimerUIState> = _uiState.asStateFlow()
 
@@ -40,7 +42,7 @@ class NotificationsPrimerViewModel(
                 interactor.updateNotificationsConfiguration(true)
                 resetNotificationsPrimerConfiguration()
             } catch (e: Exception) {
-                Logger(TAG).e(throwable = e)
+                logger.e(throwable = e)
             } finally {
                 _uiState.value = PrimerUIState.DismissDialog
             }

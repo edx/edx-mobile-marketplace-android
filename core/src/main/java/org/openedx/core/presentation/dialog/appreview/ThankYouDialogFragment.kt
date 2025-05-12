@@ -23,6 +23,7 @@ import org.openedx.core.utils.Logger
 
 class ThankYouDialogFragment : BaseAppReviewDialogFragment() {
 
+    private val logger = Logger(TAG)
     private val reviewManager: ReviewManager by inject()
 
     override fun onCreateView(
@@ -81,7 +82,7 @@ class ThankYouDialogFragment : BaseAppReviewDialogFragment() {
                     onRateAppClick()
                 }
             } catch (e: ReviewException) {
-                Logger(TAG).e(throwable = e)
+                logger.e(throwable = e)
             }
         }
     }

@@ -43,6 +43,8 @@ class DiscussionThreadsViewModel(
     analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, "", analytics) {
 
+    private val logger = Logger(TAG)
+
     private val _uiState =
         MutableLiveData<DiscussionThreadsUIState>(DiscussionThreadsUIState.Loading)
     val uiState: LiveData<DiscussionThreadsUIState>
@@ -204,7 +206,7 @@ class DiscussionThreadsViewModel(
                 interactor.markBlocksCompletion(courseId, listOf(blockId))
             } catch (e: Exception) {
                 isBlockAlreadyCompleted = false
-                Logger(TAG).e(throwable = e)
+                logger.e(throwable = e)
             }
         }
     }

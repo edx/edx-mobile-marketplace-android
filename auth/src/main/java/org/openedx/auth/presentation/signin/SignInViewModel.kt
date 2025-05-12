@@ -36,6 +36,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
+import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.Logger
 import retrofit2.HttpException
 import org.openedx.core.R as CoreRes
@@ -199,6 +200,7 @@ class SignInViewModel(
     private fun setMetadata(authType: AuthType) {
         preferencesManager.user?.let {
             analytics.setUserIdForSession(it.id)
+            CrashlyticsHelper.setUserId(it.id.toString())
         }
         preferencesManager.lastSignInType = authType.name
     }

@@ -103,6 +103,8 @@ class CourseContainerViewModel(
     val courseRouter: CourseRouter,
 ) : BaseViewModel() {
 
+    private val logger = Logger(TAG)
+
     private val _dataReady = MutableLiveData<Boolean?>()
     val dataReady: LiveData<Boolean?>
         get() = _dataReady
@@ -314,7 +316,7 @@ class CourseContainerViewModel(
                     _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 }
             } catch (e: Exception) {
-                Logger(TAG).e(
+                logger.e(
                     throwable = e, metadata = mapOf(
                         "courseId" to courseId,
                         "isIAPFlow" to isIAPFlow,

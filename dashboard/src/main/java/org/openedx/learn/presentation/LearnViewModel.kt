@@ -29,6 +29,9 @@ class LearnViewModel(
     private val pushManager: PushGlobalManager,
     private val pushNotifier: PushNotifier
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
+
     private val _uiState = MutableStateFlow(
         LearnUIState(
             if (openTab == LearnTab.PROGRAMS.name) {
@@ -78,7 +81,7 @@ class LearnViewModel(
                     val unreadNotifications = pushManager.getUnreadNotificationsCount()
                     _uiState.update { it.copy(hasUnreadNotifications = unreadNotifications > 0) }
                 } catch (e: Exception) {
-                    Logger(TAG).e(throwable = e)
+                    logger.e(throwable = e)
                 }
             }
         }

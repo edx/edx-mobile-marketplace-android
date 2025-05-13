@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
+import org.openedx.core.utils.Logger
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.presentation.NotificationsAnalytics
@@ -26,6 +27,8 @@ class NotificationsSettingsViewModel(
     private val analytics: NotificationsAnalytics,
     preference: NotificationsPreferences,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableStateFlow<NotificationsSettingsUiState>(
         NotificationsSettingsUiState.Configuration(
@@ -57,6 +60,7 @@ class NotificationsSettingsViewModel(
                     val response = interactor.updateNotificationsConfiguration(value)
                     enablePushNotifications(enabled = response.updatedValue)
                 } catch (e: Exception) {
+                    logger.e(throwable = e, metadata = mapOf("preference" to value))
                     showErrorMessage()
                 }
             }
@@ -71,6 +75,7 @@ class NotificationsSettingsViewModel(
                 val response = interactor.fetchNotificationsConfiguration()
                 enablePushNotifications(enabled = response.discussionsPushEnabled)
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 showErrorMessage()
             }
         }
@@ -195,5 +200,9 @@ class NotificationsSettingsViewModel(
                 putAll(params)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "NotificationsSettingsViewModel"
     }
 }

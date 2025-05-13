@@ -15,6 +15,7 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileAnalyticsEvent
@@ -30,6 +31,7 @@ class ManageAccountViewModel(
     private val analytics: ProfileAnalytics,
     val profileRouter: ProfileRouter
 ) : BaseViewModel() {
+    private val logger = Logger(TAG)
 
     private val _uiState: MutableStateFlow<ManageAccountUIState> = MutableStateFlow(ManageAccountUIState.Loading)
     internal val uiState: StateFlow<ManageAccountUIState> = _uiState.asStateFlow()
@@ -79,6 +81,7 @@ class ManageAccountViewModel(
                 } else {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
                 }
+                logger.e(throwable = e)
             } finally {
                 _isUpdating.value = false
             }
@@ -116,5 +119,9 @@ class ManageAccountViewModel(
                 putAll(params)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "ManageAccountViewModel"
     }
 }

@@ -11,6 +11,7 @@ import org.openedx.core.Validator
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.EdxError
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileAnalyticsEvent
@@ -25,6 +26,8 @@ class DeleteProfileViewModel(
     private val validator: Validator,
     private val analytics: ProfileAnalytics,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableLiveData<DeleteProfileFragmentUIState>()
     val uiState: LiveData<DeleteProfileFragmentUIState>
@@ -62,6 +65,7 @@ class DeleteProfileViewModel(
                         DeleteProfileFragmentUIState.Error(resourceManager.getString(org.openedx.profile.R.string.profile_password_is_incorrect))
                 }
                 logDeleteProfileEvent(false)
+                logger.e(throwable = e)
             }
         }
     }
@@ -88,5 +92,9 @@ class DeleteProfileViewModel(
                 putAll(param)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "DeleteProfileViewModel"
     }
 }

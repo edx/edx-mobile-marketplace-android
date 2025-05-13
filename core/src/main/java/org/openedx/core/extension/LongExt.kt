@@ -1,5 +1,6 @@
 package org.openedx.core.extension
 
+import org.openedx.core.utils.Logger
 import kotlin.math.log10
 import kotlin.math.pow
 
@@ -12,6 +13,7 @@ fun Long.toFileSize(round: Int = 2): String {
             "%." + round + "f", this / 1024.0.pow(digitGroups.toDouble())
         ) + " " + units[digitGroups]
     } catch (e: Exception) {
+        Logger("LongExt").e(throwable = e)
         println(e.toString())
     }
     return ""

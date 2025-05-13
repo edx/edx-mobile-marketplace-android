@@ -144,9 +144,7 @@ class PushManager(
                 .takeIf { it[PARAM_NOTIFICATION_DOMAIN] == NotificationsAnalyticsKey.DISCUSSION.key }
                 ?: return
         } catch (e: Exception) {
-            logger.e(
-                throwable = IllegalArgumentException("$EXCEPTION_MESSAGE $data", e)
-            )
+            logger.e(throwable = IllegalArgumentException("$EXCEPTION_MESSAGE $data", e))
             return
         }
 
@@ -177,7 +175,7 @@ class PushManager(
     }.filterValues { it.isNotNullOrEmpty() }
 
     companion object {
-        const val TAG = "PushManager"
+        private const val TAG = "PushManager"
 
         const val PRIMER_MAX_DISMISSAL_COUNT = 3
         const val PRIMER_INITIAL_RESHOW_DAYS = 7

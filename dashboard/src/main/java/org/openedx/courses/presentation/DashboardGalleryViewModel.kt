@@ -168,6 +168,7 @@ class DashboardGalleryViewModel(
                 } else {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
                 }
+                logger.e(throwable = e, metadata = mapOf("isIAPFlow" to isIAPFlow))
             } finally {
                 _updating.value = false
                 isLoading = false
@@ -338,7 +339,7 @@ class DashboardGalleryViewModel(
                     }
                 )
             } catch (e: Exception) {
-                logger.d { "Error getting enrolled courses: $e" }
+                logger.e(throwable = e)
             }
         }
     }

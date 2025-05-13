@@ -39,6 +39,7 @@ import org.openedx.core.system.notifier.CourseOpenBlock
 import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.system.notifier.RefreshPLSBanner
 import org.openedx.core.utils.FileUtil
+import org.openedx.core.utils.Logger
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
@@ -69,6 +70,8 @@ class CourseOutlineViewModel(
     workerController,
     coreAnalytics
 ) {
+    private val logger = Logger(TAG)
+
     val isCourseNestedListEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
     private val _uiState = MutableStateFlow<CourseOutlineUIState>(CourseOutlineUIState.Loading)
@@ -249,6 +252,7 @@ class CourseOutlineViewModel(
                 } else {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
                 }
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }
@@ -301,6 +305,7 @@ class CourseOutlineViewModel(
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_dates_shift_dates_unsuccessful_msg)))
                 }
                 onResetDates(false)
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }
@@ -439,5 +444,9 @@ class CourseOutlineViewModel(
                 put(CourseAnalyticsKey.SCREEN_NAME.key, CourseAnalyticsKey.COURSE_DASHBOARD.key)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "CourseOutlineViewModel"
     }
 }

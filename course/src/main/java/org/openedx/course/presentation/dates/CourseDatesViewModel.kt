@@ -34,6 +34,7 @@ import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.RefreshDates
 import org.openedx.core.system.notifier.RefreshPLSBanner
+import org.openedx.core.utils.Logger
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
@@ -56,6 +57,8 @@ class CourseDatesViewModel(
     private val config: Config,
     val courseRouter: CourseRouter,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     var isSelfPaced = true
 
@@ -129,6 +132,7 @@ class CourseDatesViewModel(
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection)))
                 }
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             } finally {
                 courseNotifier.send(CourseLoading(false))
             }
@@ -149,6 +153,7 @@ class CourseDatesViewModel(
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_dates_shift_dates_unsuccessful_msg)))
                 }
                 onResetDates(false)
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }
@@ -158,6 +163,10 @@ class CourseDatesViewModel(
             courseStructure?.blockData?.getVerticalBlocks()
                 ?.find { it.descendants.contains(blockId) }
         } catch (e: Exception) {
+            logger.e(
+                throwable = e,
+                metadata = mapOf("blockId" to blockId, "courseId" to courseId)
+            )
             null
         }
     }
@@ -167,6 +176,10 @@ class CourseDatesViewModel(
             courseStructure?.blockData?.getSequentialBlocks()
                 ?.find { it.descendants.contains(blockId) }
         } catch (e: Exception) {
+            logger.e(
+                throwable = e,
+                metadata = mapOf("blockId" to blockId, "courseId" to courseId)
+            )
             null
         }
     }
@@ -308,5 +321,9 @@ class CourseDatesViewModel(
                 isSuccess?.let { put(CourseAnalyticsKey.SUCCESS.key, it) }
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "CourseDatesViewModel"
     }
 }

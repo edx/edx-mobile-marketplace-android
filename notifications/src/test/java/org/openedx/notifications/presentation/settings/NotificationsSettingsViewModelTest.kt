@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Deferred
@@ -27,6 +28,7 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.R
 import org.openedx.core.UIMessage
+import org.openedx.core.utils.Logger
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.NotificationsConfiguration
@@ -68,6 +70,9 @@ class NotificationsSettingsViewModelTest {
 
         every { NotificationManagerCompat.from(any()) } returns notificationManager
         every { context.getString(R.string.core_service_unavailable_message) } returns somethingWrong
+
+        mockkConstructor(Logger::class)
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
 
     @Test

@@ -39,7 +39,7 @@ object CrashlyticsHelper : KoinComponent {
      */
     fun reportException(
         exception: Throwable,
-        metadata: Map<String, Any> = emptyMap(),
+        metadata: Map<String, Any?> = emptyMap(),
     ) = runIfEnabled {
         metadata.forEach {
             log(it.toString())

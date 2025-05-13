@@ -119,6 +119,7 @@ class SignInViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(CoreRes.string.core_error_unknown_error))
                 }
+                logger.e(throwable = e)
             }
             _uiState.update { it.copy(showProgress = false) }
         }

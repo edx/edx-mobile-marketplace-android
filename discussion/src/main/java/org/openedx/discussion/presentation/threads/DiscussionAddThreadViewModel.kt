@@ -9,6 +9,7 @@ import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
@@ -22,6 +23,8 @@ class DiscussionAddThreadViewModel(
     private val notifier: DiscussionNotifier,
     private val analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, "", analytics) {
+
+    private val logger = Logger(TAG)
 
     private val _newThread = MutableLiveData<org.openedx.discussion.domain.model.Thread>()
     val newThread: LiveData<org.openedx.discussion.domain.model.Thread>
@@ -55,6 +58,7 @@ class DiscussionAddThreadViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
+                logger.e(throwable = e)
             }
             _isLoading.value = false
         }
@@ -76,5 +80,9 @@ class DiscussionAddThreadViewModel(
         viewModelScope.launch {
             notifier.send(DiscussionThreadAdded())
         }
+    }
+
+    companion object {
+        private const val TAG = "DiscussionAddThreadViewModel"
     }
 }

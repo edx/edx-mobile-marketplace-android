@@ -531,6 +531,7 @@ class CourseContainerViewModel(
             try {
                 interactor.getCourseStructure(courseId, isNeedRefresh = true)
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 _errorMessage.value =
                     resourceManager.getString(CoreR.string.core_error_unknown_error)
             }

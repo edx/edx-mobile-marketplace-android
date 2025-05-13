@@ -1,25 +1,35 @@
 package org.openedx.profile.presentation.edit
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import org.openedx.core.R
-import org.openedx.core.UIMessage
-import org.openedx.profile.domain.model.Account
-import org.openedx.core.domain.model.ProfileImage
-import org.openedx.core.system.ResourceManager
-import org.openedx.profile.domain.interactor.ProfileInteractor
-import org.openedx.profile.presentation.ProfileAnalytics
-import org.openedx.profile.system.notifier.AccountUpdated
-import org.openedx.profile.system.notifier.ProfileNotifier
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
+import org.openedx.core.R
+import org.openedx.core.UIMessage
+import org.openedx.core.domain.model.ProfileImage
+import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
+import org.openedx.profile.domain.interactor.ProfileInteractor
+import org.openedx.profile.domain.model.Account
+import org.openedx.profile.presentation.ProfileAnalytics
+import org.openedx.profile.system.notifier.AccountUpdated
+import org.openedx.profile.system.notifier.ProfileNotifier
 import java.io.File
 import java.net.UnknownHostException
 
@@ -65,6 +75,8 @@ class EditProfileViewModelTest {
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
         every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
         every { analytics.logScreenEvent(any(), any()) } returns Unit
+        mockkConstructor(Logger::class)
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
 
     @After

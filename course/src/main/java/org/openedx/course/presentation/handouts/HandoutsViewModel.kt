@@ -9,6 +9,7 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.domain.model.AnnouncementModel
 import org.openedx.core.domain.model.HandoutsModel
+import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -21,6 +22,8 @@ class HandoutsViewModel(
     private val interactor: CourseInteractor,
     private val courseAnalytics: CourseAnalytics,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     val apiHostUrl get() = config.getApiHostURL()
 
@@ -53,7 +56,10 @@ class HandoutsViewModel(
                     }
                 }
             } catch (e: Exception) {
-                //ignore e.printStackTrace()
+                logger.e(
+                    throwable = e,
+                    metadata = mapOf("handoutsType" to handoutsType, "courseId" to courseId)
+                )
                 emptyState = true
             }
             if (emptyState) {
@@ -120,5 +126,9 @@ class HandoutsViewModel(
                 put(CourseAnalyticsKey.COURSE_ID.key, courseId)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "HandoutsViewModel"
     }
 }

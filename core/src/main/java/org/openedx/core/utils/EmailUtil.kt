@@ -9,6 +9,7 @@ import android.widget.Toast
 import org.openedx.core.R
 
 object EmailUtil {
+    private val logger = Logger("EmailUtil")
 
     fun showFeedbackScreen(
         context: Context,
@@ -63,6 +64,7 @@ object EmailUtil {
                     Toast.LENGTH_SHORT
                 ).show()
             }
+            logger.e(throwable = ex)
         }
     }
 

@@ -115,6 +115,7 @@ class NotificationsInboxViewModel(
                 } else {
                     _uiState.value = InboxUIState.Fallback(state = InboxFullScreenState.ServerError)
                 }
+                logger.e(throwable = e)
             } finally {
                 isLoading = false
                 _isRefreshing.value = false

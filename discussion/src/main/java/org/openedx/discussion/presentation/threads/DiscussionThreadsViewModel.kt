@@ -139,6 +139,7 @@ class DiscussionThreadsViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             } finally {
                 _isUpdating.value = false
                 isLoading = false
@@ -206,7 +207,10 @@ class DiscussionThreadsViewModel(
                 interactor.markBlocksCompletion(courseId, listOf(blockId))
             } catch (e: Exception) {
                 isBlockAlreadyCompleted = false
-                logger.e(throwable = e)
+                logger.e(
+                    throwable = e,
+                    metadata = mapOf("courseId" to courseId, "blockId" to blockId),
+                )
             }
         }
     }

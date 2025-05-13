@@ -34,6 +34,7 @@ object TimeUtils {
             val parsePosition = ParsePosition(0)
             return ISO8601Utils.parse(text, parsePosition)
         } catch (e: ParseException) {
+            logger.e(throwable = e, metadata = mapOf("time" to text))
             null
         }
     }
@@ -43,6 +44,7 @@ object TimeUtils {
             val sdf = SimpleDateFormat(FORMAT_ISO_8601_WITH_TIME_ZONE, Locale.getDefault())
             sdf.parse(text)
         } catch (e: ParseException) {
+            logger.e(throwable = e, metadata = mapOf("time" to text))
             null
         }
     }

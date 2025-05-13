@@ -313,6 +313,7 @@ class DiscussionCommentsViewModel(
             _uiMessage.value =
                 UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
         }
+        logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
     }
 
     companion object {

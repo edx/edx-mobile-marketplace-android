@@ -9,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,7 +37,6 @@ import org.openedx.core.domain.model.DashboardCourseList
 import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.presentation.IAPAnalytics
-import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
@@ -44,7 +44,9 @@ import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.PushEvent
+import org.openedx.core.system.notifier.PushNotifier
 import org.openedx.core.system.notifier.app.AppNotifier
+import org.openedx.core.utils.Logger
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 import java.net.UnknownHostException
 
@@ -95,6 +97,8 @@ class DashboardViewModelTest {
         every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
         every { appNotifier.notifier } returns emptyFlow()
         every { config.getApiHostURL() } returns "http://localhost:8000"
+        mockkConstructor(Logger::class)
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
 
     @After

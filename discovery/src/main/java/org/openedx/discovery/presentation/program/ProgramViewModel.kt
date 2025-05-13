@@ -19,6 +19,7 @@ import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.DiscoveryNotifier
 import org.openedx.core.system.notifier.NavigationToDiscovery
+import org.openedx.core.utils.Logger
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.presentation.DiscoveryRouter
 
@@ -32,6 +33,8 @@ class ProgramViewModel(
     private val resourceManager: ResourceManager,
     private val interactor: DiscoveryInteractor,
 ) : BaseViewModel() {
+    private val logger = Logger(TAG)
+
     val uriScheme: String get() = config.getUriScheme()
 
     val programConfig get() = config.getProgramConfig().webViewConfig
@@ -68,6 +71,7 @@ class ProgramViewModel(
                 } else {
                     _uiState.emit(ProgramUIState.CourseEnrolled(courseId, false))
                 }
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }
@@ -110,5 +114,9 @@ class ProgramViewModel(
         viewModelScope.launch {
             _uiState.emit(ProgramUIState.Error(if (networkConnection.isOnline()) ErrorType.UNKNOWN_ERROR else ErrorType.CONNECTION_ERROR))
         }
+    }
+
+    companion object {
+        private const val TAG = "ProgramViewModel"
     }
 }

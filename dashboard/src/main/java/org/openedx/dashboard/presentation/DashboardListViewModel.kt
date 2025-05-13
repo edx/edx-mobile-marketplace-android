@@ -178,6 +178,7 @@ class DashboardListViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
+                logger.e(throwable = e)
             }
             _updating.value = false
             isLoading = false
@@ -287,6 +288,7 @@ class DashboardListViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
+                logger.e(throwable = e)
             }
             _updating.value = false
             isLoading = false

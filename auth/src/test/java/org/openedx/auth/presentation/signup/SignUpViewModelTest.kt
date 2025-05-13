@@ -6,6 +6,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.mockkObject
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,6 +47,8 @@ import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
+import org.openedx.core.utils.CrashlyticsHelper
+import org.openedx.core.utils.Logger
 import java.net.UnknownHostException
 
 @ExperimentalCoroutinesApi
@@ -122,6 +126,10 @@ class SignUpViewModelTest {
         every { config.getMicrosoftConfig() } returns MicrosoftConfig()
         every { config.getMicrosoftConfig() } returns MicrosoftConfig()
         every { analytics.logScreenEvent(any(), any()) } returns Unit
+        mockkConstructor(Logger::class)
+        mockkObject(CrashlyticsHelper)
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
+        every { CrashlyticsHelper.setUserId(any()) } returns Unit
     }
 
     @After

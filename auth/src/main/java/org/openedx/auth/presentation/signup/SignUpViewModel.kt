@@ -101,6 +101,7 @@ class SignUpViewModel(
                         )
                     )
                 }
+                logger.e(throwable = e)
             } finally {
                 _uiState.update { state ->
                     state.copy(isLoading = false)
@@ -246,6 +247,7 @@ class SignUpViewModel(
                 )
             )
         }
+        logger.e(throwable = throwable)
     }
 
     fun socialAuth(fragment: Fragment, authType: AuthType) {

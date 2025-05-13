@@ -6,6 +6,7 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import org.openedx.core.utils.Logger
 import java.lang.reflect.Type
 import org.openedx.core.domain.model.CourseEnrollments as DomainCourseEnrollments
 
@@ -26,6 +27,8 @@ data class CourseEnrollments(
     )
 
     class Deserializer : JsonDeserializer<CourseEnrollments> {
+        private val logger = Logger(TAG)
+
         override fun deserialize(
             json: JsonElement?,
             typeOfT: Type?,
@@ -52,6 +55,7 @@ data class CourseEnrollments(
                     EnrolledCourse::class.java
                 )
             } catch (ex: Exception) {
+                logger.e(throwable = ex)
                 null
             }
         }
@@ -63,6 +67,7 @@ data class CourseEnrollments(
                     DashboardCourseList::class.java
                 )
             } catch (ex: Exception) {
+                logger.e(throwable = ex)
                 DashboardCourseList(
                     next = null,
                     previous = null,
@@ -91,8 +96,13 @@ data class CourseEnrollments(
                     AppConfig::class.java
                 )
             } catch (ex: Exception) {
+                logger.e(throwable = ex)
                 AppConfig()
             }
+        }
+
+        companion object {
+            private const val TAG = "CourseEnrollmentsDeserializer"
         }
     }
 }

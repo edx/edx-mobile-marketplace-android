@@ -15,6 +15,7 @@ import org.openedx.core.system.notifier.CourseCompletionSet
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSubtitleLanguageChanged
 import org.openedx.core.system.notifier.CourseVideoPositionChanged
+import org.openedx.core.utils.Logger
 import org.openedx.course.data.repository.CourseRepository
 import org.openedx.course.presentation.CourseAnalytics
 import subtitleFile.TimedTextObject
@@ -28,6 +29,8 @@ open class VideoUnitViewModel(
     private val transcriptManager: TranscriptManager,
     courseAnalytics: CourseAnalytics,
 ) : BaseVideoViewModel(courseId, blockId, courseAnalytics) {
+
+    private val logger = Logger(TAG)
 
     var videoUrl = ""
     var videoDuration = 0L
@@ -115,6 +118,7 @@ open class VideoUnitViewModel(
                     )
                     notifier.send(CourseCompletionSet())
                 } catch (e: Exception) {
+                    logger.e(throwable = e)
                     isBlockAlreadyCompleted = false
                 }
             }
@@ -134,4 +138,8 @@ open class VideoUnitViewModel(
     }
 
     fun getCurrentVideoTime() = currentVideoTime.value ?: 0
+
+    companion object {
+        private const val TAG = "VideoUnitViewModel"
+    }
 }

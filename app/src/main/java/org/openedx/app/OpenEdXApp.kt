@@ -6,6 +6,10 @@ import com.braze.configuration.BrazeConfig
 import com.braze.ui.BrazeDeeplinkHandler
 import com.google.firebase.FirebaseApp
 import io.branch.referral.Branch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.loadKoinModules
@@ -27,8 +31,11 @@ class OpenEdXApp : Application() {
 
         initializeKoinModules()
 
-        if (config.getFirebaseConfig().enabled) {
-            FirebaseApp.initializeApp(this)
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            if (config.getFirebaseConfig().enabled) {
+                // FirebaseApp.initializeApp might be slow, so run it off the main thread
+                FirebaseApp.initializeApp(this@OpenEdXApp)
+            }
         }
 
         if (config.getBranchConfig().enabled) {

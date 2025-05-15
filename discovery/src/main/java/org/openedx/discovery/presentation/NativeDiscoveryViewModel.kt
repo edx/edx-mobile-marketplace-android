@@ -17,6 +17,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
+import org.openedx.core.utils.Logger
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.domain.model.Course
 
@@ -29,6 +30,8 @@ class NativeDiscoveryViewModel(
     private val appNotifier: AppNotifier,
     private val corePreferences: CorePreferences,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     val apiHostUrl get() = config.getApiHostURL()
     val isUserLoggedIn get() = corePreferences.user != null
@@ -93,6 +96,7 @@ class NativeDiscoveryViewModel(
                 }
                 _uiState.value = DiscoveryUIState.Courses(ArrayList(coursesList))
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -136,6 +140,7 @@ class NativeDiscoveryViewModel(
                 coursesList.addAll(response.results)
                 _uiState.value = DiscoveryUIState.Courses(ArrayList(coursesList))
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -194,5 +199,9 @@ class NativeDiscoveryViewModel(
                 put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "NativeDiscoveryViewModel"
     }
 }

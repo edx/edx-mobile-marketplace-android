@@ -170,8 +170,8 @@ class CourseVideoViewModel(
                 }
                 courseNotifier.send(CourseLoading(false))
             } catch (e: Exception) {
-                _uiState.value = CourseVideosUIState.Empty
                 logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
+                _uiState.value = CourseVideosUIState.Empty
             }
         }
     }

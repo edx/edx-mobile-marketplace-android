@@ -108,6 +108,7 @@ class SignInViewModel(
                 logSignInSuccessEvent(AuthType.PASSWORD)
                 appNotifier.send(SignInEvent())
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 logSignInErrorEvent(AuthType.PASSWORD, e)
                 if (e is EdxError.InvalidGrantException) {
                     _uiMessage.value =
@@ -119,7 +120,6 @@ class SignInViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(CoreRes.string.core_error_unknown_error))
                 }
-                logger.e(throwable = e)
             }
             _uiState.update { it.copy(showProgress = false) }
         }
@@ -150,6 +150,7 @@ class SignInViewModel(
                     logSignInErrorEvent(authType, Exception(OAuthHelper.ACCESS_TOKEN_EMPTY_MESSAGE))
                 }
             }.onFailure { exception ->
+                logger.e (throwable = exception)
                 _uiState.update { it.copy(showProgress = false) }
                 logSignInErrorEvent(authType, exception)
             }
@@ -175,7 +176,7 @@ class SignInViewModel(
         runCatching {
             interactor.loginSocial(token, authType)
         }.onFailure { error ->
-            logger.e { "Social login error: $error" }
+            logger.e (throwable = error)
             logSignInErrorEvent(authType, error)
             onUnknownError()
         }.onSuccess {

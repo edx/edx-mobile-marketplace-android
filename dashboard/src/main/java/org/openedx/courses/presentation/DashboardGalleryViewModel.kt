@@ -163,12 +163,12 @@ class DashboardGalleryViewModel(
                     }
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("isIAPFlow" to isIAPFlow))
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
                 }
-                logger.e(throwable = e, metadata = mapOf("isIAPFlow" to isIAPFlow))
             } finally {
                 _updating.value = false
                 isLoading = false
@@ -327,6 +327,7 @@ class DashboardGalleryViewModel(
                         _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
                     },
                     onFailure = {
+                        logger.e(throwable = it)
                         _iapUiState.tryEmit(
                             IAPUIState.Error(
                                 IAPException(

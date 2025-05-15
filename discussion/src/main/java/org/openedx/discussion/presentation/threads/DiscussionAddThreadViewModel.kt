@@ -51,6 +51,7 @@ class DiscussionAddThreadViewModel(
                 _newThread.value = interactor.createThread(topicId, courseId, type, title, rawBody, follow)
                 logPostCreatedEvent(topicId, type, follow, _newThread.value?.author ?: "")
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -58,7 +59,6 @@ class DiscussionAddThreadViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
-                logger.e(throwable = e)
             }
             _isLoading.value = false
         }

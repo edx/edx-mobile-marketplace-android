@@ -107,6 +107,10 @@ class CourseSectionViewModel(
                         sectionName = sequentialBlock.displayName
                     )
             } catch (e: Exception) {
+                logger.e(
+                    throwable = e,
+                    metadata = mapOf("blockId" to blockId, "courseId" to courseId)
+                )
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -114,10 +118,6 @@ class CourseSectionViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
-                logger.e(
-                    throwable = e,
-                    metadata = mapOf("blockId" to blockId, "courseId" to courseId)
-                )
             }
         }
     }

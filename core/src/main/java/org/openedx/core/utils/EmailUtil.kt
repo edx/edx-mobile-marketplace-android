@@ -57,6 +57,7 @@ object EmailUtil {
                 it.startActivity(targetIntent)
             }
         } catch (ex: ActivityNotFoundException) {
+            logger.e(throwable = ex)
             //There is no activity which can perform the intended share Intent
             context?.let {
                 Toast.makeText(
@@ -64,7 +65,6 @@ object EmailUtil {
                     Toast.LENGTH_SHORT
                 ).show()
             }
-            logger.e(throwable = ex)
         }
     }
 

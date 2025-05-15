@@ -7,10 +7,13 @@ import okhttp3.Response
 import okio.IOException
 import org.openedx.core.data.model.ErrorResponse
 import org.openedx.core.system.EdxError
+import org.openedx.core.utils.Logger
 
 class HandleErrorInterceptor(
     private val gson: Gson
 ) : Interceptor {
+    private val logger = Logger(TAG)
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val response = chain.proceed(chain.request())
 
@@ -42,6 +45,7 @@ class HandleErrorInterceptor(
                     throw EdxError.ValidationException(errorResponse.errorDescription ?: "")
                 }
             } catch (e: JsonSyntaxException) {
+                logger.e(throwable = e, metadata = mapOf("json" to jsonStr))
                 throw IOException("JsonSyntaxException $jsonStr", e)
             }
         }
@@ -52,5 +56,6 @@ class HandleErrorInterceptor(
     companion object {
         const val ERROR_INVALID_GRANT = "invalid_grant"
         const val ERROR_USER_NOT_ACTIVE = "user_not_active"
+        const val TAG = "HandleErrorInterceptor"
     }
 }

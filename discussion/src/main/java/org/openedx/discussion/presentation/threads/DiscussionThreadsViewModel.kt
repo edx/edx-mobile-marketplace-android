@@ -132,6 +132,7 @@ class DiscussionThreadsViewModel(
                 }
                 _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -139,7 +140,6 @@ class DiscussionThreadsViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
-                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             } finally {
                 _isUpdating.value = false
                 isLoading = false
@@ -206,11 +206,11 @@ class DiscussionThreadsViewModel(
                 isBlockAlreadyCompleted = true
                 interactor.markBlocksCompletion(courseId, listOf(blockId))
             } catch (e: Exception) {
-                isBlockAlreadyCompleted = false
                 logger.e(
                     throwable = e,
                     metadata = mapOf("courseId" to courseId, "blockId" to blockId),
                 )
+                isBlockAlreadyCompleted = false
             }
         }
     }

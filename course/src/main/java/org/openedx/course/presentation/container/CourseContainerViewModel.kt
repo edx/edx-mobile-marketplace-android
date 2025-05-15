@@ -344,6 +344,7 @@ class CourseContainerViewModel(
                         _iapState.value =
                             IAPUIState.ProductData(formattedPrice = it.formattedPrice)
                     }.onFailure {
+                        logger.e(throwable = it)
                         if (it is IAPException) {
                             updateErrorState(it)
                         }
@@ -403,6 +404,7 @@ class CourseContainerViewModel(
                 purchaseFlowData.basketId = basketId
                 _iapState.value = IAPUIState.PurchaseProduct
             }.onFailure {
+                logger.e(throwable = it)
                 if (it is IAPException) {
                     updateErrorState(it)
                 }
@@ -436,6 +438,7 @@ class CourseContainerViewModel(
             }.onSuccess {
                 consumeOrderForFurtherPurchases(purchaseFlowData)
             }.onFailure {
+                logger.e(throwable = it)
                 if (it is IAPException) {
                     updateErrorState(it)
                 }
@@ -452,6 +455,7 @@ class CourseContainerViewModel(
                 }.onSuccess {
                     updateCourseData()
                 }.onFailure {
+                    logger.e(throwable = it)
                     if (it is IAPException) {
                         updateErrorState(it)
                     }

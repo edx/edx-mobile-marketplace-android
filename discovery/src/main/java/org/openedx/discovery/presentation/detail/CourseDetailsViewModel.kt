@@ -72,6 +72,7 @@ class CourseDetailsViewModel(
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -79,7 +80,6 @@ class CourseDetailsViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
-                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }
@@ -99,6 +99,7 @@ class CourseDetailsViewModel(
                     notifier.send(CourseDashboardUpdate())
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -106,7 +107,6 @@ class CourseDetailsViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
-                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }

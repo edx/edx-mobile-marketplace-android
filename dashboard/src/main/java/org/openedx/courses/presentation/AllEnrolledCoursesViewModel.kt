@@ -101,12 +101,12 @@ class AllEnrolledCoursesViewModel(
                 coursesList.addAll(response.courses)
                 _uiState.update { it.copy(courses = coursesList.toList()) }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("filter" to currentFilter.value.key))
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
                 }
-                logger.e(throwable = e, metadata = mapOf("filter" to currentFilter.value.key))
             }
             _uiState.update { it.copy(refreshing = false, showProgress = false) }
             isLoading = false
@@ -144,12 +144,12 @@ class AllEnrolledCoursesViewModel(
                 }
                 _uiState.update { it.copy(courses = coursesList.toList()) }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("filter" to currentFilter.value.key))
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
                 }
-                logger.e(throwable = e, metadata = mapOf("filter" to currentFilter.value.key))
             }
             _uiState.update { it.copy(refreshing = false, showProgress = false) }
             isLoading = false

@@ -128,6 +128,7 @@ class CourseInfoViewModel(
                     )
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.emit(
                         UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection))
@@ -135,7 +136,6 @@ class CourseInfoViewModel(
                 } else {
                     _showAlert.emit(true)
                 }
-                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }

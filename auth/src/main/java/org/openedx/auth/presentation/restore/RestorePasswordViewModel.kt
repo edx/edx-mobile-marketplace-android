@@ -67,6 +67,7 @@ class RestorePasswordViewModel(
                     logResetPasswordEvent(false)
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 _uiState.value = RestorePasswordUIState.Initial
                 logResetPasswordEvent(false)
                 if (e is EdxError.ValidationException) {
@@ -78,7 +79,6 @@ class RestorePasswordViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
-                logger.e(throwable = e)
             }
         }
     }

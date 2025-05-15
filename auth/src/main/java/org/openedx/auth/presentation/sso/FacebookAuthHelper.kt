@@ -73,6 +73,8 @@ class FacebookAuthHelper {
     fun clear() {
         runCatching {
             LoginManager.getInstance().unregisterCallback(callbackManager)
+        }.onFailure {
+            logger.e (throwable = it)
         }
     }
 

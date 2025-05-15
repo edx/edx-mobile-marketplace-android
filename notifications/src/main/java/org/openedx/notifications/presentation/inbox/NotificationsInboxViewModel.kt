@@ -107,6 +107,7 @@ class NotificationsInboxViewModel(
                     InboxUIState.Fallback(state = InboxFullScreenState.Empty)
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (uiState.value is InboxUIState.Data || _isRefreshing.value) {
                     emitErrorMessage(e)
                 } else if (e.isInternetError()) {
@@ -115,7 +116,6 @@ class NotificationsInboxViewModel(
                 } else {
                     _uiState.value = InboxUIState.Fallback(state = InboxFullScreenState.ServerError)
                 }
-                logger.e(throwable = e)
             } finally {
                 isLoading = false
                 _isRefreshing.value = false

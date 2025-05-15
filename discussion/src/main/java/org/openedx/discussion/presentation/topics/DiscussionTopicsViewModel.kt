@@ -56,11 +56,11 @@ class DiscussionTopicsViewModel(
                     _uiState.value = DiscussionTopicsUIState.Error
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 _uiState.value = DiscussionTopicsUIState.Error
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 }
-                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             } finally {
                 courseNotifier.send(CourseLoading(false))
             }

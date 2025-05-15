@@ -203,7 +203,6 @@ class OauthRefreshTokenAuthenticator(
                 }
             }
         } catch (ex: JSONException) {
-            Log.d("OauthRefreshTokenAuthenticator", "Unable to get error_code from 401 response")
             logger.e(throwable = ex, metadata = mapOf("responseBody" to responseBody))
             return null
         }

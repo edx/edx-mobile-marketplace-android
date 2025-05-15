@@ -62,6 +62,7 @@ class ProgramViewModel(
                 _uiState.emit(ProgramUIState.CourseEnrolled(courseId, true))
                 notifier.send(CourseDashboardUpdate())
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiState.emit(
                         ProgramUIState.UiMessage(
@@ -71,7 +72,6 @@ class ProgramViewModel(
                 } else {
                     _uiState.emit(ProgramUIState.CourseEnrolled(courseId, false))
                 }
-                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }

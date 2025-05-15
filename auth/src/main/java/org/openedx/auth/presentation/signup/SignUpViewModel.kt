@@ -88,6 +88,7 @@ class SignUpViewModel(
             try {
                 updateFields(interactor.getRegistrationFields())
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.emit(
                         UIMessage.SnackBarMessage(
@@ -101,7 +102,6 @@ class SignUpViewModel(
                         )
                     )
                 }
-                logger.e(throwable = e)
             } finally {
                 _uiState.update { state ->
                     state.copy(isLoading = false)
@@ -233,6 +233,7 @@ class SignUpViewModel(
     }
 
     private suspend fun handleRegisterException(throwable: Throwable) {
+        logger.e(throwable = throwable)
         _uiState.update { it.copy(isButtonLoading = false) }
         if (throwable.isInternetError()) {
             _uiMessage.emit(
@@ -247,7 +248,6 @@ class SignUpViewModel(
                 )
             )
         }
-        logger.e(throwable = throwable)
     }
 
     fun socialAuth(fragment: Fragment, authType: AuthType) {
@@ -266,6 +266,7 @@ class SignUpViewModel(
                 })
                 socialAuth.checkToken()
             }.onFailure { exception ->
+                logger.e(throwable = exception)
                 _uiState.update { it.copy(isLoading = false) }
                 logLogistrationFailureEvent(
                     AuthAnalyticsEvent.SOCIAL_AUTH_FAILURE,
@@ -289,7 +290,8 @@ class SignUpViewModel(
     private suspend fun exchangeToken(socialAuth: SocialAuthResponse) {
         runCatching {
             interactor.loginSocial(socialAuth.accessToken, socialAuth.authType)
-        }.onFailure {
+        }.onFailure { exception ->
+            logger.e(throwable = exception)
             val fields = uiState.value.allFields.toMutableList()
                 .filter { it.type != RegistrationFieldType.PASSWORD }
                 .map { field ->

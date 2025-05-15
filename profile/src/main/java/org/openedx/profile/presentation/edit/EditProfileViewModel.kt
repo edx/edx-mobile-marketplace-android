@@ -90,6 +90,7 @@ class EditProfileViewModel(
                 _deleteImage.value = false
                 _selectedImageUri.value = null
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 _uiState.value = EditProfileUIState(account.copy(), isLimited = isLimitedProfile)
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -98,7 +99,6 @@ class EditProfileViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
-                logger.e(throwable = e)
             }
         }
     }
@@ -116,6 +116,7 @@ class EditProfileViewModel(
                 _selectedImageUri.value = null
                 sendAccountUpdated()
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("file" to file))
                 _uiState.value = EditProfileUIState(account.copy(), isLimited = isLimitedProfile)
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -124,7 +125,6 @@ class EditProfileViewModel(
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
-                logger.e(throwable = e, metadata = mapOf("file" to file))
             }
         }
     }

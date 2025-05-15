@@ -52,6 +52,7 @@ class DeleteProfileViewModel(
                 logDeleteProfileEvent(true)
                 notifier.send(AccountDeactivated())
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -65,7 +66,6 @@ class DeleteProfileViewModel(
                         DeleteProfileFragmentUIState.Error(resourceManager.getString(org.openedx.profile.R.string.profile_password_is_incorrect))
                 }
                 logDeleteProfileEvent(false)
-                logger.e(throwable = e)
             }
         }
     }

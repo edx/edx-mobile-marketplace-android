@@ -246,13 +246,13 @@ class CourseOutlineViewModel(
                 _canShowPLSBanner.value =
                     coursePreferences.canShowPLSBanner(courseId, datesBannerInfo.bannerType.name)
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 _uiState.value = CourseOutlineUIState.Error
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
                 }
-                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }
@@ -299,13 +299,13 @@ class CourseOutlineViewModel(
                 courseNotifier.send(CourseDatesShifted)
                 onResetDates(true)
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_dates_shift_dates_unsuccessful_msg)))
                 }
                 onResetDates(false)
-                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             }
         }
     }

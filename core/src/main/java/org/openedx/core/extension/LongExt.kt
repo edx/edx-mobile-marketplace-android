@@ -14,7 +14,6 @@ fun Long.toFileSize(round: Int = 2): String {
         ) + " " + units[digitGroups]
     } catch (e: Exception) {
         Logger("LongExt").e(throwable = e)
-        println(e.toString())
     }
     return ""
 }

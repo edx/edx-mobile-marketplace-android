@@ -26,6 +26,10 @@ enum class ProfileAnalyticsEvent(val eventName: String, val biValue: String) {
         "Profile:Video Setting Clicked",
         "edx.bi.app.profile.video_setting.clicked"
     ),
+    APPEARANCE_SETTING_CLICKED(
+        "Profile:Appearance Setting Clicked",
+        "edx.bi.app.profile.appearance_setting.clicked"
+    ),
     PUSH_NOTIFICATIONS_CLICKED(
         "Profile:Push Notifications Setting Clicked",
         "edx.bi.app.profile.push_notifications_setting.clicked"
@@ -82,6 +86,10 @@ enum class ProfileAnalyticsEvent(val eventName: String, val biValue: String) {
         "Profile:Logged Out",
         "edx.bi.app.user.logout"
     ),
+    APP_THEME_CHANGED(
+        "Profile:App Theme Changed",
+        "edx.bi.app.profile.app_theme.changed"
+    ),
 }
 
 enum class ProfileAnalyticsKey(val key: String) {
@@ -94,4 +102,6 @@ enum class ProfileAnalyticsKey(val key: String) {
     SUCCESS("success"),
     FORCE("force"),
     FALSE("false"),
+    NEW_MODE("new_mode"),
+    PREVIOUS_MODE("previous_mode")
 }

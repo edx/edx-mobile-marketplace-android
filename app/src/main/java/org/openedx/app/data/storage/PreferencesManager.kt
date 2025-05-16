@@ -8,6 +8,7 @@ import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
 import org.openedx.core.domain.model.AppConfig
+import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.domain.model.VideoPlaybackSpeed
 import org.openedx.core.domain.model.VideoQuality
 import org.openedx.core.domain.model.VideoSettings
@@ -136,6 +137,15 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
             )
         }
 
+    override var appThemeMode: AppThemeMode
+        set(value) {
+            saveString(APP_THEME_MODE, value.name)
+        }
+        get() {
+            val mode = getString(APP_THEME_MODE, defValue = AppThemeMode.MATCH_DEVICE.name)
+            return AppThemeMode.valueOf(mode)
+        }
+
     override var appConfig: AppConfig
         set(value) {
             val appConfigJson = Gson().toJson(value)
@@ -248,5 +258,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val NOTIFICATIONS_CONFIGURATION = "notifications_configuration"
         private const val NOTIFICATIONS_PRIMER_CONFIGURATION = "notifications_primer_configuration"
         private const val PLS_BANNER_SHOWN = "pls_banner_shown"
+        private const val APP_THEME_MODE = "app_theme_mode"
     }
 }

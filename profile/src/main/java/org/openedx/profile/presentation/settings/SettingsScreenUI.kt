@@ -190,6 +190,9 @@ internal fun SettingsScreen(
                                         onVideoSettingsClick = {
                                             onAction(SettingsScreenAction.VideoSettingsClick)
                                         },
+                                        onAppearanceSettingsClick = {
+                                            onAction(SettingsScreenAction.AppearanceSettingsClick)
+                                        },
                                         onCalendarSettingsClick = {
                                             onAction(SettingsScreenAction.CalendarSettingsClick)
                                         },
@@ -273,6 +276,7 @@ internal fun SettingsScreen(
 private fun SettingsSection(
     uiState: SettingsUIState.Data,
     onVideoSettingsClick: () -> Unit,
+    onAppearanceSettingsClick: () -> Unit,
     onCalendarSettingsClick: () -> Unit,
     onPushNotificationsSettingsClick: () -> Unit,
 ) {
@@ -294,6 +298,12 @@ private fun SettingsSection(
                 SettingsItem(
                     text = stringResource(id = profileR.string.profile_video),
                     onClick = onVideoSettingsClick
+                )
+
+                SettingsDivider()
+                SettingsItem(
+                    text = stringResource(id = profileR.string.profile_appearance),
+                    onClick = onAppearanceSettingsClick
                 )
 
 //                SettingsDivider()

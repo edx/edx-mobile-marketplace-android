@@ -62,6 +62,7 @@ import org.openedx.profile.data.repository.ProfileRepository
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.anothersaccount.AnothersProfileViewModel
+import org.openedx.profile.presentation.appearance.AppearanceSettingsViewModel
 import org.openedx.profile.presentation.calendar.CalendarViewModel
 import org.openedx.profile.presentation.delete.DeleteProfileViewModel
 import org.openedx.profile.presentation.edit.EditProfileViewModel
@@ -208,6 +209,7 @@ val screenModule = module {
         )
     }
     viewModel { (account: Account) -> EditProfileViewModel(get(), get(), get(), get(), account) }
+    viewModel { AppearanceSettingsViewModel(get(), get()) }
     viewModel { VideoSettingsViewModel(get(), get(), get(), get()) }
     viewModel { (qualityType: String) -> VideoQualityViewModel(qualityType, get(), get(), get()) }
     viewModel { DeleteProfileViewModel(get(), get(), get(), get(), get()) }

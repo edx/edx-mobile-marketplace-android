@@ -89,6 +89,12 @@ class SettingsFragment : Fragment() {
                                 )
                             }
 
+                            SettingsScreenAction.AppearanceSettingsClick -> {
+                                viewModel.appearanceSettingsClicked(
+                                    requireActivity().supportFragmentManager
+                                )
+                            }
+
                             SettingsScreenAction.PushNotificationsSettingsClick -> {
                                 viewModel.pushNotificationsSettingsClicked(
                                     requireActivity().supportFragmentManager
@@ -169,6 +175,7 @@ internal interface SettingsScreenAction {
     object TermsClick : SettingsScreenAction
     object SupportClick : SettingsScreenAction
     object VideoSettingsClick : SettingsScreenAction
+    object AppearanceSettingsClick : SettingsScreenAction
     object ManageAccountClick : SettingsScreenAction
     object CalendarSettingsClick : SettingsScreenAction
     object PushNotificationsSettingsClick : SettingsScreenAction

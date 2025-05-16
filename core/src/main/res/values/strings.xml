@@ -240,4 +240,10 @@
     <string name="iap_continue_to_payment">Continue to payment (%s)</string>
     <string name="iap_continue_with_free_track">Continue with free track</string>
 
+    <!-- App Appearance Settings -->
+    <string name="core_light_mode">Light mode</string>
+    <string name="core_dark_mode">Dark mode</string>
+    <string name="core_match_device">Match device</string>
+    <string name="core_match_device_description">Matches your device settings automatically.</string>
+
 </resources>

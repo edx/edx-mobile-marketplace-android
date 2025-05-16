@@ -47,6 +47,7 @@ import org.openedx.notifications.presentation.settings.NotificationsSettingsFrag
 import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.profile.presentation.anothersaccount.AnothersProfileFragment
+import org.openedx.profile.presentation.appearance.AppearanceSettingsFragment
 import org.openedx.profile.presentation.calendar.CalendarFragment
 import org.openedx.profile.presentation.delete.DeleteProfileFragment
 import org.openedx.profile.presentation.edit.EditProfileFragment
@@ -439,6 +440,10 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
 
     override fun navigateToVideoSettings(fm: FragmentManager) {
         replaceFragmentWithBackStack(fm, VideoSettingsFragment())
+    }
+
+    override fun navigateToAppearanceSettings(fm: FragmentManager) {
+        replaceFragmentWithBackStack(fm, AppearanceSettingsFragment())
     }
 
     override fun navigateToPushNotificationsSettings(fm: FragmentManager) {

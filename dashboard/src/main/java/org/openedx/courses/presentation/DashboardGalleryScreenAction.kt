@@ -22,6 +22,7 @@ interface DashboardGalleryScreenAction {
     data class OpenCourse(
         val enrolledCourse: EnrolledCourse,
         val isPrimaryCourse: Boolean,
+        val source: ActionSource,
     ) : DashboardGalleryScreenAction
 
     data class NavigateToDates(
@@ -31,5 +32,5 @@ interface DashboardGalleryScreenAction {
 }
 
 enum class ActionSource {
-    PAST_ASSIGNMENT, UPCOMING_ASSIGNMENT, RESUME_BLOCK
+    PAST_ASSIGNMENT, UPCOMING_ASSIGNMENT, RESUME_BLOCK, START_COURSE, CARD
 }

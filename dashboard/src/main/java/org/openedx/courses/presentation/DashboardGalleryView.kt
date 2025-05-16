@@ -247,11 +247,12 @@ private fun DashboardGalleryView(
                                 modifier = Modifier.fillMaxSize(),
                                 userCourses = uiState.userCourses,
                                 apiHostUrl = apiHostUrl,
-                                openCourse = { course, isPrimaryCourse ->
+                                openCourse = { course, actionSource, isPrimaryCourse ->
                                     onAction(
                                         DashboardGalleryScreenAction.OpenCourse(
                                             enrolledCourse = course,
-                                            isPrimaryCourse = isPrimaryCourse
+                                            isPrimaryCourse = isPrimaryCourse,
+                                            source = actionSource,
                                         )
                                     )
                                 },
@@ -363,7 +364,7 @@ private fun UserCourses(
     modifier: Modifier = Modifier,
     userCourses: CourseEnrollments,
     apiHostUrl: String,
-    openCourse: (EnrolledCourse, isPrimaryCourse: Boolean) -> Unit,
+    openCourse: (enrolledCourse: EnrolledCourse, source: ActionSource, isPrimaryCourse: Boolean) -> Unit,
     navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
     onViewAllClick: (isCardClicked: Boolean) -> Unit,
     resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
@@ -381,7 +382,9 @@ private fun UserCourses(
                 apiHostUrl = apiHostUrl,
                 navigateToDates = navigateToDates,
                 resumeBlockId = resumeBlockId,
-                openCourse = { openCourse(it, true) },
+                openCourse = { course, action ->
+                    openCourse(course, action, true)
+                },
                 onIAPAction = onIAPAction,
             )
         }
@@ -391,7 +394,7 @@ private fun UserCourses(
                 courseCount = userCourses.enrollments.pagination.count,
                 hasNextPage = userCourses.enrollments.pagination.next.isNotEmpty(),
                 apiHostUrl = apiHostUrl,
-                onCourseClick = { openCourse(it, false) },
+                onCourseClick = { openCourse(it, ActionSource.CARD, false) },
                 onViewAllClick = onViewAllClick
             )
         }
@@ -604,7 +607,7 @@ private fun PrimaryCourseCard(
     apiHostUrl: String,
     navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
     resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
-    openCourse: (EnrolledCourse) -> Unit,
+    openCourse: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
     onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
     val orientation = LocalConfiguration.current.orientation
@@ -623,7 +626,7 @@ private fun PrimaryCourseCard(
                 Row(
                     modifier = Modifier
                         .clickable {
-                            openCourse(primaryCourse)
+                            openCourse(primaryCourse, ActionSource.CARD)
                         }
                         .height(IntrinsicSize.Min)
                 ) {
@@ -649,7 +652,7 @@ private fun PrimaryCourseCard(
             else -> {
                 Column(
                     modifier = Modifier.clickable {
-                        openCourse(primaryCourse)
+                        openCourse(primaryCourse, ActionSource.CARD)
                     }
                 ) {
                     PrimaryCourseCaption(
@@ -690,7 +693,7 @@ private fun PrimaryCourseButtons(
     adjustHeight: Boolean = false,
     navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
     resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
-    openCourse: (EnrolledCourse) -> Unit,
+    openCourse: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
     isIAPEnabled: Boolean,
     onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
@@ -787,7 +790,7 @@ private fun PrimaryCourseButtons(
             primaryCourse = primaryCourse,
             onClick = {
                 if (primaryCourse.courseStatus == null) {
-                    openCourse(primaryCourse)
+                    openCourse(primaryCourse, ActionSource.START_COURSE)
                 } else {
                     resumeBlockId(
                         primaryCourse,

@@ -18,13 +18,13 @@ import org.openedx.app.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isNotNullOrEmpty
-import org.openedx.notifications.PushManager
+import org.openedx.core.system.PushGlobalManager
 
 class OpenEdXFirebaseMessagingService : FirebaseMessagingService() {
 
     private val preferences: CorePreferences by inject()
     private val config: Config by inject()
-    private val pushManager: PushManager by inject()
+    private val pushManager: PushGlobalManager by inject()
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)

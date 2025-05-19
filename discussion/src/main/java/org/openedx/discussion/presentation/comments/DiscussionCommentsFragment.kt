@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import kotlinx.coroutines.delay
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -338,6 +339,7 @@ private fun DiscussionCommentsScreen(
                 Box(Modifier.pullRefresh(pullRefreshState)) {
                     when (uiState) {
                         is DiscussionCommentsUIState.Success -> {
+                            var staticItemsCount = 0
                             Column(
                                 Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -368,6 +370,7 @@ private fun DiscussionCommentsScreen(
                                                 onUserPhotoClick(username)
                                             }
                                         )
+                                        staticItemsCount++
                                     }
                                     if (uiState.commentsData.isNotEmpty()) {
                                         item {
@@ -384,6 +387,7 @@ private fun DiscussionCommentsScreen(
                                                 color = MaterialTheme.appColors.textPrimary,
                                                 style = MaterialTheme.appTypography.titleLarge
                                             )
+                                            staticItemsCount++
                                         }
                                     }
                                     items(uiState.commentsData) { comment ->
@@ -416,6 +420,17 @@ private fun DiscussionCommentsScreen(
                                         }
                                     }
                                 }
+
+                                val scrollToIndex =
+                                    uiState.commentsData.indexOfFirst { comment -> comment.shouldHighlight }
+                                LaunchedEffect(scrollToIndex) {
+                                    // add delay to allow the UI to be drawn before scrolling
+                                    delay(500)
+                                    if (scrollToIndex != -1) {
+                                        scrollState.animateScrollToItem(scrollToIndex + staticItemsCount)
+                                    }
+                                }
+
                                 if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
                                     paginationCallBack()
                                 }

@@ -29,6 +29,7 @@ import org.openedx.app.room.AppDatabase
 import org.openedx.core.config.Config
 import org.openedx.core.config.FirebaseConfig
 import org.openedx.core.data.model.User
+import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
@@ -53,12 +54,14 @@ class AppViewModelTest {
     private val pushManager = mockk<PushGlobalManager>()
 
     private val user = User(0, "", "", "")
+    private val appThemeMode = AppThemeMode.MATCH_DEVICE
 
     @Before
     fun before() {
         Dispatchers.setMain(dispatcher)
         every { analytics.logEvent(any(), any()) } returns Unit
         every { preferencesManager.user } returns user
+        every { preferencesManager.appThemeMode } returns appThemeMode
     }
 
     @After

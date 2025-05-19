@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import org.openedx.core.BaseViewModel
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.AppThemeMode
+import org.openedx.core.ui.theme.ThemeManager
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileAnalyticsEvent
 import org.openedx.profile.presentation.ProfileAnalyticsKey

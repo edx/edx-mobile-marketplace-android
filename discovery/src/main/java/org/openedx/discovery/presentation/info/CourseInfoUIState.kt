@@ -6,6 +6,7 @@ sealed class CourseInfoUIState {
     data class CourseInfo(
         val initialUrl: String = "",
         val isPreLogin: Boolean = false,
-        val enrollmentSuccess: AtomicReference<String> = AtomicReference("")
+        val hadEnrollment: AtomicReference<Boolean> = AtomicReference(false),
+        val enrollmentSuccess: AtomicReference<String> = AtomicReference(""),
     ) : CourseInfoUIState()
 }

@@ -115,16 +115,16 @@ class CourseInfoFragment : Fragment() {
                 }
 
                 LaunchedEffect((uiState as CourseInfoUIState.CourseInfo).enrollmentSuccess.get()) {
-                    if ((uiState as CourseInfoUIState.CourseInfo).enrollmentSuccess.get()
-                            .isNotEmpty()
-                    ) {
+                    val courseInfo = uiState as CourseInfoUIState.CourseInfo
+                    if (courseInfo.enrollmentSuccess.get().isNotEmpty()) {
                         viewModel.onSuccessfulCourseEnrollment(
                             fragmentManager = requireActivity().supportFragmentManager,
-                            courseId = (uiState as CourseInfoUIState.CourseInfo).enrollmentSuccess.get(),
-                            showTrackSelection = true,
+                            courseId = courseInfo.enrollmentSuccess.get(),
+                            showTrackSelection = courseInfo.hadEnrollment.get().not(),
                         )
                         // Clear after navigation
-                        (uiState as CourseInfoUIState.CourseInfo).enrollmentSuccess.set("")
+                        courseInfo.hadEnrollment.set(false)
+                        courseInfo.enrollmentSuccess.set("")
                     }
                 }
 

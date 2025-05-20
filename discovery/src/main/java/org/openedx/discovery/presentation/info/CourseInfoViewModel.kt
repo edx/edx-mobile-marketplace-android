@@ -104,7 +104,12 @@ class CourseInfoViewModel(
                     _uiMessage.emit(
                         UIMessage.ToastMessage(resourceManager.getString(R.string.discovery_you_are_already_enrolled))
                     )
-                    _uiState.update { it.copy(enrollmentSuccess = AtomicReference(courseId)) }
+                    _uiState.update {
+                        it.copy(
+                            hadEnrollment = AtomicReference(true),
+                            enrollmentSuccess = AtomicReference(courseId)
+                        )
+                    }
                     return@launch
                 }
 
@@ -114,7 +119,12 @@ class CourseInfoViewModel(
                 _uiMessage.emit(
                     UIMessage.ToastMessage(resourceManager.getString(R.string.discovery_enrolled_successfully))
                 )
-                _uiState.update { it.copy(enrollmentSuccess = AtomicReference(courseId)) }
+                _uiState.update {
+                    it.copy(
+                        hadEnrollment = AtomicReference(false),
+                        enrollmentSuccess = AtomicReference(courseId)
+                    )
+                }
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.emit(

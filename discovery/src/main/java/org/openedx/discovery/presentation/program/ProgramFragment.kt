@@ -107,6 +107,7 @@ class ProgramFragment : Fragment() {
                                 viewModel.onEnrolledCourseClick(
                                     fragmentManager = requireActivity().supportFragmentManager,
                                     courseId = courseId,
+                                    showTrackSelection = true,
                                 )
                                 context.toastMessage(getString(R.string.discovery_enrolled_successfully))
                             } else {
@@ -159,7 +160,7 @@ class ProgramFragment : Fragment() {
                                 viewModel.onEnrolledCourseClick(
                                     fragmentManager = requireActivity().supportFragmentManager,
                                     courseId = param,
-                                    showTrackSelection = true,
+                                    showTrackSelection = false,
                                 )
                             }
 

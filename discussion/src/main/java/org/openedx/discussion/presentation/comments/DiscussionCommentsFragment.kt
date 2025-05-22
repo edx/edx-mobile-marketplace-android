@@ -421,16 +421,6 @@ private fun DiscussionCommentsScreen(
                                     }
                                 }
 
-                                val scrollToIndex =
-                                    uiState.commentsData.indexOfFirst { comment -> comment.shouldHighlight }
-                                LaunchedEffect(scrollToIndex) {
-                                    // add delay to allow the UI to be drawn before scrolling
-                                    delay(500)
-                                    if (scrollToIndex != -1) {
-                                        scrollState.animateScrollToItem(scrollToIndex + staticItemsCount)
-                                    }
-                                }
-
                                 if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
                                     paginationCallBack()
                                 }
@@ -502,6 +492,15 @@ private fun DiscussionCommentsScreen(
                                             )
                                         }
                                     }
+                                }
+                            }
+                            val scrollToIndex =
+                                uiState.commentsData.indexOfFirst { comment -> comment.shouldHighlight }
+                            LaunchedEffect(scrollToIndex) {
+                                // add delay to allow the UI to be drawn before scrolling
+                                delay(500)
+                                if (scrollToIndex != -1) {
+                                    scrollState.animateScrollToItem(scrollToIndex + staticItemsCount)
                                 }
                             }
                         }

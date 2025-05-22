@@ -168,6 +168,11 @@ class SettingsViewModel(
         logProfileEvent(ProfileAnalyticsEvent.VIDEO_SETTING_CLICKED)
     }
 
+    fun appearanceSettingsClicked(fragmentManager: FragmentManager) {
+        router.navigateToAppearanceSettings(fragmentManager)
+        logProfileEvent(ProfileAnalyticsEvent.APPEARANCE_SETTING_CLICKED)
+    }
+
     fun pushNotificationsSettingsClicked(fragmentManager: FragmentManager) {
         router.navigateToPushNotificationsSettings(fragmentManager)
         logProfileEvent((ProfileAnalyticsEvent.PUSH_NOTIFICATIONS_CLICKED))

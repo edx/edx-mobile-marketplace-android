@@ -24,6 +24,7 @@ import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.SignInEvent
+import org.openedx.core.ui.theme.ThemeManager
 import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.Logger
 
@@ -57,6 +58,7 @@ class AppViewModel(
     init {
         logAppLaunchEvent()
         setUserId(preferencesManager.user)
+        setAppThemeFromPreference()
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -104,6 +106,10 @@ class AppViewModel(
         user?.let {
             analytics.setUserIdForSession(it.id)
         }
+    }
+
+    private fun setAppThemeFromPreference() {
+        ThemeManager.applyThemeMode(context, preferencesManager.appThemeMode)
     }
 
     private suspend fun handleLogoutEvent(event: LogoutEvent) {

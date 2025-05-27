@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -75,6 +77,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.extension.parcelable
+import org.openedx.core.extension.smoothScrollToIndex
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.WindowSize
@@ -265,6 +268,8 @@ private fun DiscussionCommentsScreen(
     }
 
     val sendButtonAlpha = if (responseValue.isEmpty()) 0.3f else 1f
+    var itemHeightPx by remember { mutableFloatStateOf(0f) }
+
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -339,7 +344,6 @@ private fun DiscussionCommentsScreen(
                 Box(Modifier.pullRefresh(pullRefreshState)) {
                     when (uiState) {
                         is DiscussionCommentsUIState.Success -> {
-                            var staticItemsCount = 0
                             Column(
                                 Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -361,7 +365,10 @@ private fun DiscussionCommentsScreen(
                                                 .fillMaxWidth()
                                                 .background(MaterialTheme.appColors.background)
                                                 .padding(horizontal = paddingContent)
-                                                .padding(top = 32.dp),
+                                                .padding(top = 32.dp)
+                                                .onGloballyPositioned { layout ->
+                                                    itemHeightPx = layout.size.height.toFloat()
+                                                },
                                             thread = uiState.thread,
                                             onClick = { action, bool ->
                                                 onItemClick(action, uiState.thread.id, bool)
@@ -370,7 +377,6 @@ private fun DiscussionCommentsScreen(
                                                 onUserPhotoClick(username)
                                             }
                                         )
-                                        staticItemsCount++
                                     }
                                     if (uiState.commentsData.isNotEmpty()) {
                                         item {
@@ -387,7 +393,6 @@ private fun DiscussionCommentsScreen(
                                                 color = MaterialTheme.appColors.textPrimary,
                                                 style = MaterialTheme.appTypography.titleLarge
                                             )
-                                            staticItemsCount++
                                         }
                                     }
                                     items(uiState.commentsData) { comment ->
@@ -500,7 +505,10 @@ private fun DiscussionCommentsScreen(
                                 // add delay to allow the UI to be drawn before scrolling
                                 delay(500)
                                 if (scrollToIndex != -1) {
-                                    scrollState.animateScrollToItem(scrollToIndex + staticItemsCount)
+                                    scrollState.smoothScrollToIndex(
+                                        index = scrollToIndex + 1,
+                                        itemHeightPx = itemHeightPx
+                                    )
                                 }
                             }
                         }

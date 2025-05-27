@@ -32,7 +32,7 @@ class AppCookieManager(private val config: Config, private val api: CookiesApi) 
         } catch (e: Exception) {
             logger.e(
                 throwable = e,
-                metadata = mapOf("url" to response!!.raw().request.url.toString())
+                metadata = mapOf("url" to response?.raw()?.request?.url.toString())
             )
         }
     }

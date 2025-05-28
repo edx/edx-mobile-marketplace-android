@@ -22,6 +22,7 @@ import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSectionChanged
 import org.openedx.core.system.notifier.CourseStructureUpdated
+import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -36,6 +37,8 @@ class CourseUnitContainerViewModel(
     private val analytics: CourseAnalytics,
     private val corePreferences: CorePreferences,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val blocks = ArrayList<Block>()
 
@@ -101,7 +104,7 @@ class CourseUnitContainerViewModel(
 
                 setupCurrentIndex(componentId)
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e)
             }
         }
     }
@@ -141,7 +144,7 @@ class CourseUnitContainerViewModel(
                     _subSectionUnitBlocks.value =
                         getSubSectionUnitBlocks(blocks, getSubSectionId(unitId))
 
-                    if(_descendantsBlocks.value.isEmpty()){
+                    if (_descendantsBlocks.value.isEmpty()) {
                         _descendantsBlocks.value = listOf(block)
                     }
                 } else {
@@ -298,5 +301,9 @@ class CourseUnitContainerViewModel(
 
     fun setUnitsListVisibility(isVisible: Boolean) {
         _unitsListShowed.value = isVisible
+    }
+
+    companion object {
+        private const val TAG = "CourseUnitContainerViewModel"
     }
 }

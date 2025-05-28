@@ -21,6 +21,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSectionChanged
+import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -44,6 +45,7 @@ class CourseSectionViewModel(
     workerController,
     coreAnalytics
 ) {
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableLiveData<CourseSectionUIState>(CourseSectionUIState.Loading)
     val uiState: LiveData<CourseSectionUIState>
@@ -105,6 +107,10 @@ class CourseSectionViewModel(
                         sectionName = sequentialBlock.displayName
                     )
             } catch (e: Exception) {
+                logger.e(
+                    throwable = e,
+                    metadata = mapOf("blockId" to blockId, "courseId" to courseId)
+                )
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -166,5 +172,9 @@ class CourseSectionViewModel(
                 }
             )
         }
+    }
+
+    companion object {
+        private const val TAG = "CourseSectionViewModel"
     }
 }

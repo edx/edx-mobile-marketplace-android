@@ -5,6 +5,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,6 +29,7 @@ import org.openedx.core.domain.model.Pagination
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
+import org.openedx.core.utils.Logger
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.domain.model.CourseList
 import java.net.UnknownHostException
@@ -61,6 +63,8 @@ class NativeDiscoveryViewModelTest {
         every { corePreferences.user } returns null
         every { config.getApiHostURL() } returns "http://localhost:8000"
         every { config.isPreLoginExperienceEnabled() } returns false
+        mockkConstructor(Logger::class)
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
 
     @After

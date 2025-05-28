@@ -21,6 +21,7 @@ import org.openedx.core.module.billing.getUserId
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.utils.EmailUtil
+import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
 
 class IAPInteractor(
@@ -30,6 +31,7 @@ class IAPInteractor(
     private val repository: IAPRepository,
     private val preferencesManager: CorePreferences,
 ) {
+    private val logger = Logger(TAG)
     private val iapConfig
         get() = preferencesManager.appConfig.iapConfig
     val isIAPEnabled
@@ -191,11 +193,16 @@ class IAPInteractor(
                         onSuccess(purchaseFlowData)
                     }
                 }.onFailure {
+                    logger.e (throwable = it)
                     if (it is IAPException) {
                         onFailure(it)
                     }
                 }
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "IAPInteractor"
     }
 }

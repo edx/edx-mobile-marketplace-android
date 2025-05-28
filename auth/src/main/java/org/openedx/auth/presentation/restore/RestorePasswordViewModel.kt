@@ -18,6 +18,7 @@ import org.openedx.core.system.EdxError
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
+import org.openedx.core.utils.Logger
 
 class RestorePasswordViewModel(
     private val interactor: AuthInteractor,
@@ -25,6 +26,8 @@ class RestorePasswordViewModel(
     private val analytics: AuthAnalytics,
     private val appNotifier: AppNotifier
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableLiveData<RestorePasswordUIState>()
     val uiState: LiveData<RestorePasswordUIState>
@@ -64,6 +67,7 @@ class RestorePasswordViewModel(
                     logResetPasswordEvent(false)
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 _uiState.value = RestorePasswordUIState.Initial
                 logResetPasswordEvent(false)
                 if (e is EdxError.ValidationException) {
@@ -109,5 +113,9 @@ class RestorePasswordViewModel(
                 putAll(params)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "RestorePasswordViewModel"
     }
 }

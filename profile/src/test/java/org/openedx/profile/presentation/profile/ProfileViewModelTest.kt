@@ -9,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -29,6 +30,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.domain.model.AgreementUrls
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileRouter
@@ -82,6 +84,8 @@ class ProfileViewModelTest {
         every { config.getFeedbackEmailAddress() } returns ""
         every { config.getAgreement(Locale.current.language) } returns AgreementUrls()
         every { config.getFaqUrl() } returns ""
+        mockkConstructor(Logger::class)
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
 
     @After

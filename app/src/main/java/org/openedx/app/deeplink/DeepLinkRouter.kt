@@ -12,6 +12,7 @@ import org.openedx.core.FragmentViewType
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.presentation.course.CourseViewMode
+import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.handouts.HandoutsType
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
@@ -29,6 +30,8 @@ class DeepLinkRouter(
     private val courseInteractor: CourseInteractor,
     private val discussionInteractor: DiscussionInteractor
 ) : CoroutineScope {
+
+    private val logger = Logger(TAG)
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Default
@@ -387,7 +390,7 @@ class DeepLinkRouter(
                                 )
                             }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        logger.e(throwable = e, metadata = deepLink.toMap())
                     }
                 }
             }
@@ -425,7 +428,7 @@ class DeepLinkRouter(
                                 }
                             }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        logger.e(throwable = e, metadata = deepLink.toMap())
                     }
                 }
             }
@@ -464,7 +467,7 @@ class DeepLinkRouter(
                                 )
                             }
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            logger.e(throwable = e, metadata = deepLink.toMap())
                         }
                     }
                 }
@@ -518,7 +521,7 @@ class DeepLinkRouter(
                     )
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e, metadata = deepLink.toMap())
             }
         }
     }
@@ -570,7 +573,7 @@ class DeepLinkRouter(
                     )
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e, metadata = deepLink.toMap())
             }
         }
     }
@@ -606,8 +609,12 @@ class DeepLinkRouter(
         return try {
             discoveryInteractor.getCourseDetails(courseId)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             null
         }
+    }
+
+    companion object {
+        private const val TAG = "DeepLinkRouter"
     }
 }

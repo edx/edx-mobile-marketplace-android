@@ -171,6 +171,7 @@ class DashboardListViewModel(
                     iapNotifier.send(CourseDataUpdated())
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -280,6 +281,7 @@ class DashboardListViewModel(
                     )
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -345,6 +347,7 @@ class DashboardListViewModel(
                         _iapUiState.tryEmit(IAPUIState.PurchasesFulfillmentCompleted)
                     },
                     onFailure = {
+                        logger.e(throwable = it)
                         _iapUiState.tryEmit(
                             IAPUIState.Error(
                                 IAPException(

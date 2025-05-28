@@ -11,6 +11,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
@@ -35,6 +36,8 @@ class DiscussionCommentsViewModel(
     private val corePreferences: CorePreferences,
     analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, thread.id, analytics) {
+
+    private val logger = Logger(TAG)
 
     val title = resourceManager.getString(thread.type.resId)
 
@@ -153,7 +156,7 @@ class DiscussionCommentsViewModel(
                 )
                 sendThreadUpdated()
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e)
             }
         }
     }
@@ -303,6 +306,7 @@ class DiscussionCommentsViewModel(
     }
 
     private fun handleException(e: Exception) {
+        logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
         if (e.isInternetError()) {
             _uiMessage.value =
                 UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -310,5 +314,9 @@ class DiscussionCommentsViewModel(
             _uiMessage.value =
                 UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
         }
+    }
+
+    companion object {
+        private const val TAG = "DiscussionCommentsViewModel"
     }
 }

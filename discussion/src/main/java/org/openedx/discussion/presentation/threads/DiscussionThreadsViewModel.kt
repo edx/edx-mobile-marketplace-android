@@ -17,6 +17,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
@@ -41,6 +42,8 @@ class DiscussionThreadsViewModel(
     private val pushGlobalManager: PushGlobalManager,
     analytics: DiscussionAnalytics,
 ) : BaseDiscussionViewModel(courseId, "", analytics) {
+
+    private val logger = Logger(TAG)
 
     private val _uiState =
         MutableLiveData<DiscussionThreadsUIState>(DiscussionThreadsUIState.Loading)
@@ -129,6 +132,7 @@ class DiscussionThreadsViewModel(
                 }
                 _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -202,8 +206,11 @@ class DiscussionThreadsViewModel(
                 isBlockAlreadyCompleted = true
                 interactor.markBlocksCompletion(courseId, listOf(blockId))
             } catch (e: Exception) {
+                logger.e(
+                    throwable = e,
+                    metadata = mapOf("courseId" to courseId, "blockId" to blockId),
+                )
                 isBlockAlreadyCompleted = false
-                e.printStackTrace()
             }
         }
     }
@@ -212,5 +219,9 @@ class DiscussionThreadsViewModel(
         if (config.isPushNotificationsEnabled()) {
             pushGlobalManager.showNotificationsPrimer(context, fm)
         }
+    }
+
+    companion object {
+        private const val TAG = "DiscussionThreadsViewModel"
     }
 }

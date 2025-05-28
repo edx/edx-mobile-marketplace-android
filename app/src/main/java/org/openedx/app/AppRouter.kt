@@ -15,6 +15,7 @@ import org.openedx.core.presentation.global.app_upgrade.UpgradeRequiredFragment
 import org.openedx.core.presentation.global.webview.WebContentFragment
 import org.openedx.core.presentation.settings.video.VideoQualityFragment
 import org.openedx.core.presentation.settings.video.VideoQualityType
+import org.openedx.core.utils.Logger
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.container.CourseContainerFragment
 import org.openedx.course.presentation.container.NoAccessCourseContainerFragment
@@ -61,6 +62,8 @@ import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
 class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, DiscussionRouter,
     ProfileRouter, AppUpgradeRouter, WhatsNewRouter, NotificationsRouter {
 
+    private val logger = Logger(TAG)
+
     //region AuthRouter
     override fun navigateToMain(
         fm: FragmentManager,
@@ -74,7 +77,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
                 .replace(R.id.container, MainFragment.newInstance(courseId, infoType, openTab))
                 .commit()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e)
         }
     }
 
@@ -113,7 +116,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
                 .replace(R.id.container, WhatsNewFragment.newInstance(courseId, infoType))
                 .commit()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e)
         }
     }
 
@@ -125,7 +128,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
                 }
                 popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e)
             }
         }
     }
@@ -460,7 +463,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
                 .replace(R.id.container, MainFragment.newInstance("", "", "DISCOVER"))
                 .commit()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e)
         }
     }
 
@@ -491,7 +494,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
                 .addToBackStack(fragment.javaClass.simpleName)
                 .commit()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e)
         }
     }
 
@@ -506,7 +509,7 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
                 .replace(R.id.container, fragment, fragment.javaClass.simpleName)
                 .commit()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e)
         }
     }
 
@@ -518,8 +521,12 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
                 .replace(R.id.container, ProfileFragment())
                 .commit()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e)
         }
     }
     //endregion
+
+    companion object {
+        private const val TAG = "AppRouter"
+    }
 }

@@ -39,7 +39,7 @@ class AnalyticsManager(
         }
 
         if (config.getFullstoryConfig().isEnabled) {
-            addAnalyticsTracker(FullstoryAnalytics(config.getFirebaseConfig().enabled))
+            addAnalyticsTracker(FullstoryAnalytics())
         }
     }
 

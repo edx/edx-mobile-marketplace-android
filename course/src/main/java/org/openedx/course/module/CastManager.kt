@@ -31,7 +31,7 @@ class CastManager(val context: Context) {
             castPlayer = CastPlayer(castContext)
             setUpCastListener()
         }.addOnFailureListener {
-            logger.e(it, true)
+            logger.e(it)
         }
     }
 

@@ -5,6 +5,7 @@ import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
 object Sha1Util {
+    private val logger = Logger("Sha1Util")
 
     fun SHA1(text: String): String {
         return try {
@@ -13,8 +14,10 @@ object Sha1Util {
             val sha1hash = md.digest()
             convertToHex(sha1hash)
         } catch (e: NoSuchAlgorithmException) {
+            logger.e(throwable = e, metadata = mapOf("text" to text))
             text
         } catch (e: UnsupportedEncodingException) {
+            logger.e(throwable = e, metadata = mapOf("text" to text))
             text
         }
     }

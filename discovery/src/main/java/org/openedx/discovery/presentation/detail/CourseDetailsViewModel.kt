@@ -15,6 +15,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.DiscoveryNotifier
+import org.openedx.core.utils.Logger
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.DiscoveryAnalytics
@@ -31,6 +32,8 @@ class CourseDetailsViewModel(
     private val notifier: DiscoveryNotifier,
     private val analytics: DiscoveryAnalytics,
 ) : BaseViewModel() {
+    private val logger = Logger(TAG)
+
     val apiHostUrl get() = config.getApiHostURL()
     val isUserLoggedIn get() = corePreferences.user != null
 
@@ -69,6 +72,7 @@ class CourseDetailsViewModel(
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -95,6 +99,7 @@ class CourseDetailsViewModel(
                     notifier.send(CourseDashboardUpdate())
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -150,5 +155,9 @@ class CourseDetailsViewModel(
                 put(DiscoveryAnalyticsKey.CONVERSION.key, courseId)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "CourseDetailsViewModel"
     }
 }

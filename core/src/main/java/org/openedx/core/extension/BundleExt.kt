@@ -6,6 +6,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.os.Parcelable
 import com.google.gson.Gson
+import org.openedx.core.utils.Logger
 import java.io.Serializable
 
 inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? = when {
@@ -29,6 +30,7 @@ inline fun <reified T> stringToObject(value: String): T? {
     return try {
         Gson().fromJson(value, genericType<T>())
     } catch (e: Exception) {
+        Logger("BundleExt").e(throwable = e, metadata = mapOf("value" to value))
         null
     }
 }

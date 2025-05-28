@@ -9,6 +9,7 @@ import android.widget.Toast
 import org.openedx.core.R
 
 object EmailUtil {
+    private val logger = Logger("EmailUtil")
 
     fun showFeedbackScreen(
         context: Context,
@@ -56,6 +57,7 @@ object EmailUtil {
                 it.startActivity(targetIntent)
             }
         } catch (ex: ActivityNotFoundException) {
+            logger.e(throwable = ex)
             //There is no activity which can perform the intended share Intent
             context?.let {
                 Toast.makeText(

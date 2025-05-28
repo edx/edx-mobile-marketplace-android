@@ -11,6 +11,7 @@ import org.openedx.core.Validator
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.EdxError
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileAnalyticsEvent
@@ -25,6 +26,8 @@ class DeleteProfileViewModel(
     private val validator: Validator,
     private val analytics: ProfileAnalytics,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableLiveData<DeleteProfileFragmentUIState>()
     val uiState: LiveData<DeleteProfileFragmentUIState>
@@ -49,6 +52,7 @@ class DeleteProfileViewModel(
                 logDeleteProfileEvent(true)
                 notifier.send(AccountDeactivated())
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
@@ -88,5 +92,9 @@ class DeleteProfileViewModel(
                 putAll(param)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "DeleteProfileViewModel"
     }
 }

@@ -5,6 +5,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -28,6 +29,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
+import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.Topic
 import org.openedx.discussion.presentation.DiscussionAnalytics
@@ -63,6 +65,8 @@ class DiscussionTopicsViewModelTest {
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
         every { courseNotifier.notifier } returns flowOf(CourseLoading(false))
         coEvery { courseNotifier.send(any<CourseLoading>()) } returns Unit
+        mockkConstructor(Logger::class)
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
 
     @After

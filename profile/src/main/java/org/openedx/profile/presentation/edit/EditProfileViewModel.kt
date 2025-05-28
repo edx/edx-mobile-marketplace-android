@@ -10,6 +10,7 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.ProfileAnalytics
@@ -26,6 +27,8 @@ class EditProfileViewModel(
     private val analytics: ProfileAnalytics,
     account: Account,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableLiveData<EditProfileUIState>()
     val uiState: LiveData<EditProfileUIState>
@@ -87,6 +90,7 @@ class EditProfileViewModel(
                 _deleteImage.value = false
                 _selectedImageUri.value = null
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 _uiState.value = EditProfileUIState(account.copy(), isLimited = isLimitedProfile)
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -112,6 +116,7 @@ class EditProfileViewModel(
                 _selectedImageUri.value = null
                 sendAccountUpdated()
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("file" to file))
                 _uiState.value = EditProfileUIState(account.copy(), isLimited = isLimitedProfile)
                 if (e.isInternetError()) {
                     _uiMessage.value =
@@ -172,5 +177,9 @@ class EditProfileViewModel(
                 putAll(params)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "EditProfileViewModel"
     }
 }

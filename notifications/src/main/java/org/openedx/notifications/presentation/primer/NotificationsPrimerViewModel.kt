@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
+import org.openedx.core.utils.Logger
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.NotificationsPrimerConfiguration
@@ -18,6 +19,8 @@ class NotificationsPrimerViewModel(
     private val preferences: NotificationsPreferences,
     private val analytics: NotificationsAnalytics,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableStateFlow<PrimerUIState>(PrimerUIState.ShowDialog)
     val uiState: StateFlow<PrimerUIState> = _uiState.asStateFlow()
@@ -39,7 +42,7 @@ class NotificationsPrimerViewModel(
                 interactor.updateNotificationsConfiguration(true)
                 resetNotificationsPrimerConfiguration()
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e)
             } finally {
                 _uiState.value = PrimerUIState.DismissDialog
             }
@@ -131,5 +134,9 @@ class NotificationsPrimerViewModel(
                 putAll(params)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "NotificationsPrimerViewModel"
     }
 }

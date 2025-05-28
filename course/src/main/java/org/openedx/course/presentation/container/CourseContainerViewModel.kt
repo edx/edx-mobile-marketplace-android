@@ -68,6 +68,7 @@ import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.RefreshDates
 import org.openedx.core.system.notifier.RefreshDiscussions
 import org.openedx.core.system.notifier.UpdateCourseData
+import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.DatesShiftedSnackBar
 import org.openedx.course.data.storage.CoursePreferences
@@ -101,6 +102,8 @@ class CourseContainerViewModel(
     private val imageProcessor: ImageProcessor,
     val courseRouter: CourseRouter,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _dataReady = MutableLiveData<Boolean?>()
     val dataReady: LiveData<Boolean?>
@@ -313,7 +316,13 @@ class CourseContainerViewModel(
                     _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(
+                    throwable = e, metadata = mapOf(
+                        "courseId" to courseId,
+                        "isIAPFlow" to isIAPFlow,
+                        "isExpiredCoursePurchase" to isExpiredCoursePurchase
+                    )
+                )
                 _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 _showProgress.value = false
             }
@@ -335,6 +344,7 @@ class CourseContainerViewModel(
                         _iapState.value =
                             IAPUIState.ProductData(formattedPrice = it.formattedPrice)
                     }.onFailure {
+                        logger.e(throwable = it)
                         if (it is IAPException) {
                             updateErrorState(it)
                         }
@@ -394,6 +404,7 @@ class CourseContainerViewModel(
                 purchaseFlowData.basketId = basketId
                 _iapState.value = IAPUIState.PurchaseProduct
             }.onFailure {
+                logger.e(throwable = it)
                 if (it is IAPException) {
                     updateErrorState(it)
                 }
@@ -427,6 +438,7 @@ class CourseContainerViewModel(
             }.onSuccess {
                 consumeOrderForFurtherPurchases(purchaseFlowData)
             }.onFailure {
+                logger.e(throwable = it)
                 if (it is IAPException) {
                     updateErrorState(it)
                 }
@@ -443,6 +455,7 @@ class CourseContainerViewModel(
                 }.onSuccess {
                     updateCourseData()
                 }.onFailure {
+                    logger.e(throwable = it)
                     if (it is IAPException) {
                         updateErrorState(it)
                     }
@@ -522,6 +535,7 @@ class CourseContainerViewModel(
             try {
                 interactor.getCourseStructure(courseId, isNeedRefresh = true)
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 _errorMessage.value =
                     resourceManager.getString(CoreR.string.core_error_unknown_error)
             }
@@ -779,5 +793,9 @@ class CourseContainerViewModel(
                 putAll(param)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "CourseContainerViewModel"
     }
 }

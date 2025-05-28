@@ -28,6 +28,7 @@ import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.system.notifier.VideoNotifier
 import org.openedx.core.system.notifier.VideoQualityChanged
 import org.openedx.core.utils.FileUtil
+import org.openedx.core.utils.Logger
 import org.openedx.course.R
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
@@ -56,6 +57,7 @@ class CourseVideoViewModel(
     coreAnalytics
 ) {
 
+    private val logger = Logger(TAG)
     val isCourseNestedListEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
     private val _uiState = MutableStateFlow<CourseVideosUIState>(CourseVideosUIState.Loading)
@@ -168,6 +170,7 @@ class CourseVideoViewModel(
                 }
                 courseNotifier.send(CourseLoading(false))
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 _uiState.value = CourseVideosUIState.Empty
             }
         }
@@ -234,5 +237,9 @@ class CourseVideoViewModel(
                 )
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "CourseVideoViewModel"
     }
 }

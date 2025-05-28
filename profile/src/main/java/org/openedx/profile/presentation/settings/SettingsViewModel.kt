@@ -40,6 +40,7 @@ import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.RequestEnrolledCourseErrorEvent
 import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
 import org.openedx.core.utils.EmailUtil
+import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Configuration
 import org.openedx.profile.presentation.ProfileAnalytics
@@ -64,6 +65,8 @@ class SettingsViewModel(
     private val appNotifier: AppNotifier,
     private val profileNotifier: ProfileNotifier,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _uiState: MutableStateFlow<SettingsUIState> =
         MutableStateFlow(SettingsUIState.Data(configuration))
@@ -120,6 +123,7 @@ class SettingsViewModel(
                     }
                 )
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {
@@ -300,6 +304,7 @@ class SettingsViewModel(
                     _iapUiState.emit(IAPUIState.FakePurchasesFulfillmentCompleted)
                 }
             }.onFailure {
+                logger.e(throwable = it)
                 if (it is IAPException) {
                     _iapUiState.emit(
                         IAPUIState.Error(
@@ -328,5 +333,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             _iapUiState.emit(null)
         }
+    }
+
+    companion object {
+        private const val TAG = "SettingsViewModel"
     }
 }

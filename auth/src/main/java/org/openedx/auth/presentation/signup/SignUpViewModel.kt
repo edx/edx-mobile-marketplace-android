@@ -36,6 +36,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
+import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.Logger
 import retrofit2.HttpException
 import org.openedx.core.R as coreR
@@ -87,6 +88,7 @@ class SignUpViewModel(
             try {
                 updateFields(interactor.getRegistrationFields())
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.emit(
                         UIMessage.SnackBarMessage(
@@ -231,6 +233,7 @@ class SignUpViewModel(
     }
 
     private suspend fun handleRegisterException(throwable: Throwable) {
+        logger.e(throwable = throwable)
         _uiState.update { it.copy(isButtonLoading = false) }
         if (throwable.isInternetError()) {
             _uiMessage.emit(
@@ -263,6 +266,7 @@ class SignUpViewModel(
                 })
                 socialAuth.checkToken()
             }.onFailure { exception ->
+                logger.e(throwable = exception)
                 _uiState.update { it.copy(isLoading = false) }
                 logLogistrationFailureEvent(
                     AuthAnalyticsEvent.SOCIAL_AUTH_FAILURE,
@@ -286,7 +290,8 @@ class SignUpViewModel(
     private suspend fun exchangeToken(socialAuth: SocialAuthResponse) {
         runCatching {
             interactor.loginSocial(socialAuth.accessToken, socialAuth.authType)
-        }.onFailure {
+        }.onFailure { exception ->
+            logger.e(throwable = exception)
             val fields = uiState.value.allFields.toMutableList()
                 .filter { it.type != RegistrationFieldType.PASSWORD }
                 .map { field ->
@@ -348,6 +353,7 @@ class SignUpViewModel(
     private fun setUserId() {
         preferencesManager.user?.let {
             analytics.setUserIdForSession(it.id)
+            CrashlyticsHelper.setUserId(it.id.toString())
         }
     }
 

@@ -14,6 +14,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.RefreshDiscussions
+import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
@@ -28,6 +29,8 @@ class DiscussionTopicsViewModel(
     private val courseNotifier: CourseNotifier,
     val discussionRouter: DiscussionRouter,
 ) : BaseDiscussionViewModel(courseId, "", analytics) {
+
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableLiveData<DiscussionTopicsUIState>()
     val uiState: LiveData<DiscussionTopicsUIState>
@@ -53,6 +56,7 @@ class DiscussionTopicsViewModel(
                     _uiState.value = DiscussionTopicsUIState.Error
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 _uiState.value = DiscussionTopicsUIState.Error
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
@@ -90,6 +94,8 @@ class DiscussionTopicsViewModel(
     }
 
     companion object DiscussionTopic {
+        private const val TAG = "DiscussionTopicsViewModel"
+
         const val TOPIC = "Topic"
         const val ALL_POSTS = "All posts"
         const val FOLLOWING_POSTS = "Following"

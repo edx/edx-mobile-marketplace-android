@@ -25,6 +25,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.DiscoveryNotifier
+import org.openedx.core.utils.Logger
 import org.openedx.discovery.R
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.presentation.DiscoveryAnalytics
@@ -48,6 +49,7 @@ class CourseInfoViewModel(
     private val analytics: DiscoveryAnalytics,
     corePreferences: CorePreferences,
 ) : BaseViewModel() {
+    private val logger = Logger(TAG)
 
     private val _uiState =
         MutableStateFlow(
@@ -126,6 +128,7 @@ class CourseInfoViewModel(
                     )
                 }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.emit(
                         UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection))
@@ -222,6 +225,7 @@ class CourseInfoViewModel(
     }
 
     companion object {
+        private const val TAG = "CourseInfoViewModel"
         private const val ARG_PATH_ID = "path_id"
     }
 }

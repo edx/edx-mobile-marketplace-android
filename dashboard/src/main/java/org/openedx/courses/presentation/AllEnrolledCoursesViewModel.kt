@@ -21,6 +21,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.DiscoveryNotifier
+import org.openedx.core.utils.Logger
 import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
 import org.openedx.dashboard.presentation.DashboardAnalytics
@@ -38,6 +39,8 @@ class AllEnrolledCoursesViewModel(
     private val analytics: DashboardAnalytics,
     private val dashboardRouter: DashboardRouter
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     val apiHostUrl get() = config.getApiHostURL()
     val hasInternetConnection: Boolean
@@ -98,6 +101,7 @@ class AllEnrolledCoursesViewModel(
                 coursesList.addAll(response.courses)
                 _uiState.update { it.copy(courses = coursesList.toList()) }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("filter" to currentFilter.value.key))
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {
@@ -140,6 +144,7 @@ class AllEnrolledCoursesViewModel(
                 }
                 _uiState.update { it.copy(courses = coursesList.toList()) }
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("filter" to currentFilter.value.key))
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {
@@ -221,5 +226,9 @@ class AllEnrolledCoursesViewModel(
                 DashboardAnalyticsKey.CATEGORY.key to DashboardAnalyticsKey.MY_COURSES.key
             )
         )
+    }
+
+    companion object {
+        private const val TAG = "AllEnrolledCoursesViewModel"
     }
 }

@@ -36,6 +36,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
+import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.Logger
 import retrofit2.HttpException
 import org.openedx.core.R as CoreRes
@@ -107,6 +108,7 @@ class SignInViewModel(
                 logSignInSuccessEvent(AuthType.PASSWORD)
                 appNotifier.send(SignInEvent())
             } catch (e: Exception) {
+                logger.e(throwable = e)
                 logSignInErrorEvent(AuthType.PASSWORD, e)
                 if (e is EdxError.InvalidGrantException) {
                     _uiMessage.value =
@@ -148,6 +150,7 @@ class SignInViewModel(
                     logSignInErrorEvent(authType, Exception(OAuthHelper.ACCESS_TOKEN_EMPTY_MESSAGE))
                 }
             }.onFailure { exception ->
+                logger.e (throwable = exception)
                 _uiState.update { it.copy(showProgress = false) }
                 logSignInErrorEvent(authType, exception)
             }
@@ -173,7 +176,7 @@ class SignInViewModel(
         runCatching {
             interactor.loginSocial(token, authType)
         }.onFailure { error ->
-            logger.e { "Social login error: $error" }
+            logger.e (throwable = error)
             logSignInErrorEvent(authType, error)
             onUnknownError()
         }.onSuccess {
@@ -199,6 +202,7 @@ class SignInViewModel(
     private fun setMetadata(authType: AuthType) {
         preferencesManager.user?.let {
             analytics.setUserIdForSession(it.id)
+            CrashlyticsHelper.setUserId(it.id.toString())
         }
         preferencesManager.lastSignInType = authType.name
     }

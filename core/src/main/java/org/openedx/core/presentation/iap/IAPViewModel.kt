@@ -33,6 +33,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
+import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
 
 class IAPViewModel(
@@ -42,6 +43,8 @@ class IAPViewModel(
     private val resourceManager: ResourceManager,
     private val iapNotifier: IAPNotifier,
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
 
     private val _uiState = MutableStateFlow<IAPUIState>(IAPUIState.Loading(IAPLoaderType.PRICE))
     val uiState: StateFlow<IAPUIState>
@@ -128,6 +131,7 @@ class IAPViewModel(
                         _uiState.value =
                             IAPUIState.ProductData(formattedPrice = it.formattedPrice)
                     }.onFailure {
+                        logger.e(throwable = it)
                         if (it is IAPException) {
                             updateErrorState(it)
                         }
@@ -174,6 +178,7 @@ class IAPViewModel(
                 purchaseFlowData.basketId = basketId
                 _uiState.value = IAPUIState.PurchaseProduct
             }.onFailure {
+                logger.e(throwable = it)
                 if (it is IAPException) {
                     updateErrorState(it)
                 }
@@ -207,6 +212,7 @@ class IAPViewModel(
             }.onSuccess {
                 consumeOrderForFurtherPurchases(purchaseFlowData)
             }.onFailure {
+                logger.e(throwable = it)
                 if (it is IAPException) {
                     updateErrorState(it)
                 }
@@ -222,6 +228,7 @@ class IAPViewModel(
                 }.onSuccess {
                     updateCourseData()
                 }.onFailure {
+                    logger.e(throwable = it)
                     if (it is IAPException) {
                         updateErrorState(it)
                     }
@@ -269,5 +276,9 @@ class IAPViewModel(
     fun clearIAPFLow() {
         _uiState.value = IAPUIState.Clear
         purchaseFlowData.reset()
+    }
+
+    companion object {
+        private const val TAG = "IAPViewModel"
     }
 }

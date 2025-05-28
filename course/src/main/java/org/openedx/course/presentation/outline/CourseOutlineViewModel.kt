@@ -39,6 +39,7 @@ import org.openedx.core.system.notifier.CourseOpenBlock
 import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.system.notifier.RefreshPLSBanner
 import org.openedx.core.utils.FileUtil
+import org.openedx.core.utils.Logger
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
@@ -69,6 +70,8 @@ class CourseOutlineViewModel(
     workerController,
     coreAnalytics
 ) {
+    private val logger = Logger(TAG)
+
     val isCourseNestedListEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
     private val _uiState = MutableStateFlow<CourseOutlineUIState>(CourseOutlineUIState.Loading)
@@ -243,6 +246,7 @@ class CourseOutlineViewModel(
                 _canShowPLSBanner.value =
                     coursePreferences.canShowPLSBanner(courseId, datesBannerInfo.bannerType.name)
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 _uiState.value = CourseOutlineUIState.Error
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
@@ -295,6 +299,7 @@ class CourseOutlineViewModel(
                 courseNotifier.send(CourseDatesShifted)
                 onResetDates(true)
             } catch (e: Exception) {
+                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
                 } else {
@@ -439,5 +444,9 @@ class CourseOutlineViewModel(
                 put(CourseAnalyticsKey.SCREEN_NAME.key, CourseAnalyticsKey.COURSE_DASHBOARD.key)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "CourseOutlineViewModel"
     }
 }

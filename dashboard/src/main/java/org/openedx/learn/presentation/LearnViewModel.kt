@@ -14,6 +14,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.PushEvent
 import org.openedx.core.system.notifier.PushNotifier
+import org.openedx.core.utils.Logger
 import org.openedx.dashboard.presentation.DashboardAnalytics
 import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
 import org.openedx.dashboard.presentation.DashboardAnalyticsKey
@@ -28,6 +29,9 @@ class LearnViewModel(
     private val pushManager: PushGlobalManager,
     private val pushNotifier: PushNotifier
 ) : BaseViewModel() {
+
+    private val logger = Logger(TAG)
+
     private val _uiState = MutableStateFlow(
         LearnUIState(
             if (openTab == LearnTab.PROGRAMS.name) {
@@ -77,7 +81,7 @@ class LearnViewModel(
                     val unreadNotifications = pushManager.getUnreadNotificationsCount()
                     _uiState.update { it.copy(hasUnreadNotifications = unreadNotifications > 0) }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    logger.e(throwable = e)
                 }
             }
         }
@@ -104,5 +108,9 @@ class LearnViewModel(
                 put(DashboardAnalyticsKey.CATEGORY.key, DashboardAnalyticsKey.LEARN.key)
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "LearnViewModel"
     }
 }

@@ -25,6 +25,7 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.ui.theme.ThemeManager
+import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.Logger
 
@@ -105,6 +106,7 @@ class AppViewModel(
     private fun setUserId(user: User?) {
         user?.let {
             analytics.setUserIdForSession(it.id)
+            CrashlyticsHelper.setUserId(it.id.toString())
         }
     }
 
@@ -139,7 +141,7 @@ class AppViewModel(
                 deepLink.notificationDomain?.let { pushManager.logNotificationTappedEvent(deepLink.toMap()) }
                 deepLink.notificationId?.let { pushManager.markNotificationAsRead(it) }
             } catch (e: Exception) {
-                logger.e(throwable = e, submitCrashReport = true)
+                logger.e(throwable = e)
             }
         }
     }

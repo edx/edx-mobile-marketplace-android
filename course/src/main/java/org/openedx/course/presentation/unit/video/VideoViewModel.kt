@@ -12,6 +12,7 @@ import org.openedx.core.system.notifier.CourseCompletionSet
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseVideoPositionChanged
 import org.openedx.core.utils.LocaleUtils
+import org.openedx.core.utils.Logger
 import org.openedx.course.data.repository.CourseRepository
 import org.openedx.course.presentation.CourseAnalytics
 
@@ -23,6 +24,8 @@ class VideoViewModel(
     private val preferencesManager: CorePreferences,
     courseAnalytics: CourseAnalytics,
 ) : BaseVideoViewModel(courseId, blockId, courseAnalytics) {
+
+    private val logger = Logger(TAG)
 
     var videoUrl = ""
     var currentVideoTime = 0L
@@ -78,6 +81,10 @@ class VideoViewModel(
                     )
                     notifier.send(CourseCompletionSet())
                 } catch (e: Exception) {
+                    logger.e(
+                        throwable = e,
+                        metadata = mapOf("courseId" to courseId, "blockId" to blockId)
+                    )
                     isBlockAlreadyCompleted = false
                 }
             }
@@ -89,5 +96,9 @@ class VideoViewModel(
     fun setVideoPlaybackSpeed(speed: Float) {
         preferencesManager.videoSettings =
             videoSettings.copy(videoPlaybackSpeed = VideoPlaybackSpeed.getVideoPlaybackSpeed(speed))
+    }
+
+    companion object {
+        private const val TAG = "VideoViewModel"
     }
 }

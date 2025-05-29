@@ -139,6 +139,9 @@ class DiscussionCommentsFragment : Fragment() {
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
+                    onCommentPulseEnd = { comment->
+                        viewModel.updateCommentPulseStatus(comment =comment)
+                    },
                     onSwipeRefresh = {
                         viewModel.updateThreadComments()
                     },
@@ -247,6 +250,7 @@ private fun DiscussionCommentsScreen(
     title: String,
     canLoadMore: Boolean,
     refreshing: Boolean,
+    onCommentPulseEnd: (DiscussionComment) -> Unit = {},
     onSwipeRefresh: () -> Unit,
     paginationCallBack: () -> Unit,
     onItemClick: (String, String, Boolean) -> Unit,
@@ -404,6 +408,7 @@ private fun DiscussionCommentsScreen(
                                                     onCommentClick(comment)
                                                 },
                                             comment = comment,
+                                            onCommentPulseEnd = onCommentPulseEnd,
                                             onClick = { action, commentId, bool ->
                                                 onItemClick(action, commentId, bool)
                                             },

@@ -205,9 +205,10 @@ fun CommentItem(
     modifier: Modifier,
     comment: DiscussionComment,
     shape: Shape = MaterialTheme.appShapes.cardShape,
+    onCommentPulseEnd: (DiscussionComment) -> Unit = {},
     onClick: (String, String, Boolean) -> Unit,
     onAddCommentClick: () -> Unit = {},
-    onUserPhotoClick: (String) -> Unit
+    onUserPhotoClick: (String) -> Unit,
 ) {
     val profileImageUrl = if (comment.profileImage?.hasImage == true) {
         comment.profileImage.imageUrlFull
@@ -241,11 +242,11 @@ fun CommentItem(
 
     LaunchedEffect(comment.shouldHighlight) {
         if (comment.shouldHighlight) {
-            repeat(6) {
+            repeat(5) {
                 backgroundColor.animateTo(highlightColor, animationSpec = tween(250))
                 backgroundColor.animateTo(normalColor, animationSpec = tween(250))
             }
-            comment.shouldHighlight = false
+            onCommentPulseEnd(comment)
         } else {
             backgroundColor.snapTo(normalColor)
         }

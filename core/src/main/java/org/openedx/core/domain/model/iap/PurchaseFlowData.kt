@@ -25,13 +25,6 @@ data class PurchaseFlowData(
     var isConsumed: Boolean = false
 
     fun reset() {
-        iapFlow = null
-        screenName = null
-        courseId = null
-        courseName = null
-        isSelfPaced = null
-        componentId = null
-        productInfo = null
         currencyCode = ""
         price = 0.0
         formattedPrice = null
@@ -71,6 +64,7 @@ enum class IAPFlow(val value: String) {
 enum class IAPFlowSource(val screen: String) {
     COURSE_ENROLLMENT("course_enrollment"),
     COURSE_DASHBOARD("course_dashboard"),
+    COURSE_COMPONENT("course_component"),
     PROFILE("profile"),
     TRACK_SELECTION("track_selection"),
 }

@@ -305,13 +305,9 @@ class IAPDialogFragment : DialogFragment() {
             return newInstance(purchaseFlowData)
         }
 
-        fun newInstance(
-            purchaseFlowData: PurchaseFlowData
-        ): IAPDialogFragment {
+        fun newInstance(purchaseFlowData: PurchaseFlowData): IAPDialogFragment {
             val fragment = IAPDialogFragment()
-            fragment.arguments = bundleOf(
-                ARG_PURCHASE_FLOW_DATA to purchaseFlowData
-            )
+            fragment.arguments = bundleOf(ARG_PURCHASE_FLOW_DATA to purchaseFlowData)
             return fragment
         }
     }

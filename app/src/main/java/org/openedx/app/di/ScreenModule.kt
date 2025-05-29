@@ -28,6 +28,7 @@ import org.openedx.course.presentation.outline.CourseOutlineViewModel
 import org.openedx.course.presentation.section.CourseSectionViewModel
 import org.openedx.course.presentation.unit.container.CourseUnitContainerViewModel
 import org.openedx.course.presentation.unit.html.HtmlUnitViewModel
+import org.openedx.course.presentation.unit.unlockcontent.UnlockContentViewModel
 import org.openedx.course.presentation.unit.video.BaseVideoViewModel
 import org.openedx.course.presentation.unit.video.EncodedVideoUnitViewModel
 import org.openedx.course.presentation.unit.video.VideoUnitViewModel
@@ -327,6 +328,8 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
+            get(),
         )
     }
     viewModel { (courseId: String, courseTitle: String) ->
@@ -525,6 +528,10 @@ val screenModule = module {
         )
     }
     viewModel { HtmlUnitViewModel(get(), get(), get(), get(), get()) }
+
+    viewModel { (blockId: String, courseId: String) ->
+        UnlockContentViewModel(blockId, courseId, get(), get(), get(), get())
+    }
 
     viewModel { ProgramViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 

@@ -4,9 +4,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.openedx.core.BaseViewModel
@@ -19,9 +24,12 @@ import org.openedx.core.extension.indexOfFirstFromIndex
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.presentation.course.CourseViewMode
+import org.openedx.core.presentation.global.AppData
+import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSectionChanged
 import org.openedx.core.system.notifier.CourseStructureUpdated
+import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
@@ -36,6 +44,8 @@ class CourseUnitContainerViewModel(
     private val notifier: CourseNotifier,
     private val analytics: CourseAnalytics,
     private val corePreferences: CorePreferences,
+    private val appData: AppData,
+    iapNotifier: IAPNotifier,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -45,6 +55,11 @@ class CourseUnitContainerViewModel(
     val isCourseExpandableSectionsEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
     val isCourseUnitProgressEnabled get() = config.getCourseUIConfig().isCourseUnitProgressEnabled
+
+    private val iapConfig
+        get() = corePreferences.appConfig.iapConfig
+    val isUpgradeEnabled
+        get() = iapConfig.isUpgradeEnabled(appData.versionName)
 
     private var currentIndex = 0
     private var currentVerticalIndex = 0
@@ -77,6 +92,9 @@ class CourseUnitContainerViewModel(
     private val _subSectionUnitBlocks = MutableStateFlow<List<Block>>(listOf())
     val subSectionUnitBlocks = _subSectionUnitBlocks.asStateFlow()
 
+    private val _refreshComponent = MutableSharedFlow<Boolean>()
+    val refreshComponent = _refreshComponent.asSharedFlow()
+
     var nextButtonText = ""
     var hasNextBlock = false
 
@@ -90,19 +108,28 @@ class CourseUnitContainerViewModel(
     val videoQuality
         get() = corePreferences.videoSettings.videoStreamingQuality
 
-    fun loadBlocks(mode: CourseViewMode, componentId: String = "") {
+    fun loadBlocks(mode: CourseViewMode, componentId: String = "", isNeedRefresh: Boolean = false) {
         currentMode = mode
         viewModelScope.launch {
             try {
                 val courseStructure = when (mode) {
-                    CourseViewMode.FULL -> interactor.getCourseStructure(courseId)
-                    CourseViewMode.VIDEOS -> interactor.getCourseStructureForVideos(courseId)
+                    CourseViewMode.FULL -> interactor.getCourseStructure(courseId, isNeedRefresh)
+                    CourseViewMode.VIDEOS -> interactor.getCourseStructureForVideos(
+                        courseId,
+                        isNeedRefresh
+                    )
                 }
                 val blocks = courseStructure.blockData
                 courseName = courseStructure.name
                 this@CourseUnitContainerViewModel.blocks.clearAndAddAll(blocks)
 
+                updateDescendantsBlocks(blocks)
                 setupCurrentIndex(componentId)
+                if (isNeedRefresh) {
+                    viewModelScope.launch {
+                        _refreshComponent.emit(true)
+                    }
+                }
             } catch (e: Exception) {
                 logger.e(throwable = e)
             }
@@ -124,6 +151,29 @@ class CourseUnitContainerViewModel(
                 }
             }
         }
+        iapNotifier.notifier.onEach { event ->
+            when (event) {
+                is CourseDataUpdated.CourseUnitDataUpdate -> {
+                    currentMode?.let { loadBlocks(it, currentComponentId, true) }
+                }
+            }
+        }.distinctUntilChanged().launchIn(viewModelScope)
+    }
+
+    private fun updateDescendantsBlocks(blocks: List<Block>) {
+        blocks.forEach { block ->
+            if (block.id == unitId) {
+                if (block.descendants.isNotEmpty() || block.isGated()) {
+                    _descendantsBlocks.value =
+                        block.descendants.mapNotNull { descendant ->
+                            blocks.firstOrNull { descendant == it.id }
+                        }
+                    if (_descendantsBlocks.value.isEmpty()) {
+                        _descendantsBlocks.value = listOf(block)
+                    }
+                }
+            }
+        }
     }
 
     private fun setupCurrentIndex(componentId: String = "") {
@@ -137,16 +187,8 @@ class CourseUnitContainerViewModel(
                     it.descendants.contains(blocks[currentVerticalIndex].id)
                 }
                 if (block.descendants.isNotEmpty() || block.isGated()) {
-                    _descendantsBlocks.value =
-                        block.descendants.mapNotNull { descendant ->
-                            blocks.firstOrNull { descendant == it.id }
-                        }
                     _subSectionUnitBlocks.value =
                         getSubSectionUnitBlocks(blocks, getSubSectionId(unitId))
-
-                    if (_descendantsBlocks.value.isEmpty()) {
-                        _descendantsBlocks.value = listOf(block)
-                    }
                 } else {
                     setNextVerticalIndex()
                 }

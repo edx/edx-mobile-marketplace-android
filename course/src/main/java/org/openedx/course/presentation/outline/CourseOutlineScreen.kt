@@ -48,6 +48,7 @@ import org.openedx.core.BlockType
 import org.openedx.core.NoContentScreenType
 import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.AssignmentProgress
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseAccessDetails
@@ -309,7 +310,6 @@ private fun CourseOutlineUI(
                                                     ResumeCourseTablet(
                                                         modifier = Modifier.padding(vertical = 16.dp),
                                                         block = uiState.resumeComponent,
-                                                        displayName = uiState.resumeUnitTitle,
                                                         onResumeClick = onResumeClick
                                                     )
                                                 } else {
@@ -439,7 +439,6 @@ private fun ResumeCourse(
 private fun ResumeCourseTablet(
     modifier: Modifier = Modifier,
     block: Block,
-    displayName: String,
     onResumeClick: (String) -> Unit,
 ) {
     Row(
@@ -638,6 +637,7 @@ private val mockChapterBlock = Block(
     descendantsType = BlockType.CHAPTER,
     completion = 0.0,
     containsGatedContent = false,
+    authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
     assignmentProgress = mockAssignmentProgress,
     due = Date()
 )
@@ -657,6 +657,7 @@ private val mockSequentialBlock = Block(
     descendantsType = BlockType.CHAPTER,
     completion = 0.0,
     containsGatedContent = false,
+    authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
     assignmentProgress = mockAssignmentProgress,
     due = Date()
 )

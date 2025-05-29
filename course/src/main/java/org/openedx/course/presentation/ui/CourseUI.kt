@@ -340,8 +340,7 @@ fun NavigationUnitsButtons(
     Row(
         modifier = Modifier
             .navigationBarsPadding()
-            .then(subModifier)
-            .background(MaterialTheme.appColors.background),
+            .then(subModifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {

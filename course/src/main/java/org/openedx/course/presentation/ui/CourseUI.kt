@@ -80,6 +80,7 @@ import androidx.compose.ui.zIndex
 import org.jsoup.Jsoup
 import org.openedx.core.BlockType
 import org.openedx.core.domain.model.AssignmentProgress
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseBannerType
@@ -1461,6 +1462,7 @@ private val mockChapterBlock = Block(
     descendantsType = BlockType.CHAPTER,
     completion = 1.0,
     containsGatedContent = false,
+    authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
     assignmentProgress = AssignmentProgress("", 1f, 2f),
     due = Date()
 )

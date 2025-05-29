@@ -62,6 +62,7 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.BlockType
 import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.AssignmentProgress
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.extension.serializable
@@ -481,6 +482,7 @@ private val mockBlock = Block(
     descendantsType = BlockType.HTML,
     completion = 0.0,
     containsGatedContent = false,
+    authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
     assignmentProgress = AssignmentProgress("", 1f, 2f),
     due = Date()
 )

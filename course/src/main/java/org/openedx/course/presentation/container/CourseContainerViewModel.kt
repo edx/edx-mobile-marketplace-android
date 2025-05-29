@@ -236,7 +236,7 @@ class CourseContainerViewModel(
             when (event) {
                 is UpdateCourseData -> {
                     fetchCourseDetails(
-                        isIAPFlow = event.isPurchasedFromCourseDashboard,
+                        isIAPFlow = true,
                         isExpiredCoursePurchase = event.isExpiredCoursePurchase
                     )
                 }

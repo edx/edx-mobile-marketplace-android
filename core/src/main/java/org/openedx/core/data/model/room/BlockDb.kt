@@ -8,6 +8,7 @@ import org.openedx.core.data.model.BlockCounts
 import org.openedx.core.data.model.EncodedVideos
 import org.openedx.core.data.model.StudentViewData
 import org.openedx.core.data.model.VideoInfo
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.domain.model.AssignmentProgress as DomainAssignmentProgress
 import org.openedx.core.domain.model.Block as DomainBlock
@@ -45,6 +46,8 @@ data class BlockDb(
     val completion: Double,
     @ColumnInfo("contains_gated_content")
     val containsGatedContent: Boolean,
+    @ColumnInfo("authorization_denial_reason")
+    val authorizationDenialReason: String,
     @Embedded
     val assignmentProgress: AssignmentProgressDb?,
     @ColumnInfo("due")
@@ -78,6 +81,7 @@ data class BlockDb(
             descendantsType = descendantsType,
             completion = completion,
             containsGatedContent = containsGatedContent,
+            authorizationDenialReason = AuthorizationDenialReason.from(authorizationDenialReason),
             assignmentProgress = assignmentProgress?.mapToDomain(),
             due = TimeUtils.iso8601ToDate(due ?: ""),
         )
@@ -104,6 +108,7 @@ data class BlockDb(
                     blockCounts = BlockCountsDb.createFrom(blockCounts),
                     completion = completion ?: 0.0,
                     containsGatedContent = containsGatedContent ?: false,
+                    authorizationDenialReason = authorizationDenialReason ?: "",
                     assignmentProgress = assignmentProgress?.mapToRoomEntity(),
                     due = due
                 )

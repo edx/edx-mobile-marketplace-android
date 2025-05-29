@@ -3,9 +3,11 @@ package org.openedx.course.presentation.unit.container
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import org.openedx.core.FragmentViewType
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.course.presentation.unit.NotSupportedUnitFragment
 import org.openedx.course.presentation.unit.html.HtmlUnitFragment
+import org.openedx.course.presentation.unit.unlockcontent.UnlockContentFragment
 import org.openedx.course.presentation.unit.video.VideoUnitFragment
 import org.openedx.course.presentation.unit.video.YoutubeVideoUnitFragment
 import org.openedx.discussion.presentation.threads.DiscussionThreadsFragment
@@ -23,6 +25,17 @@ class CourseUnitContainerAdapter(
 
     private fun unitBlockFragment(block: Block): Fragment {
         return when {
+            (block.authorizationDenialReason == AuthorizationDenialReason.FEATURE_BASED_ENROLLMENTS) -> {
+                if (viewModel.isIAPEnabled) {
+                    UnlockContentFragment.newInstance(viewModel.courseId, block.id)
+                } else {
+                    NotSupportedUnitFragment.newInstance(
+                        block.id,
+                        block.lmsWebUrl
+                    )
+                }
+            }
+
             (block.isVideoBlock &&
                     (block.studentViewData?.encodedVideos?.hasVideoUrl == true ||
                             block.studentViewData?.encodedVideos?.hasYoutubeUrl == true)) -> {
@@ -31,7 +44,9 @@ class CourseUnitContainerAdapter(
                     val downloadModel = viewModel.getDownloadModelById(block.id)
                     val isDownloaded = downloadModel != null
 
-                    val videoUrl = downloadModel?.path ?: getPreferredVideoInfoForStreaming(viewModel.videoQuality).url
+                    val videoUrl = downloadModel?.path ?: getPreferredVideoInfoForStreaming(
+                        viewModel.videoQuality
+                    ).url
                     val transcripts =
                         downloadModel?.transcriptPaths ?: block.studentViewData?.transcripts
 

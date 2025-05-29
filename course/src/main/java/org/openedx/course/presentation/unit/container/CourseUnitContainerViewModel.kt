@@ -19,10 +19,12 @@ import org.openedx.core.extension.indexOfFirstFromIndex
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.presentation.course.CourseViewMode
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSectionChanged
 import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.utils.Logger
+import org.openedx.core.system.notifier.RefreshCourseComponents
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -36,6 +38,7 @@ class CourseUnitContainerViewModel(
     private val notifier: CourseNotifier,
     private val analytics: CourseAnalytics,
     private val corePreferences: CorePreferences,
+    private val appData: AppData,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -45,6 +48,11 @@ class CourseUnitContainerViewModel(
     val isCourseExpandableSectionsEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
     val isCourseUnitProgressEnabled get() = config.getCourseUIConfig().isCourseUnitProgressEnabled
+
+    private val iapConfig
+        get() = corePreferences.appConfig.iapConfig
+    val isIAPEnabled
+        get() = iapConfig.isEnabled && iapConfig.disableVersions.contains(appData.versionName).not()
 
     private var currentIndex = 0
     private var currentVerticalIndex = 0
@@ -121,6 +129,8 @@ class CourseUnitContainerViewModel(
                     val blockId = blocks[currentVerticalIndex].id
                     _subSectionUnitBlocks.value =
                         getSubSectionUnitBlocks(blocks, getSubSectionId(blockId))
+                } else if (event is RefreshCourseComponents) {
+                    currentMode?.let { loadBlocks(it, currentComponentId) }
                 }
             }
         }

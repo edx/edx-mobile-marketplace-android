@@ -44,9 +44,11 @@ data class PurchaseFlowData(
             IAPFlow.SILENT -> {
                 true
             }
+
             IAPFlow.RESTORE -> {
                 false
             }
+
             else -> {
                 null
             }
@@ -68,5 +70,6 @@ enum class IAPFlow(val value: String) {
 enum class IAPFlowSource(val screen: String) {
     COURSE_ENROLLMENT("course_enrollment"),
     COURSE_DASHBOARD("course_dashboard"),
+    COURSE_COMPONENT("course_component"),
     PROFILE("profile"),
 }

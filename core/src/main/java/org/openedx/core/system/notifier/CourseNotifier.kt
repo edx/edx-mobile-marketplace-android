@@ -22,4 +22,5 @@ class CourseNotifier {
     suspend fun send(event: RefreshDates) = channel.emit(event)
     suspend fun send(event: RefreshPLSBanner) = channel.emit(event)
     suspend fun send(event: RefreshDiscussions) = channel.emit(event)
+    suspend fun send(event: RefreshCourseComponents) = channel.emit(event)
 }

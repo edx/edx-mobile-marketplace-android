@@ -23,6 +23,7 @@ import org.openedx.core.BlockType
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.AssignmentProgress
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseAccessDetails
@@ -30,6 +31,7 @@ import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.presentation.course.CourseViewMode
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
@@ -50,6 +52,7 @@ class CourseUnitContainerViewModelTest {
     private val notifier = mockk<CourseNotifier>()
     private val analytics = mockk<CourseAnalytics>()
     private val corePreferences = mockk<CorePreferences>()
+    private val appData = mockk<AppData>()
 
     private val assignmentProgress = AssignmentProgress(
         assignmentType = "Homework",
@@ -74,6 +77,7 @@ class CourseUnitContainerViewModelTest {
             descendantsType = BlockType.HTML,
             completion = 0.0,
             assignmentProgress = assignmentProgress,
+            authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
             due = Date()
         ),
         Block(
@@ -92,6 +96,7 @@ class CourseUnitContainerViewModelTest {
             descendantsType = BlockType.HTML,
             completion = 0.0,
             assignmentProgress = assignmentProgress,
+            authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
             due = Date()
         ),
         Block(
@@ -110,6 +115,7 @@ class CourseUnitContainerViewModelTest {
             descendantsType = BlockType.HTML,
             completion = 0.0,
             assignmentProgress = assignmentProgress,
+            authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
             due = Date()
         ),
         Block(
@@ -128,6 +134,7 @@ class CourseUnitContainerViewModelTest {
             descendantsType = BlockType.HTML,
             completion = 0.0,
             assignmentProgress = assignmentProgress,
+            authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
             due = Date()
         )
 
@@ -195,7 +202,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
 
         coEvery { interactor.getCourseStructure(any()) } throws UnknownHostException()
@@ -218,7 +226,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
 
         coEvery { interactor.getCourseStructure(any()) } throws UnknownHostException()
@@ -241,7 +250,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
 
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
@@ -266,7 +276,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -289,7 +300,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -314,7 +326,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -339,7 +352,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -364,7 +378,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -389,7 +404,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
         coEvery { interactor.getCourseStructure("") } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos("") } returns courseStructure
@@ -414,7 +430,8 @@ class CourseUnitContainerViewModelTest {
                 interactor,
                 notifier,
                 analytics,
-                corePreferences
+                corePreferences,
+                appData
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure

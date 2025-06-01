@@ -28,6 +28,7 @@ import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.AssignmentProgress
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseAccessDetails
@@ -96,6 +97,7 @@ class CourseSectionViewModelTest {
             descendantsType = BlockType.HTML,
             completion = 0.0,
             assignmentProgress = assignmentProgress,
+            authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
             due = Date()
         ),
         Block(
@@ -114,6 +116,7 @@ class CourseSectionViewModelTest {
             descendantsType = BlockType.HTML,
             completion = 0.0,
             assignmentProgress = assignmentProgress,
+            authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
             due = Date()
         ),
         Block(
@@ -132,6 +135,7 @@ class CourseSectionViewModelTest {
             descendantsType = BlockType.HTML,
             completion = 0.0,
             assignmentProgress = assignmentProgress,
+            authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
             due = Date()
         )
     )

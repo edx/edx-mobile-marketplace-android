@@ -24,6 +24,7 @@ import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.extension.toIAPException
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.global.AppData
@@ -94,7 +95,7 @@ class SettingsViewModel(
 
     private val configuration
         get() = Configuration(
-            isIAPEnabled = corePreferences.appConfig.iapConfig.isEnabled,
+            isIAPEnabled = corePreferences.appConfig.iapConfig.isUpgradeEnabled(appData.versionName),
             agreementUrls = config.getAgreement(Locale.current.language),
             faqUrl = config.getFaqUrl(),
             feedbackFormUrl = corePreferences.appConfig.feedbackFormUrl,
@@ -305,17 +306,20 @@ class SettingsViewModel(
                 }
             }.onFailure {
                 logger.e(throwable = it)
-                if (it is IAPException) {
-                    _iapUiState.emit(
-                        IAPUIState.Error(
-                            IAPException(
-                                IAPRequestType.RESTORE_CODE,
-                                it.httpErrorCode,
-                                it.errorMessage
-                            )
+                val iapException = it.toIAPException(
+                    requestType = IAPRequestType.RESTORE_CODE,
+                    defaultMessage = resourceManager.getString(R.string.core_error_unknown_error)
+                )
+
+                _iapUiState.emit(
+                    IAPUIState.Error(
+                        IAPException(
+                            IAPRequestType.RESTORE_CODE,
+                            iapException.httpErrorCode,
+                            iapException.errorMessage
                         )
                     )
-                }
+                )
             }
         }
     }

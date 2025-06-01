@@ -14,12 +14,14 @@ import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.extension.toIAPException
 import org.openedx.core.module.billing.BillingProcessor
-import org.openedx.core.module.billing.getCourseSku
+import org.openedx.core.module.billing.getCourseId
 import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.module.billing.getUserId
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.iap.IAPRequestType
+import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.EmailUtil
 import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
@@ -30,12 +32,15 @@ class IAPInteractor(
     private val config: Config,
     private val repository: IAPRepository,
     private val preferencesManager: CorePreferences,
+    private val resourceManager: ResourceManager,
 ) {
     private val logger = Logger(TAG)
     private val iapConfig
         get() = preferencesManager.appConfig.iapConfig
     val isIAPEnabled
-        get() = iapConfig.isEnabled && iapConfig.disableVersions.contains(appData.versionName).not()
+        get() = iapConfig.isEnabled
+    val isUpgradeEnabled
+        get() = iapConfig.isUpgradeEnabled(appData.versionName)
 
     fun showFeedbackScreen(context: Context, message: String) {
         EmailUtil.showFeedbackScreen(
@@ -71,39 +76,34 @@ class IAPInteractor(
         }
     }
 
-    suspend fun addToBasket(courseSku: String): Long {
-        val basketResponse = repository.addToBasket(courseSku)
-        repository.proceedCheckout(basketResponse.basketId)
-        return basketResponse.basketId
-    }
-
     suspend fun purchaseItem(
         activity: FragmentActivity,
+        courseId: String,
         productInfo: ProductInfo,
         purchaseListeners: BillingProcessor.PurchaseListeners,
     ) {
         preferencesManager.user?.id?.let { id ->
             billingProcessor.setPurchaseListener(purchaseListeners)
-            billingProcessor.purchaseItem(activity, id, productInfo)
+            billingProcessor.purchaseItem(activity, id, courseId, productInfo)
         }
     }
 
-    suspend fun executeOrder(
-        basketId: Long,
-        purchaseToken: String,
-        price: Double,
+    suspend fun createOrder(
+        courseId: String,
         currencyCode: String,
+        price: Double,
+        purchaseToken: String,
     ) {
-        repository.executeOrder(
-            basketId = basketId,
-            paymentProcessor = ApiConstants.IAPFields.PAYMENT_PROCESSOR,
-            purchaseToken = purchaseToken,
-            price = price,
+        repository.createOrder(
+            courseId = courseId,
             currencyCode = currencyCode,
+            price = price,
+            paymentProcessor = ApiConstants.IAPFields.PAYMENT_PROCESSOR,
+            purchaseToken = purchaseToken
         )
     }
 
-    suspend fun consumePurchase(purchaseToken: String) {
+    suspend fun consumePurchaseByToken(purchaseToken: String) {
         val result = billingProcessor.consumePurchase(purchaseToken)
         if (result.responseCode != BillingResponseCode.OK) {
             throw IAPException(
@@ -111,6 +111,19 @@ class IAPInteractor(
                 httpErrorCode = result.responseCode,
                 errorMessage = result.debugMessage
             )
+        }
+    }
+
+    suspend fun consumePurchaseByCourseId(enrolledCourseId: String) {
+        val purchases = billingProcessor.queryPurchases()
+        val purchasedCourse = purchases.firstOrNull { purchase ->
+            val userAccountId = purchase.getUserId()
+            val courseId = purchase.getCourseId()
+
+            userAccountId == preferencesManager.user?.id && courseId == enrolledCourseId
+        }
+        purchasedCourse?.purchaseToken?.let {
+            consumePurchaseByToken(it)
         }
     }
 
@@ -122,16 +135,16 @@ class IAPInteractor(
         val purchases = billingProcessor.queryPurchases()
         val userPurchases = purchases.filter { purchase ->
             val userAccountId = purchase.getUserId()
-            val courseSku = purchase.getCourseSku()
+            val courseId = purchase.getCourseId()
 
             userAccountId == userId && enrolledCourses.any { enrolledCourse ->
-                courseSku == enrolledCourse.productInfo?.courseSku
+                courseId == enrolledCourse.course.id
             }
         }
         if (userPurchases.isNotEmpty()) {
             userPurchases.first().let { purchase ->
                 val courseVerified = enrolledCourses.find { enrolledCourse ->
-                    enrolledCourse.productInfo?.courseSku == purchase.getCourseSku()
+                    enrolledCourse.course.id == purchase.getCourseId()
                 }
                 courseVerified?.let {
                     val productDetails =
@@ -139,8 +152,9 @@ class IAPInteractor(
                     val purchaseProductFlow = PurchaseFlowData(
                         courseId = courseVerified.course.id,
                         isSelfPaced = courseVerified.course.isSelfPaced,
-                        productInfo = courseVerified.productInfo
+                        productInfo = courseVerified.productInfo,
                     ).apply {
+                        this.purchaseToken = purchase.purchaseToken
                         productDetails?.oneTimePurchaseOfferDetails?.let {
                             this.price = it.getPriceAmount()
                             this.currencyCode = it.priceCurrencyCode
@@ -148,7 +162,7 @@ class IAPInteractor(
                         this.flowStartTime = TimeUtils.getCurrentTime()
                     }
                     verificationInitiated(purchaseProductFlow)
-                    startUnfulfilledVerification(purchase)
+                    startUnfulfilledVerification(courseVerified.course.id, purchase)
                     return purchaseProductFlow
                 }
             }
@@ -160,21 +174,18 @@ class IAPInteractor(
         return null
     }
 
-    private suspend fun startUnfulfilledVerification(userPurchase: Purchase) {
+    private suspend fun startUnfulfilledVerification(courseId: String, userPurchase: Purchase) {
         val productDetail =
             billingProcessor.querySyncDetails(userPurchase.products.first()).productDetailsList?.firstOrNull()
         productDetail?.oneTimePurchaseOfferDetails?.takeIf {
-            userPurchase.getCourseSku().isNullOrEmpty().not()
+            userPurchase.getCourseId().isNullOrEmpty().not()
         }?.let { oneTimeProductDetails ->
-            val courseSku = userPurchase.getCourseSku() ?: return@let
-            val basketId = addToBasket(courseSku)
-            executeOrder(
-                basketId = basketId,
-                purchaseToken = userPurchase.purchaseToken,
-                price = oneTimeProductDetails.getPriceAmount(),
+            createOrder(
+                courseId = courseId,
                 currencyCode = oneTimeProductDetails.priceCurrencyCode,
+                price = oneTimeProductDetails.getPriceAmount(),
+                purchaseToken = userPurchase.purchaseToken,
             )
-            consumePurchase(userPurchase.purchaseToken)
         }
     }
 
@@ -184,7 +195,7 @@ class IAPInteractor(
         onSuccess: (PurchaseFlowData) -> Unit,
         onFailure: (IAPException) -> Unit,
     ) {
-        if (isIAPEnabled) {
+        if (isUpgradeEnabled) {
             preferencesManager.user?.id?.let { userId ->
                 runCatching {
                     processUnfulfilledPurchase(userId, enrolledCourses, verificationInitiated)
@@ -193,10 +204,13 @@ class IAPInteractor(
                         onSuccess(purchaseFlowData)
                     }
                 }.onFailure {
-                    logger.e (throwable = it)
-                    if (it is IAPException) {
-                        onFailure(it)
-                    }
+                    logger.e(throwable = it)
+                    onFailure(
+                        it.toIAPException(
+                            requestType = IAPRequestType.UNFULFILLED_CODE,
+                            defaultMessage = resourceManager.getString(R.string.core_error_unknown_error)
+                        )
+                    )
                 }
             }
         }

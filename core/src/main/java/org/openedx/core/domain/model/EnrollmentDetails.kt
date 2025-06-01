@@ -21,6 +21,9 @@ data class EnrollmentDetails(
     val isAuditMode: Boolean
         get() = EnrollmentMode.AUDIT.toString().equals(mode, ignoreCase = true)
 
+    val isVerifiedMode: Boolean
+        get() = EnrollmentMode.VERIFIED.toString().equals(mode, ignoreCase = true)
+
     fun mapToRoomEntity() = EnrollmentDetailsDB(
         created = created?.let { ISO8601Utils.format(it) },
         mode = mode,

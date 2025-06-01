@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "00f3f09f9e2831800db9d8b11756144f",
+    "identityHash": "c56954ad90bd6b0aeed83e482c2fd982",
     "entities": [
       {
         "tableName": "course_discovery_table",
@@ -722,7 +722,7 @@
       },
       {
         "tableName": "course_enrollment_details_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `courseUpdates` TEXT NOT NULL, `courseHandouts` TEXT NOT NULL, `discussionUrl` TEXT NOT NULL, `hasUnmetPrerequisites` INTEGER NOT NULL, `isTooEarly` INTEGER NOT NULL, `isStaff` INTEGER NOT NULL, `auditAccessExpires` TEXT, `hasAccess` INTEGER, `errorCode` TEXT, `developerMessage` TEXT, `userMessage` TEXT, `additionalContextUserMessage` TEXT, `userFragment` TEXT, `certificateURL` TEXT, `created` TEXT, `mode` TEXT, `isActive` INTEGER NOT NULL, `upgradeDeadline` TEXT, `name` TEXT NOT NULL, `number` TEXT NOT NULL, `org` TEXT NOT NULL, `start` TEXT, `startDisplay` TEXT NOT NULL, `startType` TEXT NOT NULL, `end` TEXT, `isSelfPaced` INTEGER NOT NULL, `courseAbout` TEXT NOT NULL, `courseModes` TEXT, `bannerImage` TEXT, `courseImage` TEXT, `courseVideo` TEXT, `image` TEXT, `facebook` TEXT NOT NULL, `twitter` TEXT NOT NULL, `courseSku` TEXT, `storeSku` TEXT, `lmsUSDPrice` REAL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `courseUpdates` TEXT NOT NULL, `courseHandouts` TEXT NOT NULL, `discussionUrl` TEXT NOT NULL, `hasUnmetPrerequisites` INTEGER NOT NULL, `isTooEarly` INTEGER NOT NULL, `isStaff` INTEGER NOT NULL, `auditAccessExpires` TEXT, `hasAccess` INTEGER, `errorCode` TEXT, `developerMessage` TEXT, `userMessage` TEXT, `additionalContextUserMessage` TEXT, `userFragment` TEXT, `certificateURL` TEXT, `created` TEXT, `mode` TEXT, `isActive` INTEGER NOT NULL, `upgradeDeadline` TEXT, `name` TEXT NOT NULL, `number` TEXT NOT NULL, `org` TEXT NOT NULL, `start` TEXT, `startDisplay` TEXT NOT NULL, `startType` TEXT NOT NULL, `end` TEXT, `isSelfPaced` INTEGER NOT NULL, `courseAbout` TEXT NOT NULL, `courseModes` TEXT, `bannerImage` TEXT, `courseImage` TEXT, `courseVideo` TEXT, `image` TEXT, `facebook` TEXT NOT NULL, `twitter` TEXT NOT NULL, `storeSku` TEXT, `lmsUSDPrice` REAL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -935,12 +935,6 @@
             "notNull": true
           },
           {
-            "fieldPath": "courseInfoOverview.productInfo.courseSku",
-            "columnName": "courseSku",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
             "fieldPath": "courseInfoOverview.productInfo.storeSku",
             "columnName": "storeSku",
             "affinity": "TEXT",
@@ -966,7 +960,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '00f3f09f9e2831800db9d8b11756144f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c56954ad90bd6b0aeed83e482c2fd982')"
     ]
   }
 }

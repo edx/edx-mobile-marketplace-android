@@ -11,6 +11,7 @@ sealed class IAPUIState {
     data class Loading(val loaderType: IAPLoaderType) : IAPUIState()
     data class Error(val iapException: IAPException) : IAPUIState()
     data object Clear : IAPUIState()
+    data object None : IAPUIState()
 }
 
 enum class IAPLoaderType {
@@ -35,10 +36,10 @@ enum class IAPAction(val action: String) {
 enum class IAPRequestType(val request: String) {
     // Custom Codes for request types
     PRICE_CODE("price_fetch"),
-    ADD_TO_BASKET_CODE("basket"),
-    CHECKOUT_CODE("checkout"),
     PAYMENT_SDK_CODE("payment"),
-    EXECUTE_ORDER_CODE("execute"),
+    PURCHASE_PRECHECK_CODE("purchase_precheck"),
+    CREATE_ORDER_CODE("create_order"),
+    COURSE_REFRESH_CODE("course_refresh"),
     NO_SKU_CODE("sku"),
     CONSUME_CODE("consume"),
     UNFULFILLED_CODE("unfulfilled"),

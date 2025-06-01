@@ -221,8 +221,8 @@ class IAPDialogFragment : DialogFragment() {
                                         )
                                         if (iapException.requestType == IAPRequestType.CONSUME_CODE) {
                                             iapViewModel.retryToConsumeOrder()
-                                        } else if (iapException.requestType == IAPRequestType.EXECUTE_ORDER_CODE) {
-                                            iapViewModel.retryExecuteOrder()
+                                        } else if (iapException.requestType == IAPRequestType.CREATE_ORDER_CODE) {
+                                            iapViewModel.retryCreateOrder()
                                         }
                                     }
 
@@ -292,7 +292,6 @@ class IAPDialogFragment : DialogFragment() {
             componentId: String? = null,
             productInfo: ProductInfo? = null,
         ): IAPDialogFragment {
-            val fragment = IAPDialogFragment()
             val purchaseFlowData = PurchaseFlowData().apply {
                 this.iapFlow = iapFlow
                 this.screenName = screenName
@@ -303,7 +302,13 @@ class IAPDialogFragment : DialogFragment() {
                 this.componentId = componentId
                 this.productInfo = productInfo
             }
+            return newInstance(purchaseFlowData)
+        }
 
+        fun newInstance(
+            purchaseFlowData: PurchaseFlowData
+        ): IAPDialogFragment {
+            val fragment = IAPDialogFragment()
             fragment.arguments = bundleOf(
                 ARG_PURCHASE_FLOW_DATA to purchaseFlowData
             )

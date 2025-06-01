@@ -374,7 +374,7 @@ fun CourseDashboard(
             )
             val canShowTrackSelection by viewModel.canShowTrackSelection.collectAsState()
             val accessStatus = viewModel.courseAccessStatus.observeAsState()
-            val canShowUpgradeButton by viewModel.canShowUpgradeButton.collectAsState()
+            val canShowValuePropButton by viewModel.canShowValuePropButton.collectAsState()
             val tabState = rememberLazyListState()
             val snackState = remember { SnackbarHostState() }
             val pullRefreshState = rememberPullRefreshState(
@@ -444,7 +444,7 @@ fun CourseDashboard(
                                 )
                             },
                             upgradeButton = {
-                                if (isDataReady && canShowUpgradeButton) {
+                                if (isDataReady && canShowValuePropButton) {
                                     val horizontalPadding =
                                         if (!windowSize.isTablet) 16.dp else 98.dp
                                     UpgradeToAccessView(
@@ -675,10 +675,6 @@ private fun AuditExpiredUpgradableView(
     val iapState by viewModel.iapState.collectAsState()
 
     when (iapState) {
-        is IAPUIState.PurchaseProduct -> {
-            viewModel.purchaseItem(fragmentActivity)
-        }
-
         is IAPUIState.Error -> {
             val iapException = (iapState as IAPUIState.Error).iapException
             IAPErrorDialog(iapException = iapException, onIAPAction = { iapAction ->
@@ -731,8 +727,8 @@ private fun AuditExpiredUpgradableView(
                         )
                         if (iapException.requestType == IAPRequestType.CONSUME_CODE) {
                             viewModel.retryToConsumeOrder()
-                        } else if (iapException.requestType == IAPRequestType.EXECUTE_ORDER_CODE) {
-                            viewModel.retryExecuteOrder()
+                        } else if (iapException.requestType == IAPRequestType.CREATE_ORDER_CODE) {
+                            viewModel.retryCreateOrder()
                         }
                     }
 
@@ -814,7 +810,6 @@ private fun AuditExpiredUpgradableView(
 
                 when (iapState) {
                     is IAPUIState.Loading,
-                    is IAPUIState.PurchaseProduct,
                     is IAPUIState.Error,
                         -> {
                         CircularProgressIndicator(
@@ -832,7 +827,7 @@ private fun AuditExpiredUpgradableView(
                                 viewModel.purchaseFlowData.formattedPrice ?: 0.0,
                             ),
                             onClick = {
-                                viewModel.startPurchaseFlow()
+                                viewModel.startPurchaseFlow(fragmentActivity)
                             })
                     }
 

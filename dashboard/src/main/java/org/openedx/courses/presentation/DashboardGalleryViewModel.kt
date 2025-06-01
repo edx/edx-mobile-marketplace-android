@@ -134,7 +134,7 @@ class DashboardGalleryViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun getCourses(isIAPFlow: Boolean = false) {
+    fun getCourses(courseId: String? = null, isIAPFlow: Boolean = false) {
         viewModelScope.launch {
             try {
                 val cachedCourseEnrollments = fileUtil.getObjectFromFile<CourseEnrollments>()
@@ -162,7 +162,23 @@ class DashboardGalleryViewModel(
                         _uiState.value = DashboardGalleryUIState.Courses(response)
                     }
                     if (isIAPFlow) {
-                        iapNotifier.send(CourseDataUpdated())
+                        courseId?.let {
+                            val enrolledCourse = if (response.primary?.course?.id == it) {
+                                response.primary
+                            } else {
+                                response.enrollments.courses.firstOrNull { enrollment ->
+                                    enrollment.course.id == courseId
+                                }
+                            }
+                            enrolledCourse?.let { course ->
+                                iapNotifier.send(
+                                    CourseDataUpdated.CourseEnrollmentDataUpdated(
+                                        course.course.id,
+                                        course.isVerifiedMode
+                                    )
+                                )
+                            }
+                        }
                     }
                 } else {
                     val courseEnrollments = fileUtil.getObjectFromFile<CourseEnrollments>()
@@ -187,12 +203,16 @@ class DashboardGalleryViewModel(
         }
     }
 
-    fun updateCourses(isUpdating: Boolean = true, isIAPFlow: Boolean = false) {
+    fun updateCourses(
+        courseId: String? = null,
+        isUpdating: Boolean = true,
+        isIAPFlow: Boolean = false
+    ) {
         if (isLoading) {
             return
         }
         _updating.value = isUpdating
-        getCourses(isIAPFlow = isIAPFlow)
+        getCourses(courseId = courseId, isIAPFlow = isIAPFlow)
     }
 
     fun refreshPushBadgeCount() {
@@ -261,14 +281,14 @@ class DashboardGalleryViewModel(
                 }
             }
 
+            IAPAction.ACTION_REFRESH,
             IAPAction.ACTION_COMPLETION -> {
-                IAPDialogFragment.newInstance(
-                    IAPFlow.SILENT,
-                    IAPFlowSource.COURSE_ENROLLMENT.screen
-                ).show(
-                    fragmentManager,
-                    IAPDialogFragment.TAG
-                )
+                eventLogger.purchaseFlowData?.apply {
+                    this.iapFlow = IAPFlow.SILENT
+                    this.screenName = IAPFlowSource.COURSE_ENROLLMENT.screen
+                }?.let {
+                    IAPDialogFragment.newInstance(it).show(fragmentManager, IAPDialogFragment.TAG)
+                }
                 clearIAPState()
             }
 
@@ -311,7 +331,10 @@ class DashboardGalleryViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    updateCourses(isIAPFlow = event.isPurchasedFromCourseDashboard.not())
+                    updateCourses(
+                        courseId = event.courseId,
+                        isIAPFlow = event.isFromValueProp || event.isExpiredCoursePurchase
+                    )
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)

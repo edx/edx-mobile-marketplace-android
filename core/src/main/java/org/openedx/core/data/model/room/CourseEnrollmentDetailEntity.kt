@@ -98,12 +98,6 @@ data class CourseInfoOverviewDB(
 data class CourseModeDB(
     @ColumnInfo("slug")
     val slug: String?,
-    @ColumnInfo("sku")
-    val sku: String?,
-    @ColumnInfo("androidSku")
-    val androidSku: String?,
-    @ColumnInfo("iosSku")
-    val iosSku: String?,
     @ColumnInfo("minPrice")
     val minPrice: Double?,
     @ColumnInfo("storeSku")
@@ -112,9 +106,6 @@ data class CourseModeDB(
     fun mapToDomain(): CourseMode {
         return CourseMode(
             slug = slug,
-            sku = sku,
-            androidSku = androidSku,
-            iosSku = iosSku,
             minPrice = minPrice,
             storeSku = storeSku,
         )
@@ -122,15 +113,12 @@ data class CourseModeDB(
 }
 
 data class ProductInfoDb(
-    @ColumnInfo("courseSku")
-    val courseSku: String,
     @ColumnInfo("storeSku")
     val storeSku: String,
     @ColumnInfo("lmsUSDPrice")
     val lmsUSDPrice: Double,
 ) {
     fun mapToDomain() = ProductInfo(
-        courseSku = courseSku,
         storeSku = storeSku,
         lmsUSDPrice = lmsUSDPrice,
     )

@@ -135,14 +135,17 @@ class SettingsFragment : Fragment() {
                                 viewModel.showFeedbackScreen(requireActivity(), errorMessage)
                             }
 
+                            IAPAction.ACTION_REFRESH,
                             IAPAction.ACTION_RESTORE -> {
-                                IAPDialogFragment.newInstance(
-                                    IAPFlow.RESTORE,
-                                    IAPFlowSource.PROFILE.screen
-                                ).show(
-                                    requireActivity().supportFragmentManager,
-                                    IAPDialogFragment.TAG
-                                )
+                                viewModel.eventLogger.purchaseFlowData?.apply {
+                                    iapFlow = IAPFlow.RESTORE
+                                    screenName = IAPFlowSource.PROFILE.screen
+                                }?.let {
+                                    IAPDialogFragment.newInstance(it).show(
+                                        requireActivity().supportFragmentManager,
+                                        IAPDialogFragment.TAG
+                                    )
+                                }
                             }
 
                             IAPAction.ACTION_RESTORE_PURCHASE_CANCEL -> {

@@ -28,6 +28,7 @@ class WhatsNewManager(
     }
 
     override fun shouldShowWhatsNew(): Boolean {
+        if (!config.isWhatsNewEnabled()) return false
         return try {
             val dataVersion = Version(getNewestData().version)
             val appVersion = Version(appData.versionName)

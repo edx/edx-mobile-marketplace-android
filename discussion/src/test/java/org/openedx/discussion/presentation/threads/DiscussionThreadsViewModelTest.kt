@@ -34,6 +34,7 @@ import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
+import org.openedx.discussion.domain.model.DiscussionConfig
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.ThreadsData
@@ -61,6 +62,29 @@ class DiscussionThreadsViewModelTest {
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
+
+    val mockDiscussionConfig = DiscussionConfig(
+        courseId = "",
+        isPostingEnabled = true,
+        blackoutPeriods = emptyList(),
+        threadListUrl = "",
+        followingThreadListUrl = "",
+        topicsUrl = "",
+        allowAnonymousPosts = false,
+        allowAnonymousToPeers = false,
+        userRoles = listOf(""),
+        canModerate = false,
+        isGroupTA = false,
+        isUserAdmin = false,
+        isCourseStaff = false,
+        isCourseAdmin = false,
+        provider = "mock_provider",
+        isInContextEnabled = false,
+        isGroupSubsectionEnabled = false,
+        editReasons = emptyList(),
+        postCloseReasons = emptyList(),
+        showDiscussions = true
+    )
 
     //region mockThread
 
@@ -111,6 +135,7 @@ class DiscussionThreadsViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        coEvery { interactor.getCourseDiscussionConfig(any()) } returns mockDiscussionConfig
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
         every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
         mockkConstructor(Logger::class)

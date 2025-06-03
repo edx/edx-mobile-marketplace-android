@@ -49,9 +49,13 @@ class DiscussionTopicsViewModel(
     private fun getCourseTopic() {
         viewModelScope.launch {
             try {
+                val discussionConfig = interactor.getCourseDiscussionConfig(courseId)
                 val response = interactor.getCourseTopics(courseId)
                 if (response.isEmpty().not()) {
-                    _uiState.value = DiscussionTopicsUIState.Topics(response)
+                    _uiState.value = DiscussionTopicsUIState.Topics(
+                        isPostingEnabled = discussionConfig.isPostingEnabled,
+                        data = response
+                    )
                 } else {
                     _uiState.value = DiscussionTopicsUIState.Error
                 }

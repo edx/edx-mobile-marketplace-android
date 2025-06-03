@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -40,6 +42,7 @@ import androidx.fragment.app.FragmentManager
 import org.openedx.core.FragmentViewType
 import org.openedx.core.NoContentScreenType
 import org.openedx.core.UIMessage
+import org.openedx.core.ui.CircularProgress
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.NoContentScreen
 import org.openedx.core.ui.StaticSearchBar
@@ -70,10 +73,11 @@ fun DiscussionTopicsScreen(
         windowSize = windowSize,
         uiState = uiState,
         uiMessage = uiMessage,
-        onSearchClick = {
+        onSearchClick = { isPostingEnabled ->
             discussionTopicsViewModel.discussionRouter.navigateToSearchThread(
                 fragmentManager,
-                discussionTopicsViewModel.courseId
+                discussionTopicsViewModel.courseId,
+                isPostingEnabled,
             )
         },
         onItemClick = { action, data, title ->
@@ -98,8 +102,8 @@ private fun DiscussionTopicsUI(
     windowSize: WindowSize,
     uiState: DiscussionTopicsUIState,
     uiMessage: UIMessage?,
-    onSearchClick: () -> Unit,
-    onItemClick: (String, String, String) -> Unit
+    onSearchClick: (Boolean) -> Unit,
+    onItemClick: (String, String, String) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
@@ -152,12 +156,26 @@ private fun DiscussionTopicsUI(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .statusBarsInset()
                 .displayCutoutForLandscape(),
             contentAlignment = Alignment.TopCenter
         ) {
             Column(screenWidth) {
-                if ((uiState is DiscussionTopicsUIState.Error).not()) {
+                if ((uiState is DiscussionTopicsUIState.Topics) && uiState.isPostingEnabled.not()) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp)
+                            .background(MaterialTheme.appColors.warning)
+                            .padding(vertical = 12.dp),
+                        text = stringResource(id = R.string.discussion_posting_disabled_msg),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.appTypography.titleSmall,
+                        color = MaterialTheme.appColors.textPrimaryVariant
+                    )
+                } else {
+                    Spacer(modifier = Modifier.statusBarsInset())
+                }
+                if (uiState is DiscussionTopicsUIState.Topics) {
                     StaticSearchBar(
                         modifier = Modifier
                             .height(48.dp)
@@ -165,7 +183,7 @@ private fun DiscussionTopicsUI(
                             .padding(horizontal = contentPaddings)
                             .fillMaxWidth(),
                         text = stringResource(id = R.string.discussion_search_all_posts),
-                        onClick = onSearchClick
+                        onClick = { onSearchClick(uiState.isPostingEnabled) }
                     )
                 }
                 Surface(
@@ -254,7 +272,10 @@ private fun DiscussionTopicsUI(
                                     }
                                 }
 
-                                DiscussionTopicsUIState.Loading -> {}
+                                DiscussionTopicsUIState.Loading -> {
+                                    CircularProgress()
+                                }
+
                                 else -> {
                                     NoContentScreen(noContentScreenType = NoContentScreenType.COURSE_DISCUSSIONS)
                                 }
@@ -276,7 +297,7 @@ private fun DiscussionTopicsScreenPreview() {
     OpenEdXTheme {
         DiscussionTopicsUI(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = DiscussionTopicsUIState.Topics(listOf(mockTopic, mockTopic)),
+            uiState = DiscussionTopicsUIState.Topics(false, listOf(mockTopic, mockTopic)),
             uiMessage = null,
             onItemClick = { _, _, _ -> },
             onSearchClick = {}
@@ -308,7 +329,7 @@ private fun DiscussionTopicsScreenTabletPreview() {
     OpenEdXTheme {
         DiscussionTopicsUI(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
-            uiState = DiscussionTopicsUIState.Topics(listOf(mockTopic, mockTopic)),
+            uiState = DiscussionTopicsUIState.Topics(false, listOf(mockTopic, mockTopic)),
             uiMessage = null,
             onItemClick = { _, _, _ -> },
             onSearchClick = {}

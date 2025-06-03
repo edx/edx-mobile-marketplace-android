@@ -123,6 +123,7 @@ class DiscussionCommentsFragment : Fragment() {
         savedInstanceState: Bundle?
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        val isPostingEnabled = requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true)
         setContent {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
@@ -139,6 +140,10 @@ class DiscussionCommentsFragment : Fragment() {
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
+                    isPostingEnabled = (requireArguments().getBoolean(
+                        ARG_IS_POSTING_ENABLED,
+                        false
+                    )),
                     onCommentPulseEnd = { comment ->
                         viewModel.updateCommentPulseStatus(comment = comment)
                     },
@@ -170,7 +175,8 @@ class DiscussionCommentsFragment : Fragment() {
                             viewModel.courseId,
                             viewModel.thread.id,
                             it,
-                            viewModel.thread.closed
+                            viewModel.thread.closed,
+                            isPostingEnabled,
                         )
                     },
                     onUserPhotoClick = { username ->
@@ -198,7 +204,8 @@ class DiscussionCommentsFragment : Fragment() {
                                 viewModel.courseId,
                                 viewModel.thread.id,
                                 it,
-                                viewModel.thread.closed
+                                viewModel.thread.closed,
+                                isPostingEnabled,
                             )
                             fromNotificationNavigation = false
                         }
@@ -221,12 +228,14 @@ class DiscussionCommentsFragment : Fragment() {
         private const val ARG_THREAD = "argThread"
         private const val ARG_RESPONSE_ID = "argResponseId"
         private const val ARG_COMMENT_ID = "argCommentId"
+        private const val ARG_IS_POSTING_ENABLED = "argIsPostingEnabled"
 
         fun newInstance(
             courseId: String,
             thread: Thread,
             responseId: String,
             commentId: String,
+            isPostingEnabled: Boolean,
         ): DiscussionCommentsFragment {
             val fragment = DiscussionCommentsFragment()
             fragment.arguments = bundleOf(
@@ -234,6 +243,7 @@ class DiscussionCommentsFragment : Fragment() {
                 ARG_THREAD to thread,
                 ARG_RESPONSE_ID to responseId,
                 ARG_COMMENT_ID to commentId,
+                ARG_IS_POSTING_ENABLED to isPostingEnabled,
             )
             return fragment
         }
@@ -250,6 +260,7 @@ private fun DiscussionCommentsScreen(
     title: String,
     canLoadMore: Boolean,
     refreshing: Boolean,
+    isPostingEnabled: Boolean,
     onCommentPulseEnd: (DiscussionComment) -> Unit = {},
     onSwipeRefresh: () -> Unit,
     paginationCallBack: () -> Unit,
@@ -436,69 +447,71 @@ private fun DiscussionCommentsScreen(
                                 if (!isSystemInDarkTheme()) {
                                     Divider(color = MaterialTheme.appColors.cardViewBorder)
                                 }
-                                Box(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .background(MaterialTheme.appColors.surface),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Row(
+                                if (isPostingEnabled) {
+                                    Box(
                                         Modifier
-                                            .then(screenWidth)
-                                            .heightIn(84.dp, Dp.Unspecified)
-                                            .padding(top = 16.dp, bottom = 24.dp)
-                                            .padding(horizontal = 24.dp)
-                                            .displayCutoutForLandscape(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.appColors.surface),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        OutlinedTextField(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .heightIn(36.dp, 80.dp),
-                                            value = responseValue,
-                                            onValueChange = { str ->
-                                                responseValue = str
-                                            },
-                                            shape = MaterialTheme.appShapes.buttonShape,
-                                            textStyle = MaterialTheme.appTypography.labelLarge,
-                                            maxLines = 3,
-                                            placeholder = {
-                                                Text(
-                                                    text = stringResource(id = R.string.discussion_add_response),
-                                                    color = MaterialTheme.appColors.textFieldHint,
-                                                    style = MaterialTheme.appTypography.labelLarge,
-                                                )
-                                            },
-                                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                                backgroundColor = MaterialTheme.appColors.textFieldBackgroundVariant,
-                                                unfocusedBorderColor = MaterialTheme.appColors.textFieldBorder,
-                                                textColor = MaterialTheme.appColors.textFieldText
-                                            ),
-                                            enabled = !uiState.thread.closed
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .clip(CircleShape)
-                                                .alpha(sendButtonAlpha)
-                                                .background(MaterialTheme.appColors.primaryButtonBackground)
-                                                .clickable {
-                                                    keyboardController?.hide()
-                                                    focusManager.clearFocus()
-                                                    if (responseValue.isNotEmpty()) {
-                                                        onAddResponseClick(responseValue.trim())
-                                                        responseValue = ""
-                                                    }
-                                                },
-                                            contentAlignment = Alignment.Center
+                                        Row(
+                                            Modifier
+                                                .then(screenWidth)
+                                                .heightIn(84.dp, Dp.Unspecified)
+                                                .padding(top = 16.dp, bottom = 24.dp)
+                                                .padding(horizontal = 24.dp)
+                                                .displayCutoutForLandscape(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
-                                            Icon(
-                                                modifier = Modifier.padding(7.dp),
-                                                painter = painterResource(id = R.drawable.discussion_ic_send),
-                                                contentDescription = stringResource(id = R.string.discussion_add_response),
-                                                tint = MaterialTheme.appColors.primaryButtonText
+                                            OutlinedTextField(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .heightIn(36.dp, 80.dp),
+                                                value = responseValue,
+                                                onValueChange = { str ->
+                                                    responseValue = str
+                                                },
+                                                shape = MaterialTheme.appShapes.buttonShape,
+                                                textStyle = MaterialTheme.appTypography.labelLarge,
+                                                maxLines = 3,
+                                                placeholder = {
+                                                    Text(
+                                                        text = stringResource(id = R.string.discussion_add_response),
+                                                        color = MaterialTheme.appColors.textFieldHint,
+                                                        style = MaterialTheme.appTypography.labelLarge,
+                                                    )
+                                                },
+                                                colors = TextFieldDefaults.outlinedTextFieldColors(
+                                                    backgroundColor = MaterialTheme.appColors.textFieldBackgroundVariant,
+                                                    unfocusedBorderColor = MaterialTheme.appColors.textFieldBorder,
+                                                    textColor = MaterialTheme.appColors.textFieldText
+                                                ),
+                                                enabled = !uiState.thread.closed
                                             )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(48.dp)
+                                                    .clip(CircleShape)
+                                                    .alpha(sendButtonAlpha)
+                                                    .background(MaterialTheme.appColors.primaryButtonBackground)
+                                                    .clickable {
+                                                        keyboardController?.hide()
+                                                        focusManager.clearFocus()
+                                                        if (responseValue.isNotEmpty()) {
+                                                            onAddResponseClick(responseValue.trim())
+                                                            responseValue = ""
+                                                        }
+                                                    },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    modifier = Modifier.padding(7.dp),
+                                                    painter = painterResource(id = R.drawable.discussion_ic_send),
+                                                    contentDescription = stringResource(id = R.string.discussion_add_response),
+                                                    tint = MaterialTheme.appColors.primaryButtonText
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -555,6 +568,7 @@ private fun DiscussionCommentsScreenPreview() {
             uiMessage = null,
             title = "Test Screen",
             canLoadMore = false,
+            isPostingEnabled = false,
             paginationCallBack = {},
             onItemClick = { _, _, _ ->
 
@@ -585,6 +599,7 @@ private fun DiscussionCommentsScreenTabletPreview() {
             uiMessage = null,
             title = "Test Screen",
             canLoadMore = false,
+            isPostingEnabled = false,
             paginationCallBack = {},
             onItemClick = { _, _, _ ->
 

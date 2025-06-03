@@ -9,6 +9,7 @@ import org.openedx.discussion.data.model.request.ThreadBody
 import org.openedx.discussion.data.model.request.VoteBody
 import org.openedx.discussion.data.model.response.CommentResult
 import org.openedx.discussion.data.model.response.CommentsResponse
+import org.openedx.discussion.data.model.response.DiscussionConfig
 import org.openedx.discussion.data.model.response.ThreadsResponse
 import org.openedx.discussion.data.model.response.TopicsResponse
 import retrofit2.http.Body
@@ -20,6 +21,11 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface DiscussionApi {
+
+    @GET("/api/discussion/v1/courses/{course_id}")
+    suspend fun getCourseDiscussionConfig(
+        @Path("course_id") courseId: String,
+    ): DiscussionConfig
 
     @GET("/api/discussion/v1/course_topics/{course_id}")
     suspend fun getCourseTopics(

@@ -72,6 +72,7 @@ class DiscussionThreadsViewModel(
     private var lastFilterType = FilterType.ALL_POSTS.value
 
     private var isBlockAlreadyCompleted = false
+    var isPostingEnabled = true
 
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
@@ -87,7 +88,7 @@ class DiscussionThreadsViewModel(
                     }
                     if (index >= 0) {
                         threadsList[index] = it.thread
-                        _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
+                        _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList(), isPostingEnabled)
                     }
                 }
 
@@ -111,6 +112,8 @@ class DiscussionThreadsViewModel(
     private fun loadThreads() {
         viewModelScope.launch {
             try {
+                val discussionConfig = interactor.getCourseDiscussionConfig(courseId)
+                isPostingEnabled = discussionConfig.isPostingEnabled
                 val response = fetchThreads()
                 if (response.pagination.next.isNotEmpty()) {
                     _canLoadMore.value = true
@@ -130,7 +133,7 @@ class DiscussionThreadsViewModel(
                         threadsList.add(0, thread)
                     }
                 }
-                _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList())
+                _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList(), isPostingEnabled)
             } catch (e: Exception) {
                 logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {

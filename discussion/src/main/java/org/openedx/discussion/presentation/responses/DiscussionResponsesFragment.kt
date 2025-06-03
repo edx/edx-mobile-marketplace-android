@@ -115,9 +115,10 @@ class DiscussionResponsesFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        val isPostingEnabled = requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true)
         setContent {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
@@ -134,6 +135,7 @@ class DiscussionResponsesFragment : Fragment() {
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
                     isClosed = viewModel.isThreadClosed,
+                    isPostingEnabled = isPostingEnabled,
                     onSwipeRefresh = {
                         viewModel.updateCommentResponses()
                     },
@@ -180,19 +182,22 @@ class DiscussionResponsesFragment : Fragment() {
         private const val ARG_THREAD_ID = "threadId"
         private const val ARG_COMMENT = "comment"
         private const val ARG_IS_CLOSED = "isClosed"
+        private const val ARG_IS_POSTING_ENABLED = "isPostingEnabled"
 
         fun newInstance(
             courseId: String,
             threadId: String,
             comment: DiscussionComment,
             isClosed: Boolean,
+            isPostingEnabled: Boolean,
         ): DiscussionResponsesFragment {
             val fragment = DiscussionResponsesFragment()
             fragment.arguments = bundleOf(
                 ARG_COURSE_ID to courseId,
                 ARG_THREAD_ID to threadId,
                 ARG_COMMENT to comment,
-                ARG_IS_CLOSED to isClosed
+                ARG_IS_CLOSED to isClosed,
+                ARG_IS_POSTING_ENABLED to isPostingEnabled,
             )
             return fragment
         }
@@ -208,12 +213,13 @@ private fun DiscussionResponsesScreen(
     canLoadMore: Boolean,
     refreshing: Boolean,
     isClosed: Boolean,
+    isPostingEnabled: Boolean,
     onSwipeRefresh: () -> Unit,
     paginationCallBack: () -> Unit,
     onItemClick: (String, String, Boolean) -> Unit,
     addCommentClick: (String) -> Unit,
     onBackClick: () -> Unit,
-    onUserPhotoClick: (String) -> Unit
+    onUserPhotoClick: (String) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
@@ -424,68 +430,70 @@ private fun DiscussionResponsesScreen(
                                 if (!isSystemInDarkTheme()) {
                                     Divider(color = MaterialTheme.appColors.cardViewBorder)
                                 }
-                                Box(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .background(MaterialTheme.appColors.surface),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Row(
+                                if (isPostingEnabled) {
+                                    Box(
                                         Modifier
-                                            .then(screenWidth)
-                                            .heightIn(84.dp, Dp.Unspecified)
-                                            .padding(top = 16.dp, bottom = 24.dp)
-                                            .padding(horizontal = 24.dp)
-                                            .displayCutoutForLandscape(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.appColors.surface),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        OutlinedTextField(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .heightIn(36.dp, 80.dp),
-                                            value = commentValue,
-                                            onValueChange = { str ->
-                                                commentValue = str
-                                            },
-                                            textStyle = MaterialTheme.appTypography.labelLarge,
-                                            maxLines = 3,
-                                            shape = MaterialTheme.appShapes.buttonShape,
-                                            placeholder = {
-                                                Text(
-                                                    text = stringResource(id = org.openedx.discussion.R.string.discussion_add_comment),
-                                                    color = MaterialTheme.appColors.textFieldHint,
-                                                    style = MaterialTheme.appTypography.labelLarge,
-                                                )
-                                            },
-                                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                                backgroundColor = MaterialTheme.appColors.textFieldBackgroundVariant,
-                                                unfocusedBorderColor = MaterialTheme.appColors.textFieldBorder,
-                                                textColor = MaterialTheme.appColors.textFieldText
-                                            ),
-                                            enabled = !isClosed
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .clip(CircleShape)
-                                                .background(sendButtonColor)
-                                                .clickable {
-                                                    keyboardController?.hide()
-                                                    focusManager.clearFocus()
-                                                    if (commentValue.isNotEmpty()) {
-                                                        addCommentClick(commentValue.trim())
-                                                        commentValue = ""
-                                                    }
-                                                },
-                                            contentAlignment = Alignment.Center
+                                        Row(
+                                            Modifier
+                                                .then(screenWidth)
+                                                .heightIn(84.dp, Dp.Unspecified)
+                                                .padding(top = 16.dp, bottom = 24.dp)
+                                                .padding(horizontal = 24.dp)
+                                                .displayCutoutForLandscape(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
-                                            Icon(
-                                                modifier = Modifier.padding(7.dp),
-                                                painter = painterResource(id = org.openedx.discussion.R.drawable.discussion_ic_send),
-                                                contentDescription = null,
-                                                tint = iconButtonColor
+                                            OutlinedTextField(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .heightIn(36.dp, 80.dp),
+                                                value = commentValue,
+                                                onValueChange = { str ->
+                                                    commentValue = str
+                                                },
+                                                textStyle = MaterialTheme.appTypography.labelLarge,
+                                                maxLines = 3,
+                                                shape = MaterialTheme.appShapes.buttonShape,
+                                                placeholder = {
+                                                    Text(
+                                                        text = stringResource(id = org.openedx.discussion.R.string.discussion_add_comment),
+                                                        color = MaterialTheme.appColors.textFieldHint,
+                                                        style = MaterialTheme.appTypography.labelLarge,
+                                                    )
+                                                },
+                                                colors = TextFieldDefaults.outlinedTextFieldColors(
+                                                    backgroundColor = MaterialTheme.appColors.textFieldBackgroundVariant,
+                                                    unfocusedBorderColor = MaterialTheme.appColors.textFieldBorder,
+                                                    textColor = MaterialTheme.appColors.textFieldText
+                                                ),
+                                                enabled = !isClosed
                                             )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(48.dp)
+                                                    .clip(CircleShape)
+                                                    .background(sendButtonColor)
+                                                    .clickable {
+                                                        keyboardController?.hide()
+                                                        focusManager.clearFocus()
+                                                        if (commentValue.isNotEmpty()) {
+                                                            addCommentClick(commentValue.trim())
+                                                            commentValue = ""
+                                                        }
+                                                    },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    modifier = Modifier.padding(7.dp),
+                                                    painter = painterResource(id = org.openedx.discussion.R.drawable.discussion_ic_send),
+                                                    contentDescription = null,
+                                                    tint = iconButtonColor
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -540,7 +548,8 @@ private fun DiscussionResponsesScreenPreview() {
             },
             onBackClick = {},
             isClosed = false,
-            onUserPhotoClick = {}
+            onUserPhotoClick = {},
+            isPostingEnabled = false,
         )
     }
 }
@@ -571,7 +580,8 @@ private fun DiscussionResponsesScreenTabletPreview() {
             },
             onBackClick = {},
             isClosed = false,
-            onUserPhotoClick = {}
+            onUserPhotoClick = {},
+            isPostingEnabled = false,
         )
     }
 }

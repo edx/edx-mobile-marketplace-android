@@ -173,7 +173,8 @@ class DiscussionThreadsFragment : Fragment() {
                         router.navigateToDiscussionComments(
                             requireActivity().supportFragmentManager,
                             viewModel.courseId,
-                            it
+                            it,
+                            viewModel.isPostingEnabled,
                         )
                     },
                     onCreatePostClick = {
@@ -205,6 +206,7 @@ class DiscussionThreadsFragment : Fragment() {
                                 it,
                                 responseId,
                                 commentId,
+                                viewModel.isPostingEnabled,
                             )
                         }
                         fromNotificationNavigation = false
@@ -566,24 +568,26 @@ private fun DiscussionThreadsScreen(
                                                                 color = MaterialTheme.appColors.textPrimary,
                                                                 style = MaterialTheme.appTypography.titleLarge
                                                             )
-                                                            Box(
-                                                                Modifier
-                                                                    .size(40.dp)
-                                                                    .clip(CircleShape)
-                                                                    .background(MaterialTheme.appColors.primaryButtonBackground)
-                                                                    .clickable {
-                                                                        onCreatePostClick()
-                                                                    },
-                                                                contentAlignment = Alignment.Center
-                                                            ) {
-                                                                Icon(
-                                                                    modifier = Modifier.size(16.dp),
-                                                                    painter = painterResource(id = discussionR.drawable.discussion_ic_add_comment),
-                                                                    contentDescription = stringResource(
-                                                                        id = discussionR.string.discussion_add_comment
-                                                                    ),
-                                                                    tint = MaterialTheme.appColors.primaryButtonText
-                                                                )
+                                                            if (uiState.isPostingEnabled) {
+                                                                Box(
+                                                                    Modifier
+                                                                        .size(40.dp)
+                                                                        .clip(CircleShape)
+                                                                        .background(MaterialTheme.appColors.primaryButtonBackground)
+                                                                        .clickable {
+                                                                            onCreatePostClick()
+                                                                        },
+                                                                    contentAlignment = Alignment.Center
+                                                                ) {
+                                                                    Icon(
+                                                                        modifier = Modifier.size(16.dp),
+                                                                        painter = painterResource(id = discussionR.drawable.discussion_ic_add_comment),
+                                                                        contentDescription = stringResource(
+                                                                            id = discussionR.string.discussion_add_comment
+                                                                        ),
+                                                                        tint = MaterialTheme.appColors.primaryButtonText
+                                                                    )
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -646,31 +650,33 @@ private fun DiscussionThreadsScreen(
                                                         color = MaterialTheme.appColors.textPrimary,
                                                         textAlign = TextAlign.Center
                                                     )
-                                                    Spacer(Modifier.height(12.dp))
-                                                    Text(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        text = stringResource(discussionR.string.discussion_click_button_create_discussion),
-                                                        style = MaterialTheme.appTypography.bodyLarge,
-                                                        color = MaterialTheme.appColors.textPrimary,
-                                                        textAlign = TextAlign.Center
-                                                    )
-                                                    Spacer(Modifier.height(40.dp))
-                                                    OpenEdXOutlinePrimaryButton(
-                                                        modifier = Modifier
-                                                            .widthIn(184.dp, Dp.Unspecified),
-                                                        text = stringResource(id = discussionR.string.discussion_create_post),
-                                                        onClick = {
-                                                            onCreatePostClick()
-                                                        },
-                                                        content = {
-                                                            IconText(
-                                                                text = stringResource(id = discussionR.string.discussion_create_post),
-                                                                painter = painterResource(id = discussionR.drawable.discussion_ic_add_comment),
-                                                                color = MaterialTheme.appColors.primary,
-                                                                textStyle = MaterialTheme.appTypography.labelLarge,
-                                                            )
-                                                        },
-                                                    )
+                                                    if (uiState.isPostingEnabled) {
+                                                        Spacer(Modifier.height(12.dp))
+                                                        Text(
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            text = stringResource(discussionR.string.discussion_click_button_create_discussion),
+                                                            style = MaterialTheme.appTypography.bodyLarge,
+                                                            color = MaterialTheme.appColors.textPrimary,
+                                                            textAlign = TextAlign.Center
+                                                        )
+                                                        Spacer(Modifier.height(40.dp))
+                                                        OpenEdXOutlinePrimaryButton(
+                                                            modifier = Modifier
+                                                                .widthIn(184.dp, Dp.Unspecified),
+                                                            text = stringResource(id = discussionR.string.discussion_create_post),
+                                                            onClick = {
+                                                                onCreatePostClick()
+                                                            },
+                                                            content = {
+                                                                IconText(
+                                                                    text = stringResource(id = discussionR.string.discussion_create_post),
+                                                                    painter = painterResource(id = discussionR.drawable.discussion_ic_add_comment),
+                                                                    color = MaterialTheme.appColors.primary,
+                                                                    textStyle = MaterialTheme.appTypography.labelLarge,
+                                                                )
+                                                            },
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -707,7 +713,7 @@ private fun DiscussionThreadsScreenPreview() {
         DiscussionThreadsScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             "All posts",
-            uiState = DiscussionThreadsUIState.Threads(listOf(mockPinnedThread, mockThread)),
+            uiState = DiscussionThreadsUIState.Threads(listOf(mockPinnedThread, mockThread), true),
             uiMessage = null,
             onItemClick = {},
             onBackClick = {},
@@ -731,7 +737,7 @@ private fun DiscussionThreadsEmptyScreenPreview() {
         DiscussionThreadsScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             "All posts",
-            uiState = DiscussionThreadsUIState.Threads(emptyList()),
+            uiState = DiscussionThreadsUIState.Threads(emptyList(), false),
             uiMessage = null,
             onItemClick = {},
             onBackClick = {},
@@ -755,7 +761,7 @@ private fun DiscussionThreadsScreenTabletPreview() {
         DiscussionThreadsScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             "All posts",
-            uiState = DiscussionThreadsUIState.Threads(listOf(mockPinnedThread, mockThread)),
+            uiState = DiscussionThreadsUIState.Threads(listOf(mockPinnedThread, mockThread), true),
             uiMessage = null,
             onItemClick = {},
             onBackClick = {},

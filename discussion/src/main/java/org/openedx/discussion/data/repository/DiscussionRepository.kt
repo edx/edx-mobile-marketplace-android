@@ -25,6 +25,9 @@ class DiscussionRepository(
     private val topics = mutableListOf<Topic>()
     private var currentCourseId = ""
 
+    suspend fun getCourseDiscussionConfig(courseId: String) =
+        api.getCourseDiscussionConfig(courseId).mapToDomain()
+
     suspend fun getCourseTopics(courseId: String): List<Topic> {
         val topicsData = api.getCourseTopics(courseId).mapToDomain()
         val defaultTopicName = resourceManager.getString(R.string.discussion_unnamed_subcategory)

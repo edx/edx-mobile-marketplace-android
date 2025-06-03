@@ -99,6 +99,7 @@ class DiscussionSearchThreadFragment : Fragment() {
         savedInstanceState: Bundle?
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        val isPostingEnabled = requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true)
         setContent {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
@@ -122,7 +123,8 @@ class DiscussionSearchThreadFragment : Fragment() {
                         router.navigateToDiscussionComments(
                             requireActivity().supportFragmentManager,
                             viewModel.courseId,
-                            it
+                            it,
+                            isPostingEnabled,
                         )
                     },
                     onSearchTextChanged = { viewModel.searchThreads(it) },
@@ -139,12 +141,16 @@ class DiscussionSearchThreadFragment : Fragment() {
 
     companion object {
         private const val ARG_COURSE_ID = "courseId"
+        private const val ARG_IS_POSTING_ENABLED = "isPostingEnabled"
+        
         fun newInstance(
-            courseId: String
+            courseId: String,
+            isPostingEnabled: Boolean,
         ): DiscussionSearchThreadFragment {
             val fragment = DiscussionSearchThreadFragment()
             fragment.arguments = bundleOf(
-                ARG_COURSE_ID to courseId
+                ARG_COURSE_ID to courseId,
+                ARG_IS_POSTING_ENABLED to isPostingEnabled,
             )
             return fragment
         }

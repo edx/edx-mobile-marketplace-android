@@ -56,6 +56,8 @@ class HtmlUnitViewModel(
         assets.readAsText("js_injection/completions.js")?.let { jsList.add(it) }
         //Injection to fix CSS issues for Survey xBlock
         assets.readAsText("js_injection/survey_css.js")?.let { jsList.add(it) }
+        //Injection to add bottom spacer for WebView
+        assets.readAsText("js_injection/webview_bottom_spacer.js")?.let { jsList.add(it) }
 
         _injectJSList.value = jsList
     }

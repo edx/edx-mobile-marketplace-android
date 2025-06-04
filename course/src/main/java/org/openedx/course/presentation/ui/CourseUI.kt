@@ -574,6 +574,9 @@ fun VideoSubtitles(
                             fontWeight = fontWeight,
                         )
                         Spacer(Modifier.height(16.dp))
+                        if (index == subtitles.lastIndex) {
+                            Spacer(Modifier.height(64.dp))
+                        }
                     }
                 }
             }

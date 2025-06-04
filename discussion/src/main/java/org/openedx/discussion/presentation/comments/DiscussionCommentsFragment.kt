@@ -139,8 +139,8 @@ class DiscussionCommentsFragment : Fragment() {
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
-                    onCommentPulseEnd = { comment->
-                        viewModel.updateCommentPulseStatus(comment =comment)
+                    onCommentPulseEnd = { comment ->
+                        viewModel.updateCommentPulseStatus(comment = comment)
                     },
                     onSwipeRefresh = {
                         viewModel.updateThreadComments()
@@ -430,7 +430,6 @@ private fun DiscussionCommentsScreen(
                                         }
                                     }
                                 }
-
                                 if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
                                     paginationCallBack()
                                 }

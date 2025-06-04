@@ -62,4 +62,5 @@ enum class PrimaryCourseCardAction(val action: String) {
     UPCOMING_ASSIGNMENT("upcoming_assignment"),
     RESUME_COURSE("resume_course"),
     UPGRADE_VALUE_PROP("upgrade_value_prop"),
+    START_COURSE("start_course"),
 }

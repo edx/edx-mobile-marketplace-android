@@ -381,7 +381,7 @@ class DashboardGalleryViewModel(
                 if (action.isPrimaryCourse) {
                     logPrimaryCourseCardClicked(
                         courseId = courseId,
-                        action = PrimaryCourseCardAction.CARD,
+                        action = getPrimaryCourseCardAction(action.source),
                     )
                 } else {
                     logSecondaryCourseCardClicked(courseId)
@@ -389,14 +389,9 @@ class DashboardGalleryViewModel(
             }
 
             is DashboardGalleryScreenAction.OpenBlock -> {
-                val clickedAction = when (action.source) {
-                    ActionSource.PAST_ASSIGNMENT -> PrimaryCourseCardAction.PAST_ASSIGNMENT
-                    ActionSource.UPCOMING_ASSIGNMENT -> PrimaryCourseCardAction.UPCOMING_ASSIGNMENT
-                    ActionSource.RESUME_BLOCK -> PrimaryCourseCardAction.RESUME_COURSE
-                }
                 logPrimaryCourseCardClicked(
                     courseId = courseId,
-                    action = clickedAction,
+                    action = getPrimaryCourseCardAction(action.source),
                     resumeBlockId = resumeBlockId
                 )
             }
@@ -416,6 +411,16 @@ class DashboardGalleryViewModel(
             }
 
             else -> {}
+        }
+    }
+
+    private fun getPrimaryCourseCardAction(action: ActionSource): PrimaryCourseCardAction {
+        return when (action) {
+            ActionSource.PAST_ASSIGNMENT -> PrimaryCourseCardAction.PAST_ASSIGNMENT
+            ActionSource.UPCOMING_ASSIGNMENT -> PrimaryCourseCardAction.UPCOMING_ASSIGNMENT
+            ActionSource.RESUME_BLOCK -> PrimaryCourseCardAction.RESUME_COURSE
+            ActionSource.START_COURSE -> PrimaryCourseCardAction.START_COURSE
+            ActionSource.CARD -> PrimaryCourseCardAction.CARD
         }
     }
 

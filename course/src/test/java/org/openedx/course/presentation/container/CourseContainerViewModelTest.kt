@@ -11,6 +11,8 @@ import io.mockk.spyk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -26,7 +28,6 @@ import org.openedx.core.ImageProcessor
 import org.openedx.core.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.api.CourseApi
-import org.openedx.core.data.model.CourseStructureModel
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
@@ -40,7 +41,6 @@ import org.openedx.core.domain.model.CourseSharingUtmParameters
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
-import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.system.CalendarManager
 import org.openedx.core.system.ResourceManager
@@ -52,7 +52,6 @@ import org.openedx.core.utils.Logger
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
-import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseRouter
 import java.util.Date
 
@@ -100,34 +99,6 @@ class CourseContainerViewModelTest {
             isDeepLinkEnabled = false,
         )
     )
-    private val courseDetails = CourseEnrollmentDetails(
-        id = "id",
-        courseUpdates = "",
-        courseHandouts = "",
-        discussionUrl = "",
-        courseAccessDetails = CourseAccessDetails(
-            false,
-            false,
-            false,
-            null,
-            coursewareAccess = CoursewareAccess(
-                false, "", "", "",
-                "", ""
-
-            )
-        ),
-        certificate = null,
-        enrollmentDetails = EnrollmentDetails(
-            null, "audit", false, Date()
-        ),
-        courseInfoOverview = CourseInfoOverview(
-            "Open edX Demo Course", "", "OpenedX", Date(),
-            "", "", null, false, null,
-            CourseSharingUtmParameters("", ""),
-            "", listOf(), ProductInfo("", "", 1.0)
-        )
-
-    )
 
     private val courseStructure = CourseStructure(
         root = "",
@@ -167,43 +138,17 @@ class CourseContainerViewModelTest {
         productInfo = null
     )
 
-    private val courseStructureModel = CourseStructureModel(
-        root = "",
-        blockData = mapOf(),
-        id = "id",
-        name = "Course name",
-        number = "",
-        org = "Org",
-        start = "",
-        startDisplay = "",
-        startType = "",
-        end = null,
-        courseAccessDetails = org.openedx.core.data.model.CourseAccessDetails(
-            hasUnmetPrerequisites = false,
-            isTooEarly = false,
-            isStaff = false,
-            auditAccessExpires = "",
-            coursewareAccess = null
-        ),
-        media = null,
-        certificate = null,
-        isSelfPaced = false,
-        progress = null,
-        enrollmentDetails = org.openedx.core.data.model.EnrollmentDetails("", "", "", false, ""),
-        courseModes = arrayListOf()
-    )
-
     private val enrollmentDetails = CourseEnrollmentDetails(
         id = "",
         courseUpdates = "",
         courseHandouts = "",
         discussionUrl = "",
         courseAccessDetails = CourseAccessDetails(
-            false,
-            false,
-            false,
-            null,
-            CoursewareAccess(
+            hasUnmetPrerequisites = false,
+            isTooEarly = false,
+            isStaff = false,
+            auditAccessExpires = null,
+            coursewareAccess = CoursewareAccess(
                 false, "", "", "",
                 "", ""
             )
@@ -231,7 +176,6 @@ class CourseContainerViewModelTest {
         every { courseNotifier.notifier } returns emptyFlow()
         every { calendarManager.getCourseCalendarTitle(any()) } returns calendarTitle
         every { config.getApiHostURL() } returns "baseUrl"
-        coEvery { interactor.getEnrollmentDetails(any()) } returns courseDetails
         every { imageProcessor.loadImage(any(), any(), any()) } returns Unit
         every { imageProcessor.applyBlur(any(), any()) } returns mockBitmap
         every { courseAnalytics.logScreenEvent(any(), any()) } returns Unit
@@ -268,23 +212,14 @@ class CourseContainerViewModelTest {
             courseRouter = courseRouter,
         )
         every { networkConnection.isOnline() } returns true
-        coEvery { interactor.getEnrollmentDetails(any()) } throws Exception()
-        every {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.DASHBOARD.eventName,
-                any()
-            )
-        } returns Unit
-        every {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.HOME_TAB.eventName,
-                any()
-            )
-        } returns Unit
+        every { iapInteractor.isIAPEnabled } returns true
+        coEvery { interactor.getCourseStructureFlow(any(), any()) } returns flowOf(null)
+        coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flow { throw Exception() }
+
         viewModel.fetchCourseDetails()
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getEnrollmentDetails(any()) }
+        coVerify(exactly = 1) { interactor.getEnrollmentDetailsFlow(any()) }
         assert(!viewModel.refreshing.value)
         assert(viewModel.courseAccessStatus.value == CourseAccessError.UNKNOWN)
     }
@@ -312,12 +247,14 @@ class CourseContainerViewModelTest {
             courseRouter = courseRouter,
         )
         every { networkConnection.isOnline() } returns true
-        coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
+        every { iapInteractor.isIAPEnabled } returns true
+        coEvery { interactor.getCourseStructureFlow(any(), any()) } returns flowOf(courseStructure)
+        coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(enrollmentDetails)
 
         viewModel.fetchCourseDetails()
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.getEnrollmentDetails(any()) }
+        coVerify(exactly = 1) { interactor.getEnrollmentDetailsFlow(any()) }
         assert(viewModel.errorMessage.value == null)
         assert(!viewModel.refreshing.value)
         assert(viewModel.courseAccessStatus.value != null)
@@ -346,19 +283,10 @@ class CourseContainerViewModelTest {
             courseRouter = courseRouter,
         )
         every { networkConnection.isOnline() } returns false
-        coEvery { interactor.getEnrollmentDetails(any()) } returns enrollmentDetails
-        every {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.DASHBOARD.eventName,
-                any()
-            )
-        } returns Unit
-        every {
-            courseAnalytics.logScreenEvent(
-                CourseAnalyticsEvent.HOME_TAB.eventName,
-                any()
-            )
-        } returns Unit
+        every { iapInteractor.isIAPEnabled } returns true
+        coEvery { interactor.getCourseStructureFlow(any(), any()) } returns flowOf(courseStructure)
+        coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(enrollmentDetails)
+
         viewModel.fetchCourseDetails()
         advanceUntilIdle()
         coVerify(exactly = 0) { courseApi.getEnrollmentDetails(any()) }
@@ -424,7 +352,6 @@ class CourseContainerViewModelTest {
             imageProcessor = imageProcessor,
             courseRouter = courseRouter,
         )
-        coEvery { interactor.getEnrollmentDetails(any()) } returns courseDetails
         coEvery { interactor.getCourseStructure(any(), true) } returns courseStructure
         coEvery { courseNotifier.send(CourseStructureUpdated("")) } returns Unit
         viewModel.updateData()

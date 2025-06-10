@@ -30,6 +30,7 @@ class DiscussionCommentsViewModel(
     thread: Thread,
     val responseId: String,
     val commentId: String,
+    val isPostingEnabled: Boolean,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,

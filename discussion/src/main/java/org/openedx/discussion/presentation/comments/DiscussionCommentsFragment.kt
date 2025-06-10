@@ -108,6 +108,7 @@ class DiscussionCommentsFragment : Fragment() {
             requireArguments().parcelable(ARG_THREAD)!!,
             requireArguments().getString(ARG_RESPONSE_ID, ""),
             requireArguments().getString(ARG_COMMENT_ID, ""),
+            requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true),
         )
     }
     private val router by inject<DiscussionRouter>()
@@ -123,7 +124,6 @@ class DiscussionCommentsFragment : Fragment() {
         savedInstanceState: Bundle?
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-        val isPostingEnabled = requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true)
         setContent {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
@@ -140,10 +140,7 @@ class DiscussionCommentsFragment : Fragment() {
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
-                    isPostingEnabled = (requireArguments().getBoolean(
-                        ARG_IS_POSTING_ENABLED,
-                        false
-                    )),
+                    isPostingEnabled = viewModel.isPostingEnabled,
                     onCommentPulseEnd = { comment ->
                         viewModel.updateCommentPulseStatus(comment = comment)
                     },
@@ -176,7 +173,7 @@ class DiscussionCommentsFragment : Fragment() {
                             viewModel.thread.id,
                             it,
                             viewModel.thread.closed,
-                            isPostingEnabled,
+                            viewModel.isPostingEnabled,
                         )
                     },
                     onUserPhotoClick = { username ->
@@ -205,7 +202,7 @@ class DiscussionCommentsFragment : Fragment() {
                                 viewModel.thread.id,
                                 it,
                                 viewModel.thread.closed,
-                                isPostingEnabled,
+                                viewModel.isPostingEnabled,
                             )
                             fromNotificationNavigation = false
                         }

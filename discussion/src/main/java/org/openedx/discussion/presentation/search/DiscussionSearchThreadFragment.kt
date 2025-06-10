@@ -83,7 +83,10 @@ import org.openedx.discussion.R as discussionR
 class DiscussionSearchThreadFragment : Fragment() {
 
     private val viewModel by viewModel<DiscussionSearchThreadViewModel> {
-        parametersOf(requireArguments().getString(ARG_COURSE_ID))
+        parametersOf(
+            requireArguments().getString(ARG_COURSE_ID, ""),
+            requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true)
+        )
     }
 
     private val router by inject<DiscussionRouter>()
@@ -96,10 +99,9 @@ class DiscussionSearchThreadFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-        val isPostingEnabled = requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true)
         setContent {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
@@ -124,7 +126,7 @@ class DiscussionSearchThreadFragment : Fragment() {
                             requireActivity().supportFragmentManager,
                             viewModel.courseId,
                             it,
-                            isPostingEnabled,
+                            viewModel.isPostingEnabled,
                         )
                     },
                     onSearchTextChanged = { viewModel.searchThreads(it) },
@@ -138,11 +140,10 @@ class DiscussionSearchThreadFragment : Fragment() {
         }
     }
 
-
     companion object {
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_IS_POSTING_ENABLED = "isPostingEnabled"
-        
+
         fun newInstance(
             courseId: String,
             isPostingEnabled: Boolean,
@@ -170,7 +171,7 @@ private fun DiscussionSearchThreadScreen(
     onSearchTextChanged: (String) -> Unit,
     onSwipeRefresh: () -> Unit,
     paginationCallback: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()

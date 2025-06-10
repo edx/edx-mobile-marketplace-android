@@ -1,10 +1,7 @@
 package org.openedx.discussion.data.model.response
 
 import com.google.gson.annotations.SerializedName
-import org.openedx.core.utils.TimeUtils
-import org.openedx.discussion.domain.model.Blackout as DomainBlackout
 import org.openedx.discussion.domain.model.DiscussionConfig as DomainDiscussionConfig
-import org.openedx.discussion.domain.model.Reason as DomainReason
 
 data class DiscussionConfig(
     @SerializedName("id")
@@ -69,35 +66,7 @@ data class DiscussionConfig(
 ) {
     fun mapToDomain(): DomainDiscussionConfig {
         return DomainDiscussionConfig(
-            courseId = id,
             isPostingEnabled = isPostingEnabled,
-            blackoutPeriods = blackouts.map {
-                DomainBlackout(
-                    start = TimeUtils.iso8601ToDate(it.start),
-                    end = TimeUtils.iso8601ToDate(it.end),
-                )
-            },
-            threadListUrl = threadListUrl,
-            followingThreadListUrl = followingThreadListUrl,
-            topicsUrl = topicsUrl,
-            allowAnonymousPosts = allowAnonymous,
-            allowAnonymousToPeers = allowAnonymousToPeers,
-            userRoles = userRoles,
-            canModerate = hasModerationPrivileges,
-            isGroupTA = isGroupTa,
-            isUserAdmin = isUserAdmin,
-            isCourseStaff = isCourseStaff,
-            isCourseAdmin = isCourseAdmin,
-            provider = provider,
-            isInContextEnabled = enableInContext,
-            isGroupSubsectionEnabled = groupAtSubsection,
-            editReasons = editReasons.map {
-                DomainReason(it.code, it.label)
-            },
-            postCloseReasons = postCloseReasons.map {
-                DomainReason(it.code, it.label)
-            },
-            showDiscussions = showDiscussions
         )
     }
 }

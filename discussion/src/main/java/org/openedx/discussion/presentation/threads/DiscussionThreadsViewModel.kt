@@ -88,7 +88,8 @@ class DiscussionThreadsViewModel(
                     }
                     if (index >= 0) {
                         threadsList[index] = it.thread
-                        _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList(), isPostingEnabled)
+                        _uiState.value =
+                            DiscussionThreadsUIState.Threads(threadsList.toList(), isPostingEnabled)
                     }
                 }
 
@@ -96,7 +97,8 @@ class DiscussionThreadsViewModel(
                     is DiscussionThreadAdded,
                     is DiscussionCommentAdded,
                     is DiscussionResponseAdded,
-                    is DiscussionThreadFollowed -> {
+                    is DiscussionThreadFollowed,
+                        -> {
                         _showPrimer.emit(true)
                     }
                 }
@@ -109,10 +111,10 @@ class DiscussionThreadsViewModel(
         logTopicScreenEvent(topicId)
     }
 
-    private fun loadThreads() {
+    private fun loadThreads(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             try {
-                val discussionConfig = interactor.getCourseDiscussionConfig(courseId)
+                val discussionConfig = interactor.getCourseDiscussionConfig(courseId, forceRefresh)
                 isPostingEnabled = discussionConfig.isPostingEnabled
                 val response = fetchThreads()
                 if (response.pagination.next.isNotEmpty()) {
@@ -133,7 +135,8 @@ class DiscussionThreadsViewModel(
                         threadsList.add(0, thread)
                     }
                 }
-                _uiState.value = DiscussionThreadsUIState.Threads(threadsList.toList(), isPostingEnabled)
+                _uiState.value =
+                    DiscussionThreadsUIState.Threads(threadsList.toList(), isPostingEnabled)
             } catch (e: Exception) {
                 logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
@@ -181,7 +184,7 @@ class DiscussionThreadsViewModel(
         _isUpdating.value = true
         threadsList.clear()
         nextPage = 1
-        loadThreads()
+        loadThreads(forceRefresh = true)
     }
 
     fun sortThreads(orderBy: String) {

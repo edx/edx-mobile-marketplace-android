@@ -100,7 +100,8 @@ class DiscussionResponsesFragment : Fragment() {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
             requireArguments().getString(ARG_THREAD_ID, ""),
-            requireArguments().parcelable(ARG_COMMENT)
+            requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true),
+            requireArguments().parcelable(ARG_COMMENT),
         )
     }
 
@@ -118,7 +119,6 @@ class DiscussionResponsesFragment : Fragment() {
         savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-        val isPostingEnabled = requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true)
         setContent {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
@@ -135,7 +135,7 @@ class DiscussionResponsesFragment : Fragment() {
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
                     isClosed = viewModel.isThreadClosed,
-                    isPostingEnabled = isPostingEnabled,
+                    isPostingEnabled = viewModel.isPostingEnabled,
                     onSwipeRefresh = {
                         viewModel.updateCommentResponses()
                     },

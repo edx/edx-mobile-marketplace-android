@@ -63,27 +63,8 @@ class DiscussionThreadsViewModelTest {
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
 
-    val mockDiscussionConfig = DiscussionConfig(
-        courseId = "",
+    private val mockDiscussionConfig = DiscussionConfig(
         isPostingEnabled = true,
-        blackoutPeriods = emptyList(),
-        threadListUrl = "",
-        followingThreadListUrl = "",
-        topicsUrl = "",
-        allowAnonymousPosts = false,
-        allowAnonymousToPeers = false,
-        userRoles = listOf(""),
-        canModerate = false,
-        isGroupTA = false,
-        isUserAdmin = false,
-        isCourseStaff = false,
-        isCourseAdmin = false,
-        provider = "mock_provider",
-        isInContextEnabled = false,
-        isGroupSubsectionEnabled = false,
-        editReasons = emptyList(),
-        postCloseReasons = emptyList(),
-        showDiscussions = true
     )
 
     //region mockThread
@@ -510,6 +491,7 @@ class DiscussionThreadsViewModelTest {
 
     @Test
     fun `refreshThread Topic success`() = runTest {
+        coEvery { interactor.getCourseDiscussionConfig(any(), true) } returns mockDiscussionConfig
         coEvery { interactor.getThreads("", any(), any(), null, range(1, 2)) } returns ThreadsData(
             threads,
             "",
@@ -554,6 +536,7 @@ class DiscussionThreadsViewModelTest {
             "",
             Pagination(10, "", 4, "1")
         )
+        coEvery { interactor.getCourseDiscussionConfig(any(), true) } returns mockDiscussionConfig
         coEvery {
             notifier.notifier
         } returns flow {
@@ -597,6 +580,7 @@ class DiscussionThreadsViewModelTest {
             "",
             Pagination(10, "", 4, "1")
         )
+        coEvery { interactor.getCourseDiscussionConfig(any(), true) } returns mockDiscussionConfig
         coEvery {
             notifier.notifier
         } returns flow {

@@ -53,27 +53,8 @@ class DiscussionTopicsViewModelTest {
 
     private val noInternet = "Slow or no internet connection"
 
-    val mockDiscussionConfig = DiscussionConfig(
-        courseId = "",
+    private val mockDiscussionConfig = DiscussionConfig(
         isPostingEnabled = true,
-        blackoutPeriods = emptyList(),
-        threadListUrl = "",
-        followingThreadListUrl = "",
-        topicsUrl = "",
-        allowAnonymousPosts = false,
-        allowAnonymousToPeers = false,
-        userRoles = listOf(""),
-        canModerate = false,
-        isGroupTA = false,
-        isUserAdmin = false,
-        isCourseStaff = false,
-        isCourseAdmin = false,
-        provider = "mock_provider",
-        isInContextEnabled = false,
-        isGroupSubsectionEnabled = false,
-        editReasons = emptyList(),
-        postCloseReasons = emptyList(),
-        showDiscussions = true
     )
 
 

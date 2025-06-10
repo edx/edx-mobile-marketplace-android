@@ -23,6 +23,7 @@ import org.openedx.discussion.system.notifier.DiscussionResponseAdded
 class DiscussionResponsesViewModel(
     val courseId: String,
     val threadId: String,
+    val isPostingEnabled: Boolean,
     private var comment: DiscussionComment,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,

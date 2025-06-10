@@ -7,8 +7,8 @@ class DiscussionInteractor(
     private val repository: DiscussionRepository
 ) {
 
-    suspend fun getCourseDiscussionConfig(courseId: String) =
-        repository.getCourseDiscussionConfig(courseId)
+    suspend fun getCourseDiscussionConfig(courseId: String, forceRefresh: Boolean = false) =
+        repository.getCourseDiscussionConfig(courseId, forceRefresh)
 
     suspend fun getCourseTopics(courseId: String) = repository.getCourseTopics(courseId)
 

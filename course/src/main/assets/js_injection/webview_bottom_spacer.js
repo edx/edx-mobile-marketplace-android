@@ -3,7 +3,7 @@
         const spacer = document.createElement('div');
         spacer.id = 'bottom-padding';
         Object.assign(spacer.style, {
-            height: '100px',
+            height: '50px',
             width: '100%',
             background: 'transparent'
         });

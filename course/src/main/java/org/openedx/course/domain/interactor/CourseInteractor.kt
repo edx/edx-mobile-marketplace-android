@@ -1,5 +1,6 @@
 package org.openedx.course.domain.interactor
 
+import kotlinx.coroutines.flow.Flow
 import org.openedx.core.BlockType
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.CourseEnrollmentDetails
@@ -10,6 +11,13 @@ class CourseInteractor(
     private val repository: CourseRepository
 ) {
 
+    suspend fun getCourseStructureFlow(
+        courseId: String,
+        forceRefresh: Boolean = true,
+    ): Flow<CourseStructure?> {
+        return repository.getCourseStructureFlow(courseId, forceRefresh)
+    }
+
     suspend fun getCourseStructure(
         courseId: String,
         isNeedRefresh: Boolean = false
@@ -17,8 +25,8 @@ class CourseInteractor(
         return repository.getCourseStructure(courseId, isNeedRefresh)
     }
 
-    suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
-        return repository.getEnrollmentDetails(courseId = courseId)
+    suspend fun getEnrollmentDetailsFlow(courseId: String): Flow<CourseEnrollmentDetails?> {
+        return repository.getEnrollmentDetailsFlow(courseId)
     }
 
     suspend fun getCourseStructureForVideos(
@@ -61,13 +69,13 @@ class CourseInteractor(
         return courseStructure.copy(blockData = resultBlocks.toList())
     }
 
-    suspend fun getCourseStatus(courseId: String) = repository.getCourseStatus(courseId)
+    suspend fun getCourseStatusFlow(courseId: String) = repository.getCourseStatusFlow(courseId)
+
+    suspend fun getCourseDatesFlow(courseId: String) = repository.getCourseDatesFlow(courseId)
 
     suspend fun getCourseDates(courseId: String) = repository.getCourseDates(courseId)
 
     suspend fun resetCourseDates(courseId: String) = repository.resetCourseDates(courseId)
-
-    suspend fun getDatesBannerInfo(courseId: String) = repository.getDatesBannerInfo(courseId)
 
     suspend fun getHandouts(courseId: String) = repository.getHandouts(courseId)
 

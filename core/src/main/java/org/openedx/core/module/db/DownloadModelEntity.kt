@@ -25,11 +25,11 @@ data class DownloadModelEntity(
     val downloadedState: String,
     @ColumnInfo("progress")
     val progress: Float?,
-    @ColumnInfo("transcriptUrls", defaultValue = "")
+    @ColumnInfo("transcriptUrls")
     val transcriptUrls: String,
-    @ColumnInfo("transcriptPaths", defaultValue = "")
+    @ColumnInfo("transcriptPaths")
     val transcriptPaths: String,
-    @ColumnInfo("transcriptDownloadedStatus", defaultValue = "NOT_DOWNLOADED")
+    @ColumnInfo("transcriptDownloadedStatus")
     val transcriptDownloadedStatus: String,
 ) {
 

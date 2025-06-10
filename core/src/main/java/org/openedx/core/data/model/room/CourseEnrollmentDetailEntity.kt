@@ -12,7 +12,6 @@ import org.openedx.core.domain.model.CourseEnrollmentDetails
 import org.openedx.core.domain.model.CourseInfoOverview
 import org.openedx.core.domain.model.CourseMode
 import org.openedx.core.domain.model.iap.ProductInfo
-import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.utils.TimeUtils
 
 @Entity(tableName = "course_enrollment_details_table")
@@ -74,6 +73,8 @@ data class CourseInfoOverviewDB(
     val courseAbout: String,
     @ColumnInfo("courseModes")
     val courseModes: List<CourseModeDB>?,
+    @Embedded
+    val productInfo: ProductInfoDb?,
 ) {
     fun mapToDomain(): CourseInfoOverview {
         val modes = courseModes?.map { it.mapToData() }
@@ -90,17 +91,7 @@ data class CourseInfoOverviewDB(
             courseSharingUtmParameters = courseSharingUtmParameters.mapToDomain(),
             courseAbout = courseAbout,
             courseModes = modes?.map { it.mapToDomain() },
-            productInfo = modes?.find {
-                it.isVerifiedMode()
-            }?.takeIf {
-                it.androidSku.isNotNullOrEmpty() && it.storeSku.isNotNullOrEmpty()
-            }?.run {
-                ProductInfo(
-                    courseSku = androidSku!!,
-                    storeSku = storeSku!!,
-                    lmsUSDPrice = minPrice ?: 0.0
-                )
-            }
+            productInfo = productInfo?.mapToDomain(),
         )
     }
 }
@@ -142,4 +133,19 @@ data class CourseModeDB(
             )
         }
     }
+}
+
+data class ProductInfoDb(
+    @ColumnInfo("courseSku")
+    val courseSku: String,
+    @ColumnInfo("storeSku")
+    val storeSku: String,
+    @ColumnInfo("lmsUSDPrice")
+    val lmsUSDPrice: Double,
+) {
+    fun mapToDomain() = ProductInfo(
+        courseSku = courseSku,
+        storeSku = storeSku,
+        lmsUSDPrice = lmsUSDPrice,
+    )
 }

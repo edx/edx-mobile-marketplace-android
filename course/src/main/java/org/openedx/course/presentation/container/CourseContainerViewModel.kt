@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.annotation.StringRes
+import androidx.core.graphics.createBitmap
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -19,6 +20,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -33,12 +36,14 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
+import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
+import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isFalse
-import org.openedx.core.extension.isNotNull
+import org.openedx.core.extension.isInternetError
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.module.billing.BillingProcessor
@@ -164,7 +169,7 @@ class CourseContainerViewModel(
     val calendarSyncUIState: StateFlow<CalendarSyncUIState> =
         _calendarSyncUIState.asStateFlow()
 
-    private var _courseImage = MutableStateFlow(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888))
+    private var _courseImage = MutableStateFlow(createBitmap(1, 1))
     val courseImage: StateFlow<Bitmap> = _courseImage.asStateFlow()
 
     val hasInternetConnection: Boolean
@@ -249,84 +254,143 @@ class CourseContainerViewModel(
     fun fetchCourseDetails(isIAPFlow: Boolean = false, isExpiredCoursePurchase: Boolean = false) {
         _showProgress.value = true
         viewModelScope.launch {
-            try {
-                _courseDetails = interactor.getEnrollmentDetails(courseId)
-                _courseDetails?.let { courseDetails ->
-                    val courseInfoOverview = courseDetails.courseInfoOverview
-                    courseName = courseInfoOverview.name
-                    _canShowUpgradeButton.value =
-                        iapInteractor.isIAPEnabled && courseDetails.isUpgradeable
-                    _canShowTrackSelection.value = showTrackSelection && _canShowUpgradeButton.value
-                    loadCourseImage(courseInfoOverview.media?.image?.large)
-                    _showProgress.value = false
-                    if (courseDetails.hasAccess.isFalse()) {
-                        _dataReady.value = false
-                        if (courseDetails.isAuditAccessExpired) {
-                            if (_canShowUpgradeButton.value && courseInfoOverview.productInfo.isNotNull()) {
-                                purchaseFlowData.apply {
-                                    courseId = courseDetails.id
-                                    courseName = courseInfoOverview.name
-                                    isSelfPaced = courseInfoOverview.isSelfPaced
-                                    productInfo = courseInfoOverview.productInfo
-                                    screenName = IAPFlowSource.COURSE_DASHBOARD.screen
-                                    iapFlow = IAPFlow.USER_INITIATED
-                                }
-                                loadPrice()
-                                _courseAccessStatus.value =
-                                    CourseAccessError.AUDIT_EXPIRED_UPGRADABLE
-                            } else {
-                                _courseAccessStatus.value =
-                                    CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE
-                            }
-                        } else if (courseDetails.courseInfoOverview.isStarted.not()) {
-                            _courseAccessStatus.value = CourseAccessError.NOT_YET_STARTED
-                        } else {
-                            _courseAccessStatus.value = CourseAccessError.UNKNOWN
-                        }
-                    } else {
-                        _courseAccessStatus.value = CourseAccessError.NONE
-                        _isNavigationEnabled.value = true
-                        _calendarSyncUIState.update { state ->
-                            state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
-                        }
-                        if (resumeBlockId.isNotEmpty()) {
-                            delay(500L)
-                            courseNotifier.send(CourseOpenBlock(resumeBlockId))
-                        }
-                        if (isIAPFlow) {
-                            if (isExpiredCoursePurchase) {
-                                if (eventLogger.isSilentIAPFlow.isNull()) {
-                                    eventLogger.upgradeSuccessEvent()
-                                }
-                                _uiMessage.emit(
-                                    UIMessage.ToastMessage(
-                                        resourceManager.getString(
-                                            CoreR.string.iap_success_message
-                                        )
-                                    )
-                                )
-                            } else {
-                                iapNotifier.send(CourseDataUpdated())
-                            }
-                            _iapState.value = IAPUIState.CourseDataUpdated
-                        }
-                        _dataReady.value = true
-                    }
-                } ?: run {
-                    _courseAccessStatus.value = CourseAccessError.UNKNOWN
+            val courseStructureFlow = interactor.getCourseStructureFlow(courseId)
+                .catch { e ->
+                    handleFetchError(e)
+                    emit(null)
                 }
-            } catch (e: Exception) {
-                logger.e(
-                    throwable = e, metadata = mapOf(
-                        "courseId" to courseId,
-                        "isIAPFlow" to isIAPFlow,
-                        "isExpiredCoursePurchase" to isExpiredCoursePurchase
-                    )
-                )
-                _courseAccessStatus.value = CourseAccessError.UNKNOWN
-                _showProgress.value = false
+            val courseDetailsFlow = interactor.getEnrollmentDetailsFlow(courseId)
+                .catch { emit(null) }
+
+            courseStructureFlow.combine(courseDetailsFlow) { courseStructure, courseEnrollmentDetails ->
+                courseStructure to courseEnrollmentDetails
+            }.catch { e ->
+                handleFetchError(e)
+            }.collect { (courseStructure, courseEnrollmentDetails) ->
+                when {
+                    courseEnrollmentDetails != null -> {
+                        handleCourseEnrollment(
+                            courseDetails = courseEnrollmentDetails,
+                            isIAPFlow = isIAPFlow,
+                            isExpiredCoursePurchase = isExpiredCoursePurchase,
+                        )
+                    }
+
+                    courseStructure != null -> {
+                        handleCourseStructureOnly(courseStructure)
+                    }
+
+                    else -> _courseAccessStatus.value = CourseAccessError.UNKNOWN
+                }
             }
         }
+    }
+
+    /**
+     * Handles the scenario where [CourseEnrollmentDetails] is successfully fetched.
+     */
+    private fun handleCourseEnrollment(
+        courseDetails: CourseEnrollmentDetails,
+        isIAPFlow: Boolean = false,
+        isExpiredCoursePurchase: Boolean = false,
+    ) {
+        _courseDetails = courseDetails
+        val courseInfoOverview = courseDetails.courseInfoOverview
+
+        courseName = courseInfoOverview.name
+        loadCourseImage(courseInfoOverview.media?.image?.large)
+
+        _canShowUpgradeButton.value = iapInteractor.isIAPEnabled && courseDetails.isUpgradeable
+        _canShowTrackSelection.value = showTrackSelection && _canShowUpgradeButton.value
+
+        _showProgress.value = false
+
+        if (courseDetails.hasAccess.isFalse()) {
+            _dataReady.value = false
+            if (courseDetails.isAuditAccessExpired) {
+                if (_canShowUpgradeButton.value) {
+                    purchaseFlowData.apply {
+                        courseId = courseDetails.id
+                        courseName = courseInfoOverview.name
+                        isSelfPaced = courseInfoOverview.isSelfPaced
+                        productInfo = courseInfoOverview.productInfo
+                        screenName = IAPFlowSource.COURSE_DASHBOARD.screen
+                        iapFlow = IAPFlow.USER_INITIATED
+                    }
+                    loadPrice()
+                    _courseAccessStatus.value = CourseAccessError.AUDIT_EXPIRED_UPGRADABLE
+                } else {
+                    _courseAccessStatus.value = CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE
+                }
+            } else if (courseDetails.courseInfoOverview.isStarted.not()) {
+                _courseAccessStatus.value = CourseAccessError.NOT_YET_STARTED
+            } else {
+                _courseAccessStatus.value = CourseAccessError.UNKNOWN
+            }
+        } else {
+            _courseAccessStatus.value = CourseAccessError.NONE
+            _isNavigationEnabled.value = true
+            _calendarSyncUIState.update { state ->
+                state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
+            }
+            if (resumeBlockId.isNotEmpty()) {
+                viewModelScope.launch {
+                    delay(500L)
+                    courseNotifier.send(CourseOpenBlock(resumeBlockId))
+                }
+            }
+            if (isIAPFlow) {
+                viewModelScope.launch {
+                    if (isExpiredCoursePurchase) {
+                        if (eventLogger.isSilentIAPFlow.isNull()) {
+                            eventLogger.upgradeSuccessEvent()
+                        }
+                        _uiMessage.emit(
+                            UIMessage.ToastMessage(
+                                resourceManager.getString(
+                                    CoreR.string.iap_success_message
+                                )
+                            )
+                        )
+                    } else {
+                        iapNotifier.send(CourseDataUpdated())
+                    }
+                }
+                _iapState.value = IAPUIState.CourseDataUpdated
+            }
+            _dataReady.value = true
+        }
+    }
+
+    /**
+     * Handles the scenario where we only have [CourseStructure] but no enrollment details.
+     */
+    private fun handleCourseStructureOnly(courseStructure: CourseStructure) {
+        loadCourseImage(courseStructure.media?.image?.large)
+        _courseAccessStatus.value = CourseAccessError.NONE
+        _isNavigationEnabled.value = true
+        _calendarSyncUIState.update { state ->
+            state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
+        }
+        if (resumeBlockId.isNotEmpty()) {
+            viewModelScope.launch {
+                delay(500L)
+                courseNotifier.send(CourseOpenBlock(resumeBlockId))
+            }
+        }
+        _dataReady.value = true
+    }
+
+    private fun handleFetchError(e: Throwable) {
+        logger.e(throwable = e)
+        if (!isNetworkRelatedError(e)) {
+            _courseAccessStatus.value = CourseAccessError.UNKNOWN
+        }
+        _showProgress.value = false
+    }
+
+    private fun isNetworkRelatedError(e: Throwable): Boolean {
+        return e.isInternetError() || e is NoCachedDataException
     }
 
     fun loadPrice() {

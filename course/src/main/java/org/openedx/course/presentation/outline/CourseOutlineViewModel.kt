@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.openedx.core.BlockType
 import org.openedx.core.R
@@ -20,7 +22,7 @@ import org.openedx.core.domain.model.CourseBannerType
 import org.openedx.core.domain.model.CourseComponentStatus
 import org.openedx.core.domain.model.CourseDateBlock
 import org.openedx.core.domain.model.CourseDatesBannerInfo
-import org.openedx.core.domain.model.CourseDatesResult
+import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.extension.getSequentialBlocks
 import org.openedx.core.extension.getVerticalBlocks
 import org.openedx.core.extension.isInternetError
@@ -196,62 +198,64 @@ class CourseOutlineViewModel(
 
     private fun getCourseDataInternal() {
         viewModelScope.launch {
-            try {
-                var courseStructure = interactor.getCourseStructure(courseId)
+            val courseStructureFlow = interactor.getCourseStructureFlow(courseId, false)
+                .catch { emit(null) }
+            val courseStatusFlow = interactor.getCourseStatusFlow(courseId)
+            val courseDatesFlow = interactor.getCourseDatesFlow(courseId)
+            combine(
+                courseStructureFlow,
+                courseStatusFlow,
+                courseDatesFlow
+            ) { courseStructure, courseStatus, courseDatesResult ->
+                Triple(courseStructure, courseStatus, courseDatesResult)
+            }.catch { e ->
+                handleCourseDataError(e)
+            }.collect { (courseStructure, courseStatus, courseDates) ->
+                if (courseStructure == null) return@collect
                 val blocks = courseStructure.blockData
+                val datesBannerInfo = courseDates.courseBanner
 
-                val courseStatus = if (networkConnection.isOnline()) {
-                    interactor.getCourseStatus(courseId)
-                } else {
-                    CourseComponentStatus("")
-                }
+                checkIfCalendarOutOfDate(courseDates.datesSection.values.flatten())
 
-                val courseDatesResult = if (networkConnection.isOnline()) {
-                    interactor.getCourseDates(courseId)
-                } else {
-                    CourseDatesResult(
-                        datesSection = linkedMapOf(),
-                        courseBanner = CourseDatesBannerInfo(
-                            missedDeadlines = false,
-                            missedGatedContent = false,
-                            verifiedUpgradeLink = "",
-                            contentTypeGatingEnabled = false,
-                            hasEnded = false
-                        )
-                    )
-                }
-                val datesBannerInfo = courseDatesResult.courseBanner
-
-                checkIfCalendarOutOfDate(courseDatesResult.datesSection.values.flatten())
-
-                setBlocks(blocks)
-                courseSubSections.clear()
-                courseSubSectionUnit.clear()
-                courseStructure = courseStructure.copy(blockData = sortBlocks(blocks))
-                initDownloadModelsStatus()
-
-                _uiState.value = CourseOutlineUIState.CourseData(
-                    courseStructure = courseStructure,
-                    downloadedState = getDownloadModelsStatus(),
-                    resumeComponent = getResumeBlock(blocks, courseStatus.lastVisitedBlockId),
-                    resumeUnitTitle = resumeVerticalBlock?.displayName ?: "",
-                    courseSubSections = courseSubSections,
-                    courseSectionsState = getCourseSectionExpandedState(courseStructure.blockData),
-                    subSectionsDownloadsCount = subSectionsDownloadsCount,
-                    datesBannerInfo = datesBannerInfo
-                )
-                _canShowPLSBanner.value =
-                    coursePreferences.canShowPLSBanner(courseId, datesBannerInfo.bannerType.name)
-            } catch (e: Exception) {
-                logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
-                _uiState.value = CourseOutlineUIState.Error
-                if (e.isInternetError()) {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
-                } else {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
-                }
+                initializeCourseData(blocks, courseStructure, courseStatus, datesBannerInfo)
             }
         }
+    }
+
+    private suspend fun initializeCourseData(
+        blocks: List<Block>,
+        courseStructure: CourseStructure,
+        courseStatus: CourseComponentStatus,
+        datesBannerInfo: CourseDatesBannerInfo,
+    ) {
+        setBlocks(blocks)
+        courseSubSections.clear()
+        courseSubSectionUnit.clear()
+        val sortedStructure = courseStructure.copy(blockData = sortBlocks(blocks))
+        initDownloadModelsStatus()
+
+        _uiState.value = CourseOutlineUIState.CourseData(
+            courseStructure = sortedStructure,
+            downloadedState = getDownloadModelsStatus(),
+            resumeComponent = getResumeBlock(blocks, courseStatus.lastVisitedBlockId),
+            resumeUnitTitle = resumeVerticalBlock?.displayName ?: "",
+            courseSubSections = courseSubSections,
+            courseSectionsState = getCourseSectionExpandedState(sortedStructure.blockData),
+            subSectionsDownloadsCount = subSectionsDownloadsCount,
+            datesBannerInfo = datesBannerInfo,
+        )
+        _canShowPLSBanner.value =
+            coursePreferences.canShowPLSBanner(courseId, datesBannerInfo.bannerType.name)
+    }
+
+    private suspend fun handleCourseDataError(e: Throwable) {
+        logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
+        _uiState.value = CourseOutlineUIState.Error
+        val errorMessage = when {
+            e.isInternetError() -> R.string.core_error_no_connection
+            else -> R.string.core_error_unknown_error
+        }
+        _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(errorMessage)))
     }
 
     private fun sortBlocks(blocks: List<Block>): List<Block> {
@@ -260,20 +264,26 @@ class CourseOutlineViewModel(
         blocks.forEach { block ->
             if (block.type == BlockType.CHAPTER) {
                 resultBlocks.add(block)
-                block.descendants.forEach { descendant ->
-                    blocks.find { it.id == descendant }?.let { sequentialBlock ->
-                        courseSubSections.getOrPut(block.id) { mutableListOf() }
-                            .add(sequentialBlock)
-                        courseSubSectionUnit[sequentialBlock.id] =
-                            sequentialBlock.getFirstDescendantBlock(blocks)
-                        subSectionsDownloadsCount[sequentialBlock.id] =
-                            sequentialBlock.getDownloadsCount(blocks)
-                        addDownloadableChildrenForSequentialBlock(sequentialBlock)
-                    }
-                }
+                processDescendants(block, blocks)
             }
         }
-        return resultBlocks.toList()
+        return resultBlocks
+    }
+
+    private fun processDescendants(block: Block, blocks: List<Block>) {
+        block.descendants.forEach { descendantId ->
+            val sequentialBlock = blocks.find { it.id == descendantId } ?: return@forEach
+            addSequentialBlockToSubSections(block, sequentialBlock)
+            courseSubSectionUnit[sequentialBlock.id] =
+                sequentialBlock.getFirstDescendantBlock(blocks)
+            subSectionsDownloadsCount[sequentialBlock.id] =
+                sequentialBlock.getDownloadsCount(blocks)
+            addDownloadableChildrenForSequentialBlock(sequentialBlock)
+        }
+    }
+
+    private fun addSequentialBlockToSubSections(block: Block, sequentialBlock: Block) {
+        courseSubSections.getOrPut(block.id) { mutableListOf() }.add(sequentialBlock)
     }
 
     private fun getResumeBlock(

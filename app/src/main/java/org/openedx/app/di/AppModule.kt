@@ -18,7 +18,6 @@ import org.openedx.app.data.storage.PreferencesManager
 import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.room.AppDatabase
 import org.openedx.app.room.DATABASE_NAME
-import org.openedx.app.room.Migrations
 import org.openedx.auth.presentation.AgreementProvider
 import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.auth.presentation.AuthRouter
@@ -151,7 +150,6 @@ val appModule = module {
             DATABASE_NAME
         ).fallbackToDestructiveMigration()
             .fallbackToDestructiveMigrationOnDowngrade()
-            .addMigrations(Migrations.MIGRATION_1_2)
             .build()
     }
 

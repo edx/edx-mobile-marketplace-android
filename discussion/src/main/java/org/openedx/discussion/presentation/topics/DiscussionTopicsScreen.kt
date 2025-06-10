@@ -170,7 +170,7 @@ private fun DiscussionTopicsUI(
                         text = stringResource(id = R.string.discussion_posting_disabled_msg),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.appTypography.titleSmall,
-                        color = MaterialTheme.appColors.textPrimaryVariant
+                        color = MaterialTheme.appColors.textWarning
                     )
                 } else {
                     Spacer(modifier = Modifier.statusBarsInset())

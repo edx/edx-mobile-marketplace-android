@@ -300,7 +300,7 @@ class DashboardGalleryViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    updateCourses(isIAPFlow = event.isPurchasedFromCourseDashboard.not())
+                    updateCourses(isIAPFlow = true)
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)

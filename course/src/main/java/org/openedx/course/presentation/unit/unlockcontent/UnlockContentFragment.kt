@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
@@ -38,10 +37,10 @@ import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.R
+import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OpenEdXBrandButton
-import org.openedx.core.ui.UnlockingAccessView
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
@@ -75,6 +74,14 @@ class UnlockContentFragment : Fragment() {
                         viewModel.purchaseItem(requireActivity())
                     }
 
+                    is UnlockContentUIAction.FullScreenLoader -> {
+                        IAPDialogFragment.newInstance((uiEvent as UnlockContentUIAction.FullScreenLoader).purchaseFlowData)
+                            .show(
+                                requireActivity().supportFragmentManager,
+                                IAPDialogFragment.TAG
+                            )
+                    }
+
                     is UnlockContentUIAction.Error -> {
                         val iapException = (uiEvent as UnlockContentUIAction.Error).iapException
                         IAPErrorDialog(iapException = iapException, onIAPAction = { iapAction ->
@@ -84,16 +91,23 @@ class UnlockContentFragment : Fragment() {
                                     viewModel.reloadPrice(iapException)
                                 }
 
-                                else -> {
-                                    viewModel.clearIAPFLow()
+                                IAPAction.ACTION_GET_HELP -> {
+                                    viewModel.showFeedbackScreen(
+                                        context,
+                                        iapException.requestType.request,
+                                        iapException.getFormattedErrorMessage()
+                                    )
                                 }
 
+                                else -> {
+                                    viewModel.refreshIAPState()
+                                }
                             }
                         })
                     }
 
                     UnlockContentUIAction.Clear -> {
-                        viewModel.clearIAPFLow()
+                        viewModel.refreshIAPState()
                     }
 
                     else -> {
@@ -137,10 +151,6 @@ fun GradedAssignmentLockedCard(
                 uiAction = UnlockContentUIAction.UpgradeButton(formattedPrice = uiState.formattedPrice),
                 onUpgradeClick = onUpgradeClick
             )
-        }
-
-        UnlockContentUIState.FullScreenLoading -> {
-            UnlockingAccessView()
         }
 
         else -> {}
@@ -244,8 +254,6 @@ private fun UpgradeBenefit(text: String) {
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, device = Devices.NEXUS_9)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.NEXUS_9)
 @Composable
 fun GradedAssignmentLockedCardPreview() {
     OpenEdXTheme {

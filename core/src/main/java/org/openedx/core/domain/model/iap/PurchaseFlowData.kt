@@ -24,13 +24,6 @@ data class PurchaseFlowData(
     var flowStartTime: Long = 0
 
     fun reset() {
-        iapFlow = null
-        screenName = null
-        courseId = null
-        courseName = null
-        isSelfPaced = null
-        componentId = null
-        productInfo = null
         currencyCode = ""
         price = 0.0
         formattedPrice = null
@@ -60,7 +53,8 @@ enum class IAPFlow(val value: String) {
     RESTORE("restore"),
     SILENT("silent"),
     USER_INITIATED("user_initiated"),
-    TRACK_SELECTION("track_selection");
+    TRACK_SELECTION("track_selection"),
+    UNLOCK_COMPONENT_USER_INITIATED("unlock_component_user_initiated");
 
     fun value(): String {
         return this.name.lowercase()

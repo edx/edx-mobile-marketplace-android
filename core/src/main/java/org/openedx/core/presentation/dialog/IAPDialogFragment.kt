@@ -290,7 +290,6 @@ class IAPDialogFragment : DialogFragment() {
             componentId: String? = null,
             productInfo: ProductInfo? = null,
         ): IAPDialogFragment {
-            val fragment = IAPDialogFragment()
             val purchaseFlowData = PurchaseFlowData().apply {
                 this.iapFlow = iapFlow
                 this.screenName = screenName
@@ -301,10 +300,12 @@ class IAPDialogFragment : DialogFragment() {
                 this.componentId = componentId
                 this.productInfo = productInfo
             }
+            return this.newInstance(purchaseFlowData)
+        }
 
-            fragment.arguments = bundleOf(
-                ARG_PURCHASE_FLOW_DATA to purchaseFlowData
-            )
+        fun newInstance(purchaseFlowData: PurchaseFlowData): IAPDialogFragment {
+            val fragment = IAPDialogFragment()
+            fragment.arguments = bundleOf(ARG_PURCHASE_FLOW_DATA to purchaseFlowData)
             return fragment
         }
     }

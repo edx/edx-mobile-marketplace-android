@@ -39,9 +39,9 @@ import org.openedx.core.utils.TimeUtils
 class IAPViewModel(
     private val purchaseFlowData: PurchaseFlowData,
     private val iapInteractor: IAPInteractor,
-    private val analytics: IAPAnalytics,
     private val resourceManager: ResourceManager,
     private val iapNotifier: IAPNotifier,
+    analytics: IAPAnalytics,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -93,7 +93,11 @@ class IAPViewModel(
                             eventLogger.upgradeSuccessEvent()
                         }
                         _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
-                        _uiState.value = IAPUIState.CourseDataUpdated
+                        // The IAP dialog will be dismissed by `CourseUnitContainerFragment` after
+                        // refreshing the course components
+                        if (eventLogger.purchaseFlowData?.iapFlow != IAPFlow.UNLOCK_COMPONENT_USER_INITIATED) {
+                            _uiState.value = IAPUIState.CourseDataUpdated
+                        }
                     }
                 }
             }.distinctUntilChanged().launchIn(viewModelScope)
@@ -111,6 +115,11 @@ class IAPViewModel(
                 _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
                 purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
                 updateCourseData()
+            }
+
+            IAPFlow.UNLOCK_COMPONENT_USER_INITIATED -> {
+                _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
+                executeOrder(purchaseFlowData)
             }
 
             else -> {}

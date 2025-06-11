@@ -1,5 +1,6 @@
 package org.openedx.course.presentation.unit.unlockcontent
 
+import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.BillingClient
@@ -11,12 +12,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
-import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.IAPFlow
@@ -30,32 +27,25 @@ import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPEventLogger
 import org.openedx.core.presentation.iap.IAPRequestType
-import org.openedx.core.system.ResourceManager
-import org.openedx.core.system.notifier.CourseDataUpdated
-import org.openedx.core.system.notifier.CourseNotifier
-import org.openedx.core.system.notifier.IAPNotifier
-import org.openedx.core.system.notifier.RefreshCourseComponents
-import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.domain.interactor.CourseInteractor
 
 class UnlockContentViewModel(
-    blockId: String,
-    private val courseId: String,
-    analytics: IAPAnalytics,
+    val blockId: String,
+    val courseId: String,
     private val courseInteractor: CourseInteractor,
     private val iapInteractor: IAPInteractor,
-    private val iapNotifier: IAPNotifier,
-    private val courseNotifier: CourseNotifier,
-    private val resourceManager: ResourceManager,
+    analytics: IAPAnalytics,
 ) : BaseViewModel() {
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
-            if (purchase.getCourseSku() == purchaseData.productInfo?.courseSku) {
-                _uiState.value = UnlockContentUIState.FullScreenLoading
-                purchaseData.purchaseToken = purchase.purchaseToken
-                executeOrder(purchaseData)
+            viewModelScope.launch {
+                if (purchase.getCourseSku() == purchaseData.productInfo?.courseSku) {
+                    purchaseData.purchaseToken = purchase.purchaseToken
+                    // execute order, consume order and course data update will performed behind the fullscreen loader
+                    _uiEvent.emit(UnlockContentUIAction.FullScreenLoader(purchaseData))
+                }
             }
         }
 
@@ -82,7 +72,7 @@ class UnlockContentViewModel(
         get() = _uiMessage.asSharedFlow()
 
     private val purchaseData: PurchaseFlowData = PurchaseFlowData(
-        iapFlow = IAPFlow.USER_INITIATED,
+        iapFlow = IAPFlow.UNLOCK_COMPONENT_USER_INITIATED,
         screenName = IAPFlowSource.COURSE_COMPONENT.name,
         courseId = courseId,
         courseName = null,
@@ -94,21 +84,12 @@ class UnlockContentViewModel(
 
     private val eventLogger = IAPEventLogger(
         analytics = analytics,
-        isSilentIAPFlow = purchaseData.isSilentIAPFlow(),
+        isSilentIAPFlow = false,
         purchaseFlowData = purchaseData
     )
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            iapNotifier.notifier.onEach { event ->
-                when (event) {
-                    is CourseDataUpdated -> {
-                        eventLogger.upgradeSuccessEvent()
-                        _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
-                        courseNotifier.send(RefreshCourseComponents)
-                    }
-                }
-            }.distinctUntilChanged().launchIn(viewModelScope)
             fetchCourseData()
             loadPrice()
             eventLogger.loadIAPScreenEvent()
@@ -158,7 +139,7 @@ class UnlockContentViewModel(
                 iapException.requestType.request,
                 IAPAction.ACTION_CLOSE.action
             )
-            loadPrice()
+            refreshIAPState()
         }
     }
 
@@ -212,49 +193,6 @@ class UnlockContentViewModel(
         }
     }
 
-    private fun executeOrder(purchaseFlowData: PurchaseFlowData) {
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
-                iapInteractor.executeOrder(
-                    basketId = purchaseFlowData.basketId,
-                    purchaseToken = purchaseFlowData.purchaseToken!!,
-                    price = purchaseFlowData.price,
-                    currencyCode = purchaseFlowData.currencyCode,
-                )
-            }.onSuccess {
-                consumeOrderForFurtherPurchases(purchaseFlowData)
-            }.onFailure {
-                if (it is IAPException) {
-                    updateErrorState(it)
-                }
-            }
-        }
-    }
-
-    private fun consumeOrderForFurtherPurchases(purchaseFlowData: PurchaseFlowData) {
-        viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.purchaseToken?.let {
-                runCatching {
-                    iapInteractor.consumePurchase(it)
-                }.onSuccess {
-                    updateCourseData()
-                }.onFailure {
-                    if (it is IAPException) {
-                        updateErrorState(it)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun updateCourseData() {
-        viewModelScope.launch(Dispatchers.IO) {
-            purchaseData.courseId?.let {
-                iapNotifier.send(UpdateCourseData(false))
-            }
-        }
-    }
-
     private fun updateErrorState(iapException: IAPException) {
         eventLogger.logExceptionEvent(iapException)
         viewModelScope.launch {
@@ -266,8 +204,16 @@ class UnlockContentViewModel(
         }
     }
 
-    fun clearIAPFLow() {
+    fun showFeedbackScreen(context: Context, requestType: String, message: String) {
+        iapInteractor.showFeedbackScreen(context, message)
+        eventLogger.logIAPErrorActionEvent(requestType, IAPAction.ACTION_GET_HELP.action)
+        refreshIAPState()
+    }
+
+    fun refreshIAPState() {
         viewModelScope.launch {
+            _uiEvent.emit(UnlockContentUIAction.None)
+            purchaseData.reset()
             loadPrice()
         }
     }

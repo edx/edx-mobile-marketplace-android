@@ -155,7 +155,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     appReviewManager.tryToOpenRateDialog()
                 }
             }
-        }.launchIn(lifecycleScope)
+        }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     @OptIn(UnstableApi::class)

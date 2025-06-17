@@ -299,13 +299,6 @@ private fun SettingsSection(
                     text = stringResource(id = profileR.string.profile_video),
                     onClick = onVideoSettingsClick
                 )
-
-                SettingsDivider()
-                SettingsItem(
-                    text = stringResource(id = profileR.string.profile_appearance),
-                    onClick = onAppearanceSettingsClick
-                )
-
 //                SettingsDivider()
 //                SettingsItem(
 //                    text = stringResource(id = profileR.string.profile_dates_and_calendar),
@@ -319,6 +312,11 @@ private fun SettingsSection(
                         onClick = onPushNotificationsSettingsClick
                     )
                 }
+                SettingsDivider()
+                SettingsItem(
+                    text = stringResource(id = profileR.string.profile_appearance),
+                    onClick = onAppearanceSettingsClick
+                )
             }
         }
     }

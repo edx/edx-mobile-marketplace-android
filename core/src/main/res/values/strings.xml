@@ -7,12 +7,12 @@
     <string name="core_error_no_connection">Slow or no internet connection</string>
     <string name="core_error_unknown_error">Something went wrong</string>
     <string name="core_error_try_again">Try again</string>
-    <string name="core_privacy_policy">Privacy Policy</string>
-    <string name="core_cookie_policy" translatable="false">Cookie Policy</string>
+    <string name="core_privacy_policy">Privacy policy</string>
+    <string name="core_cookie_policy" translatable="false">Cookie policy</string>
     <string name="core_data_sell" translatable="false">Do not sell my personal information</string>
     <string name="core_faq" translatable="false">View FAQ</string>
-    <string name="core_terms_of_use">Terms of Use</string>
-    <string name="core_help_us_improve">Help us Improve</string>
+    <string name="core_terms_of_use">Terms of use</string>
+    <string name="core_help_us_improve">Help us improve</string>
     <string name="core_profile">Profile</string>
     <string name="core_cancel">Cancel</string>
     <string name="core_search">Search</string>
@@ -152,7 +152,7 @@
     <string name="core_video_downloaded_subtitle" formatted="false">Videos %d, %s Total</string>
     <string name="core_video_streaming_quality">Video streaming quality</string>
     <string name="core_video_download_quality">Video download quality</string>
-    <string name="core_manage_account">Manage Account</string>
+    <string name="core_manage_account">Manage account</string>
 
     <string name="core_assignment_due_tag" tools:ignore="MissingTranslation">Assignment Due</string>
     <string name="core_title_syncing_calendar" tools:ignore="MissingTranslation">Syncing calendar…</string>
@@ -185,7 +185,7 @@
     <string name="core_snackbar_course_calendar_removed" tools:ignore="MissingTranslation">Your course calendar has been removed.</string>
     <string name="core_snackbar_course_calendar_updated" tools:ignore="MissingTranslation">Your course calendar has been updated.</string>
     <string name="core_snackbar_course_calendar_error" tools:ignore="MissingTranslation">Error Adding Calendar, Please try later</string>
-    <string name="core_contact_support">Contact Support</string>
+    <string name="core_contact_support">Contact support</string>
 
     <!-- endregion -->
 

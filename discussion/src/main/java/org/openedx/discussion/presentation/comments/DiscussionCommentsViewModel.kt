@@ -118,16 +118,16 @@ class DiscussionCommentsViewModel(
                 comments.addAll(response.results.map {
                     it.copy(isAuthor = it.author == corePreferences.user?.username)
                 })
-                if (responseId.isNotEmpty()) {
+                if (responseId.isNotEmpty() && page < 3) {
                     val comment = comments.find { it.id == responseId }
                     if (comment == null) {
                         val newComment = interactor.getResponse(responseId)
-                        newComment.shouldHighlight = true
+                        newComment.shouldHighlight = commentId.isEmpty()
                         comments.add(0, newComment)
                         commentCount.inc()
                     } else {
                         comments.remove(comment)
-                        comment.shouldHighlight = true
+                        comment.shouldHighlight = commentId.isEmpty()
                         comments.add(0, comment)
                     }
                 }
@@ -164,6 +164,13 @@ class DiscussionCommentsViewModel(
     private fun getThreadComments() {
         _uiState.value = DiscussionCommentsUIState.Loading
         internalLoadComments(markReadIfSuccessful = true)
+    }
+
+    fun updateCommentPulseStatus(comment: DiscussionComment) {
+        if (_uiState.value is DiscussionCommentsUIState.Success) {
+            (_uiState.value as DiscussionCommentsUIState.Success)
+                .commentsData.find { it.id == comment.id }?.shouldHighlight = false
+        }
     }
 
     fun updateThreadComments() {

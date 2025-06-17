@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -67,6 +69,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import kotlinx.coroutines.delay
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -74,6 +77,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.extension.parcelable
+import org.openedx.core.extension.smoothScrollToIndex
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.WindowSize
@@ -135,6 +139,9 @@ class DiscussionCommentsFragment : Fragment() {
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
                     refreshing = refreshing,
+                    onCommentPulseEnd = { comment ->
+                        viewModel.updateCommentPulseStatus(comment = comment)
+                    },
                     onSwipeRefresh = {
                         viewModel.updateThreadComments()
                     },
@@ -243,6 +250,7 @@ private fun DiscussionCommentsScreen(
     title: String,
     canLoadMore: Boolean,
     refreshing: Boolean,
+    onCommentPulseEnd: (DiscussionComment) -> Unit = {},
     onSwipeRefresh: () -> Unit,
     paginationCallBack: () -> Unit,
     onItemClick: (String, String, Boolean) -> Unit,
@@ -264,6 +272,8 @@ private fun DiscussionCommentsScreen(
     }
 
     val sendButtonAlpha = if (responseValue.isEmpty()) 0.3f else 1f
+    var itemHeightPx by remember { mutableFloatStateOf(0f) }
+
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -359,7 +369,10 @@ private fun DiscussionCommentsScreen(
                                                 .fillMaxWidth()
                                                 .background(MaterialTheme.appColors.background)
                                                 .padding(horizontal = paddingContent)
-                                                .padding(top = 32.dp),
+                                                .padding(top = 32.dp)
+                                                .onGloballyPositioned { layout ->
+                                                    itemHeightPx = layout.size.height.toFloat()
+                                                },
                                             thread = uiState.thread,
                                             onClick = { action, bool ->
                                                 onItemClick(action, uiState.thread.id, bool)
@@ -395,6 +408,7 @@ private fun DiscussionCommentsScreen(
                                                     onCommentClick(comment)
                                                 },
                                             comment = comment,
+                                            onCommentPulseEnd = onCommentPulseEnd,
                                             onClick = { action, commentId, bool ->
                                                 onItemClick(action, commentId, bool)
                                             },
@@ -487,6 +501,18 @@ private fun DiscussionCommentsScreen(
                                             )
                                         }
                                     }
+                                }
+                            }
+                            val scrollToIndex =
+                                uiState.commentsData.indexOfFirst { comment -> comment.shouldHighlight }
+                            LaunchedEffect(scrollToIndex) {
+                                // add delay to allow the UI to be drawn before scrolling
+                                delay(500)
+                                if (scrollToIndex != -1) {
+                                    scrollState.smoothScrollToIndex(
+                                        index = scrollToIndex + 1,
+                                        itemHeightPx = itemHeightPx
+                                    )
                                 }
                             }
                         }

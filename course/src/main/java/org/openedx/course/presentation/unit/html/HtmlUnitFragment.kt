@@ -2,7 +2,6 @@ package org.openedx.course.presentation.unit.html
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -20,7 +19,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
@@ -37,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.Dp
@@ -90,15 +87,6 @@ class HtmlUnitFragment : Fragment() {
 
                 val injectJSList by viewModel.injectJSList.collectAsState()
 
-                val configuration = LocalConfiguration.current
-
-                val bottomPadding =
-                    if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                        72.dp
-                    } else {
-                        0.dp
-                    }
-
                 val border = if (!isSystemInDarkTheme() && !viewModel.isCourseUnitProgressEnabled) {
                     Modifier.roundBorderWithoutBottom(
                         borderWidth = 2.dp,
@@ -116,7 +104,6 @@ class HtmlUnitFragment : Fragment() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(bottom = bottomPadding)
                             .background(MaterialTheme.appColors.background)
                             .then(border),
                         contentAlignment = Alignment.TopCenter

@@ -404,8 +404,8 @@ fun CourseDashboard(
                         )
                     } ?: ""
                 IAPDialogFragment.newInstance(
-                    iapFlow = IAPFlow.TRACK_SELECTION,
-                    screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
+                    iapFlow = IAPFlow.USER_INITIATED,
+                    screenName = IAPFlowSource.TRACK_SELECTION.screen,
                     courseId = viewModel.courseId,
                     courseName = viewModel.courseName,
                     courseExpiresDate = courseExpiresDate,

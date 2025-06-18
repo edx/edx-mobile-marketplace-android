@@ -2,6 +2,7 @@ package org.openedx.core.presentation.iap
 
 import com.android.billingclient.api.BillingClient
 import org.openedx.core.domain.model.iap.IAPFlow
+import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isNull
@@ -117,7 +118,7 @@ class IAPEventLogger(
 
     fun loadIAPScreenEvent() {
         val event =
-            if (purchaseFlowData?.iapFlow == IAPFlow.TRACK_SELECTION)
+            if (purchaseFlowData?.screenName == IAPFlowSource.TRACK_SELECTION.screen)
                 IAPAnalyticsEvent.IAP_TRACK_SELECTION_VIEWED
             else
                 IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED

@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.BlockType
 import org.openedx.core.UIMessage
-import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.VideoSettings
@@ -37,7 +36,6 @@ import org.openedx.course.presentation.CourseRouter
 class CourseVideoViewModel(
     val courseId: String,
     val courseTitle: String,
-    private val config: Config,
     private val interactor: CourseInteractor,
     private val resourceManager: ResourceManager,
     private val networkConnection: NetworkConnection,
@@ -58,7 +56,6 @@ class CourseVideoViewModel(
 ) {
 
     private val logger = Logger(TAG)
-    val isCourseNestedListEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
     private val _uiState = MutableStateFlow<CourseVideosUIState>(CourseVideosUIState.Loading)
     val uiState: StateFlow<CourseVideosUIState>
@@ -159,13 +156,14 @@ class CourseVideoViewModel(
                     courseStructure = courseStructure.copy(blockData = sortBlocks(blocks))
                     initDownloadModelsStatus()
 
-                    val courseSectionsState =
-                        (_uiState.value as? CourseVideosUIState.CourseData)?.courseSectionsState.orEmpty()
-
                     _uiState.value =
                         CourseVideosUIState.CourseData(
-                            courseStructure, getDownloadModelsStatus(), courseSubSections,
-                            courseSectionsState, subSectionsDownloadsCount, getDownloadModelsSize()
+                            courseStructure = courseStructure,
+                            downloadedState = getDownloadModelsStatus(),
+                            courseSubSections = courseSubSections,
+                            courseSectionsState = getCourseSectionExpandedState(courseStructure.blockData),
+                            subSectionsDownloadsCount = subSectionsDownloadsCount,
+                            downloadModelsSize = getDownloadModelsSize(),
                         )
                 }
                 courseNotifier.send(CourseLoading(false))
@@ -237,6 +235,22 @@ class CourseVideoViewModel(
                 )
             }
         }
+    }
+
+    private fun getCourseSectionExpandedState(blockData: List<Block>): Map<String, Boolean> {
+        val expandedState = mutableMapOf<String, Boolean>()
+
+        // Open only the first incomplete section (if any)
+        blockData.firstOrNull { !it.isCompleted() }?.id
+            ?.let { expandedState[it] = true }
+
+        // Merge in any existing overrides (existing takes precedence)
+        val existingState = (_uiState.value as? CourseVideosUIState.CourseData)
+            ?.courseSectionsState
+            .orEmpty()
+        expandedState.putAll(existingState)
+
+        return expandedState
     }
 
     companion object {

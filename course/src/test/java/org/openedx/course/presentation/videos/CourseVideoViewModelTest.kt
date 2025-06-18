@@ -218,7 +218,6 @@ class CourseVideoViewModelTest {
         val viewModel = CourseVideoViewModel(
             "",
             "",
-            config,
             interactor,
             resourceManager,
             networkConnection,
@@ -250,7 +249,6 @@ class CourseVideoViewModelTest {
         val viewModel = CourseVideoViewModel(
             "",
             "",
-            config,
             interactor,
             resourceManager,
             networkConnection,
@@ -290,7 +288,6 @@ class CourseVideoViewModelTest {
         val viewModel = CourseVideoViewModel(
             "",
             "",
-            config,
             interactor,
             resourceManager,
             networkConnection,
@@ -332,7 +329,6 @@ class CourseVideoViewModelTest {
         val viewModel = CourseVideoViewModel(
             "",
             "",
-            config,
             interactor,
             resourceManager,
             networkConnection,
@@ -370,7 +366,6 @@ class CourseVideoViewModelTest {
             val viewModel = CourseVideoViewModel(
                 "",
                 "",
-                config,
                 interactor,
                 resourceManager,
                 networkConnection,
@@ -412,7 +407,6 @@ class CourseVideoViewModelTest {
             val viewModel = CourseVideoViewModel(
                 "",
                 "",
-                config,
                 interactor,
                 resourceManager,
                 networkConnection,

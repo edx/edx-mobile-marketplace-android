@@ -230,16 +230,13 @@ class CourseOutlineViewModel(
                 courseStructure = courseStructure.copy(blockData = sortBlocks(blocks))
                 initDownloadModelsStatus()
 
-                val courseSectionsState =
-                    (_uiState.value as? CourseOutlineUIState.CourseData)?.courseSectionsState.orEmpty()
-
                 _uiState.value = CourseOutlineUIState.CourseData(
                     courseStructure = courseStructure,
                     downloadedState = getDownloadModelsStatus(),
                     resumeComponent = getResumeBlock(blocks, courseStatus.lastVisitedBlockId),
                     resumeUnitTitle = resumeVerticalBlock?.displayName ?: "",
                     courseSubSections = courseSubSections,
-                    courseSectionsState = courseSectionsState,
+                    courseSectionsState = getCourseSectionExpandedState(courseStructure.blockData),
                     subSectionsDownloadsCount = subSectionsDownloadsCount,
                     datesBannerInfo = datesBannerInfo
                 )
@@ -343,6 +340,22 @@ class CourseOutlineViewModel(
                 }
             }
         }
+    }
+
+    private fun getCourseSectionExpandedState(blockData: List<Block>): Map<String, Boolean> {
+        val expandedState = mutableMapOf<String, Boolean>()
+
+        // Open only the first incomplete section (if any)
+        blockData.firstOrNull { !it.isCompleted() }?.id
+            ?.let { expandedState[it] = true }
+
+        // Merge in any existing overrides (existing takes precedence)
+        val existingState = (_uiState.value as? CourseOutlineUIState.CourseData)
+            ?.courseSectionsState
+            .orEmpty()
+        expandedState.putAll(existingState)
+
+        return expandedState
     }
 
     fun viewCertificateTappedEvent() {

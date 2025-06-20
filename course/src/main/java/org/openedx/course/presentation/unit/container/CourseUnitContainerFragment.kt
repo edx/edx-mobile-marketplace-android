@@ -366,8 +366,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             binding.viewPager.orientation = ViewPager2.ORIENTATION_VERTICAL
         }
         binding.viewPager.offscreenPageLimit = 1
-        adapter =
-            CourseUnitContainerAdapter(this, viewModel.getUnitBlocks().toMutableList(), viewModel)
+        adapter = CourseUnitContainerAdapter(this, viewModel.getUnitBlocks(), viewModel)
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
         binding.viewPager.registerOnPageChangeCallback(onPageChangeCallback)

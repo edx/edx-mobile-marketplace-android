@@ -33,6 +33,7 @@ import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.notifier.CourseNotifier
+import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
@@ -53,6 +54,7 @@ class CourseUnitContainerViewModelTest {
     private val analytics = mockk<CourseAnalytics>()
     private val corePreferences = mockk<CorePreferences>()
     private val appData = mockk<AppData>()
+    private val iapNotifier = mockk<IAPNotifier>()
 
     private val assignmentProgress = AssignmentProgress(
         assignmentType = "Homework",
@@ -194,6 +196,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `getBlocks no internet connection exception`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -203,7 +207,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
 
         coEvery { interactor.getCourseStructure(any()) } throws UnknownHostException()
@@ -218,6 +223,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `getBlocks unknown exception`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -227,7 +234,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
 
         coEvery { interactor.getCourseStructure(any()) } throws UnknownHostException()
@@ -242,6 +250,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `getBlocks unknown success`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -251,7 +261,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
 
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
@@ -268,6 +279,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun setupCurrentIndex() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -277,7 +290,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -292,6 +306,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `getCurrentBlock test`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -301,7 +317,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -318,6 +335,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `moveToPrevBlock null`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -327,7 +346,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -344,6 +364,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `moveToPrevBlock not null`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -353,7 +375,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -370,6 +393,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `moveToNextBlock null`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -379,7 +404,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -396,6 +422,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `moveToNextBlock not null`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -405,7 +433,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
         coEvery { interactor.getCourseStructure("") } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos("") } returns courseStructure
@@ -422,6 +451,8 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `currentIndex isLastIndex`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+
         val viewModel =
             CourseUnitContainerViewModel(
                 "",
@@ -431,7 +462,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData
+                appData,
+                iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -443,5 +475,4 @@ class CourseUnitContainerViewModelTest {
         coVerify(exactly = 0) { interactor.getCourseStructure(any()) }
         coVerify(exactly = 1) { interactor.getCourseStructureForVideos(any()) }
     }
-
 }

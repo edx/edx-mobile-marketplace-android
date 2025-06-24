@@ -52,8 +52,8 @@ class CourseRepository(
         val fetchRemoteCourse = !hasCourseStructure || forceRefresh
         if (networkConnection.isOnline() && fetchRemoteCourse) {
             val response = api.getCourseStructure(
-                cacheControlHeaderParam = "stale-if-error=0",
-                blocksApiVersion = "v3",
+                cacheControlHeaderParam = ApiConstants.HEADER_STALE_IF_ERROR,
+                blocksApiVersion = ApiConstants.BLOCKS_API_VERSION,
                 username = preferencesManager.user?.username,
                 courseId = courseId,
             )
@@ -74,8 +74,8 @@ class CourseRepository(
 
         if (networkConnection.isOnline()) {
             val response = api.getCourseStructure(
-                cacheControlHeaderParam = "stale-if-error=0",
-                blocksApiVersion = "v3",
+                cacheControlHeaderParam = ApiConstants.HEADER_STALE_IF_ERROR,
+                blocksApiVersion = ApiConstants.BLOCKS_API_VERSION,
                 username = preferencesManager.user?.username,
                 courseId = courseId
             )

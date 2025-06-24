@@ -97,12 +97,22 @@ class CourseRepository(
     suspend fun getEnrollmentDetailsFlow(
         courseId: String,
     ): Flow<CourseEnrollmentDetails> = channelFlowWithAwait {
+        var hasEnrollmentDetails = false
         getCourseEnrollmentDetailsFromCache(courseId)?.let {
+            hasEnrollmentDetails = true
             trySend(it)
         }
-        getEnrollmentDetails(courseId).let {
-            courseDao.insertCourseEnrollmentDetailsEntity(it.mapToRoomEntity())
-            trySend(it)
+
+        if (networkConnection.isOnline()) {
+            getEnrollmentDetails(courseId).let {
+                courseDao.insertCourseEnrollmentDetailsEntity(it.mapToRoomEntity())
+                hasEnrollmentDetails = true
+                trySend(it)
+            }
+        }
+
+        if (!hasEnrollmentDetails) {
+            throw NoCachedDataException()
         }
     }
 

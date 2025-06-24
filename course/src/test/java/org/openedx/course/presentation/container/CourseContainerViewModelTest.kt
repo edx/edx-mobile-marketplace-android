@@ -213,7 +213,6 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns true
         every { iapInteractor.isIAPEnabled } returns true
-        coEvery { interactor.getCourseStructureFlow(any(), any()) } returns flowOf(null)
         coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flow { throw Exception() }
 
         viewModel.fetchCourseDetails()
@@ -248,7 +247,6 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns true
         every { iapInteractor.isIAPEnabled } returns true
-        coEvery { interactor.getCourseStructureFlow(any(), any()) } returns flowOf(courseStructure)
         coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(enrollmentDetails)
 
         viewModel.fetchCourseDetails()
@@ -284,7 +282,6 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns false
         every { iapInteractor.isIAPEnabled } returns true
-        coEvery { interactor.getCourseStructureFlow(any(), any()) } returns flowOf(courseStructure)
         coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(enrollmentDetails)
 
         viewModel.fetchCourseDetails()

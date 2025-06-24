@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -36,7 +35,6 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
-import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
@@ -44,6 +42,7 @@ import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isFalse
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.extension.isNotNull
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.module.billing.BillingProcessor
@@ -254,33 +253,21 @@ class CourseContainerViewModel(
     fun fetchCourseDetails(isIAPFlow: Boolean = false, isExpiredCoursePurchase: Boolean = false) {
         _showProgress.value = true
         viewModelScope.launch {
-            val courseStructureFlow = interactor.getCourseStructureFlow(courseId)
+            val courseDetailsFlow = interactor.getEnrollmentDetailsFlow(courseId)
                 .catch { e ->
                     handleFetchError(e)
                     emit(null)
                 }
-            val courseDetailsFlow = interactor.getEnrollmentDetailsFlow(courseId)
-                .catch { emit(null) }
 
-            courseStructureFlow.combine(courseDetailsFlow) { courseStructure, courseEnrollmentDetails ->
-                courseStructure to courseEnrollmentDetails
-            }.catch { e ->
-                handleFetchError(e)
-            }.collect { (courseStructure, courseEnrollmentDetails) ->
-                when {
-                    courseEnrollmentDetails != null -> {
-                        handleCourseEnrollment(
-                            courseDetails = courseEnrollmentDetails,
-                            isIAPFlow = isIAPFlow,
-                            isExpiredCoursePurchase = isExpiredCoursePurchase,
-                        )
-                    }
-
-                    courseStructure != null -> {
-                        handleCourseStructureOnly(courseStructure)
-                    }
-
-                    else -> _courseAccessStatus.value = CourseAccessError.UNKNOWN
+            courseDetailsFlow.collect { courseEnrollmentDetails ->
+                if (courseEnrollmentDetails.isNotNull()) {
+                    handleCourseEnrollment(
+                        courseDetails = courseEnrollmentDetails!!,
+                        isIAPFlow = isIAPFlow,
+                        isExpiredCoursePurchase = isExpiredCoursePurchase,
+                    )
+                } else {
+                    _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 }
             }
         }
@@ -360,25 +347,6 @@ class CourseContainerViewModel(
             }
             _dataReady.value = true
         }
-    }
-
-    /**
-     * Handles the scenario where we only have [CourseStructure] but no enrollment details.
-     */
-    private fun handleCourseStructureOnly(courseStructure: CourseStructure) {
-        loadCourseImage(courseStructure.media?.image?.large)
-        _courseAccessStatus.value = CourseAccessError.NONE
-        _isNavigationEnabled.value = true
-        _calendarSyncUIState.update { state ->
-            state.copy(isCalendarSyncEnabled = isCalendarSyncEnabled())
-        }
-        if (resumeBlockId.isNotEmpty()) {
-            viewModelScope.launch {
-                delay(500L)
-                courseNotifier.send(CourseOpenBlock(resumeBlockId))
-            }
-        }
-        _dataReady.value = true
     }
 
     private fun handleFetchError(e: Throwable) {

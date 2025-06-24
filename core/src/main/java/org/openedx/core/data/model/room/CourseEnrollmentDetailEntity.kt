@@ -77,7 +77,6 @@ data class CourseInfoOverviewDB(
     val productInfo: ProductInfoDb?,
 ) {
     fun mapToDomain(): CourseInfoOverview {
-        val modes = courseModes?.map { it.mapToData() }
         return CourseInfoOverview(
             name = name,
             number = number,
@@ -90,7 +89,7 @@ data class CourseInfoOverviewDB(
             media = media?.mapToDomain(),
             courseSharingUtmParameters = courseSharingUtmParameters.mapToDomain(),
             courseAbout = courseAbout,
-            courseModes = modes?.map { it.mapToDomain() },
+            courseModes = courseModes?.map { it.mapToDomain() },
             productInfo = productInfo?.mapToDomain(),
         )
     }
@@ -110,8 +109,8 @@ data class CourseModeDB(
     @ColumnInfo("storeSku")
     var storeSku: String?,
 ) {
-    fun mapToData(): org.openedx.core.data.model.CourseMode {
-        return org.openedx.core.data.model.CourseMode(
+    fun mapToDomain(): CourseMode {
+        return CourseMode(
             slug = slug,
             sku = sku,
             androidSku = androidSku,
@@ -119,19 +118,6 @@ data class CourseModeDB(
             minPrice = minPrice,
             storeSku = storeSku,
         )
-    }
-
-    companion object {
-        fun createFrom(courseMode: CourseMode): CourseModeDB {
-            return CourseModeDB(
-                slug = courseMode.slug,
-                sku = courseMode.sku,
-                androidSku = courseMode.androidSku,
-                iosSku = courseMode.iosSku,
-                minPrice = courseMode.minPrice,
-                storeSku = courseMode.storeSku,
-            )
-        }
     }
 }
 

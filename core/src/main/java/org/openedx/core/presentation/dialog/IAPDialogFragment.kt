@@ -36,6 +36,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.R
 import org.openedx.core.domain.model.iap.IAPFlow
+import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.extension.isNotNullOrEmpty
@@ -114,8 +115,9 @@ class IAPDialogFragment : DialogFragment() {
                                     }
 
                                     iapState is IAPUIState.ProductData &&
-                                            iapViewModel.purchaseData.formattedPrice.isNotNullOrEmpty() -> {
-                                        if (iapViewModel.purchaseData.iapFlow == IAPFlow.TRACK_SELECTION) {
+                                            iapViewModel.purchaseData.formattedPrice.isNotNullOrEmpty() &&
+                                            iapViewModel.purchaseData.iapFlow == IAPFlow.USER_INITIATED -> {
+                                        if (iapViewModel.purchaseData.screenName == IAPFlowSource.TRACK_SELECTION.screen) {
                                             val buttonText =
                                                 if (selectedOption == CourseTrack.CERTIFICATE) {
                                                     stringResource(
@@ -135,7 +137,7 @@ class IAPDialogFragment : DialogFragment() {
                                                         onDismiss()
                                                     }
                                                 })
-                                        } else if (iapViewModel.purchaseData.iapFlow == IAPFlow.USER_INITIATED) {
+                                        } else {
                                             OpenEdXBrandButton(
                                                 text = stringResource(
                                                     id = R.string.iap_upgrade_price,
@@ -241,7 +243,7 @@ class IAPDialogFragment : DialogFragment() {
                     if (isFullScreenLoader) {
                         UnlockingAccessView()
                     } else if (TextUtils.isEmpty(iapViewModel.purchaseData.courseName).not()) {
-                        if (iapViewModel.purchaseData.iapFlow == IAPFlow.TRACK_SELECTION) {
+                        if (iapViewModel.purchaseData.screenName == IAPFlowSource.TRACK_SELECTION.screen) {
                             TrackSelectionFeature(
                                 modifier = Modifier.padding(contentPadding),
                                 courseName = iapViewModel.purchaseData.courseName!!,

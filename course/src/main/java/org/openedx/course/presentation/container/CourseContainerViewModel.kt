@@ -38,10 +38,8 @@ import org.openedx.core.domain.model.CourseEnrollmentDetails
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
-import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isFalse
-import org.openedx.core.extension.isInternetError
 import org.openedx.core.extension.isNotNull
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
@@ -351,14 +349,8 @@ class CourseContainerViewModel(
 
     private fun handleFetchError(e: Throwable) {
         logger.e(throwable = e)
-        if (!isNetworkRelatedError(e)) {
-            _courseAccessStatus.value = CourseAccessError.UNKNOWN
-        }
+        _courseAccessStatus.value = CourseAccessError.UNKNOWN
         _showProgress.value = false
-    }
-
-    private fun isNetworkRelatedError(e: Throwable): Boolean {
-        return e.isInternetError() || e is NoCachedDataException
     }
 
     fun loadPrice() {

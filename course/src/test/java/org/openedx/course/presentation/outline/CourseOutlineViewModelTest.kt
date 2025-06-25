@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +16,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -58,6 +60,7 @@ import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseStructureUpdated
+import org.openedx.core.utils.Logger
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
@@ -240,8 +243,13 @@ class CourseOutlineViewModelTest {
         every { resourceManager.getString(org.openedx.course.R.string.course_can_download_only_with_wifi) } returns cantDownload
         every { config.getApiHostURL() } returns "http://localhost:8000"
 
+        coEvery { interactor.getCourseStructureFlow(any(), any()) } returns flowOf(courseStructure)
         coEvery { interactor.getCourseDates(any()) } returns mockedCourseDatesResult
+        coEvery { interactor.getCourseDatesFlow(any()) } returns flowOf(mockedCourseDatesResult)
         every { coursePreferences.canShowPLSBanner(any(), any()) } returns true
+
+        mockkConstructor(Logger::class)
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
 
     @After
@@ -251,10 +259,9 @@ class CourseOutlineViewModelTest {
 
     @Test
     fun `getCourseDataInternal no internet connection exception`() = runTest(UnconfinedTestDispatcher()) {
-        coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         every { networkConnection.isOnline() } returns true
         every { downloadDao.readAllData() } returns flow { emit(emptyList()) }
-        coEvery { interactor.getCourseStatus(any()) } throws UnknownHostException()
+        coEvery { interactor.getCourseStatusFlow(any()) } returns flow { throw UnknownHostException() }
 
         val viewModel = CourseOutlineViewModel(
             "",
@@ -279,8 +286,8 @@ class CourseOutlineViewModelTest {
         viewModel.getCourseData()
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
-        coVerify(exactly = 2) { interactor.getCourseStatus(any()) }
+        coVerify(exactly = 2) { interactor.getCourseStructureFlow(any(), any()) }
+        coVerify(exactly = 2) { interactor.getCourseStatusFlow(any()) }
 
         assertEquals(noInternet, message.await()?.message)
         assert(viewModel.uiState.value is CourseOutlineUIState.Error)
@@ -288,10 +295,9 @@ class CourseOutlineViewModelTest {
 
     @Test
     fun `getCourseDataInternal unknown exception`() = runTest(UnconfinedTestDispatcher()) {
-        coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         every { networkConnection.isOnline() } returns true
         every { downloadDao.readAllData() } returns flow { emit(emptyList()) }
-        coEvery { interactor.getCourseStatus(any()) } throws Exception()
+        coEvery { interactor.getCourseStatusFlow(any()) } returns flow { throw Exception() }
         val viewModel = CourseOutlineViewModel(
             "",
             "",
@@ -310,13 +316,15 @@ class CourseOutlineViewModelTest {
         )
 
         val message = async {
-            viewModel.uiMessage.first() as? UIMessage.SnackBarMessage
+            withTimeoutOrNull(15000) {
+                viewModel.uiMessage.first() as? UIMessage.SnackBarMessage
+            }
         }
         viewModel.getCourseData()
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
-        coVerify(exactly = 2) { interactor.getCourseStatus(any()) }
+        coVerify(exactly = 2) { interactor.getCourseStructureFlow(any(), any()) }
+        coVerify(exactly = 2) { interactor.getCourseStatusFlow(any()) }
 
         assertEquals(somethingWrong, message.await()?.message)
         assert(viewModel.uiState.value is CourseOutlineUIState.Error)
@@ -324,7 +332,6 @@ class CourseOutlineViewModelTest {
 
     @Test
     fun `getCourseDataInternal success with internet connection`() = runTest(UnconfinedTestDispatcher()) {
-        coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         every { networkConnection.isOnline() } returns true
         coEvery { downloadDao.readAllData() } returns flow {
             emit(
@@ -335,7 +342,7 @@ class CourseOutlineViewModelTest {
                 )
             )
         }
-        coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
+        coEvery { interactor.getCourseStatusFlow(any()) } returns flowOf(CourseComponentStatus("id"))
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
 
         val viewModel = CourseOutlineViewModel(
@@ -364,8 +371,8 @@ class CourseOutlineViewModelTest {
         viewModel.getCourseData()
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
-        coVerify(exactly = 2) { interactor.getCourseStatus(any()) }
+        coVerify(exactly = 2) { interactor.getCourseStructureFlow(any(), any()) }
+        coVerify(exactly = 2) { interactor.getCourseStatusFlow(any()) }
 
         assert(message.await() == null)
         assert(viewModel.uiState.value is CourseOutlineUIState.CourseData)
@@ -373,7 +380,6 @@ class CourseOutlineViewModelTest {
 
     @Test
     fun `getCourseDataInternal success without internet connection`() = runTest(UnconfinedTestDispatcher()) {
-        coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         every { networkConnection.isOnline() } returns false
         coEvery { downloadDao.readAllData() } returns flow {
             emit(
@@ -384,7 +390,7 @@ class CourseOutlineViewModelTest {
                 )
             )
         }
-        coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
+        coEvery { interactor.getCourseStatusFlow(any()) } returns flowOf(CourseComponentStatus("id"))
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
 
         val viewModel = CourseOutlineViewModel(
@@ -412,8 +418,8 @@ class CourseOutlineViewModelTest {
         viewModel.getCourseData()
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
-        coVerify(exactly = 0) { interactor.getCourseStatus(any()) }
+        coVerify(exactly = 2) { interactor.getCourseStructureFlow(any(), any()) }
+        coVerify(exactly = 2) { interactor.getCourseStatusFlow(any()) }
 
         assert(message.await() == null)
         assert(viewModel.uiState.value is CourseOutlineUIState.CourseData)
@@ -421,7 +427,6 @@ class CourseOutlineViewModelTest {
 
     @Test
     fun `updateCourseData success with internet connection`() = runTest(UnconfinedTestDispatcher()) {
-        coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         every { networkConnection.isOnline() } returns true
         coEvery { downloadDao.readAllData() } returns flow {
             emit(
@@ -432,7 +437,7 @@ class CourseOutlineViewModelTest {
                 )
             )
         }
-        coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
+        coEvery { interactor.getCourseStatusFlow(any()) } returns flowOf(CourseComponentStatus("id"))
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
 
         val viewModel = CourseOutlineViewModel(
@@ -460,8 +465,8 @@ class CourseOutlineViewModelTest {
         viewModel.getCourseData()
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
-        coVerify(exactly = 2) { interactor.getCourseStatus(any()) }
+        coVerify(exactly = 2) { interactor.getCourseStructureFlow(any(), any()) }
+        coVerify(exactly = 2) { interactor.getCourseStatusFlow(any()) }
 
         assert(message.await() == null)
         assert(viewModel.uiState.value is CourseOutlineUIState.CourseData)
@@ -470,6 +475,10 @@ class CourseOutlineViewModelTest {
     @Test
     fun `CourseStructureUpdated notifier test`() = runTest(UnconfinedTestDispatcher()) {
         coEvery { downloadDao.readAllData() } returns flow { emit(emptyList()) }
+        coEvery { notifier.notifier } returns flow { emit(CourseStructureUpdated("")) }
+        every { networkConnection.isOnline() } returns true
+        coEvery { interactor.getCourseStatusFlow(any()) } returns flowOf(CourseComponentStatus("id"))
+
         val viewModel = CourseOutlineViewModel(
             "",
             "",
@@ -486,10 +495,6 @@ class CourseOutlineViewModelTest {
             downloadDao,
             workerController
         )
-        coEvery { notifier.notifier } returns flow { emit(CourseStructureUpdated("")) }
-        coEvery { interactor.getCourseStructure(any()) } returns courseStructure
-        every { networkConnection.isOnline() } returns true
-        coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
         val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
@@ -499,8 +504,8 @@ class CourseOutlineViewModelTest {
         viewModel.getCourseData()
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { interactor.getCourseStructure(any()) }
-        coVerify(exactly = 1) { interactor.getCourseStatus(any()) }
+        coVerify(exactly = 3) { interactor.getCourseStructureFlow(any(), any()) }
+        coVerify(exactly = 3) { interactor.getCourseStatusFlow(any()) }
     }
 
     @Test
@@ -516,7 +521,7 @@ class CourseOutlineViewModelTest {
             )
         } returns Unit
         coEvery { workerController.saveModels(any()) } returns Unit
-        coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
+        coEvery { interactor.getCourseStatusFlow(any()) } returns flowOf(CourseComponentStatus("id"))
         coEvery { downloadDao.readAllData() } returns flow { emit(emptyList()) }
         every { config.getCourseUIConfig().isCourseDropdownNavigationEnabled } returns false
 
@@ -556,7 +561,7 @@ class CourseOutlineViewModelTest {
     @Test
     fun `saveDownloadModels only wifi download, with connection`() = runTest(UnconfinedTestDispatcher()) {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
-        coEvery { interactor.getCourseStatus(any()) } returns CourseComponentStatus("id")
+        coEvery { interactor.getCourseStatusFlow(any()) } returns flowOf(CourseComponentStatus("id"))
         every { preferencesManager.videoSettings.wifiDownloadOnly } returns true
         every { networkConnection.isWifiConnected() } returns true
         every { networkConnection.isOnline() } returns true
@@ -595,6 +600,7 @@ class CourseOutlineViewModelTest {
     @Test
     fun `saveDownloadModels only wifi download, without connection`() = runTest(UnconfinedTestDispatcher()) {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
+        coEvery { interactor.getCourseStatusFlow(any()) } returns flowOf(CourseComponentStatus("id"))
         every { preferencesManager.videoSettings.wifiDownloadOnly } returns true
         every { networkConnection.isWifiConnected() } returns false
         every { networkConnection.isOnline() } returns false
@@ -620,12 +626,12 @@ class CourseOutlineViewModelTest {
         )
         val message = async {
             withTimeoutOrNull(5000) {
-                viewModel.uiMessage.first() as? UIMessage.SnackBarMessage
+                viewModel.uiMessage.first() as? UIMessage.ToastMessage
             }
         }
         viewModel.saveDownloadModels("", "")
 
         advanceUntilIdle()
-        assert(message.await()?.message.isNullOrEmpty())
+        assertEquals(cantDownload, message.await()?.message)
     }
 }

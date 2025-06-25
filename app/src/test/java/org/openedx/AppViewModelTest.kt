@@ -26,7 +26,7 @@ import org.openedx.app.AppAnalytics
 import org.openedx.app.AppViewModel
 import org.openedx.app.data.storage.PreferencesManager
 import org.openedx.app.deeplink.DeepLinkRouter
-import org.openedx.app.room.AppDatabase
+import org.openedx.core.DatabaseManager
 import org.openedx.core.config.Config
 import org.openedx.core.config.FirebaseConfig
 import org.openedx.core.data.model.User
@@ -47,10 +47,10 @@ class AppViewModelTest {
 
     private val config = mockk<Config>()
     private val notifier = mockk<AppNotifier>()
-    private val room = mockk<AppDatabase>()
+    private val databaseManager = mockk<DatabaseManager>()
     private val preferencesManager = mockk<PreferencesManager>()
     private val analytics = mockk<AppAnalytics>()
-    private val fileUtil = mockk<FileUtil>()
+    private val fileUtil = mockk<FileUtil>(relaxed = true)
     private val deepLinkRouter = mockk<DeepLinkRouter>()
     private val context = mockk<Context>()
     private val pushManager = mockk<PushGlobalManager>()
@@ -83,7 +83,7 @@ class AppViewModelTest {
         val viewModel = AppViewModel(
             config,
             notifier,
-            room,
+            databaseManager,
             preferencesManager,
             dispatcher,
             analytics,
@@ -109,7 +109,7 @@ class AppViewModelTest {
         }
         every { preferencesManager.clear() } returns Unit
         every { analytics.setUserIdForSession(any()) } returns Unit
-        every { room.clearAllTables() } returns Unit
+        every { databaseManager.clearTables() } returns Unit
         every { analytics.logoutEvent(true) } returns Unit
         every { preferencesManager.canResetAppDirectory } returns false
         every { preferencesManager.pushToken } returns ""
@@ -118,7 +118,7 @@ class AppViewModelTest {
         val viewModel = AppViewModel(
             config,
             notifier,
-            room,
+            databaseManager,
             preferencesManager,
             dispatcher,
             analytics,
@@ -146,7 +146,7 @@ class AppViewModelTest {
         }
         every { preferencesManager.clear() } returns Unit
         every { analytics.setUserIdForSession(any()) } returns Unit
-        every { room.clearAllTables() } returns Unit
+        every { databaseManager.clearTables() } returns Unit
         every { analytics.logoutEvent(true) } returns Unit
         every { preferencesManager.canResetAppDirectory } returns false
         every { preferencesManager.pushToken } returns ""
@@ -155,7 +155,7 @@ class AppViewModelTest {
         val viewModel = AppViewModel(
             config,
             notifier,
-            room,
+            databaseManager,
             preferencesManager,
             dispatcher,
             analytics,
@@ -175,7 +175,7 @@ class AppViewModelTest {
         verify(exactly = 1) { preferencesManager.clear() }
         verify(exactly = 1) { analytics.setUserIdForSession(any()) }
         verify(exactly = 2) { preferencesManager.user }
-        verify(exactly = 1) { room.clearAllTables() }
+        verify(exactly = 1) { databaseManager.clearTables() }
         verify(exactly = 1) { analytics.logoutEvent(true) }
     }
 }

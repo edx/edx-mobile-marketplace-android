@@ -18,7 +18,7 @@ import org.openedx.app.data.storage.PreferencesManager
 import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.room.AppDatabase
 import org.openedx.app.room.DATABASE_NAME
-import org.openedx.app.room.Migrations
+import org.openedx.app.room.DatabaseManager
 import org.openedx.auth.presentation.AgreementProvider
 import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.auth.presentation.AuthRouter
@@ -82,6 +82,7 @@ import org.openedx.whatsnew.WhatsNewRouter
 import org.openedx.whatsnew.data.storage.WhatsNewPreferences
 import org.openedx.whatsnew.presentation.WhatsNewAnalytics
 import org.openedx.core.R as CoreR
+import org.openedx.core.DatabaseManager as IDatabaseManager
 
 val appModule = module {
 
@@ -144,6 +145,9 @@ val appModule = module {
         Dispatchers.IO
     }
 
+    single { DatabaseManager(get(), get(), get()) }
+    single<IDatabaseManager> { get<DatabaseManager>() }
+
     single {
         Room.databaseBuilder(
             androidApplication(),
@@ -151,7 +155,6 @@ val appModule = module {
             DATABASE_NAME
         ).fallbackToDestructiveMigration()
             .fallbackToDestructiveMigrationOnDowngrade()
-            .addMigrations(Migrations.MIGRATION_1_2)
             .build()
     }
 

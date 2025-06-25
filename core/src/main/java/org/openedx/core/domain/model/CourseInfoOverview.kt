@@ -1,7 +1,9 @@
 package org.openedx.core.domain.model
 
 import android.os.Parcelable
+import com.google.gson.internal.bind.util.ISO8601Utils
 import kotlinx.parcelize.Parcelize
+import org.openedx.core.data.model.room.CourseInfoOverviewDB
 import org.openedx.core.domain.model.iap.ProductInfo
 import java.util.Date
 
@@ -21,6 +23,23 @@ data class CourseInfoOverview(
     val courseModes: List<CourseMode>?,
     val productInfo: ProductInfo?
 ) : Parcelable {
+
     val isStarted: Boolean
         get() = start?.before(Date()) ?: false
+
+    fun mapToRoomEntity() = CourseInfoOverviewDB(
+        name = name,
+        number = number,
+        org = org,
+        start = start?.let { ISO8601Utils.format(it) },
+        startDisplay = startDisplay,
+        startType = startType,
+        end = end?.let { ISO8601Utils.format(it) },
+        isSelfPaced = isSelfPaced,
+        media = media?.mapToRoomEntity(),
+        courseSharingUtmParameters = courseSharingUtmParameters.mapToRoomEntity(),
+        courseAbout = courseAbout,
+        courseModes = courseModes?.map { it.mapToRoomEntity() } ?: emptyList(),
+        productInfo = productInfo?.mapToRoomEntity(),
+    )
 }

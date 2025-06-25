@@ -6,23 +6,25 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import org.openedx.core.data.model.room.CourseEnrollmentDetailsEntity
 import org.openedx.core.data.model.room.CourseStructureEntity
-import org.openedx.core.data.model.room.discovery.EnrolledCourseEntity
 
 @Dao
 interface CourseDao {
 
-    @Query("SELECT * FROM course_enrolled_table WHERE id=:id")
-    suspend fun getEnrolledCourseById(id: String): EnrolledCourseEntity?
-
     @Query("SELECT * FROM course_enrollment_details_table WHERE id=:id")
-    suspend fun getCourseEnrollmentDetails(id: String): CourseEnrollmentDetailsEntity?
+    suspend fun getCourseEnrollmentDetailsById(id: String): CourseEnrollmentDetailsEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCourseEnrollmentDetails(vararg courseEnrollmentDetails: CourseEnrollmentDetailsEntity)
+    suspend fun insertCourseEnrollmentDetailsEntity(vararg courseEnrollmentDetailsEntity: CourseEnrollmentDetailsEntity)
+
+    @Query("DELETE FROM course_enrollment_details_table")
+    suspend fun clearEnrollmentCachedData()
 
     @Query("SELECT * FROM course_structure_table WHERE id=:id")
     suspend fun getCourseStructureById(id: String): CourseStructureEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCourseStructureEntity(vararg courseStructureEntity: CourseStructureEntity)
+
+    @Query("DELETE FROM course_structure_table")
+    suspend fun clearStructureCachedData()
 }

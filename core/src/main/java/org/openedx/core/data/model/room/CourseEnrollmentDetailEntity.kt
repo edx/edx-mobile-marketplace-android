@@ -12,7 +12,6 @@ import org.openedx.core.domain.model.CourseEnrollmentDetails
 import org.openedx.core.domain.model.CourseInfoOverview
 import org.openedx.core.domain.model.CourseMode
 import org.openedx.core.domain.model.iap.ProductInfo
-import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.utils.TimeUtils
 
 @Entity(tableName = "course_enrollment_details_table")
@@ -74,9 +73,10 @@ data class CourseInfoOverviewDB(
     val courseAbout: String,
     @ColumnInfo("courseModes")
     val courseModes: List<CourseModeDB>?,
+    @Embedded
+    val productInfo: ProductInfoDb?,
 ) {
     fun mapToDomain(): CourseInfoOverview {
-        val modes = courseModes?.map { it.mapToData() }
         return CourseInfoOverview(
             name = name,
             number = number,
@@ -89,18 +89,8 @@ data class CourseInfoOverviewDB(
             media = media?.mapToDomain(),
             courseSharingUtmParameters = courseSharingUtmParameters.mapToDomain(),
             courseAbout = courseAbout,
-            courseModes = modes?.map { it.mapToDomain() },
-            productInfo = modes?.find {
-                it.isVerifiedMode()
-            }?.takeIf {
-                it.androidSku.isNotNullOrEmpty() && it.storeSku.isNotNullOrEmpty()
-            }?.run {
-                ProductInfo(
-                    courseSku = androidSku!!,
-                    storeSku = storeSku!!,
-                    lmsUSDPrice = minPrice ?: 0.0
-                )
-            }
+            courseModes = courseModes?.map { it.mapToDomain() },
+            productInfo = productInfo?.mapToDomain(),
         )
     }
 }
@@ -119,8 +109,8 @@ data class CourseModeDB(
     @ColumnInfo("storeSku")
     var storeSku: String?,
 ) {
-    fun mapToData(): org.openedx.core.data.model.CourseMode {
-        return org.openedx.core.data.model.CourseMode(
+    fun mapToDomain(): CourseMode {
+        return CourseMode(
             slug = slug,
             sku = sku,
             androidSku = androidSku,
@@ -129,17 +119,19 @@ data class CourseModeDB(
             storeSku = storeSku,
         )
     }
+}
 
-    companion object {
-        fun createFrom(courseMode: CourseMode): CourseModeDB {
-            return CourseModeDB(
-                slug = courseMode.slug,
-                sku = courseMode.sku,
-                androidSku = courseMode.androidSku,
-                iosSku = courseMode.iosSku,
-                minPrice = courseMode.minPrice,
-                storeSku = courseMode.storeSku,
-            )
-        }
-    }
+data class ProductInfoDb(
+    @ColumnInfo("courseSku")
+    val courseSku: String,
+    @ColumnInfo("storeSku")
+    val storeSku: String,
+    @ColumnInfo("lmsUSDPrice")
+    val lmsUSDPrice: Double,
+) {
+    fun mapToDomain() = ProductInfo(
+        courseSku = courseSku,
+        storeSku = storeSku,
+        lmsUSDPrice = lmsUSDPrice,
+    )
 }

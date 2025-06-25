@@ -1,14 +1,18 @@
 package org.openedx.course.data.repository
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.openedx.core.ApiConstants
 import org.openedx.core.data.api.CourseApi
 import org.openedx.core.data.model.BlocksCompletionBody
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.CourseComponentStatus
+import org.openedx.core.domain.model.CourseDatesBannerInfo
+import org.openedx.core.domain.model.CourseDatesResult
 import org.openedx.core.domain.model.CourseEnrollmentDetails
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.exception.NoCachedDataException
+import org.openedx.core.extension.channelFlowWithAwait
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.course.data.storage.CourseDao
@@ -20,8 +24,10 @@ class CourseRepository(
     private val preferencesManager: CorePreferences,
     private val networkConnection: NetworkConnection,
 ) {
-    private var courseStructure = mutableMapOf<String, CourseStructure>()
-    private var courseEnrollmentDetails = mutableMapOf<String, CourseEnrollmentDetails>()
+    private val courseStructure = mutableMapOf<String, CourseStructure>()
+
+    private val courseStatusMap = mutableMapOf<String, CourseComponentStatus>()
+    private val courseDatesMap = mutableMapOf<String, CourseDatesResult>()
 
     suspend fun removeDownloadModel(id: String) {
         downloadDao.removeDownloadModel(id)
@@ -31,8 +37,36 @@ class CourseRepository(
         list.map { it.mapToDomain() }
     }
 
-    fun hasCourses(courseId: String): Boolean {
-        return courseStructure[courseId] != null
+    suspend fun getCourseStructureFlow(
+        courseId: String,
+        forceRefresh: Boolean = true,
+    ): Flow<CourseStructure> = channelFlowWithAwait {
+        var hasCourseStructure = false
+        val cachedCourseStructure =
+            courseStructure[courseId] ?: courseDao.getCourseStructureById(courseId)?.mapToDomain()
+        if (cachedCourseStructure != null) {
+            hasCourseStructure = true
+            trySend(cachedCourseStructure)
+        }
+
+        val fetchRemoteCourse = !hasCourseStructure || forceRefresh
+        if (networkConnection.isOnline() && fetchRemoteCourse) {
+            val response = api.getCourseStructure(
+                cacheControlHeaderParam = ApiConstants.HEADER_STALE_IF_ERROR,
+                blocksApiVersion = ApiConstants.BLOCKS_API_VERSION,
+                username = preferencesManager.user?.username,
+                courseId = courseId,
+            )
+            courseDao.insertCourseStructureEntity(response.mapToRoomEntity())
+            val courseDomainModel = response.mapToDomain()
+            courseStructure[courseId] = courseDomainModel
+            trySend(courseDomainModel)
+            hasCourseStructure = true
+        }
+
+        if (!hasCourseStructure) {
+            throw NoCachedDataException()
+        }
     }
 
     suspend fun getCourseStructure(courseId: String, isNeedRefresh: Boolean): CourseStructure {
@@ -40,10 +74,10 @@ class CourseRepository(
 
         if (networkConnection.isOnline()) {
             val response = api.getCourseStructure(
-                "stale-if-error=0",
-                "v3",
-                preferencesManager.user?.username,
-                courseId
+                cacheControlHeaderParam = ApiConstants.HEADER_STALE_IF_ERROR,
+                blocksApiVersion = ApiConstants.BLOCKS_API_VERSION,
+                username = preferencesManager.user?.username,
+                courseId = courseId
             )
             courseDao.insertCourseStructureEntity(response.mapToRoomEntity())
             courseStructure[courseId] = response.mapToDomain()
@@ -60,27 +94,53 @@ class CourseRepository(
         return courseStructure[courseId]!!
     }
 
-    suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
-        if (networkConnection.isOnline()) {
-            val response = api.getEnrollmentDetails(courseId = courseId)
-            courseDao.insertCourseEnrollmentDetails(response.mapToRoomEntity())
-            courseEnrollmentDetails[courseId] = response.mapToDomain()
+    suspend fun getEnrollmentDetailsFlow(
+        courseId: String,
+    ): Flow<CourseEnrollmentDetails> = channelFlowWithAwait {
+        var hasEnrollmentDetails = false
+        getCourseEnrollmentDetailsFromCache(courseId)?.let {
+            hasEnrollmentDetails = true
+            trySend(it)
+        }
 
-        } else {
-            val cachedCourseEnrollmentDetails = courseDao.getCourseEnrollmentDetails(courseId)
-            if (cachedCourseEnrollmentDetails != null) {
-                courseEnrollmentDetails[courseId] = cachedCourseEnrollmentDetails.mapToDomain()
-            } else {
-                throw NoCachedDataException()
+        if (networkConnection.isOnline()) {
+            getEnrollmentDetails(courseId).let {
+                courseDao.insertCourseEnrollmentDetailsEntity(it.mapToRoomEntity())
+                hasEnrollmentDetails = true
+                trySend(it)
             }
         }
 
-        return courseEnrollmentDetails[courseId]!!
+        if (!hasEnrollmentDetails) {
+            throw NoCachedDataException()
+        }
     }
 
-    suspend fun getCourseStatus(courseId: String): CourseComponentStatus {
-        val username = preferencesManager.user?.username ?: ""
-        return api.getCourseStatus(username, courseId).mapToDomain()
+    private suspend fun getCourseEnrollmentDetailsFromCache(
+        courseId: String,
+    ): CourseEnrollmentDetails? {
+        return courseDao.getCourseEnrollmentDetailsById(id = courseId)?.mapToDomain()
+    }
+
+    private suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
+        return api.getEnrollmentDetails(courseId = courseId).mapToDomain()
+    }
+
+    suspend fun getCourseStatusFlow(
+        courseId: String,
+    ): Flow<CourseComponentStatus> = channelFlowWithAwait {
+        val localStatus = courseStatusMap[courseId]
+        localStatus?.let { trySend(it) }
+
+        if (networkConnection.isOnline()) {
+            val username = preferencesManager.user?.username ?: ""
+            val status = api.getCourseStatus(username, courseId).mapToDomain()
+            courseStatusMap[courseId] = status
+            trySend(status)
+        } else {
+            val status = localStatus ?: CourseComponentStatus("")
+            trySend(status)
+        }
     }
 
     suspend fun markBlocksCompletion(courseId: String, blocksId: List<String>) {
@@ -93,14 +153,36 @@ class CourseRepository(
         return api.markBlocksCompletion(blocksCompletionBody)
     }
 
+    suspend fun getCourseDatesFlow(
+        courseId: String,
+    ): Flow<CourseDatesResult> = channelFlowWithAwait {
+        val localDates = courseDatesMap[courseId]
+        localDates?.let { trySend(it) }
+
+        if (networkConnection.isOnline()) {
+            val datesResult = api.getCourseDates(courseId).getCourseDatesResult()
+            courseDatesMap[courseId] = datesResult
+            trySend(datesResult)
+        } else {
+            val datesResult = localDates ?: CourseDatesResult(
+                datesSection = linkedMapOf(),
+                courseBanner = CourseDatesBannerInfo(
+                    missedDeadlines = false,
+                    missedGatedContent = false,
+                    verifiedUpgradeLink = "",
+                    contentTypeGatingEnabled = false,
+                    hasEnded = false
+                )
+            )
+            trySend(datesResult)
+        }
+    }
+
     suspend fun getCourseDates(courseId: String) =
         api.getCourseDates(courseId).getCourseDatesResult()
 
     suspend fun resetCourseDates(courseId: String) =
         api.resetCourseDates(mapOf(ApiConstants.COURSE_KEY to courseId)).mapToDomain()
-
-    suspend fun getDatesBannerInfo(courseId: String) =
-        api.getDatesBannerInfo(courseId).mapToDomain()
 
     suspend fun getHandouts(courseId: String) = api.getHandouts(courseId).mapToDomain()
 

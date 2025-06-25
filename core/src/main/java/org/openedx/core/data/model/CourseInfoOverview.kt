@@ -1,11 +1,7 @@
 package org.openedx.core.data.model
 
 import com.google.gson.annotations.SerializedName
-import org.openedx.core.data.model.room.CourseInfoOverviewDB
-import org.openedx.core.data.model.room.CourseModeDB
-import org.openedx.core.data.model.room.MediaDb
 import org.openedx.core.domain.model.iap.ProductInfo
-import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.domain.model.CourseInfoOverview as DomainCourseInfoOverview
 
@@ -35,6 +31,23 @@ data class CourseInfoOverview(
     @SerializedName("course_modes")
     val courseModes: List<CourseMode>?,
 ) {
+    private val productInfo: ProductInfo?
+        get() {
+            val verifiedMode = courseModes?.find { it.isVerifiedMode() }
+            val androidSku = verifiedMode?.androidSku
+            val storeSku = verifiedMode?.storeSku
+
+            return if (!androidSku.isNullOrEmpty() && !storeSku.isNullOrEmpty()) {
+                ProductInfo(
+                    courseSku = androidSku,
+                    storeSku = storeSku,
+                    lmsUSDPrice = verifiedMode.minPrice ?: 0.0
+                )
+            } else {
+                null
+            }
+        }
+
     fun mapToDomain() = DomainCourseInfoOverview(
         name = name,
         number = number,
@@ -48,33 +61,6 @@ data class CourseInfoOverview(
         courseSharingUtmParameters = courseSharingUtmParameters.mapToDomain(),
         courseAbout = courseAbout,
         courseModes = courseModes?.map { it.mapToDomain() },
-        productInfo = courseModes?.find {
-            it.isVerifiedMode()
-        }?.takeIf {
-            it.androidSku.isNotNullOrEmpty() && it.storeSku.isNotNullOrEmpty()
-        }?.run {
-            ProductInfo(
-                courseSku = androidSku!!,
-                storeSku = storeSku!!,
-                lmsUSDPrice = minPrice ?: 0.0
-            )
-        }
+        productInfo = productInfo,
     )
-
-    fun mapToRoomEntity(): CourseInfoOverviewDB {
-        return CourseInfoOverviewDB(
-            name = name,
-            number = number,
-            org = org,
-            start = start ?: "",
-            startDisplay = startDisplay,
-            startType = startType,
-            end = end ?: "",
-            isSelfPaced = isSelfPaced,
-            media = MediaDb.createFrom(media),
-            courseSharingUtmParameters = courseSharingUtmParameters.mapToRoomEntity(),
-            courseAbout = courseAbout,
-            courseModes = courseModes?.map { CourseModeDB.createFrom(it.mapToDomain()) },
-        )
-    }
 }

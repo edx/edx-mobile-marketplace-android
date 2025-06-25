@@ -137,6 +137,17 @@ class DashboardGalleryViewModel(
     fun getCourses(isIAPFlow: Boolean = false) {
         viewModelScope.launch {
             try {
+                val cachedCourseEnrollments = fileUtil.getObjectFromFile<CourseEnrollments>()
+                if (cachedCourseEnrollments == null) {
+                    if (networkConnection.isOnline()) {
+                        _uiState.value = DashboardGalleryUIState.Loading
+                    } else {
+                        _uiState.value = DashboardGalleryUIState.Empty
+                    }
+                } else {
+                    _uiState.value =
+                        DashboardGalleryUIState.Courses(cachedCourseEnrollments.mapToDomain())
+                }
                 if (networkConnection.isOnline()) {
                     isLoading = true
                     val pageSize = if (windowSize.isTablet) {

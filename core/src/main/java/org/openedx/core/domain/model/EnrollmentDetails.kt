@@ -1,20 +1,30 @@
 package org.openedx.core.domain.model
 
 import android.os.Parcelable
+import com.google.gson.internal.bind.util.ISO8601Utils
 import kotlinx.parcelize.Parcelize
+import org.openedx.core.data.model.room.discovery.EnrollmentDetailsDB
 import org.openedx.core.utils.TimeUtils
 import java.util.Date
 
 @Parcelize
 data class EnrollmentDetails(
-    var created: Date?,
-    var mode: String?,
-    var isActive: Boolean,
-    var upgradeDeadline: Date?,
+    val created: Date?,
+    val mode: String?,
+    val isActive: Boolean,
+    val upgradeDeadline: Date?,
 ) : Parcelable {
+
     val isUpgradeDeadlinePassed: Boolean
         get() = TimeUtils.isDatePassed(Date(), upgradeDeadline)
 
     val isAuditMode: Boolean
         get() = EnrollmentMode.AUDIT.toString().equals(mode, ignoreCase = true)
+
+    fun mapToRoomEntity() = EnrollmentDetailsDB(
+        created = created?.let { ISO8601Utils.format(it) },
+        mode = mode,
+        isActive = isActive,
+        upgradeDeadline = upgradeDeadline?.let { ISO8601Utils.format(it) },
+    )
 }

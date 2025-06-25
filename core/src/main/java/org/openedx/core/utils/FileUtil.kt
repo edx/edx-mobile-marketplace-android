@@ -25,6 +25,13 @@ class FileUtil(val context: Context) {
         File(getExternalAppDir().path + fileName).writeText(jsonString)
     }
 
+    inline fun <reified T> deleteObjectFile(fileName: String = "${T::class.java.simpleName}.json") {
+        val file = File(getExternalAppDir().path + fileName)
+        if (file.exists()) {
+            file.deleteRecursively()
+        }
+    }
+
     inline fun <reified T> getObjectFromFile(fileName: String = "${T::class.java.simpleName}.json"): T? {
         val file = File(getExternalAppDir().path + fileName)
         return if (file.exists()) {

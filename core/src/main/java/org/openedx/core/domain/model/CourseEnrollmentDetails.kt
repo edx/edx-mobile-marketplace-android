@@ -2,6 +2,7 @@ package org.openedx.core.domain.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import org.openedx.core.data.model.room.CourseEnrollmentDetailsEntity
 import org.openedx.core.extension.isNotNull
 import java.util.Date
 
@@ -29,6 +30,17 @@ data class CourseEnrollmentDetails(
                 courseInfoOverview.isStarted &&
                 enrollmentDetails.isUpgradeDeadlinePassed.not() &&
                 courseInfoOverview.productInfo.isNotNull()
+
+    fun mapToRoomEntity() = CourseEnrollmentDetailsEntity(
+        id = id,
+        courseUpdates = courseUpdates,
+        courseHandouts = courseHandouts,
+        discussionUrl = discussionUrl,
+        courseAccessDetails = courseAccessDetails.mapToRoomEntity(),
+        certificate = certificate?.mapToRoomEntity(),
+        enrollmentDetails = enrollmentDetails.mapToRoomEntity(),
+        courseInfoOverview = courseInfoOverview.mapToRoomEntity(),
+    )
 }
 
 enum class CourseAccessError {

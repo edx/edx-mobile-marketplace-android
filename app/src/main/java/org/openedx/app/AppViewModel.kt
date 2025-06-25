@@ -7,7 +7,6 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import androidx.room.RoomDatabase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -16,8 +15,10 @@ import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.system.push.RefreshFirebaseTokenWorker
 import org.openedx.app.system.push.SyncFirebaseTokenWorker
 import org.openedx.core.BaseViewModel
+import org.openedx.core.DatabaseManager
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.config.Config
+import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.PushGlobalManager
@@ -33,7 +34,7 @@ import org.openedx.core.utils.Logger
 class AppViewModel(
     private val config: Config,
     private val notifier: AppNotifier,
-    private val room: RoomDatabase,
+    private val databaseManager: DatabaseManager,
     private val preferencesManager: CorePreferences,
     private val dispatcher: CoroutineDispatcher,
     private val analytics: AppAnalytics,
@@ -120,11 +121,12 @@ class AppViewModel(
                 logoutHandledAt = System.currentTimeMillis()
                 preferencesManager.clear()
                 withContext(dispatcher) {
-                    room.clearAllTables()
+                    databaseManager.clearTables()
                 }
                 analytics.logoutEvent(true)
                 _logoutUser.value = Unit
             }
+            fileUtil.deleteObjectFile<CourseEnrollments>()
 
             if (config.getFirebaseConfig().isCloudMessagingEnabled) {
                 RefreshFirebaseTokenWorker.schedule(context)

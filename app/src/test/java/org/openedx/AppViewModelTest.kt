@@ -64,6 +64,7 @@ class AppViewModelTest {
         every { analytics.logEvent(any(), any()) } returns Unit
         every { preferencesManager.user } returns user
         every { preferencesManager.appThemeMode } returns appThemeMode
+        every { fileUtil.getExternalAppDir() } returns mockk()
         mockkObject(CrashlyticsHelper)
         every { CrashlyticsHelper.setUserId(any()) } returns Unit
     }

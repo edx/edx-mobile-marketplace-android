@@ -18,6 +18,7 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.DatabaseManager
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.config.Config
+import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.PushGlobalManager
@@ -125,6 +126,7 @@ class AppViewModel(
                 analytics.logoutEvent(true)
                 _logoutUser.value = Unit
             }
+            fileUtil.deleteObjectFile<CourseEnrollments>()
 
             if (config.getFirebaseConfig().isCloudMessagingEnabled) {
                 RefreshFirebaseTokenWorker.schedule(context)

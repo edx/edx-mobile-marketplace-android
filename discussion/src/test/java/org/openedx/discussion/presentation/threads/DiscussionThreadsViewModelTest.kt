@@ -34,6 +34,7 @@ import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
+import org.openedx.discussion.domain.model.DiscussionConfig
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.ThreadsData
@@ -61,6 +62,10 @@ class DiscussionThreadsViewModelTest {
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
+
+    private val mockDiscussionConfig = DiscussionConfig(
+        isPostingEnabled = true,
+    )
 
     //region mockThread
 
@@ -111,6 +116,7 @@ class DiscussionThreadsViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        coEvery { interactor.getCourseDiscussionConfig(any()) } returns mockDiscussionConfig
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
         every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
         mockkConstructor(Logger::class)
@@ -485,6 +491,7 @@ class DiscussionThreadsViewModelTest {
 
     @Test
     fun `refreshThread Topic success`() = runTest {
+        coEvery { interactor.getCourseDiscussionConfig(any(), true) } returns mockDiscussionConfig
         coEvery { interactor.getThreads("", any(), any(), null, range(1, 2)) } returns ThreadsData(
             threads,
             "",
@@ -529,6 +536,7 @@ class DiscussionThreadsViewModelTest {
             "",
             Pagination(10, "", 4, "1")
         )
+        coEvery { interactor.getCourseDiscussionConfig(any(), true) } returns mockDiscussionConfig
         coEvery {
             notifier.notifier
         } returns flow {
@@ -572,6 +580,7 @@ class DiscussionThreadsViewModelTest {
             "",
             Pagination(10, "", 4, "1")
         )
+        coEvery { interactor.getCourseDiscussionConfig(any(), true) } returns mockDiscussionConfig
         coEvery {
             notifier.notifier
         } returns flow {

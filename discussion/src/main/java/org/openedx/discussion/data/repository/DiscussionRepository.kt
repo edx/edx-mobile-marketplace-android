@@ -11,19 +11,44 @@ import org.openedx.discussion.data.model.request.ReadBody
 import org.openedx.discussion.data.model.request.ReportBody
 import org.openedx.discussion.data.model.request.ThreadBody
 import org.openedx.discussion.data.model.request.VoteBody
+import org.openedx.discussion.data.model.response.CachedDiscussionConfig
 import org.openedx.discussion.domain.model.CommentsData
 import org.openedx.discussion.domain.model.DiscussionComment
+import org.openedx.discussion.domain.model.DiscussionConfig
 import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.domain.model.Topic
+import java.util.concurrent.TimeUnit
 
 class DiscussionRepository(
     private val api: DiscussionApi,
     private val preferencesManager: CorePreferences,
     private val resourceManager: ResourceManager
 ) {
+    private val cacheDurationMs = TimeUnit.HOURS.toMillis(1)
 
+    private val discussionConfigCache = mutableMapOf<String, CachedDiscussionConfig>()
     private val topics = mutableListOf<Topic>()
     private var currentCourseId = ""
+
+    suspend fun getCourseDiscussionConfig(
+        courseId: String,
+        forceRefresh: Boolean,
+    ): DiscussionConfig {
+
+        val currentTime = System.currentTimeMillis()
+        val cached = discussionConfigCache[courseId]
+
+        // Use cache if valid and not forcefully refreshing
+        val canUseCachedConfig =
+            !forceRefresh && cached != null && (currentTime - cached.timestamp) < cacheDurationMs
+        if (canUseCachedConfig) {
+            return cached!!.config.mapToDomain()
+        }
+
+        return api.getCourseDiscussionConfig(courseId).also { freshConfig ->
+            discussionConfigCache[courseId] = CachedDiscussionConfig(freshConfig, currentTime)
+        }.mapToDomain()
+    }
 
     suspend fun getCourseTopics(courseId: String): List<Topic> {
         val topicsData = api.getCourseTopics(courseId).mapToDomain()

@@ -31,6 +31,7 @@ import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
+import org.openedx.discussion.domain.model.DiscussionConfig
 import org.openedx.discussion.domain.model.Topic
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionRouter
@@ -52,6 +53,11 @@ class DiscussionTopicsViewModelTest {
 
     private val noInternet = "Slow or no internet connection"
 
+    private val mockDiscussionConfig = DiscussionConfig(
+        isPostingEnabled = true,
+    )
+
+
     private val mockTopic = Topic(
         id = "",
         name = "All Topics",
@@ -62,6 +68,7 @@ class DiscussionTopicsViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        coEvery { interactor.getCourseDiscussionConfig(any()) } returns mockDiscussionConfig
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
         every { courseNotifier.notifier } returns flowOf(CourseLoading(false))
         coEvery { courseNotifier.send(any<CourseLoading>()) } returns Unit

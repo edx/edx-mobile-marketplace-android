@@ -46,12 +46,16 @@ class DiscussionTopicsViewModel(
         getCourseTopic()
     }
 
-    private fun getCourseTopic() {
+    private fun getCourseTopic(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             try {
+                val discussionConfig = interactor.getCourseDiscussionConfig(courseId, forceRefresh)
                 val response = interactor.getCourseTopics(courseId)
                 if (response.isEmpty().not()) {
-                    _uiState.value = DiscussionTopicsUIState.Topics(response)
+                    _uiState.value = DiscussionTopicsUIState.Topics(
+                        isPostingEnabled = discussionConfig.isPostingEnabled,
+                        data = response
+                    )
                 } else {
                     _uiState.value = DiscussionTopicsUIState.Error
                 }
@@ -87,7 +91,7 @@ class DiscussionTopicsViewModel(
         viewModelScope.launch {
             courseNotifier.notifier.collect { event ->
                 when (event) {
-                    is RefreshDiscussions -> getCourseTopic()
+                    is RefreshDiscussions -> getCourseTopic(forceRefresh = true)
                 }
             }
         }

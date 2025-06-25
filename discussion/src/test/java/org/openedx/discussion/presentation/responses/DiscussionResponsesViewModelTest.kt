@@ -112,6 +112,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -136,6 +137,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -163,6 +165,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -190,6 +193,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -216,6 +220,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -243,6 +248,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -274,6 +280,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -300,6 +307,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -326,6 +334,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -354,6 +363,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -382,6 +392,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -408,6 +419,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -434,6 +446,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -461,6 +474,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -490,6 +504,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -518,6 +533,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -546,6 +562,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -574,6 +591,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,
@@ -599,6 +617,7 @@ class DiscussionResponsesViewModelTest {
         val viewModel = DiscussionResponsesViewModel(
             "",
             "",
+            true,
             mockComment.copy(id = "0"),
             interactor,
             resourceManager,

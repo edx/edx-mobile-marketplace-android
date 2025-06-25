@@ -26,10 +26,11 @@ import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 
 class DiscussionSearchThreadViewModel(
+    val courseId: String,
+    val isPostingEnabled: Boolean,
     private val interactor: DiscussionInteractor,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
-    val courseId: String
 ) : BaseViewModel() {
 
     private val _uiState = MutableLiveData<DiscussionSearchThreadUIState>(

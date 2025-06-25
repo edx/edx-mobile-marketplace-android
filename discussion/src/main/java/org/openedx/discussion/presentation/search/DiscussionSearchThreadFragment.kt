@@ -83,7 +83,10 @@ import org.openedx.discussion.R as discussionR
 class DiscussionSearchThreadFragment : Fragment() {
 
     private val viewModel by viewModel<DiscussionSearchThreadViewModel> {
-        parametersOf(requireArguments().getString(ARG_COURSE_ID))
+        parametersOf(
+            requireArguments().getString(ARG_COURSE_ID, ""),
+            requireArguments().getBoolean(ARG_IS_POSTING_ENABLED, true)
+        )
     }
 
     private val router by inject<DiscussionRouter>()
@@ -96,7 +99,7 @@ class DiscussionSearchThreadFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
@@ -122,7 +125,8 @@ class DiscussionSearchThreadFragment : Fragment() {
                         router.navigateToDiscussionComments(
                             requireActivity().supportFragmentManager,
                             viewModel.courseId,
-                            it
+                            it,
+                            viewModel.isPostingEnabled,
                         )
                     },
                     onSearchTextChanged = { viewModel.searchThreads(it) },
@@ -136,15 +140,18 @@ class DiscussionSearchThreadFragment : Fragment() {
         }
     }
 
-
     companion object {
         private const val ARG_COURSE_ID = "courseId"
+        private const val ARG_IS_POSTING_ENABLED = "isPostingEnabled"
+
         fun newInstance(
-            courseId: String
+            courseId: String,
+            isPostingEnabled: Boolean,
         ): DiscussionSearchThreadFragment {
             val fragment = DiscussionSearchThreadFragment()
             fragment.arguments = bundleOf(
-                ARG_COURSE_ID to courseId
+                ARG_COURSE_ID to courseId,
+                ARG_IS_POSTING_ENABLED to isPostingEnabled,
             )
             return fragment
         }
@@ -164,7 +171,7 @@ private fun DiscussionSearchThreadScreen(
     onSearchTextChanged: (String) -> Unit,
     onSwipeRefresh: () -> Unit,
     paginationCallback: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()

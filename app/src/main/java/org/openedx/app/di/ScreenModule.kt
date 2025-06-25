@@ -443,12 +443,13 @@ val screenModule = module {
             get(),
         )
     }
-    viewModel { (courseId: String, thread: Thread, responseId: String, commentId: String) ->
+    viewModel { (courseId: String, thread: Thread, responseId: String, commentId: String, isPostingEnabled: Boolean) ->
         DiscussionCommentsViewModel(
             courseId,
             thread,
             responseId,
             commentId,
+            isPostingEnabled,
             get(),
             get(),
             get(),
@@ -456,10 +457,11 @@ val screenModule = module {
             get(),
         )
     }
-    viewModel { (courseId: String, threadId: String, comment: DiscussionComment) ->
+    viewModel { (courseId: String, threadId: String, isPostingEnabled: Boolean, comment: DiscussionComment) ->
         DiscussionResponsesViewModel(
             courseId,
             threadId,
+            isPostingEnabled,
             comment,
             get(),
             get(),
@@ -477,12 +479,13 @@ val screenModule = module {
             get()
         )
     }
-    viewModel { (courseId: String) ->
+    viewModel { (courseId: String, isPostingEnabled: Boolean) ->
         DiscussionSearchThreadViewModel(
+            courseId,
+            isPostingEnabled,
             get(),
             get(),
             get(),
-            courseId
         )
     }
 

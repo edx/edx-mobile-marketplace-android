@@ -355,8 +355,9 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         fm: FragmentManager,
         courseId: String,
         thread: Thread,
+        isPostingEnabled: Boolean,
     ) {
-        navigateToDiscussionComments(fm, courseId, thread, "", "")
+        navigateToDiscussionComments(fm, courseId, thread, "", "", isPostingEnabled)
     }
 
     override fun navigateToDiscussionComments(
@@ -365,10 +366,11 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         thread: Thread,
         responseId: String,
         commentId: String,
+        isPostingEnabled: Boolean,
     ) {
         replaceFragmentWithBackStack(
             fm,
-            DiscussionCommentsFragment.newInstance(courseId, thread, responseId, commentId)
+            DiscussionCommentsFragment.newInstance(courseId, thread, responseId, commentId, isPostingEnabled)
         )
     }
 
@@ -378,10 +380,11 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         threadId: String,
         comment: DiscussionComment,
         isClosed: Boolean,
+        isPostingEnabled: Boolean,
     ) {
         replaceFragmentWithBackStack(
             fm,
-            DiscussionResponsesFragment.newInstance(courseId, threadId, comment, isClosed)
+            DiscussionResponsesFragment.newInstance(courseId, threadId, comment, isClosed, isPostingEnabled)
         )
     }
 
@@ -396,10 +399,10 @@ class AppRouter : AuthRouter, DiscoveryRouter, DashboardRouter, CourseRouter, Di
         )
     }
 
-    override fun navigateToSearchThread(fm: FragmentManager, courseId: String) {
+    override fun navigateToSearchThread(fm: FragmentManager, courseId: String, isPostingEnabled: Boolean) {
         replaceFragmentWithBackStack(
             fm,
-            DiscussionSearchThreadFragment.newInstance(courseId)
+            DiscussionSearchThreadFragment.newInstance(courseId, isPostingEnabled)
         )
     }
 

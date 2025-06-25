@@ -20,6 +20,7 @@ interface DiscussionRouter {
         fm: FragmentManager,
         courseId: String,
         thread: Thread,
+        isPostingEnabled: Boolean = true,
     )
 
     fun navigateToDiscussionComments(
@@ -28,6 +29,7 @@ interface DiscussionRouter {
         thread: Thread,
         responseId: String,
         commentId: String,
+        isPostingEnabled: Boolean = true,
     )
 
     fun navigateToDiscussionResponses(
@@ -36,6 +38,7 @@ interface DiscussionRouter {
         threadId: String,
         comment: DiscussionComment,
         isClosed: Boolean,
+        isPostingEnabled: Boolean = true,
     )
 
     fun navigateToAddThread(
@@ -46,7 +49,8 @@ interface DiscussionRouter {
 
     fun navigateToSearchThread(
         fm: FragmentManager,
-        courseId: String
+        courseId: String,
+        isPostingEnabled: Boolean,
     )
 
     fun navigateToAnothersProfile(

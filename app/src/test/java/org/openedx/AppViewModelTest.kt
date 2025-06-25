@@ -50,7 +50,7 @@ class AppViewModelTest {
     private val databaseManager = mockk<DatabaseManager>()
     private val preferencesManager = mockk<PreferencesManager>()
     private val analytics = mockk<AppAnalytics>()
-    private val fileUtil = mockk<FileUtil>()
+    private val fileUtil = mockk<FileUtil>(relaxed = true)
     private val deepLinkRouter = mockk<DeepLinkRouter>()
     private val context = mockk<Context>()
     private val pushManager = mockk<PushGlobalManager>()
@@ -64,7 +64,6 @@ class AppViewModelTest {
         every { analytics.logEvent(any(), any()) } returns Unit
         every { preferencesManager.user } returns user
         every { preferencesManager.appThemeMode } returns appThemeMode
-        every { fileUtil.getExternalAppDir() } returns mockk()
         mockkObject(CrashlyticsHelper)
         every { CrashlyticsHelper.setUserId(any()) } returns Unit
     }

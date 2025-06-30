@@ -72,7 +72,7 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
-import org.openedx.core.extension.isNull
+import org.openedx.core.extension.isNotNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.dialog.IAPDialogFragment
@@ -393,7 +393,6 @@ fun CourseDashboard(
                 }
             }
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
-            if (dataReady.value.isNull()) return@Scaffold
 
             if (dataReady.value.isTrue() && canShowTrackSelection) {
                 val courseExpiresDate =
@@ -416,7 +415,7 @@ fun CourseDashboard(
                     IAPDialogFragment.TAG
                 )
                 viewModel.disableTrackSelection()
-            } else {
+            } else if (dataReady.isNotNull()) {
                 LaunchedEffect(pagerState.currentPage) {
                     tabState.animateScrollToItem(pagerState.currentPage)
                     viewModel.courseContainerTabClickedEvent(pagerState.currentPage)

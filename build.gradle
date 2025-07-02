@@ -48,7 +48,7 @@ ext {
 
     jsoup_version = '1.13.1'
 
-    room_version = '2.6.1'
+    room_version = '2.7.2'
 
     work_version = '2.9.0'
 

@@ -17,13 +17,10 @@ import kotlin.math.ceil
 
 object TimeUtils {
 
-    private const val TAG = "TimeUtils"
     private const val FORMAT_ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss'Z'"
     private const val FORMAT_ISO_8601_WITH_TIME_ZONE = "yyyy-MM-dd'T'HH:mm:ssXXX"
 
     private const val SEVEN_DAYS_IN_MILLIS = 604800000L
-
-    private val logger = Logger(TAG)
 
     fun getCurrentTime(): Long {
         return Calendar.getInstance().timeInMillis
@@ -33,8 +30,7 @@ object TimeUtils {
         return try {
             val parsePosition = ParsePosition(0)
             return ISO8601Utils.parse(text, parsePosition)
-        } catch (e: ParseException) {
-            logger.e(throwable = e, metadata = mapOf("time" to text))
+        } catch (_: ParseException) {
             null
         }
     }
@@ -43,8 +39,7 @@ object TimeUtils {
         return try {
             val sdf = SimpleDateFormat(FORMAT_ISO_8601_WITH_TIME_ZONE, Locale.getDefault())
             sdf.parse(text)
-        } catch (e: ParseException) {
-            logger.e(throwable = e, metadata = mapOf("time" to text))
+        } catch (_: ParseException) {
             null
         }
     }
@@ -56,8 +51,7 @@ object TimeUtils {
                 context.getString(R.string.core_full_date_with_time), Locale.getDefault()
             )
             applicationDateFormat.format(courseDateFormat.parse(text)!!)
-        } catch (e: Exception) {
-            logger.e(throwable = e, metadata = mapOf("time" to text))
+        } catch (_: Exception) {
             ""
         }
     }

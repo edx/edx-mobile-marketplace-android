@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
@@ -28,9 +30,14 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17
-        freeCompilerArgs = List.of("-Xstring-concat=inline")
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.fromTarget("17")
+            freeCompilerArgs.addAll(List.of(
+                    "-Xstring-concat=inline",
+                    "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
+            ))
+        }
     }
 
     buildFeatures {

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 def config = configHelper.fetchConfig()
 def appId = config.getOrDefault("APPLICATION_ID", "org.openedx.app")
 def themeDirectory = config.getOrDefault("THEME_DIRECTORY", "openedx")
@@ -106,9 +108,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17
-        freeCompilerArgs = List.of("-Xstring-concat=inline")
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.fromTarget("17")
+            freeCompilerArgs.addAll(List.of(
+                    "-Xstring-concat=inline",
+                    "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
+            ))
+        }
     }
     buildFeatures {
         viewBinding true

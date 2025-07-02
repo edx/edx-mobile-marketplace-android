@@ -32,8 +32,8 @@ data class CourseDateBlock(
     val blockId: String = "",
 ) : Parcelable {
     fun mapToDomain(): CourseDateBlock? {
-        TimeUtils.iso8601ToDate(date)?.let {
-            return CourseDateBlock(
+        return TimeUtils.iso8601ToDate(date)?.let {
+            CourseDateBlock(
                 complete = complete,
                 date = it,
                 assignmentType = assignmentType,
@@ -44,11 +44,11 @@ data class CourseDateBlock(
                 title = title,
                 blockId = blockId
             )
-        } ?: return null
+        }
     }
 
     fun mapToRoomEntity(): CourseDateBlockDb? {
-        TimeUtils.iso8601ToDate(date)?.let {
+        return TimeUtils.iso8601ToDate(date)?.let {
             return CourseDateBlockDb(
                 complete = complete,
                 date = it,
@@ -60,6 +60,6 @@ data class CourseDateBlock(
                 title = title,
                 blockId = blockId
             )
-        } ?: return null
+        }
     }
 }

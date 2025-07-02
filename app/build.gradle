@@ -10,6 +10,7 @@ def fullstoryEnabled = fullstoryConfig?.getOrDefault('ENABLED', false)
 
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'kotlin-kapt'
 

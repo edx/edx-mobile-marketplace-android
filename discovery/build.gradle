@@ -5,7 +5,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlin.plugin.compose'
     id 'kotlin-parcelize'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -67,7 +67,7 @@ android {
 dependencies {
     implementation project(path: ':core')
 
-    kapt "androidx.room:room-compiler:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
     implementation 'androidx.activity:activity-compose:1.8.1'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

@@ -12,7 +12,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'kotlin-parcelize'
-apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.devtools.ksp'
 
 if (firebaseEnabled) {
     apply plugin: 'com.google.gms.google-services'
@@ -154,7 +154,7 @@ dependencies {
     implementation project(path: ':notifications')
     implementation project(path: ':featuremanagement')
 
-    kapt "androidx.room:room-compiler:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
 
     implementation 'androidx.core:core-splashscreen:1.0.1'
 
@@ -214,8 +214,6 @@ private def setupFirebaseConfigFields(buildType) {
     buildType.manifestPlaceholders = [fcmEnabled: firebaseEnabled && cloudMessagingEnabled]
 }
 
-kapt {
-    arguments {
-        arg("room.schemaLocation", "$projectDir/schemas")
-    }
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }

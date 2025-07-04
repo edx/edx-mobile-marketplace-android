@@ -46,10 +46,6 @@ android {
         compose true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "$compose_compiler_version"
-    }
-
     flavorDimensions += "env"
     productFlavors {
         prod {

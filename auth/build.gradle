@@ -56,9 +56,6 @@ android {
         viewBinding true
         compose true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "$compose_compiler_version"
-    }
 }
 
 dependencies {

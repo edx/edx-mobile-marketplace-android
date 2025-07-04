@@ -47,10 +47,6 @@ android {
         compose = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = rootProject.extra["compose_compiler_version"].toString()
-    }
-
     flavorDimensions.add("env") // Define the flavor dimension
     productFlavors {
         create("prod") {

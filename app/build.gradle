@@ -123,9 +123,6 @@ android {
         compose true
         buildConfig true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "$compose_compiler_version"
-    }
     bundle {
         language {
             enableSplit = false

@@ -41,6 +41,7 @@ import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isFalse
 import org.openedx.core.extension.isNotNull
+import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.module.billing.BillingProcessor
@@ -149,6 +150,8 @@ class CourseContainerViewModel(
     private var _courseDetails: CourseEnrollmentDetails? = null
     val courseDetails: CourseEnrollmentDetails?
         get() = _courseDetails
+
+    var courseContainerTabs = MutableStateFlow<List<CourseContainerTab>>(CourseContainerTab.entries)
 
     val calendarPermissions: Array<String>
         get() = calendarManager.permissions
@@ -287,6 +290,7 @@ class CourseContainerViewModel(
 
         _canShowUpgradeButton.value = iapInteractor.isIAPEnabled && courseDetails.isUpgradeable
         _canShowTrackSelection.value = showTrackSelection && _canShowUpgradeButton.value
+        updateContainerTabs(_courseDetails?.discussionUrl.isNotNullOrEmpty())
 
         _showProgress.value = false
 
@@ -351,6 +355,25 @@ class CourseContainerViewModel(
         logger.e(throwable = e)
         _courseAccessStatus.value = CourseAccessError.UNKNOWN
         _showProgress.value = false
+    }
+
+    private fun updateContainerTabs(isDiscussionEnabled: Boolean) {
+        courseContainerTabs.value = CourseContainerTab.entries.filter {
+            it != CourseContainerTab.DISCUSSIONS || isDiscussionEnabled
+        }
+    }
+
+    fun getTabIndexByName(tabName: String): Int {
+        return courseContainerTabs.value.indexOfFirst {
+            it.name.equals(
+                tabName,
+                ignoreCase = true
+            )
+        }.takeIf { it != -1 } ?: 0
+    }
+
+    fun getTabNameByIndex(index: Int): CourseContainerTab {
+        return courseContainerTabs.value.getOrNull(index) ?: CourseContainerTab.HOME
     }
 
     fun loadPrice() {
@@ -590,7 +613,7 @@ class CourseContainerViewModel(
     }
 
     fun courseContainerTabClickedEvent(index: Int) {
-        when (CourseContainerTab.entries[index]) {
+        when (getTabNameByIndex(index)) {
             CourseContainerTab.HOME -> courseTabClickedEvent()
             CourseContainerTab.VIDEOS -> videoTabClickedEvent()
             CourseContainerTab.DISCUSSIONS -> discussionTabClickedEvent()

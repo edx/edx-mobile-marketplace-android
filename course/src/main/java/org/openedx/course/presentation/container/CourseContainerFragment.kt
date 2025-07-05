@@ -72,7 +72,6 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
-import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
@@ -196,7 +195,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
     private fun onRefresh(currentPage: Int) {
         if (viewModel.courseAccessStatus.value == CourseAccessError.NONE) {
-            viewModel.onRefresh(CourseContainerTab.entries[currentPage])
+            viewModel.onRefresh(viewModel.getTabNameByIndex(currentPage))
         } else {
             viewModel.fetchCourseDetails()
         }
@@ -366,15 +365,8 @@ fun CourseDashboard(
             val refreshing by viewModel.refreshing.collectAsState(true)
             val courseImage by viewModel.courseImage.collectAsState()
             val uiMessage by viewModel.uiMessage.collectAsState(null)
-            val isDiscussionEnabled: Boolean =
-                viewModel.courseDetails?.discussionUrl.isNotNullOrEmpty()
-            val courseContainerTabs = CourseContainerTab.entries.filter {
-                it != CourseContainerTab.DISCUSSIONS || isDiscussionEnabled
-            }
-            val requiredTabIndex = courseContainerTabs.indexOf(
-                enumValues<CourseContainerTab>().find { it.name == openTab.uppercase() }
-                    ?: CourseContainerTab.HOME
-            ).let { if (it < 0) 0 else it }
+            val courseContainerTabs by viewModel.courseContainerTabs.collectAsState()
+            val requiredTabIndex = viewModel.getTabIndexByName(openTab.uppercase())
 
             val pagerState = rememberPagerState(
                 initialPage = requiredTabIndex,
@@ -562,9 +554,9 @@ fun CourseDashboard(
                             hostState = snackState
                         ) { snackbarData: SnackbarData ->
                             DatesShiftedSnackBar(
-                                showAction = CourseContainerTab.entries[pagerState.currentPage] != CourseContainerTab.DATES,
+                                showAction = viewModel.getTabNameByIndex(pagerState.currentPage) != CourseContainerTab.DATES,
                                 onViewDates = {
-                                    scrollToDates(scope, pagerState)
+                                    scrollToDates(scope, viewModel, pagerState)
                                 },
                                 onClose = {
                                     snackbarData.dismiss()
@@ -595,7 +587,7 @@ private fun DashboardPager(
         userScrollEnabled = isNavigationEnabled,
         beyondBoundsPageCount = courseContainerTabs.size
     ) { page ->
-        when (courseContainerTabs[page]) {
+        when (viewModel.getTabNameByIndex(page)) {
             CourseContainerTab.HOME -> {
                 CourseOutlineScreen(
                     windowSize = windowSize,
@@ -1001,8 +993,12 @@ private fun SetupCourseAccessErrorButtons(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun scrollToDates(scope: CoroutineScope, pagerState: PagerState) {
+private fun scrollToDates(
+    scope: CoroutineScope,
+    viewModel: CourseContainerViewModel,
+    pagerState: PagerState,
+) {
     scope.launch {
-        pagerState.animateScrollToPage(CourseContainerTab.entries.indexOf(CourseContainerTab.DATES))
+        pagerState.animateScrollToPage(viewModel.getTabIndexByName(CourseContainerTab.DATES.name))
     }
 }

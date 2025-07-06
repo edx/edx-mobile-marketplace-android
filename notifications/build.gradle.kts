@@ -35,10 +35,12 @@ android {
     kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
-            freeCompilerArgs.addAll(listOf(
+            freeCompilerArgs.addAll(
+                listOf(
                     "-Xstring-concat=inline",
                     "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
-            ))
+                )
+            )
         }
     }
 

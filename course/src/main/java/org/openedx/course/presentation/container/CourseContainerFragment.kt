@@ -195,7 +195,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
     private fun onRefresh(currentPage: Int) {
         if (viewModel.courseAccessStatus.value == CourseAccessError.NONE) {
-            viewModel.onRefresh(viewModel.getTabNameByIndex(currentPage))
+            viewModel.onRefresh(viewModel.getTabByIndex(currentPage))
         } else {
             viewModel.fetchCourseDetails()
         }
@@ -554,9 +554,13 @@ fun CourseDashboard(
                             hostState = snackState
                         ) { snackbarData: SnackbarData ->
                             DatesShiftedSnackBar(
-                                showAction = viewModel.getTabNameByIndex(pagerState.currentPage) != CourseContainerTab.DATES,
+                                showAction = viewModel.getTabByIndex(pagerState.currentPage) != CourseContainerTab.DATES,
                                 onViewDates = {
-                                    scrollToDates(scope, viewModel, pagerState)
+                                    scrollToTab(
+                                        scope,
+                                        viewModel.getTabIndexByName(CourseContainerTab.DATES.name),
+                                        pagerState
+                                    )
                                 },
                                 onClose = {
                                     snackbarData.dismiss()
@@ -587,7 +591,7 @@ private fun DashboardPager(
         userScrollEnabled = isNavigationEnabled,
         beyondBoundsPageCount = courseContainerTabs.size
     ) { page ->
-        when (viewModel.getTabNameByIndex(page)) {
+        when (viewModel.getTabByIndex(page)) {
             CourseContainerTab.HOME -> {
                 CourseOutlineScreen(
                     windowSize = windowSize,
@@ -993,12 +997,12 @@ private fun SetupCourseAccessErrorButtons(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun scrollToDates(
+private fun scrollToTab(
     scope: CoroutineScope,
-    viewModel: CourseContainerViewModel,
+    pageIndex: Int,
     pagerState: PagerState,
 ) {
     scope.launch {
-        pagerState.animateScrollToPage(viewModel.getTabIndexByName(CourseContainerTab.DATES.name))
+        pagerState.animateScrollToPage(pageIndex)
     }
 }

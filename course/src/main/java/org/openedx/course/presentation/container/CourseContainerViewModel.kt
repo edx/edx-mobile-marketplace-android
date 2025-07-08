@@ -151,7 +151,10 @@ class CourseContainerViewModel(
     val courseDetails: CourseEnrollmentDetails?
         get() = _courseDetails
 
-    var courseContainerTabs = MutableStateFlow<List<CourseContainerTab>>(CourseContainerTab.entries)
+    private val _courseContainerTabs =
+        MutableStateFlow<List<CourseContainerTab>>(CourseContainerTab.entries)
+    val courseContainerTabs: StateFlow<List<CourseContainerTab>>
+        get() = _courseContainerTabs
 
     val calendarPermissions: Array<String>
         get() = calendarManager.permissions
@@ -358,13 +361,13 @@ class CourseContainerViewModel(
     }
 
     private fun updateContainerTabs(isDiscussionEnabled: Boolean) {
-        courseContainerTabs.value = CourseContainerTab.entries.filter {
+        _courseContainerTabs.value = CourseContainerTab.entries.filter {
             it != CourseContainerTab.DISCUSSIONS || isDiscussionEnabled
         }
     }
 
     fun getTabIndexByName(tabName: String): Int {
-        return courseContainerTabs.value.indexOfFirst {
+        return _courseContainerTabs.value.indexOfFirst {
             it.name.equals(
                 tabName,
                 ignoreCase = true
@@ -372,8 +375,8 @@ class CourseContainerViewModel(
         }.takeIf { it != -1 } ?: 0
     }
 
-    fun getTabNameByIndex(index: Int): CourseContainerTab {
-        return courseContainerTabs.value.getOrNull(index) ?: CourseContainerTab.HOME
+    fun getTabByIndex(index: Int): CourseContainerTab {
+        return _courseContainerTabs.value.getOrNull(index) ?: CourseContainerTab.HOME
     }
 
     fun loadPrice() {
@@ -613,7 +616,7 @@ class CourseContainerViewModel(
     }
 
     fun courseContainerTabClickedEvent(index: Int) {
-        when (getTabNameByIndex(index)) {
+        when (getTabByIndex(index)) {
             CourseContainerTab.HOME -> courseTabClickedEvent()
             CourseContainerTab.VIDEOS -> videoTabClickedEvent()
             CourseContainerTab.DISCUSSIONS -> discussionTabClickedEvent()

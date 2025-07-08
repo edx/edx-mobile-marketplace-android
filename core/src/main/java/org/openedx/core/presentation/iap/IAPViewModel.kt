@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
@@ -92,14 +93,26 @@ class IAPViewModel(
             iapNotifier.notifier.onEach { event ->
                 when (event) {
                     is CourseDataUpdated.CourseEnrollmentDataUpdated -> {
-                        if (purchaseFlowData.screenName == IAPFlowSource.COURSE_ENROLLMENT.screen) {
-                            processCourseModeCheck(isVerifiedMode = event.courseId == purchaseFlowData.courseId && event.isVerifiedMode)
+                        if (purchaseFlowData.screenName in listOf(
+                                IAPFlowSource.COURSE_ENROLLMENT.screen,
+                                IAPFlowSource.PROFILE.screen
+                            )
+                        ) {
+                            val isVerifiedMode =
+                                event.courseId == purchaseFlowData.courseId && event.isVerifiedMode
+                            processCourseModeCheck(isVerifiedMode)
                         }
                     }
 
                     is CourseDataUpdated.CourseDashboardDataUpdate -> {
-                        if (purchaseFlowData.screenName == IAPFlowSource.COURSE_DASHBOARD.screen) {
-                            processCourseModeCheck(event.courseId == purchaseFlowData.courseId && event.isVerifiedMode)
+                        if (purchaseFlowData.screenName in listOf(
+                                IAPFlowSource.COURSE_DASHBOARD.screen,
+                                IAPFlowSource.TRACK_SELECTION.screen
+                            )
+                        ) {
+                            val isVerifiedMode =
+                                event.courseId == purchaseFlowData.courseId && event.isVerifiedMode
+                            processCourseModeCheck(isVerifiedMode)
                         }
                     }
                 }
@@ -226,9 +239,9 @@ class IAPViewModel(
                     if (eventLogger.isSilentIAPFlow.isNull()) {
                         eventLogger.upgradeSuccessEvent()
                     }
-                    _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
-                    _uiState.value = IAPUIState.CourseDataUpdated
                     purchaseFlowData.isConsumed = true
+                    _uiState.value = IAPUIState.CourseDataUpdated
+                    _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                 }.onFailure {
                     logger.e(throwable = it)
                     updateErrorState(it, requestType = IAPRequestType.CONSUME_CODE)
@@ -285,7 +298,7 @@ class IAPViewModel(
      * delayed course mode transitions (e.g., after an in-app purchase).
      */
     private fun retryCourseModeTransition() {
-        if (purchaseData.courseModeTransitionRetryCount > 3) {
+        if (purchaseData.courseModeTransitionRetryCount > AppDataConstants.ENROLLMENT_MODE_RETRY_THRESHOLD) {
             updateErrorState(
                 IAPException(
                     requestType = IAPRequestType.COURSE_REFRESH_CODE,
@@ -296,7 +309,7 @@ class IAPViewModel(
             purchaseFlowData.courseModeTransitionRetryCount = 0
         } else {
             viewModelScope.launch {
-                delay(purchaseData.courseModeTransitionRetryCount * 2500L)
+                delay(purchaseData.courseModeTransitionRetryCount * AppDataConstants.ENROLLMENT_MODE_RETRY_BASE_DELAY_MS)
                 updateCourseData()
             }
         }

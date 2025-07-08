@@ -22,11 +22,12 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.ImageProcessor
 import org.openedx.core.R
@@ -37,6 +38,7 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
+import org.openedx.core.domain.model.CourseEnrollmentDetailsSource
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
@@ -269,10 +271,11 @@ class CourseContainerViewModel(
                     emit(null)
                 }
 
-            courseDetailsFlow.collect { courseEnrollmentDetails ->
-                if (courseEnrollmentDetails.isNotNull()) {
+            courseDetailsFlow.collect { courseEnrollmentDetailsSource ->
+                if (courseEnrollmentDetailsSource.isNotNull()) {
                     handleCourseEnrollment(
-                        courseDetails = courseEnrollmentDetails!!,
+                        courseDetails = courseEnrollmentDetailsSource!!.data,
+                        isCachedData = courseEnrollmentDetailsSource is CourseEnrollmentDetailsSource.Cache,
                         isFromValueProp = isFromValueProp,
                         isExpiredCoursePurchase = isExpiredCoursePurchase,
                     )
@@ -288,23 +291,30 @@ class CourseContainerViewModel(
      */
     private fun handleCourseEnrollment(
         courseDetails: CourseEnrollmentDetails,
+        isCachedData: Boolean,
         isFromValueProp: Boolean = false,
         isExpiredCoursePurchase: Boolean = false
     ) {
         _courseDetails = courseDetails
-        val waitForCourseModeTransition = shouldWaitForCourseModeTransition(
-            isVerifiedMode = courseDetails.enrollmentDetails.isVerifiedMode,
-            isFromValueProp = isFromValueProp,
-            isExpiredCoursePurchase = isExpiredCoursePurchase
-        )
-        if (waitForCourseModeTransition) return
+        if (!isCachedData) {
+            val waitForCourseModeTransition = shouldWaitForCourseModeTransition(
+                isVerifiedMode = courseDetails.enrollmentDetails.isVerifiedMode,
+                isFromValueProp = isFromValueProp,
+                isExpiredCoursePurchase = isExpiredCoursePurchase
+            )
+            if (waitForCourseModeTransition) return
+        } else if (isExpiredCoursePurchase) {
+            // No need to process cached data if came from expired course purchase
+            return
+        }
         val courseInfoOverview = courseDetails.courseInfoOverview
 
         courseName = courseInfoOverview.name
         loadCourseImage(courseInfoOverview.media?.image?.large)
 
         _canShowValuePropButton.value = iapInteractor.isIAPEnabled && courseDetails.isUpgradeable
-        _canShowTrackSelection.value = showTrackSelection && _canShowValuePropButton.value
+        _canShowTrackSelection.value =
+            courseDetails.isUpgradeable && showTrackSelection && iapInteractor.isUpgradeEnabled
         updateContainerTabs(_courseDetails?.discussionUrl.isNotNullOrEmpty())
 
         _showProgress.value = false
@@ -312,7 +322,7 @@ class CourseContainerViewModel(
         if (courseDetails.hasAccess.isFalse()) {
             _dataReady.value = false
             if (courseDetails.isAuditAccessExpired) {
-                if (_canShowValuePropButton.value) {
+                if (iapInteractor.isUpgradeEnabled) {
                     purchaseFlowData.apply {
                         courseId = courseDetails.id
                         courseName = courseInfoOverview.name
@@ -442,9 +452,10 @@ class CourseContainerViewModel(
 
     private fun checkCourseMode(activity: FragmentActivity) {
         viewModelScope.launch {
-            val isAuditMode: Boolean = try {
-                interactor.getEnrollmentDetailsFlow(courseId)
-                    .last()?.enrollmentDetails?.isAuditMode.isTrue()
+            val isAuditMode = try {
+                interactor.getEnrollmentDetailsFlow(courseId).toList()
+                    .lastOrNull()?.data?.enrollmentDetails?.isAuditMode
+                    ?: true
             } catch (e: Exception) {
                 true
             }
@@ -513,7 +524,6 @@ class CourseContainerViewModel(
             isExpiredCoursePurchase -> {
                 if (isVerifiedMode) {
                     consumeOrderForFurtherPurchases(purchaseFlowData)
-                    _iapState.value = IAPUIState.CourseDataUpdated
                 } else {
                     retryCourseModeTransition()
                     return true
@@ -529,7 +539,6 @@ class CourseContainerViewModel(
                             isVerifiedMode
                         )
                     )
-                    _iapState.value = IAPUIState.CourseDataUpdated
                 }
             }
         }
@@ -537,7 +546,7 @@ class CourseContainerViewModel(
     }
 
     private fun retryCourseModeTransition() {
-        if (purchaseFlowData.courseModeTransitionRetryCount > 3) {
+        if (purchaseFlowData.courseModeTransitionRetryCount > AppDataConstants.ENROLLMENT_MODE_RETRY_THRESHOLD) {
             updateErrorState(
                 IAPException(
                     requestType = IAPRequestType.COURSE_REFRESH_CODE,
@@ -548,7 +557,7 @@ class CourseContainerViewModel(
             purchaseFlowData.courseModeTransitionRetryCount = 0
         } else {
             viewModelScope.launch {
-                delay(purchaseFlowData.courseModeTransitionRetryCount * 2500L)
+                delay(purchaseFlowData.courseModeTransitionRetryCount * AppDataConstants.ENROLLMENT_MODE_RETRY_BASE_DELAY_MS)
                 updateCourseData()
             }
         }
@@ -567,6 +576,8 @@ class CourseContainerViewModel(
                 if (eventLogger.isSilentIAPFlow.isNull()) {
                     eventLogger.upgradeSuccessEvent()
                 }
+                purchaseFlowData.isConsumed = true
+                _iapState.value = IAPUIState.CourseDataUpdated
                 _uiMessage.emit(
                     UIMessage.ToastMessage(
                         resourceManager.getString(
@@ -574,7 +585,6 @@ class CourseContainerViewModel(
                         )
                     )
                 )
-                purchaseFlowData.isConsumed = true
             }.onFailure {
                 logger.e(throwable = it)
                 updateErrorState(it)

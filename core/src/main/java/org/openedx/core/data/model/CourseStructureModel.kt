@@ -72,17 +72,9 @@ data class CourseStructureModel(
             isSelfPaced = isSelfPaced ?: false,
             progress = progress?.mapToDomain(),
             enrollmentDetails = enrollmentDetails.mapToDomain(),
-            productInfo = courseModes?.find {
-                it.isVerifiedMode()
-            }?.takeIf {
-                it.androidSku.isNotNullOrEmpty() && it.storeSku.isNotNullOrEmpty()
-            }?.run {
-                ProductInfo(
-                    courseSku = androidSku!!,
-                    storeSku = storeSku!!,
-                    lmsUSDPrice = minPrice ?: 0.0
-                )
-            }
+            productInfo = courseModes?.find { it.isVerifiedMode() }
+                ?.takeIf { it.storeSku.isNotNullOrEmpty() }
+                ?.run { ProductInfo(storeSku = storeSku!!, lmsUSDPrice = minPrice ?: 0.0) }
         )
     }
 

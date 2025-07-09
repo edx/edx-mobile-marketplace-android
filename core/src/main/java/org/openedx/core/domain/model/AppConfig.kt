@@ -18,5 +18,10 @@ data class CourseDatesCalendarSync(
 data class IAPConfig(
     val isEnabled: Boolean = false,
     val productPrefix: String? = null,
-    val disableVersions: List<String> = listOf()
-) : Serializable
+    private val disableVersions: List<String> = listOf()
+) : Serializable {
+
+    fun isUpgradeEnabled(versionName: String): Boolean {
+        return isEnabled && disableVersions.contains(versionName).not()
+    }
+}

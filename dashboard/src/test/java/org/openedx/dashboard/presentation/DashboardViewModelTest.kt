@@ -352,7 +352,14 @@ class DashboardViewModelTest {
         every { networkConnection.isOnline() } returns true
         every { corePreferences.appConfig.iapConfig } returns appConfig.iapConfig
         coEvery { interactor.getEnrolledCourses(any()) } returns dashboardCourseList
-        coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
+        coEvery { iapNotifier.notifier } returns flow {
+            emit(
+                CourseDataUpdated.CourseEnrollmentDataUpdated(
+                    "courseId",
+                    false
+                )
+            )
+        }
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
         coEvery { pushNotifier.send(any<PushEvent.RefreshBadgeCount>()) } returns Unit
 
@@ -397,7 +404,14 @@ class DashboardViewModelTest {
                 ""
             )
         )
-        coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
+        coEvery { iapNotifier.notifier } returns flow {
+            emit(
+                CourseDataUpdated.CourseEnrollmentDataUpdated(
+                    "courseId",
+                    false
+                )
+            )
+        }
         coEvery { iapNotifier.send(any<CourseDataUpdated>()) } returns Unit
         coEvery { pushNotifier.send(any<PushEvent.RefreshBadgeCount>()) } returns Unit
 
@@ -433,7 +447,14 @@ class DashboardViewModelTest {
     @Test
     fun `CourseDashboardUpdate notifier test`() = runTest {
         coEvery { discoveryNotifier.notifier } returns flow { emit(CourseDashboardUpdate()) }
-        coEvery { iapNotifier.notifier } returns flow { emit(CourseDataUpdated()) }
+        coEvery { iapNotifier.notifier } returns flow {
+            emit(
+                CourseDataUpdated.CourseEnrollmentDataUpdated(
+                    "courseId",
+                    false
+                )
+            )
+        }
         every { corePreferences.appConfig } returns appConfig
         val viewModel = DashboardListViewModel(
             context,

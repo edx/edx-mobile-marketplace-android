@@ -236,32 +236,23 @@ fun IAPErrorDialog(iapException: IAPException, onIAPAction: (IAPAction) -> Unit)
             })
         }
 
-        IAPErrorDialogType.ADD_TO_BASKET_NOT_ACCEPTABLE_ERROR_DIALOG,
-        IAPErrorDialogType.CHECKOUT_NOT_ACCEPTABLE_ERROR_DIALOG,
-        -> {
-            UpgradeErrorDialog(
-                title = stringResource(id = R.string.iap_error_title),
-                description = stringResource(id = dialogType.messageResId),
-                confirmText = stringResource(id = dialogType.positiveButtonResId),
-                onConfirm = { onIAPAction(IAPAction.ACTION_REFRESH) },
-                dismissText = stringResource(id = dialogType.negativeButtonResId),
-                onDismiss = { onIAPAction(IAPAction.ACTION_CLOSE) }
-            )
-        }
-
-        IAPErrorDialogType.EXECUTE_BAD_REQUEST_ERROR_DIALOG,
-        IAPErrorDialogType.EXECUTE_FORBIDDEN_ERROR_DIALOG,
-        IAPErrorDialogType.EXECUTE_NOT_ACCEPTABLE_ERROR_DIALOG,
-        IAPErrorDialogType.EXECUTE_GENERAL_ERROR_DIALOG,
+        IAPErrorDialogType.PURCHASE_FLOW_CONFLICT_ERROR_DIALOG,
+        IAPErrorDialogType.CREATE_ORDER_BAD_REQUEST_ERROR_DIALOG,
+        IAPErrorDialogType.CREATE_ORDER_FORBIDDEN_ERROR_DIALOG,
+        IAPErrorDialogType.CREATE_ORDER_NOT_ACCEPTABLE_ERROR_DIALOG,
+        IAPErrorDialogType.CREATE_ORDER_CONFLICT_ERROR_DIALOG,
+        IAPErrorDialogType.CREATE_ORDER_GENERAL_ERROR_DIALOG,
+        IAPErrorDialogType.COURSE_REFRESH_ERROR_DIALOG,
         IAPErrorDialogType.CONSUME_ERROR_DIALOG,
-        -> {
-            CourseAlreadyPurchasedExecuteErrorDialog(
+        IAPErrorDialogType.GENERAL_CONFLICT_ERROR_DIALOG,
+            -> {
+            CourseAlreadyPurchasedCreateOrderErrorDialog(
                 description = stringResource(id = dialogType.messageResId),
                 positiveText = stringResource(id = dialogType.positiveButtonResId),
                 negativeText = stringResource(id = dialogType.negativeButtonResId),
                 neutralText = stringResource(id = dialogType.neutralButtonResId),
                 onPositiveClick = {
-                    if (iapException.httpErrorCode == 406) {
+                    if (iapException.httpErrorCode == 409) {
                         onIAPAction(IAPAction.ACTION_REFRESH)
                     } else {
                         onIAPAction(IAPAction.ACTION_RETRY)
@@ -328,7 +319,7 @@ fun NoSkuErrorDialog(
 }
 
 @Composable
-fun CourseAlreadyPurchasedExecuteErrorDialog(
+fun CourseAlreadyPurchasedCreateOrderErrorDialog(
     description: String,
     positiveText: String,
     negativeText: String,
@@ -606,9 +597,9 @@ private fun PreviewFakePurchasesFulfillmentCompleted() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewCourseAlreadyPurchasedExecuteErrorDialog() {
+private fun PreviewCourseAlreadyPurchasedCreateOrderErrorDialog() {
     OpenEdXTheme {
-        CourseAlreadyPurchasedExecuteErrorDialog(
+        CourseAlreadyPurchasedCreateOrderErrorDialog(
             description = stringResource(id = R.string.iap_course_not_fullfilled),
             positiveText = stringResource(id = R.string.iap_label_refresh_now),
             negativeText = stringResource(id = R.string.iap_get_help),

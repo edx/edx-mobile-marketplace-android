@@ -19,9 +19,10 @@ data class PurchaseFlowData(
     var price: Double = 0.0
     var formattedPrice: String? = null
     var purchaseToken: String? = null
-    var basketId: Long = -1
 
     var flowStartTime: Long = 0
+    var courseModeTransitionRetryCount: Long = 0
+    var isConsumed: Boolean = false
 
     fun reset() {
         iapFlow = null
@@ -35,8 +36,9 @@ data class PurchaseFlowData(
         price = 0.0
         formattedPrice = null
         purchaseToken = null
-        basketId = -1
         flowStartTime = 0
+        courseModeTransitionRetryCount = 0
+        isConsumed = false
     }
 
     fun isSilentIAPFlow(): Boolean? {
@@ -44,9 +46,11 @@ data class PurchaseFlowData(
             IAPFlow.SILENT -> {
                 true
             }
+
             IAPFlow.RESTORE -> {
                 false
             }
+
             else -> {
                 null
             }

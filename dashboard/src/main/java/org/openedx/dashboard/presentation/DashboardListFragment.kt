@@ -688,7 +688,6 @@ private val mockCourseEnrolled = EnrolledCourse(
         isSelfPaced = false
     ),
     productInfo = ProductInfo(
-        courseSku = "example_sku",
         storeSku = "mobile.android.example_100",
         lmsUSDPrice = 99.9
     )

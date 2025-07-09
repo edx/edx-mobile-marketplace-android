@@ -34,12 +34,10 @@ data class CourseInfoOverview(
     private val productInfo: ProductInfo?
         get() {
             val verifiedMode = courseModes?.find { it.isVerifiedMode() }
-            val androidSku = verifiedMode?.androidSku
             val storeSku = verifiedMode?.storeSku
 
-            return if (!androidSku.isNullOrEmpty() && !storeSku.isNullOrEmpty()) {
+            return if (!storeSku.isNullOrEmpty()) {
                 ProductInfo(
-                    courseSku = androidSku,
                     storeSku = storeSku,
                     lmsUSDPrice = verifiedMode.minPrice ?: 0.0
                 )

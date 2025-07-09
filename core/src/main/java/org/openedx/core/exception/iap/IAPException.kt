@@ -56,69 +56,36 @@ class IAPException(
                 IAPErrorDialogType.NO_SKU_ERROR_DIALOG
             }
 
-            IAPRequestType.ADD_TO_BASKET_CODE -> {
-                when (httpErrorCode) {
-                    400 -> {
-                        IAPErrorDialogType.ADD_TO_BASKET_BAD_REQUEST_ERROR_DIALOG
-                    }
-
-                    403 -> {
-                        IAPErrorDialogType.ADD_TO_BASKET_FORBIDDEN_ERROR_DIALOG
-                    }
-
-                    406 -> {
-                        IAPErrorDialogType.ADD_TO_BASKET_NOT_ACCEPTABLE_ERROR_DIALOG
-                    }
-
-                    else -> {
-                        IAPErrorDialogType.ADD_TO_BASKET_GENERAL_ERROR_DIALOG
-                    }
-                }
+            IAPRequestType.PURCHASE_PRECHECK_CODE -> {
+                IAPErrorDialogType.PURCHASE_FLOW_CONFLICT_ERROR_DIALOG
             }
 
-            IAPRequestType.CHECKOUT_CODE -> {
+            IAPRequestType.CREATE_ORDER_CODE -> {
                 when (httpErrorCode) {
                     400 -> {
-                        IAPErrorDialogType.CHECKOUT_BAD_REQUEST_ERROR_DIALOG
+                        IAPErrorDialogType.CREATE_ORDER_BAD_REQUEST_ERROR_DIALOG
                     }
 
                     403 -> {
-                        IAPErrorDialogType.CHECKOUT_FORBIDDEN_ERROR_DIALOG
+                        IAPErrorDialogType.CREATE_ORDER_FORBIDDEN_ERROR_DIALOG
                     }
 
                     406 -> {
-                        IAPErrorDialogType.CHECKOUT_NOT_ACCEPTABLE_ERROR_DIALOG
-                    }
-
-                    else -> {
-                        IAPErrorDialogType.CHECKOUT_GENERAL_ERROR_DIALOG
-                    }
-
-                }
-            }
-
-            IAPRequestType.EXECUTE_ORDER_CODE -> {
-                when (httpErrorCode) {
-                    400 -> {
-                        IAPErrorDialogType.EXECUTE_BAD_REQUEST_ERROR_DIALOG
-                    }
-
-                    403 -> {
-                        IAPErrorDialogType.EXECUTE_FORBIDDEN_ERROR_DIALOG
-                    }
-
-                    406 -> {
-                        IAPErrorDialogType.EXECUTE_NOT_ACCEPTABLE_ERROR_DIALOG
+                        IAPErrorDialogType.CREATE_ORDER_NOT_ACCEPTABLE_ERROR_DIALOG
                     }
 
                     409 -> {
-                        IAPErrorDialogType.EXECUTE_CONFLICT_ERROR_DIALOG
+                        IAPErrorDialogType.CREATE_ORDER_CONFLICT_ERROR_DIALOG
                     }
 
                     else -> {
-                        IAPErrorDialogType.EXECUTE_GENERAL_ERROR_DIALOG
+                        IAPErrorDialogType.CREATE_ORDER_GENERAL_ERROR_DIALOG
                     }
                 }
+            }
+
+            IAPRequestType.COURSE_REFRESH_CODE -> {
+                IAPErrorDialogType.COURSE_REFRESH_ERROR_DIALOG
             }
 
             IAPRequestType.CONSUME_CODE -> {
@@ -134,7 +101,11 @@ class IAPException(
             }
 
             else -> {
-                IAPErrorDialogType.GENERAL_DIALOG_ERROR
+                if (httpErrorCode == 409) {
+                    IAPErrorDialogType.GENERAL_CONFLICT_ERROR_DIALOG
+                } else {
+                    IAPErrorDialogType.GENERAL_DIALOG_ERROR
+                }
             }
         }
     }

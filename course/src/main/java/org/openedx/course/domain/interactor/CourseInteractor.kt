@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import org.openedx.core.BlockType
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.CourseEnrollmentDetails
+import org.openedx.core.domain.model.CourseEnrollmentDetailsSource
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.course.data.repository.CourseRepository
 
@@ -25,8 +26,12 @@ class CourseInteractor(
         return repository.getCourseStructure(courseId, isNeedRefresh)
     }
 
-    suspend fun getEnrollmentDetailsFlow(courseId: String): Flow<CourseEnrollmentDetails?> {
+    suspend fun getEnrollmentDetailsFlow(courseId: String): Flow<CourseEnrollmentDetailsSource?> {
         return repository.getEnrollmentDetailsFlow(courseId)
+    }
+
+    suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
+        return repository.getEnrollmentDetails(courseId)
     }
 
     suspend fun getCourseStructureForVideos(

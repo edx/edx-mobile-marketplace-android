@@ -1,6 +1,6 @@
 package org.openedx.core
 
-import java.util.*
+import java.util.Locale
 
 object AppDataConstants {
     const val USER_MIN_YEAR = 13
@@ -13,4 +13,10 @@ object AppDataConstants {
 
     // Equal 1GB
     const val DOWNLOADS_CONFIRMATION_SIZE = 1024 * 1024 * 1024L
+
+    // Max retry attempts allowed for checking enrollment mode transition after purchase.
+    const val ENROLLMENT_MODE_RETRY_THRESHOLD = 3
+
+    // Base delay in milliseconds for each enrollment mode retry attempt.
+    const val ENROLLMENT_MODE_RETRY_BASE_DELAY_MS = 2500L
 }

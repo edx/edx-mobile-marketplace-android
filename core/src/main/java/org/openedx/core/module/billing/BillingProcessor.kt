@@ -115,13 +115,14 @@ class BillingProcessor(
     suspend fun purchaseItem(
         activity: Activity,
         userId: Long,
+        courseId: String,
         productInfo: ProductInfo,
     ) {
         if (isReadyOrConnect()) {
             val response = querySyncDetails(productInfo.storeSku)
 
             response.productDetailsList?.first()?.let {
-                launchBillingFlow(activity, it, userId, productInfo.courseSku)
+                launchBillingFlow(activity, it, userId, courseId)
             }
         } else {
             listener?.onPurchaseCancel(BillingClient.BillingResponseCode.BILLING_UNAVAILABLE, "")
@@ -132,7 +133,7 @@ class BillingProcessor(
         activity: Activity,
         productDetails: ProductDetails,
         userId: Long,
-        courseSku: String,
+        courseId: String,
     ) {
         val productDetailsParamsList = listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder()
@@ -143,7 +144,7 @@ class BillingProcessor(
         val billingFlowParams = BillingFlowParams.newBuilder()
             .setProductDetailsParamsList(productDetailsParamsList)
             .setObfuscatedAccountId(userId.encodeToString())
-            .setObfuscatedProfileId(courseSku.encodeToString())
+            .setObfuscatedProfileId(courseId.encodeToString())
             .build()
 
         billingClient.launchBillingFlow(activity, billingFlowParams)
@@ -201,7 +202,7 @@ class BillingProcessor(
 fun ProductDetails.OneTimePurchaseOfferDetails.getPriceAmount(): Double =
     this.priceAmountMicros.toDouble().div(BillingProcessor.MICROS_TO_UNIT)
 
-fun Purchase.getCourseSku(): String? {
+fun Purchase.getCourseId(): String? {
     return this.accountIdentifiers?.obfuscatedProfileId?.decodeToString()
 }
 

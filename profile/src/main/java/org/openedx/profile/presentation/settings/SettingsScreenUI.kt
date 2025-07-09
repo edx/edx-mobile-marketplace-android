@@ -60,9 +60,9 @@ import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.ui.CheckingPurchasesDialog
 import org.openedx.core.ui.FakePurchasesFulfillmentCompleted
+import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.UpgradeErrorDialog
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -252,18 +252,9 @@ internal fun SettingsScreen(
             }
 
             is IAPUIState.Error -> {
-                UpgradeErrorDialog(
-                    title = stringResource(id = R.string.iap_error_title),
-                    description = stringResource(id = R.string.iap_course_not_fullfilled),
-                    confirmText = stringResource(id = R.string.core_cancel),
-                    onConfirm = { onIAPAction(IAPAction.ACTION_ERROR_CLOSE, null) },
-                    dismissText = stringResource(id = R.string.iap_get_help),
-                    onDismiss = {
-                        onIAPAction(
-                            IAPAction.ACTION_GET_HELP,
-                            iapUiState.iapException
-                        )
-                    }
+                IAPErrorDialog(
+                    iapException = iapUiState.iapException,
+                    onIAPAction = { onIAPAction(it, iapUiState.iapException) }
                 )
             }
 

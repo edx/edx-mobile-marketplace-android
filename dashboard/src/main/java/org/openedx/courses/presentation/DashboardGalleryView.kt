@@ -92,11 +92,11 @@ import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.PurchasesFulfillmentCompletedDialog
 import org.openedx.core.ui.TextIcon
-import org.openedx.core.ui.UpgradeErrorDialog
 import org.openedx.core.ui.UpgradeToAccessView
 import org.openedx.core.ui.UpgradeToAccessViewType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -330,25 +330,9 @@ private fun DashboardGalleryView(
                     }
 
                     is IAPUIState.Error -> {
-                        UpgradeErrorDialog(
-                            title = stringResource(id = CoreR.string.iap_error_title),
-                            description = stringResource(id = CoreR.string.iap_course_not_fullfilled),
-                            confirmText = stringResource(id = CoreR.string.core_cancel),
-                            onConfirm = {
-                                onIAPAction(
-                                    IAPAction.ACTION_ERROR_CLOSE,
-                                    null,
-                                    null
-                                )
-                            },
-                            dismissText = stringResource(id = CoreR.string.iap_get_help),
-                            onDismiss = {
-                                onIAPAction(
-                                    IAPAction.ACTION_GET_HELP,
-                                    null,
-                                    iapUiState.iapException
-                                )
-                            }
+                        IAPErrorDialog(
+                            iapException = iapUiState.iapException,
+                            onIAPAction = { onIAPAction(it, null, iapUiState.iapException) }
                         )
                     }
 

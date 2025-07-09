@@ -225,8 +225,6 @@
     <string name="iap_title_purchases_restored">Purchases have been successfully restored</string>
     <string name="iap_message_purchases_restored">All purchases are up to date. If you’re not seeing your purchases restored, please try restarting your app to refresh the experience.</string>
     <string name="iap_error_price_not_fetched">Your request could not be completed at this time. If this error continues, please reach out to Support.</string>
-    <string name="iap_unauthenticated_account_message">Your account could not be authenticated. Try signing out and signing back into the app. If this error continues, please contact Support.</string>
-    <string name="iap_course_not_available_message">The course you are looking to upgrade could not be found. Please try your upgrade again. If this error continues, contact Support.</string>
     <string name="iap_course_already_paid_for_message">The course you are looking to upgrade has already been paid for. For additional help, reach out to Support.</string>
     <string name="iap_course_not_fullfilled">Something happened when we tried to update your course experience. If this error continues, reach out to Support for help.</string>
     <string name="iap_payment_could_not_be_processed">Your payment could not be processed at this time. Please try again. For additional help, reach out to Support.</string>

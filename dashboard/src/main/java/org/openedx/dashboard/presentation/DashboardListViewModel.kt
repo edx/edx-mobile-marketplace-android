@@ -123,7 +123,10 @@ class DashboardListViewModel(
         iapNotifier.notifier.onEach { event ->
             when (event) {
                 is UpdateCourseData -> {
-                    updateCourses(isIAPFlow = event.isPurchasedFromCourseDashboard.not())
+                    updateCourses(
+                        courseId = event.courseId,
+                        isIAPFlow = event.isFromValueProp || event.isExpiredCoursePurchase
+                    )
                 }
             }
         }.distinctUntilChanged().launchIn(viewModelScope)
@@ -140,7 +143,7 @@ class DashboardListViewModel(
         internalLoadingCourses()
     }
 
-    fun updateCourses(isIAPFlow: Boolean = false) {
+    fun updateCourses(courseId: String? = null, isIAPFlow: Boolean = false) {
         if (isLoading) {
             return
         }
@@ -168,7 +171,19 @@ class DashboardListViewModel(
                     )
                 }
                 if (isIAPFlow) {
-                    iapNotifier.send(CourseDataUpdated())
+                    courseId?.let {
+                        val enrolledCourse = coursesList.firstOrNull { enrollment ->
+                            enrollment.course.id == courseId
+                        }
+                        enrolledCourse?.let { course ->
+                            iapNotifier.send(
+                                CourseDataUpdated.CourseEnrollmentDataUpdated(
+                                    course.course.id,
+                                    course.isVerifiedMode
+                                )
+                            )
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 logger.e(throwable = e)

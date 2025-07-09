@@ -26,8 +26,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.ImageProcessor
+import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
@@ -35,6 +37,7 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
+import org.openedx.core.domain.model.CourseEnrollmentDetailsSource
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
@@ -44,8 +47,9 @@ import org.openedx.core.extension.isNotNull
 import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
+import org.openedx.core.extension.toIAPException
 import org.openedx.core.module.billing.BillingProcessor
-import org.openedx.core.module.billing.getCourseSku
+import org.openedx.core.module.billing.getCourseId
 import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.iap.IAPAction
@@ -101,9 +105,9 @@ class CourseContainerViewModel(
     private val corePreferences: CorePreferences,
     private val coursePreferences: CoursePreferences,
     private val courseAnalytics: CourseAnalytics,
-    private val iapAnalytics: IAPAnalytics,
     private val imageProcessor: ImageProcessor,
     val courseRouter: CourseRouter,
+    iapAnalytics: IAPAnalytics,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -143,9 +147,9 @@ class CourseContainerViewModel(
 
     val eventLogger = IAPEventLogger(analytics = iapAnalytics, purchaseFlowData = purchaseFlowData)
 
-    private var _canShowUpgradeButton = MutableStateFlow(false)
-    val canShowUpgradeButton: StateFlow<Boolean>
-        get() = _canShowUpgradeButton.asStateFlow()
+    private var _canShowValuePropButton = MutableStateFlow(false)
+    val canShowValuePropButton: StateFlow<Boolean>
+        get() = _canShowValuePropButton.asStateFlow()
 
     private var _courseDetails: CourseEnrollmentDetails? = null
     val courseDetails: CourseEnrollmentDetails?
@@ -184,11 +188,11 @@ class CourseContainerViewModel(
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
-            if (purchase.getCourseSku() == purchaseFlowData.productInfo?.courseSku) {
+            if (purchase.getCourseId() == purchaseFlowData.courseId) {
                 _iapState.value =
                     IAPUIState.Loading(loaderType = IAPLoaderType.FULL_SCREEN)
                 purchaseFlowData.purchaseToken = purchase.purchaseToken
-                executeOrder(purchaseFlowData)
+                createOrder(purchaseFlowData)
             }
         }
 
@@ -244,7 +248,7 @@ class CourseContainerViewModel(
             when (event) {
                 is UpdateCourseData -> {
                     fetchCourseDetails(
-                        isIAPFlow = event.isPurchasedFromCourseDashboard,
+                        isFromValueProp = event.isFromValueProp,
                         isExpiredCoursePurchase = event.isExpiredCoursePurchase
                     )
                 }
@@ -254,7 +258,10 @@ class CourseContainerViewModel(
         courseDashboardViewed()
     }
 
-    fun fetchCourseDetails(isIAPFlow: Boolean = false, isExpiredCoursePurchase: Boolean = false) {
+    fun fetchCourseDetails(
+        isFromValueProp: Boolean = false,
+        isExpiredCoursePurchase: Boolean = false
+    ) {
         _showProgress.value = true
         viewModelScope.launch {
             val courseDetailsFlow = interactor.getEnrollmentDetailsFlow(courseId)
@@ -263,11 +270,12 @@ class CourseContainerViewModel(
                     emit(null)
                 }
 
-            courseDetailsFlow.collect { courseEnrollmentDetails ->
-                if (courseEnrollmentDetails.isNotNull()) {
+            courseDetailsFlow.collect { courseEnrollmentDetailsSource ->
+                if (courseEnrollmentDetailsSource.isNotNull()) {
                     handleCourseEnrollment(
-                        courseDetails = courseEnrollmentDetails!!,
-                        isIAPFlow = isIAPFlow,
+                        courseDetails = courseEnrollmentDetailsSource!!.data,
+                        isCachedData = courseEnrollmentDetailsSource is CourseEnrollmentDetailsSource.Local,
+                        isFromValueProp = isFromValueProp,
                         isExpiredCoursePurchase = isExpiredCoursePurchase,
                     )
                 } else {
@@ -282,17 +290,30 @@ class CourseContainerViewModel(
      */
     private fun handleCourseEnrollment(
         courseDetails: CourseEnrollmentDetails,
-        isIAPFlow: Boolean = false,
-        isExpiredCoursePurchase: Boolean = false,
+        isCachedData: Boolean,
+        isFromValueProp: Boolean = false,
+        isExpiredCoursePurchase: Boolean = false
     ) {
         _courseDetails = courseDetails
+        if (!isCachedData) {
+            val waitForCourseModeTransition = shouldWaitForCourseModeTransition(
+                isVerifiedMode = courseDetails.enrollmentDetails.isVerifiedMode,
+                isFromValueProp = isFromValueProp,
+                isExpiredCoursePurchase = isExpiredCoursePurchase
+            )
+            if (waitForCourseModeTransition) return
+        } else if (isExpiredCoursePurchase) {
+            // No need to process cached data if came from expired course purchase
+            return
+        }
         val courseInfoOverview = courseDetails.courseInfoOverview
 
         courseName = courseInfoOverview.name
         loadCourseImage(courseInfoOverview.media?.image?.large)
 
-        _canShowUpgradeButton.value = iapInteractor.isIAPEnabled && courseDetails.isUpgradeable
-        _canShowTrackSelection.value = showTrackSelection && _canShowUpgradeButton.value
+        _canShowValuePropButton.value = iapInteractor.isIAPEnabled && courseDetails.isUpgradeable
+        _canShowTrackSelection.value =
+            courseDetails.isUpgradeable && showTrackSelection && iapInteractor.isUpgradeEnabled
         updateContainerTabs(_courseDetails?.discussionUrl.isNotNullOrEmpty())
 
         _showProgress.value = false
@@ -300,7 +321,7 @@ class CourseContainerViewModel(
         if (courseDetails.hasAccess.isFalse()) {
             _dataReady.value = false
             if (courseDetails.isAuditAccessExpired) {
-                if (_canShowUpgradeButton.value) {
+                if (iapInteractor.isUpgradeEnabled) {
                     purchaseFlowData.apply {
                         courseId = courseDetails.id
                         courseName = courseInfoOverview.name
@@ -331,25 +352,6 @@ class CourseContainerViewModel(
                     courseNotifier.send(CourseOpenBlock(resumeBlockId))
                 }
             }
-            if (isIAPFlow) {
-                viewModelScope.launch {
-                    if (isExpiredCoursePurchase) {
-                        if (eventLogger.isSilentIAPFlow.isNull()) {
-                            eventLogger.upgradeSuccessEvent()
-                        }
-                        _uiMessage.emit(
-                            UIMessage.ToastMessage(
-                                resourceManager.getString(
-                                    CoreR.string.iap_success_message
-                                )
-                            )
-                        )
-                    } else {
-                        iapNotifier.send(CourseDataUpdated())
-                    }
-                }
-                _iapState.value = IAPUIState.CourseDataUpdated
-            }
             _dataReady.value = true
         }
     }
@@ -379,38 +381,6 @@ class CourseContainerViewModel(
         return _courseContainerTabs.value.getOrNull(index) ?: CourseContainerTab.HOME
     }
 
-    fun loadPrice() {
-        eventLogger.loadIAPScreenEvent()
-        viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.takeIf { it.courseId != null && it.productInfo != null }
-                ?.apply {
-                    _iapState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PRICE)
-                    runCatching {
-                        iapInteractor.loadPrice(purchaseFlowData.productInfo?.storeSku!!)
-                    }.onSuccess {
-                        this.formattedPrice = it.formattedPrice
-                        this.price = it.getPriceAmount()
-                        this.currencyCode = it.priceCurrencyCode
-                        _iapState.value =
-                            IAPUIState.ProductData(formattedPrice = it.formattedPrice)
-                    }.onFailure {
-                        logger.e(throwable = it)
-                        if (it is IAPException) {
-                            updateErrorState(it)
-                        }
-                    }
-                } ?: run {
-                updateErrorState(
-                    IAPException(
-                        requestType = IAPRequestType.PRICE_CODE,
-                        httpErrorCode = IAPRequestType.PRICE_CODE.hashCode(),
-                        errorMessage = ""
-                    )
-                )
-            }
-        }
-    }
-
     private fun loadCourseImage(imageUrl: String?) {
         imageProcessor.loadImage(
             imageUrl = config.getApiHostURL() + imageUrl,
@@ -428,7 +398,37 @@ class CourseContainerViewModel(
         )
     }
 
-    fun startPurchaseFlow() {
+    fun loadPrice() {
+        eventLogger.loadIAPScreenEvent()
+        viewModelScope.launch(Dispatchers.IO) {
+            purchaseFlowData.takeIf { it.courseId != null && it.productInfo != null }
+                ?.apply {
+                    _iapState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PRICE)
+                    runCatching {
+                        iapInteractor.loadPrice(purchaseFlowData.productInfo?.storeSku!!)
+                    }.onSuccess {
+                        this.formattedPrice = it.formattedPrice
+                        this.price = it.getPriceAmount()
+                        this.currencyCode = it.priceCurrencyCode
+                        _iapState.value =
+                            IAPUIState.ProductData(formattedPrice = it.formattedPrice)
+                    }.onFailure {
+                        logger.e(throwable = it)
+                        updateErrorState(it)
+                    }
+                } ?: run {
+                updateErrorState(
+                    IAPException(
+                        requestType = IAPRequestType.PRICE_CODE,
+                        httpErrorCode = IAPRequestType.PRICE_CODE.hashCode(),
+                        errorMessage = ""
+                    )
+                )
+            }
+        }
+    }
+
+    fun startPurchaseFlow(activity: FragmentActivity) {
         eventLogger.upgradeNowClickedEvent()
         _iapState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
         purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
@@ -446,29 +446,39 @@ class CourseContainerViewModel(
             )
             return
         }
+        checkCourseMode(activity)
+    }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
-                iapInteractor.addToBasket(productInfo.courseSku)
-            }.onSuccess { basketId ->
-                purchaseFlowData.basketId = basketId
-                _iapState.value = IAPUIState.PurchaseProduct
-            }.onFailure {
-                logger.e(throwable = it)
-                if (it is IAPException) {
-                    updateErrorState(it)
-                }
+    private fun checkCourseMode(activity: FragmentActivity) {
+        viewModelScope.launch {
+            val isAuditMode = try {
+                interactor.getEnrollmentDetails(courseId).enrollmentDetails.isAuditMode
+            } catch (e: Exception) {
+                true
+            }
+
+            if (isAuditMode) {
+                purchaseItem(activity)
+            } else {
+                updateErrorState(
+                    IAPException(
+                        requestType = IAPRequestType.PURCHASE_PRECHECK_CODE,
+                        httpErrorCode = 409, // Purchase already completed; enforcing ACTION_REFRESH to update the state.
+                        errorMessage = resourceManager.getString(R.string.iap_course_already_paid_for_message)
+                    )
+                )
             }
         }
     }
 
-    fun purchaseItem(activity: FragmentActivity) {
+    private fun purchaseItem(activity: FragmentActivity) {
         viewModelScope.launch(Dispatchers.IO) {
             takeIf {
                 purchaseFlowData.productInfo != null
             }?.apply {
                 iapInteractor.purchaseItem(
                     activity,
+                    purchaseFlowData.courseId!!,
                     purchaseFlowData.productInfo!!,
                     purchaseListeners
                 )
@@ -476,40 +486,105 @@ class CourseContainerViewModel(
         }
     }
 
-    private fun executeOrder(purchaseFlowData: PurchaseFlowData) {
+    private fun createOrder(purchaseFlowData: PurchaseFlowData) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
-                iapInteractor.executeOrder(
-                    basketId = purchaseFlowData.basketId,
-                    purchaseToken = purchaseFlowData.purchaseToken!!,
-                    price = purchaseFlowData.price,
+                iapInteractor.createOrder(
+                    courseId = purchaseFlowData.courseId!!,
                     currencyCode = purchaseFlowData.currencyCode,
+                    price = purchaseFlowData.price,
+                    purchaseToken = purchaseFlowData.purchaseToken!!,
                 )
             }.onSuccess {
-                consumeOrderForFurtherPurchases(purchaseFlowData)
+                updateCourseData()
             }.onFailure {
                 logger.e(throwable = it)
-                if (it is IAPException) {
-                    updateErrorState(it)
-                }
+                updateErrorState(it)
             }
         }
     }
 
+    private fun updateCourseData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            purchaseFlowData.courseId?.let {
+                iapNotifier.send(UpdateCourseData(courseId = it, isExpiredCoursePurchase = true))
+            }
+        }
+    }
+
+    private fun shouldWaitForCourseModeTransition(
+        isVerifiedMode: Boolean,
+        isFromValueProp: Boolean,
+        isExpiredCoursePurchase: Boolean
+    ): Boolean {
+        when {
+            isExpiredCoursePurchase -> {
+                if (isVerifiedMode) {
+                    consumeOrderForFurtherPurchases(purchaseFlowData)
+                } else {
+                    retryCourseModeTransition()
+                    return true
+                }
+            }
+
+            isFromValueProp -> {
+                // Value prop will be handled the the consume purchase flow
+                viewModelScope.launch {
+                    iapNotifier.send(
+                        CourseDataUpdated.CourseDashboardDataUpdate(
+                            courseId,
+                            isVerifiedMode
+                        )
+                    )
+                }
+            }
+        }
+        return false
+    }
+
+    private fun retryCourseModeTransition() {
+        if (purchaseFlowData.courseModeTransitionRetryCount > AppDataConstants.ENROLLMENT_MODE_RETRY_THRESHOLD) {
+            updateErrorState(
+                IAPException(
+                    requestType = IAPRequestType.COURSE_REFRESH_CODE,
+                    httpErrorCode = 409, // Course not fulfilled; enforcing ACTION_REFRESH to update the state
+                    errorMessage = resourceManager.getString(R.string.iap_course_not_fullfilled)
+                )
+            )
+            purchaseFlowData.courseModeTransitionRetryCount = 0
+        } else {
+            viewModelScope.launch {
+                delay(purchaseFlowData.courseModeTransitionRetryCount * AppDataConstants.ENROLLMENT_MODE_RETRY_BASE_DELAY_MS)
+                updateCourseData()
+            }
+        }
+    }
 
     private fun consumeOrderForFurtherPurchases(purchaseFlowData: PurchaseFlowData) {
+        if (purchaseFlowData.isConsumed) return
         viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.purchaseToken?.let {
-                runCatching {
-                    iapInteractor.consumePurchase(it)
-                }.onSuccess {
-                    updateCourseData()
-                }.onFailure {
-                    logger.e(throwable = it)
-                    if (it is IAPException) {
-                        updateErrorState(it)
-                    }
+            runCatching {
+                if (purchaseFlowData.purchaseToken.isNullOrEmpty()) {
+                    iapInteractor.consumePurchaseByCourseId(purchaseFlowData.courseId!!)
+                } else {
+                    iapInteractor.consumePurchaseByToken(purchaseFlowData.purchaseToken!!)
                 }
+            }.onSuccess {
+                if (eventLogger.isSilentIAPFlow.isNull()) {
+                    eventLogger.upgradeSuccessEvent()
+                }
+                purchaseFlowData.isConsumed = true
+                _iapState.value = IAPUIState.CourseDataUpdated
+                _uiMessage.emit(
+                    UIMessage.ToastMessage(
+                        resourceManager.getString(
+                            CoreR.string.iap_success_message
+                        )
+                    )
+                )
+            }.onFailure {
+                logger.e(throwable = it)
+                updateErrorState(it)
             }
         }
     }
@@ -520,25 +595,12 @@ class CourseContainerViewModel(
         updateCourseData()
     }
 
-    fun retryExecuteOrder() {
-        executeOrder(purchaseFlowData)
+    fun retryCreateOrder() {
+        createOrder(purchaseFlowData)
     }
 
     fun retryToConsumeOrder() {
         consumeOrderForFurtherPurchases(purchaseFlowData)
-    }
-
-    private fun updateCourseData() {
-        viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.courseId?.let {
-                iapNotifier.send(
-                    UpdateCourseData(
-                        isPurchasedFromCourseDashboard = true,
-                        isExpiredCoursePurchase = true
-                    )
-                )
-            }
-        }
     }
 
     fun disableTrackSelection() {
@@ -594,7 +656,14 @@ class CourseContainerViewModel(
         }
     }
 
-    private fun updateErrorState(iapException: IAPException) {
+    private fun updateErrorState(
+        throwable: Throwable,
+        requestType: IAPRequestType = IAPRequestType.UNKNOWN,
+    ) {
+        val iapException = throwable.toIAPException(
+            requestType = requestType,
+            defaultMessage = resourceManager.getString(R.string.core_error_unknown_error)
+        )
         eventLogger.logExceptionEvent(iapException)
         if (BillingClient.BillingResponseCode.USER_CANCELED != iapException.httpErrorCode) {
             _iapState.value = IAPUIState.Error(iapException)

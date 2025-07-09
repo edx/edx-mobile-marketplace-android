@@ -10,6 +10,7 @@ import org.openedx.core.domain.model.CourseComponentStatus
 import org.openedx.core.domain.model.CourseDatesBannerInfo
 import org.openedx.core.domain.model.CourseDatesResult
 import org.openedx.core.domain.model.CourseEnrollmentDetails
+import org.openedx.core.domain.model.CourseEnrollmentDetailsSource
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.extension.channelFlowWithAwait
@@ -96,24 +97,26 @@ class CourseRepository(
 
     suspend fun getEnrollmentDetailsFlow(
         courseId: String,
-    ): Flow<CourseEnrollmentDetails> = channelFlowWithAwait {
+    ): Flow<CourseEnrollmentDetailsSource> = channelFlowWithAwait {
         var hasEnrollmentDetails = false
         getCourseEnrollmentDetailsFromCache(courseId)?.let {
             hasEnrollmentDetails = true
-            trySend(it)
+            trySend(CourseEnrollmentDetailsSource.Local(it))
         }
 
         if (networkConnection.isOnline()) {
             getEnrollmentDetails(courseId).let {
                 courseDao.insertCourseEnrollmentDetailsEntity(it.mapToRoomEntity())
                 hasEnrollmentDetails = true
-                trySend(it)
+                trySend(CourseEnrollmentDetailsSource.Remote(it))
             }
         }
 
+        var throwable: Throwable? = null
         if (!hasEnrollmentDetails) {
-            throw NoCachedDataException()
+            throwable = NoCachedDataException()
         }
+        close(throwable)
     }
 
     private suspend fun getCourseEnrollmentDetailsFromCache(
@@ -122,7 +125,7 @@ class CourseRepository(
         return courseDao.getCourseEnrollmentDetailsById(id = courseId)?.mapToDomain()
     }
 
-    private suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
+    suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
         return api.getEnrollmentDetails(courseId = courseId).mapToDomain()
     }
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.Purchase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
@@ -25,8 +27,9 @@ import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isNull
+import org.openedx.core.extension.toIAPException
 import org.openedx.core.module.billing.BillingProcessor
-import org.openedx.core.module.billing.getCourseSku
+import org.openedx.core.module.billing.getCourseId
 import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.system.ResourceManager
@@ -39,9 +42,9 @@ import org.openedx.core.utils.TimeUtils
 class IAPViewModel(
     private val purchaseFlowData: PurchaseFlowData,
     private val iapInteractor: IAPInteractor,
-    private val analytics: IAPAnalytics,
     private val resourceManager: ResourceManager,
     private val iapNotifier: IAPNotifier,
+    analytics: IAPAnalytics,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -62,14 +65,15 @@ class IAPViewModel(
         isSilentIAPFlow = purchaseData.isSilentIAPFlow(),
         purchaseFlowData = purchaseData
     )
+    private var checkingCourseMode: Boolean = false
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
-            if (purchase.getCourseSku() == purchaseFlowData.productInfo?.courseSku) {
+            if (purchase.getCourseId() == purchaseFlowData.courseId) {
                 _uiState.value =
                     IAPUIState.Loading(loaderType = IAPLoaderType.FULL_SCREEN)
                 purchaseFlowData.purchaseToken = purchase.purchaseToken
-                executeOrder(purchaseFlowData)
+                createOrder(purchaseFlowData)
             }
         }
 
@@ -88,30 +92,50 @@ class IAPViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             iapNotifier.notifier.onEach { event ->
                 when (event) {
-                    is CourseDataUpdated -> {
-                        if (eventLogger.isSilentIAPFlow.isNull()) {
-                            eventLogger.upgradeSuccessEvent()
+                    is CourseDataUpdated.CourseEnrollmentDataUpdated -> {
+                        if (purchaseFlowData.screenName in listOf(
+                                IAPFlowSource.COURSE_ENROLLMENT.screen,
+                                IAPFlowSource.PROFILE.screen
+                            )
+                        ) {
+                            val isVerifiedMode =
+                                event.courseId == purchaseFlowData.courseId && event.isVerifiedMode
+                            processCourseModeCheck(isVerifiedMode)
                         }
-                        _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
-                        _uiState.value = IAPUIState.CourseDataUpdated
+                    }
+
+                    is CourseDataUpdated.CourseDashboardDataUpdate -> {
+                        if (purchaseFlowData.screenName in listOf(
+                                IAPFlowSource.COURSE_DASHBOARD.screen,
+                                IAPFlowSource.TRACK_SELECTION.screen
+                            )
+                        ) {
+                            val isVerifiedMode =
+                                event.courseId == purchaseFlowData.courseId && event.isVerifiedMode
+                            processCourseModeCheck(isVerifiedMode)
+                        }
                     }
                 }
             }.distinctUntilChanged().launchIn(viewModelScope)
         }
 
-        when (purchaseFlowData.iapFlow) {
-            IAPFlow.USER_INITIATED -> {
-                eventLogger.loadIAPScreenEvent()
-                loadPrice()
-            }
+        if (iapInteractor.isUpgradeEnabled) {
+            when (purchaseFlowData.iapFlow) {
+                IAPFlow.USER_INITIATED -> {
+                    eventLogger.loadIAPScreenEvent()
+                    loadPrice()
+                }
 
-            IAPFlow.SILENT, IAPFlow.RESTORE -> {
-                _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
-                purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
-                updateCourseData()
-            }
+                IAPFlow.SILENT, IAPFlow.RESTORE -> {
+                    _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
+                    purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
+                    updateCourseData()
+                }
 
-            else -> {}
+                else -> {}
+            }
+        } else {
+            _uiState.value = IAPUIState.None
         }
     }
 
@@ -130,9 +154,7 @@ class IAPViewModel(
                             IAPUIState.ProductData(formattedPrice = it.formattedPrice)
                     }.onFailure {
                         logger.e(throwable = it)
-                        if (it is IAPException) {
-                            updateErrorState(it)
-                        }
+                        updateErrorState(it, requestType = IAPRequestType.PRICE_CODE)
                     }
                 } ?: run {
                 updateErrorState(
@@ -164,24 +186,8 @@ class IAPViewModel(
             )
             return
         }
-
-        addToBasket(productInfo.courseSku)
-    }
-
-    private fun addToBasket(courseSku: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
-                iapInteractor.addToBasket(courseSku)
-            }.onSuccess { basketId ->
-                purchaseFlowData.basketId = basketId
-                _uiState.value = IAPUIState.PurchaseProduct
-            }.onFailure {
-                logger.e(throwable = it)
-                if (it is IAPException) {
-                    updateErrorState(it)
-                }
-            }
-        }
+        checkingCourseMode = true
+        updateCourseData()
     }
 
     fun purchaseItem(activity: FragmentActivity) {
@@ -191,6 +197,7 @@ class IAPViewModel(
             }?.apply {
                 iapInteractor.purchaseItem(
                     activity,
+                    purchaseFlowData.courseId!!,
                     purchaseFlowData.productInfo!!,
                     purchaseListeners
                 )
@@ -198,39 +205,112 @@ class IAPViewModel(
         }
     }
 
-    private fun executeOrder(purchaseFlowData: PurchaseFlowData) {
+    private fun createOrder(purchaseFlowData: PurchaseFlowData) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
-                iapInteractor.executeOrder(
-                    basketId = purchaseFlowData.basketId,
-                    purchaseToken = purchaseFlowData.purchaseToken!!,
-                    price = purchaseFlowData.price,
+                iapInteractor.createOrder(
+                    courseId = purchaseFlowData.courseId!!,
                     currencyCode = purchaseFlowData.currencyCode,
+                    price = purchaseFlowData.price,
+                    purchaseToken = purchaseFlowData.purchaseToken!!,
                 )
             }.onSuccess {
-                consumeOrderForFurtherPurchases(purchaseFlowData)
+                updateCourseData()
             }.onFailure {
                 logger.e(throwable = it)
-                if (it is IAPException) {
-                    updateErrorState(it)
-                }
+                updateErrorState(it, requestType = IAPRequestType.CREATE_ORDER_CODE)
             }
         }
     }
 
     private fun consumeOrderForFurtherPurchases(purchaseFlowData: PurchaseFlowData) {
+        if (purchaseFlowData.isConsumed) return
         viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.purchaseToken?.let {
+            purchaseFlowData.run {
+                // If purchaseToken is null or empty, try to fetch it from the user's purchases
+                // after error dialogs, Unfulfilled/Restore flow, etc.
                 runCatching {
-                    iapInteractor.consumePurchase(it)
+                    if (purchaseToken.isNullOrEmpty()) {
+                        iapInteractor.consumePurchaseByCourseId(purchaseFlowData.courseId!!)
+                    } else {
+                        iapInteractor.consumePurchaseByToken(purchaseToken!!)
+                    }
                 }.onSuccess {
-                    updateCourseData()
+                    if (eventLogger.isSilentIAPFlow.isNull()) {
+                        eventLogger.upgradeSuccessEvent()
+                    }
+                    purchaseFlowData.isConsumed = true
+                    _uiState.value = IAPUIState.CourseDataUpdated
+                    _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                 }.onFailure {
                     logger.e(throwable = it)
-                    if (it is IAPException) {
-                        updateErrorState(it)
-                    }
+                    updateErrorState(it, requestType = IAPRequestType.CONSUME_CODE)
                 }
+            }
+        }
+    }
+
+    private fun updateCourseData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            purchaseFlowData.courseId?.let { courseId ->
+                iapNotifier.send(UpdateCourseData(courseId = courseId, isFromValueProp = true))
+                if (!checkingCourseMode) {
+                    purchaseFlowData.courseModeTransitionRetryCount++
+                }
+            }
+        }
+    }
+
+    private fun processCourseModeCheck(isVerifiedMode: Boolean) {
+        if (checkingCourseMode) {
+            checkingCourseMode = false
+            if (!isVerifiedMode) {
+                _uiState.value = IAPUIState.PurchaseProduct
+            } else {
+                updateErrorState(
+                    IAPException(
+                        requestType = IAPRequestType.PURCHASE_PRECHECK_CODE,
+                        httpErrorCode = 409, // Purchase already completed; enforcing ACTION_REFRESH to update the state.
+                        errorMessage = resourceManager.getString(R.string.iap_course_already_paid_for_message)
+                    )
+                )
+            }
+        } else {
+            if (isVerifiedMode) {
+                consumeOrderForFurtherPurchases(purchaseFlowData)
+            } else {
+                retryCourseModeTransition()
+            }
+        }
+    }
+
+    /**
+     * Waits for the course mode transition to complete, retrying the update with delay.
+     *
+     * If the retry count exceeds the threshold (3), it triggers an error state indicating that
+     * the course could not be fulfilled. Otherwise, it waits for a delay proportional to the
+     * current retry count and then attempts to refresh the course data exponential backoff
+     * instead of linear, and reset the count after trigger the error state.
+     *
+     * Delay = retryCount * 2500ms
+     *
+     * This method implements a simple retry-with-delay mechanism for handling
+     * delayed course mode transitions (e.g., after an in-app purchase).
+     */
+    private fun retryCourseModeTransition() {
+        if (purchaseData.courseModeTransitionRetryCount > AppDataConstants.ENROLLMENT_MODE_RETRY_THRESHOLD) {
+            updateErrorState(
+                IAPException(
+                    requestType = IAPRequestType.COURSE_REFRESH_CODE,
+                    httpErrorCode = 409, // Course not fulfilled; enforcing ACTION_REFRESH to update the state
+                    errorMessage = resourceManager.getString(R.string.iap_course_not_fullfilled)
+                )
+            )
+            purchaseFlowData.courseModeTransitionRetryCount = 0
+        } else {
+            viewModelScope.launch {
+                delay(purchaseData.courseModeTransitionRetryCount * AppDataConstants.ENROLLMENT_MODE_RETRY_BASE_DELAY_MS)
+                updateCourseData()
             }
         }
     }
@@ -241,20 +321,14 @@ class IAPViewModel(
         updateCourseData()
     }
 
-    fun retryExecuteOrder() {
-        executeOrder(purchaseFlowData)
+    fun retryCreateOrder() {
+        _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
+        createOrder(purchaseFlowData)
     }
 
     fun retryToConsumeOrder() {
+        _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
         consumeOrderForFurtherPurchases(purchaseFlowData)
-    }
-
-    private fun updateCourseData() {
-        viewModelScope.launch(Dispatchers.IO) {
-            purchaseFlowData.courseId?.let {
-                iapNotifier.send(UpdateCourseData(IAPFlowSource.COURSE_DASHBOARD.screen == purchaseData.screenName))
-            }
-        }
     }
 
     fun showFeedbackScreen(context: Context, flowType: String, message: String) {
@@ -262,7 +336,14 @@ class IAPViewModel(
         eventLogger.logIAPErrorActionEvent(flowType, IAPAction.ACTION_GET_HELP.action)
     }
 
-    private fun updateErrorState(iapException: IAPException) {
+    private fun updateErrorState(
+        throwable: Throwable,
+        requestType: IAPRequestType = IAPRequestType.UNKNOWN,
+    ) {
+        val iapException = throwable.toIAPException(
+            requestType = requestType,
+            defaultMessage = resourceManager.getString(R.string.core_error_unknown_error),
+        )
         eventLogger.logExceptionEvent(iapException)
         if (BillingClient.BillingResponseCode.USER_CANCELED != iapException.httpErrorCode) {
             _uiState.value = IAPUIState.Error(iapException)

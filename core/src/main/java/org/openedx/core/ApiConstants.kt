@@ -38,6 +38,6 @@ object ApiConstants {
     }
 
     object IAPFields {
-        const val PAYMENT_PROCESSOR = "android-iap"
+        const val PAYMENT_PROCESSOR = "android_iap"
     }
 }

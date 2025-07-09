@@ -72,7 +72,7 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
-import org.openedx.core.extension.isNotNull
+import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.dialog.IAPDialogFragment
@@ -195,7 +195,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
     private fun onRefresh(currentPage: Int) {
         if (viewModel.courseAccessStatus.value == CourseAccessError.NONE) {
-            viewModel.onRefresh(CourseContainerTab.entries[currentPage])
+            viewModel.onRefresh(viewModel.getTabByIndex(currentPage))
         } else {
             viewModel.fetchCourseDetails()
         }
@@ -203,12 +203,18 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
     private fun initCourseView() {
         binding.composeCollapsingLayout.setContent {
-            val isNavigationEnabled by viewModel.isNavigationEnabled.collectAsState()
+            val dataReady = viewModel.dataReady.observeAsState()
+            if (dataReady.isNull()) {
+                return@setContent
+            }
             CourseDashboard(
                 viewModel = viewModel,
-                isNavigationEnabled = isNavigationEnabled,
+                isDataReady = dataReady.value.isTrue(),
                 isResumed = isResumed,
-                openTab = requireArguments().getString(ARG_OPEN_TAB, CourseContainerTab.HOME.name),
+                openTab = requireArguments().getString(
+                    ARG_OPEN_TAB,
+                    CourseContainerTab.HOME.name
+                ),
                 fragmentActivity = requireActivity(),
                 onRefresh = { page ->
                     onRefresh(page)
@@ -337,7 +343,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 @Composable
 fun CourseDashboard(
     viewModel: CourseContainerViewModel,
-    isNavigationEnabled: Boolean,
+    isDataReady: Boolean,
     isResumed: Boolean,
     openTab: String,
     fragmentActivity: FragmentActivity,
@@ -355,25 +361,17 @@ fun CourseDashboard(
             scaffoldState = scaffoldState,
             backgroundColor = MaterialTheme.appColors.background
         ) { paddingValues ->
+            val isNavigationEnabled by viewModel.isNavigationEnabled.collectAsState()
             val refreshing by viewModel.refreshing.collectAsState(true)
             val courseImage by viewModel.courseImage.collectAsState()
             val uiMessage by viewModel.uiMessage.collectAsState(null)
-            val requiredTabIndex = CourseContainerTab.entries.indexOf(
-                when (openTab.uppercase()) {
-                    CourseContainerTab.HOME.name -> CourseContainerTab.HOME
-                    CourseContainerTab.VIDEOS.name -> CourseContainerTab.VIDEOS
-                    CourseContainerTab.DATES.name -> CourseContainerTab.DATES
-                    CourseContainerTab.DISCUSSIONS.name -> CourseContainerTab.DISCUSSIONS
-                    CourseContainerTab.MORE.name -> CourseContainerTab.MORE
-                    else -> CourseContainerTab.HOME
-                }
-            )
+            val courseContainerTabs by viewModel.courseContainerTabs.collectAsState()
+            val requiredTabIndex = viewModel.getTabIndexByName(openTab.uppercase())
 
             val pagerState = rememberPagerState(
                 initialPage = requiredTabIndex,
-                pageCount = { CourseContainerTab.entries.size }
+                pageCount = { courseContainerTabs.size }
             )
-            val dataReady = viewModel.dataReady.observeAsState()
             val canShowTrackSelection by viewModel.canShowTrackSelection.collectAsState()
             val accessStatus = viewModel.courseAccessStatus.observeAsState()
             val canShowUpgradeButton by viewModel.canShowUpgradeButton.collectAsState()
@@ -394,7 +392,7 @@ fun CourseDashboard(
             }
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
-            if (dataReady.value.isTrue() && canShowTrackSelection) {
+            if (isDataReady && canShowTrackSelection) {
                 val courseExpiresDate =
                     viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires?.let {
                         TimeUtils.getCourseAccessFormattedDate(
@@ -415,7 +413,7 @@ fun CourseDashboard(
                     IAPDialogFragment.TAG
                 )
                 viewModel.disableTrackSelection()
-            } else if (dataReady.isNotNull()) {
+            } else {
                 LaunchedEffect(pagerState.currentPage) {
                     tabState.animateScrollToItem(pagerState.currentPage)
                     viewModel.courseContainerTabClickedEvent(pagerState.currentPage)
@@ -446,7 +444,7 @@ fun CourseDashboard(
                                 )
                             },
                             upgradeButton = {
-                                if (dataReady.value.isTrue() && canShowUpgradeButton) {
+                                if (isDataReady && canShowUpgradeButton) {
                                     val horizontalPadding =
                                         if (!windowSize.isTablet) 16.dp else 98.dp
                                     UpgradeToAccessView(
@@ -474,7 +472,7 @@ fun CourseDashboard(
                             navigation = {
                                 if (isNavigationEnabled) {
                                     RoundTabsBar(
-                                        items = CourseContainerTab.entries,
+                                        items = courseContainerTabs,
                                         contentPadding = PaddingValues(
                                             horizontal = 12.dp,
                                             vertical = 16.dp
@@ -514,6 +512,7 @@ fun CourseDashboard(
                                         DashboardPager(
                                             windowSize = windowSize,
                                             viewModel = viewModel,
+                                            courseContainerTabs = courseContainerTabs,
                                             pagerState = pagerState,
                                             isNavigationEnabled = isNavigationEnabled,
                                             isResumed = isResumed,
@@ -555,9 +554,13 @@ fun CourseDashboard(
                             hostState = snackState
                         ) { snackbarData: SnackbarData ->
                             DatesShiftedSnackBar(
-                                showAction = CourseContainerTab.entries[pagerState.currentPage] != CourseContainerTab.DATES,
+                                showAction = viewModel.getTabByIndex(pagerState.currentPage) != CourseContainerTab.DATES,
                                 onViewDates = {
-                                    scrollToDates(scope, pagerState)
+                                    scrollToTab(
+                                        scope,
+                                        viewModel.getTabIndexByName(CourseContainerTab.DATES.name),
+                                        pagerState
+                                    )
                                 },
                                 onClose = {
                                     snackbarData.dismiss()
@@ -577,6 +580,7 @@ fun CourseDashboard(
 private fun DashboardPager(
     windowSize: WindowSize,
     viewModel: CourseContainerViewModel,
+    courseContainerTabs: List<CourseContainerTab>,
     pagerState: PagerState,
     isNavigationEnabled: Boolean,
     isResumed: Boolean,
@@ -585,9 +589,9 @@ private fun DashboardPager(
     HorizontalPager(
         state = pagerState,
         userScrollEnabled = isNavigationEnabled,
-        beyondBoundsPageCount = CourseContainerTab.entries.size
+        beyondBoundsPageCount = courseContainerTabs.size
     ) { page ->
-        when (CourseContainerTab.entries[page]) {
+        when (viewModel.getTabByIndex(page)) {
             CourseContainerTab.HOME -> {
                 CourseOutlineScreen(
                     windowSize = windowSize,
@@ -821,7 +825,8 @@ private fun AuditExpiredUpgradableView(
                     }
 
                     is IAPUIState.ProductData -> {
-                        OpenEdXBrandButton(modifier = Modifier.fillMaxWidth(),
+                        OpenEdXBrandButton(
+                            modifier = Modifier.fillMaxWidth(),
                             text = stringResource(
                                 id = org.openedx.core.R.string.iap_upgrade_price,
                                 viewModel.purchaseFlowData.formattedPrice ?: 0.0,
@@ -992,8 +997,12 @@ private fun SetupCourseAccessErrorButtons(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun scrollToDates(scope: CoroutineScope, pagerState: PagerState) {
+private fun scrollToTab(
+    scope: CoroutineScope,
+    pageIndex: Int,
+    pagerState: PagerState,
+) {
     scope.launch {
-        pagerState.animateScrollToPage(CourseContainerTab.entries.indexOf(CourseContainerTab.DATES))
+        pagerState.animateScrollToPage(pageIndex)
     }
 }

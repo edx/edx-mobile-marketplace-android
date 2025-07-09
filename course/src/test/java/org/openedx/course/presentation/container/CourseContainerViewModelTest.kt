@@ -36,6 +36,7 @@ import org.openedx.core.domain.model.CourseAccessDetails
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseDatesCalendarSync
 import org.openedx.core.domain.model.CourseEnrollmentDetails
+import org.openedx.core.domain.model.CourseEnrollmentDetailsSource
 import org.openedx.core.domain.model.CourseInfoOverview
 import org.openedx.core.domain.model.CourseSharingUtmParameters
 import org.openedx.core.domain.model.CourseStructure
@@ -247,7 +248,9 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns true
         every { iapInteractor.isIAPEnabled } returns true
-        coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(enrollmentDetails)
+        coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(
+            CourseEnrollmentDetailsSource.Server(enrollmentDetails)
+        )
 
         viewModel.fetchCourseDetails()
         advanceUntilIdle()
@@ -282,7 +285,9 @@ class CourseContainerViewModelTest {
         )
         every { networkConnection.isOnline() } returns false
         every { iapInteractor.isIAPEnabled } returns true
-        coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(enrollmentDetails)
+        coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(
+            CourseEnrollmentDetailsSource.Server(enrollmentDetails)
+        )
 
         viewModel.fetchCourseDetails()
         advanceUntilIdle()

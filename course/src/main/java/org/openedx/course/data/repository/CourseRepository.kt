@@ -101,14 +101,14 @@ class CourseRepository(
         var hasEnrollmentDetails = false
         getCourseEnrollmentDetailsFromCache(courseId)?.let {
             hasEnrollmentDetails = true
-            trySend(CourseEnrollmentDetailsSource.Cache(it))
+            trySend(CourseEnrollmentDetailsSource.Local(it))
         }
 
         if (networkConnection.isOnline()) {
             getEnrollmentDetails(courseId).let {
                 courseDao.insertCourseEnrollmentDetailsEntity(it.mapToRoomEntity())
                 hasEnrollmentDetails = true
-                trySend(CourseEnrollmentDetailsSource.Server(it))
+                trySend(CourseEnrollmentDetailsSource.Remote(it))
             }
         }
 
@@ -125,7 +125,7 @@ class CourseRepository(
         return courseDao.getCourseEnrollmentDetailsById(id = courseId)?.mapToDomain()
     }
 
-    private suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
+    suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
         return api.getEnrollmentDetails(courseId = courseId).mapToDomain()
     }
 

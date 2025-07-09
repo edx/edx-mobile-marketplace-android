@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openedx.core.AppDataConstants
@@ -275,7 +274,7 @@ class CourseContainerViewModel(
                 if (courseEnrollmentDetailsSource.isNotNull()) {
                     handleCourseEnrollment(
                         courseDetails = courseEnrollmentDetailsSource!!.data,
-                        isCachedData = courseEnrollmentDetailsSource is CourseEnrollmentDetailsSource.Cache,
+                        isCachedData = courseEnrollmentDetailsSource is CourseEnrollmentDetailsSource.Local,
                         isFromValueProp = isFromValueProp,
                         isExpiredCoursePurchase = isExpiredCoursePurchase,
                     )
@@ -453,9 +452,7 @@ class CourseContainerViewModel(
     private fun checkCourseMode(activity: FragmentActivity) {
         viewModelScope.launch {
             val isAuditMode = try {
-                interactor.getEnrollmentDetailsFlow(courseId).toList()
-                    .lastOrNull()?.data?.enrollmentDetails?.isAuditMode
-                    ?: true
+                interactor.getEnrollmentDetails(courseId).enrollmentDetails.isAuditMode
             } catch (e: Exception) {
                 true
             }

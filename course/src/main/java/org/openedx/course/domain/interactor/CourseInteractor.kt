@@ -30,6 +30,10 @@ class CourseInteractor(
         return repository.getEnrollmentDetailsFlow(courseId)
     }
 
+    suspend fun getEnrollmentDetails(courseId: String): CourseEnrollmentDetails {
+        return repository.getEnrollmentDetails(courseId)
+    }
+
     suspend fun getCourseStructureForVideos(
         courseId: String,
         isNeedRefresh: Boolean = false

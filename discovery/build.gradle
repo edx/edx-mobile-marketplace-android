@@ -1,8 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
     id 'kotlin-parcelize'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -29,17 +32,19 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17
-        freeCompilerArgs = List.of("-Xstring-concat=inline")
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.fromTarget("17")
+            freeCompilerArgs.addAll(List.of(
+                    "-Xstring-concat=inline",
+                    "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
+            ))
+        }
     }
 
     buildFeatures {
         viewBinding true
         compose true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "$compose_compiler_version"
     }
 
     flavorDimensions += "env"
@@ -59,7 +64,7 @@ android {
 dependencies {
     implementation project(path: ':core')
 
-    kapt "androidx.room:room-compiler:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
     implementation 'androidx.activity:activity-compose:1.8.1'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

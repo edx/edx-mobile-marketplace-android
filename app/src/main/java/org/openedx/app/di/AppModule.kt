@@ -81,8 +81,8 @@ import org.openedx.whatsnew.WhatsNewManager
 import org.openedx.whatsnew.WhatsNewRouter
 import org.openedx.whatsnew.data.storage.WhatsNewPreferences
 import org.openedx.whatsnew.presentation.WhatsNewAnalytics
-import org.openedx.core.R as CoreR
 import org.openedx.core.DatabaseManager as IDatabaseManager
+import org.openedx.core.R as CoreR
 
 val appModule = module {
 
@@ -153,8 +153,8 @@ val appModule = module {
             androidApplication(),
             AppDatabase::class.java,
             DATABASE_NAME
-        ).fallbackToDestructiveMigration()
-            .fallbackToDestructiveMigrationOnDowngrade()
+        ).fallbackToDestructiveMigration(true)
+            .fallbackToDestructiveMigrationOnDowngrade(true)
             .build()
     }
 

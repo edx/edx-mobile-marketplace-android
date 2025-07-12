@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 def config = configHelper.fetchConfig()
 def appId = config.getOrDefault("APPLICATION_ID", "org.openedx.app")
 def themeDirectory = config.getOrDefault("THEME_DIRECTORY", "openedx")
@@ -8,8 +10,9 @@ def fullstoryEnabled = fullstoryConfig?.getOrDefault('ENABLED', false)
 
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'kotlin-parcelize'
-apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.devtools.ksp'
 
 if (firebaseEnabled) {
     apply plugin: 'com.google.gms.google-services'
@@ -106,17 +109,19 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17
-        freeCompilerArgs = List.of("-Xstring-concat=inline")
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.fromTarget("17")
+            freeCompilerArgs.addAll(List.of(
+                    "-Xstring-concat=inline",
+                    "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
+            ))
+        }
     }
     buildFeatures {
         viewBinding true
         compose true
         buildConfig true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "$compose_compiler_version"
     }
     bundle {
         language {
@@ -146,7 +151,7 @@ dependencies {
     implementation project(path: ':notifications')
     implementation project(path: ':featuremanagement')
 
-    kapt "androidx.room:room-compiler:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
 
     implementation 'androidx.core:core-splashscreen:1.0.1'
 
@@ -206,8 +211,6 @@ private def setupFirebaseConfigFields(buildType) {
     buildType.manifestPlaceholders = [fcmEnabled: firebaseEnabled && cloudMessagingEnabled]
 }
 
-kapt {
-    arguments {
-        arg("room.schemaLocation", "$projectDir/schemas")
-    }
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }

@@ -19,3 +19,4 @@ local.properties
 .venv/
 i18n/
 **/values-*/strings.xml
+/.kotlin/

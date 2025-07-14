@@ -74,4 +74,5 @@
     <string name="course_find_new_course_button">Find a new course</string>
     <string name="course_error_not_started_title">This course will begin on %s. Come back then to start learning!</string>
     <string name="course_an_error_occurred">An error occurred while loading your course</string>
+    <string name="course_double_speed">2x</string>
 </resources>

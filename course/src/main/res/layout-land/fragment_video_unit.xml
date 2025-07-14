@@ -24,6 +24,22 @@
             app:resize_mode="fit"
             app:surface_type="texture_view" />
 
+        <TextView
+            android:id="@+id/doubleSpeedBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/video_forward_badge_background"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="3dp"
+            android:text="@string/course_double_speed"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            app:drawableEndCompat="@drawable/ic_course_video_forward" />
+
     </androidx.cardview.widget.CardView>
 
     <androidx.compose.ui.platform.ComposeView

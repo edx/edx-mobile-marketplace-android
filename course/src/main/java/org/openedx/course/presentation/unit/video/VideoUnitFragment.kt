@@ -37,6 +37,7 @@ import org.openedx.course.R
 import org.openedx.course.databinding.FragmentVideoUnitBinding
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
+import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
 import kotlin.math.roundToInt
 
 class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
@@ -156,6 +157,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
             }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
+
+        enableLongPressDoubleSpeed()
     }
 
     @OptIn(UnstableApi::class)
@@ -202,6 +205,15 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.playerView.controllerShowTimeoutMs = 2000
         }
         binding.playerView.showController()
+    }
+
+    private fun enableLongPressDoubleSpeed() {
+        binding.playerView.enableLongPressDoubleSpeed(
+            player = viewModel.exoPlayer!!,
+            scope = viewLifecycleOwner.lifecycleScope,
+            onShowBadge = { binding.doubleSpeedBadge.isVisible = true },
+            onHideBadge = { binding.doubleSpeedBadge.isVisible = false }
+        )
     }
 
     companion object {

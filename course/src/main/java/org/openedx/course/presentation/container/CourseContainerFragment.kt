@@ -123,7 +123,8 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
             requireArguments().getString(ARG_COURSE_ID, ""),
             requireArguments().getString(ARG_TITLE, ""),
             requireArguments().getBoolean(ARG_SHOW_TRACK_SELECTION, false),
-            requireArguments().getString(ARG_RESUME_BLOCK, "")
+            requireArguments().getString(ARG_RESUME_BLOCK, ""),
+            requireArguments().getString(ARG_OPEN_TAB, CourseContainerTab.HOME.name)
         )
     }
 
@@ -203,18 +204,14 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
     private fun initCourseView() {
         binding.composeCollapsingLayout.setContent {
-            val dataReady = viewModel.dataReady.observeAsState()
-            if (dataReady.isNull()) {
+            val dataReady = viewModel.dataReady.observeAsState(null)
+            if (dataReady.value.isNull()) {
                 return@setContent
             }
             CourseDashboard(
                 viewModel = viewModel,
                 isDataReady = dataReady.value.isTrue(),
                 isResumed = isResumed,
-                openTab = requireArguments().getString(
-                    ARG_OPEN_TAB,
-                    CourseContainerTab.HOME.name
-                ),
                 fragmentActivity = requireActivity(),
                 onRefresh = { page ->
                     onRefresh(page)
@@ -345,7 +342,6 @@ fun CourseDashboard(
     viewModel: CourseContainerViewModel,
     isDataReady: Boolean,
     isResumed: Boolean,
-    openTab: String,
     fragmentActivity: FragmentActivity,
     onRefresh: (page: Int) -> Unit,
 ) {
@@ -366,10 +362,9 @@ fun CourseDashboard(
             val courseImage by viewModel.courseImage.collectAsState()
             val uiMessage by viewModel.uiMessage.collectAsState(null)
             val courseContainerTabs by viewModel.courseContainerTabs.collectAsState()
-            val requiredTabIndex = viewModel.getTabIndexByName(openTab.uppercase())
 
             val pagerState = rememberPagerState(
-                initialPage = requiredTabIndex,
+                initialPage = viewModel.getOpenTabIndex(),
                 pageCount = { courseContainerTabs.size }
             )
             val canShowTrackSelection by viewModel.canShowTrackSelection.collectAsState()

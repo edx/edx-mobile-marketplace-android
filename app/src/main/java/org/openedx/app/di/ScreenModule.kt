@@ -263,12 +263,13 @@ val screenModule = module {
             get()
         )
     }
-    viewModel { (courseId: String, courseTitle: String, showTrackSelection: Boolean, resumeBlockId: String) ->
+    viewModel { (courseId: String, courseTitle: String, showTrackSelection: Boolean, resumeBlockId: String, openTab: String) ->
         CourseContainerViewModel(
             courseId,
             courseTitle,
             showTrackSelection,
             resumeBlockId,
+            openTab,
             get(),
             get(),
             get(),

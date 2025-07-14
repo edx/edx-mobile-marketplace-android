@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.ImageProcessor
-import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
@@ -78,6 +77,7 @@ import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.DatesShiftedSnackBar
+import org.openedx.course.R
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CalendarSyncDialog
@@ -94,6 +94,7 @@ class CourseContainerViewModel(
     var courseName: String,
     var showTrackSelection: Boolean,
     private var resumeBlockId: String,
+    private var openTab: String,
     private val config: Config,
     private val interactor: CourseInteractor,
     private val calendarManager: CalendarManager,
@@ -352,6 +353,16 @@ class CourseContainerViewModel(
                     courseNotifier.send(CourseOpenBlock(resumeBlockId))
                 }
             }
+            // Handle cases where the tab is not found
+            if (_courseContainerTabs.value.contains(CourseContainerTab.DISCUSSIONS).not()
+                && openTab.equals(CourseContainerTab.DISCUSSIONS.name, ignoreCase = true)
+            ) {
+                viewModelScope.launch {
+                    _errorMessage.value =
+                        resourceManager.getString(R.string.course_discussions_unavailable_message)
+                }
+                openTab = ""
+            }
             _dataReady.value = true
         }
     }
@@ -379,6 +390,10 @@ class CourseContainerViewModel(
 
     fun getTabByIndex(index: Int): CourseContainerTab {
         return _courseContainerTabs.value.getOrNull(index) ?: CourseContainerTab.HOME
+    }
+
+    fun getOpenTabIndex(): Int {
+        return getTabIndexByName(openTab)
     }
 
     private fun loadCourseImage(imageUrl: String?) {
@@ -464,7 +479,7 @@ class CourseContainerViewModel(
                     IAPException(
                         requestType = IAPRequestType.PURCHASE_PRECHECK_CODE,
                         httpErrorCode = 409, // Purchase already completed; enforcing ACTION_REFRESH to update the state.
-                        errorMessage = resourceManager.getString(R.string.iap_course_already_paid_for_message)
+                        errorMessage = resourceManager.getString(CoreR.string.iap_course_already_paid_for_message)
                     )
                 )
             }
@@ -548,7 +563,7 @@ class CourseContainerViewModel(
                 IAPException(
                     requestType = IAPRequestType.COURSE_REFRESH_CODE,
                     httpErrorCode = 409, // Course not fulfilled; enforcing ACTION_REFRESH to update the state
-                    errorMessage = resourceManager.getString(R.string.iap_course_not_fullfilled)
+                    errorMessage = resourceManager.getString(CoreR.string.iap_course_not_fullfilled)
                 )
             )
             purchaseFlowData.courseModeTransitionRetryCount = 0
@@ -662,7 +677,7 @@ class CourseContainerViewModel(
     ) {
         val iapException = throwable.toIAPException(
             requestType = requestType,
-            defaultMessage = resourceManager.getString(R.string.core_error_unknown_error)
+            defaultMessage = resourceManager.getString(CoreR.string.core_error_unknown_error)
         )
         eventLogger.logExceptionEvent(iapException)
         if (BillingClient.BillingResponseCode.USER_CANCELED != iapException.httpErrorCode) {

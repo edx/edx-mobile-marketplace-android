@@ -130,6 +130,7 @@ class Config(context: Context) {
     fun getVideoPlayerConfig(): VideoPlayerConfig {
         return getObjectOrNewInstance(VIDEO_PLAYER, VideoPlayerConfig::class.java)
     }
+
     private fun getString(key: String, defaultValue: String = ""): String {
         val element = getObject(key)
         return if (element != null) {

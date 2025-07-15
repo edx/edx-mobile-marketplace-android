@@ -119,16 +119,12 @@ data class EncodedVideos(
                 || hls?.url != null
                 || fallback?.url != null
 
-    private val videoUrl: String
-        get() = fallback?.url
-            ?: hls?.url
-            ?: desktopMp4?.url
-            ?: mobileHigh?.url
-            ?: mobileLow?.url
-            ?: ""
-
     val hasVideoUrl: Boolean
-        get() = videoUrl.isNotEmpty()
+        get() = isPreferredVideoInfo(mobileHigh) ||
+                isPreferredVideoInfo(mobileLow) ||
+                isPreferredVideoInfo(desktopMp4) ||
+                isPreferredVideoInfo(hls) ||
+                isPreferredVideoInfo(fallback)
 
     val hasYoutubeUrl: Boolean
         get() = youtube?.url?.isNotEmpty() == true

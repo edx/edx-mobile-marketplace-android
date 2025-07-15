@@ -138,20 +138,10 @@ data class VideoInfo(
     var streamPriority: Int?,
 ) {
     fun mapToDomain(): DomainVideoInfo {
-        val filteredUrl = url
-            ?.takeIf { u -> blacklistPrefixes.none { prefix -> u.startsWith(prefix) } }
-            .orEmpty()
-
         return DomainVideoInfo(
-            url = filteredUrl,
+            url = url ?: "",
             fileSize = fileSize ?: 0,
             streamPriority = streamPriority ?: 0,
-        )
-    }
-
-    companion object {
-        var blacklistPrefixes: List<String> = listOf(
-            "https://cdn.idlxmedia.net/",
         )
     }
 }

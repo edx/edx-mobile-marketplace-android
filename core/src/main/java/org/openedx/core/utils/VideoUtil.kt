@@ -1,9 +1,14 @@
 package org.openedx.core.utils
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.openedx.core.AppDataConstants.VIDEO_FORMAT_M3U8
 import org.openedx.core.AppDataConstants.VIDEO_FORMAT_MP4
+import org.openedx.core.config.Config
 
-object VideoUtil {
+object VideoUtil : KoinComponent {
+
+    private val config by inject<Config>()
 
     val SUPPORTED_VIDEO_FORMATS = arrayOf(
         VIDEO_FORMAT_MP4,
@@ -17,7 +22,15 @@ object VideoUtil {
      * @return `true` if video url is valid, `false` otherwise.
      */
     fun isValidVideoUrl(videoUrl: String): Boolean {
-        return videoHasFormat(videoUrl, *SUPPORTED_VIDEO_FORMATS)
+        return videoHasFormat(videoUrl, *SUPPORTED_VIDEO_FORMATS) && isVideoWhiteListed(videoUrl)
+    }
+
+    private fun isVideoWhiteListed(videoUrl: String): Boolean {
+        val blacklistPrefixes = config.getVideoPlayerConfig().blacklistUrls
+        return videoUrl
+            .takeIf { u -> blacklistPrefixes.none { prefix -> u.startsWith(prefix) } }
+            .orEmpty()
+            .isNotEmpty()
     }
 
     /**

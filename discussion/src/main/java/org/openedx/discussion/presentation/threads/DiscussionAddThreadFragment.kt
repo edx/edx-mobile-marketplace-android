@@ -196,7 +196,7 @@ private fun DiscussionAddThreadScreen(
         mutableStateOf(topicData)
     }
     var followPost by rememberSaveable {
-        mutableStateOf(false)
+        mutableStateOf(true)
     }
     val expandedList by rememberSaveable {
         mutableStateOf(topics)

@@ -10,7 +10,6 @@ import org.openedx.notifications.data.model.NotificationsUpdateResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
-import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -38,7 +37,7 @@ interface NotificationsApi {
     @GET(APIConstants.NOTIFICATIONS_CONFIGURATION)
     suspend fun fetchNotificationsConfiguration(): NotificationsConfiguration
 
-    @POST(APIConstants.NOTIFICATION_UPDATE_CONFIGURATION)
+    @PUT(APIConstants.NOTIFICATIONS_CONFIGURATION)
     suspend fun updateNotificationsConfiguration(
         @Body notificationsUpdateBody: NotificationsUpdateBody,
     ): NotificationsUpdateResponse

@@ -47,7 +47,10 @@ class UnlockContentViewModel(
                 if (purchase.getCourseId() == purchaseData.courseId) {
                     purchaseData.purchaseToken = purchase.purchaseToken
                     // execute order, consume order and course data update will performed behind the fullscreen loader
-                    _uiEvent.emit(UnlockContentUIAction.FullScreenLoader(purchaseData))
+                    _uiEvent.emit(UnlockContentUIAction.FullScreenLoader)
+                    purchaseData.formattedPrice?.let {
+                        _uiState.value = UnlockContentUIState.ProductData(it)
+                    }
                 }
             }
         }
@@ -74,7 +77,7 @@ class UnlockContentViewModel(
     val uiMessage: SharedFlow<UIMessage>
         get() = _uiMessage.asSharedFlow()
 
-    private val purchaseData: PurchaseFlowData = PurchaseFlowData(
+    val purchaseData = PurchaseFlowData(
         iapFlow = IAPFlow.USER_INITIATED,
         screenName = IAPFlowSource.COURSE_COMPONENT.screen,
         courseId = courseId,
@@ -221,7 +224,7 @@ class UnlockContentViewModel(
     fun refreshIAPState() {
         viewModelScope.launch {
             _uiEvent.emit(UnlockContentUIAction.None)
-            purchaseData.reset()
+            purchaseData.resetSessionData()
             loadPrice()
         }
     }

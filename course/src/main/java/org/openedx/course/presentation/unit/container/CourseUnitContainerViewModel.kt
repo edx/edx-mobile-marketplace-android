@@ -55,10 +55,7 @@ class CourseUnitContainerViewModel(
     val isCourseExpandableSectionsEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
     val isCourseUnitProgressEnabled get() = config.getCourseUIConfig().isCourseUnitProgressEnabled
-
-    private val iapConfig
-        get() = corePreferences.appConfig.iapConfig
-    val isIAPEnabled = iapConfig.isEnabled
+    val isIAPEnabled = corePreferences.appConfig.iapConfig.isEnabled
 
     private var currentIndex = 0
     private var currentVerticalIndex = 0

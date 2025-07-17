@@ -70,9 +70,8 @@ class UnlockContentFragment : Fragment() {
                 }
 
                 when (uiEvent) {
-
-                    is UnlockContentUIAction.FullScreenLoader -> {
-                        IAPDialogFragment.newInstance((uiEvent as UnlockContentUIAction.FullScreenLoader).purchaseFlowData)
+                    UnlockContentUIAction.FullScreenLoader -> {
+                        IAPDialogFragment.newInstance(viewModel.purchaseData)
                             .show(
                                 requireActivity().supportFragmentManager,
                                 IAPDialogFragment.TAG
@@ -94,6 +93,15 @@ class UnlockContentFragment : Fragment() {
                                         iapException.requestType.request,
                                         iapException.getFormattedErrorMessage()
                                     )
+                                }
+
+                                IAPAction.ACTION_REFRESH,
+                                IAPAction.ACTION_RETRY -> {
+                                    IAPDialogFragment.newInstance(viewModel.purchaseData)
+                                        .show(
+                                            requireActivity().supportFragmentManager,
+                                            IAPDialogFragment.TAG
+                                        )
                                 }
 
                                 else -> {

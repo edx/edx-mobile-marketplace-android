@@ -365,7 +365,7 @@ class IAPViewModel(
 
     fun clearIAPFLow() {
         _uiState.value = IAPUIState.Clear
-        purchaseFlowData.reset()
+        purchaseFlowData.resetAll()
     }
 
     companion object {

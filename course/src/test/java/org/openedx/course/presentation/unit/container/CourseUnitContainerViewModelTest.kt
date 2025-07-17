@@ -30,6 +30,7 @@ import org.openedx.core.domain.model.CourseAccessDetails
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
+import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.notifier.CourseNotifier
@@ -180,6 +181,8 @@ class CourseUnitContainerViewModelTest {
         productInfo = null
     )
 
+    private val iapConfig = IAPConfig(false, "prefix", listOf())
+
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
@@ -197,6 +200,7 @@ class CourseUnitContainerViewModelTest {
     fun `getBlocks no internet connection exception`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(
@@ -224,6 +228,7 @@ class CourseUnitContainerViewModelTest {
     fun `getBlocks unknown exception`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(
@@ -251,6 +256,7 @@ class CourseUnitContainerViewModelTest {
     fun `getBlocks unknown success`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(
@@ -280,6 +286,7 @@ class CourseUnitContainerViewModelTest {
     fun setupCurrentIndex() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(
@@ -307,6 +314,7 @@ class CourseUnitContainerViewModelTest {
     fun `getCurrentBlock test`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(
@@ -336,6 +344,7 @@ class CourseUnitContainerViewModelTest {
     fun `moveToPrevBlock null`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(
@@ -365,6 +374,7 @@ class CourseUnitContainerViewModelTest {
     fun `moveToPrevBlock not null`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(
@@ -394,6 +404,7 @@ class CourseUnitContainerViewModelTest {
     fun `moveToNextBlock null`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(
@@ -423,6 +434,7 @@ class CourseUnitContainerViewModelTest {
     fun `moveToNextBlock not null`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(
@@ -452,6 +464,7 @@ class CourseUnitContainerViewModelTest {
     fun `currentIndex isLastIndex`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
         every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
 
         val viewModel =
             CourseUnitContainerViewModel(

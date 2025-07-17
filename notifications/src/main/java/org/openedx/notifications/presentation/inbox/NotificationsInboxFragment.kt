@@ -38,7 +38,9 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -196,6 +198,21 @@ private fun InboxView(
         mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val loadMoreTriggerThreshold = 4
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            scrollState.shouldLoadMore(
+                rememberedFirstIndex = firstVisibleIndex,
+                rememberedLastIndex = lastVisibleIndex,
+                threshold = loadMoreTriggerThreshold
+            )
+        }
+    }
+
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore && canLoadMore) {
+            paginationCallBack()
+        }
+    }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -245,7 +262,7 @@ private fun InboxView(
                                             )
                                         }
 
-                                        items(items) { item ->
+                                        items(items = items, key = { it.id }) { item ->
                                             NotificationItemView(
                                                 modifier = Modifier.clickable {
                                                     markNotificationAsRead(item, section)
@@ -271,15 +288,6 @@ private fun InboxView(
                                             CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                                         }
                                     }
-                                }
-
-                                if (scrollState.shouldLoadMore(
-                                        rememberedFirstIndex = firstVisibleIndex,
-                                        rememberedLastIndex = lastVisibleIndex,
-                                        threshold = loadMoreTriggerThreshold
-                                    )
-                                ) {
-                                    paginationCallBack()
                                 }
                             }
                         }

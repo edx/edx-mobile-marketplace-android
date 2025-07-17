@@ -102,7 +102,7 @@ class NotificationsInboxViewModel(
 
                 // Update the UI state based on whether any notifications exist
                 _uiState.value = if (notifications.values.any { it.isNotEmpty() }) {
-                    InboxUIState.Data(notifications = notifications.toMap())
+                    InboxUIState.Data(notifications = notifications.mapValues { it.value.toList() })
                 } else {
                     InboxUIState.Fallback(state = InboxFullScreenState.Empty)
                 }

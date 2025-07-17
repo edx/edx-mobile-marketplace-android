@@ -25,6 +25,13 @@ data class PurchaseFlowData(
     var isConsumed: Boolean = false
 
     fun reset() {
+        iapFlow = null
+        screenName = null
+        courseId = null
+        courseName = null
+        isSelfPaced = null
+        componentId = null
+        productInfo = null
         currencyCode = ""
         price = 0.0
         formattedPrice = null

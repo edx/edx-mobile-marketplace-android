@@ -131,33 +131,9 @@ class UnlockContentFragment : Fragment() {
 }
 
 @Composable
-fun GradedAssignmentLockedCard(
+private fun GradedAssignmentLockedCard(
     modifier: Modifier = Modifier,
     uiState: UnlockContentUIState,
-    onUpgradeClick: () -> Unit
-) {
-
-    when (uiState) {
-        is UnlockContentUIState.Loading -> {
-            ShowUpgradeBenefits(modifier = modifier, uiAction = UnlockContentUIAction.Loading)
-        }
-
-        is UnlockContentUIState.ProductData -> {
-            ShowUpgradeBenefits(
-                modifier = modifier,
-                uiAction = UnlockContentUIAction.UpgradeButton(formattedPrice = uiState.formattedPrice),
-                onUpgradeClick = onUpgradeClick
-            )
-        }
-
-        else -> {}
-    }
-}
-
-@Composable
-private fun ShowUpgradeBenefits(
-    modifier: Modifier = Modifier,
-    uiAction: UnlockContentUIAction,
     onUpgradeClick: () -> Unit = { }
 ) {
     Column(
@@ -205,16 +181,16 @@ private fun ShowUpgradeBenefits(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        when (uiAction) {
-            UnlockContentUIAction.Loading -> {
+        when (uiState) {
+            UnlockContentUIState.Loading -> {
                 CircularProgressIndicator(color = MaterialTheme.appColors.primary)
             }
 
-            is UnlockContentUIAction.UpgradeButton -> {
+            is UnlockContentUIState.ProductData -> {
                 OpenEdXBrandButton(
                     text = stringResource(
                         id = R.string.iap_upgrade_price,
-                        uiAction.formattedPrice,
+                        uiState.formattedPrice,
                     ),
                     onClick = onUpgradeClick,
                 )

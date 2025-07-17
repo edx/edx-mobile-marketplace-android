@@ -58,8 +58,7 @@ class CourseUnitContainerViewModel(
 
     private val iapConfig
         get() = corePreferences.appConfig.iapConfig
-    val isUpgradeEnabled
-        get() = iapConfig.isUpgradeEnabled(appData.versionName)
+    val isIAPEnabled = iapConfig.isEnabled
 
     private var currentIndex = 0
     private var currentVerticalIndex = 0

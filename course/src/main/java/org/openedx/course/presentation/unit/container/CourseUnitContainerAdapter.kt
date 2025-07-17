@@ -26,7 +26,7 @@ class CourseUnitContainerAdapter(
     private fun unitBlockFragment(block: Block): Fragment {
         return when {
             (block.authorizationDenialReason == AuthorizationDenialReason.FEATURE_BASED_ENROLLMENTS) -> {
-                if (viewModel.isUpgradeEnabled) {
+                if (viewModel.isIAPEnabled) {
                     UnlockContentFragment.newInstance(viewModel.courseId, block.id)
                 } else {
                     NotSupportedUnitFragment.newInstance(

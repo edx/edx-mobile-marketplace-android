@@ -7,6 +7,7 @@ import org.openedx.core.presentation.global.ErrorType
 sealed class UnlockContentUIState {
     data object Loading : UnlockContentUIState()
     data class ProductData(val formattedPrice: String) : UnlockContentUIState()
+    data object Empty : UnlockContentUIState()  // No upgrade button in case of upgrade disabled
     data class Error(val errorType: ErrorType) : UnlockContentUIState()
 }
 

@@ -94,7 +94,11 @@ class UnlockContentViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             fetchCourseData()
-            loadPrice()
+            if (iapInteractor.isUpgradeEnabled) {
+                loadPrice()
+            } else {
+                _uiState.value = UnlockContentUIState.Empty
+            }
             eventLogger.loadIAPScreenEvent()
         }
     }

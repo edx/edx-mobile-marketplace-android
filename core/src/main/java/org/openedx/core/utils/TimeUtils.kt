@@ -12,10 +12,14 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 
 object TimeUtils {
+
+    private val POSIX_LOCALE = Locale("en", "US", "POSIX")
+    private val UTC_TIME_ZONE = TimeZone.getTimeZone("UTC")
 
     private const val FORMAT_ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss'Z'"
     private const val FORMAT_ISO_8601_WITH_TIME_ZONE = "yyyy-MM-dd'T'HH:mm:ssXXX"
@@ -46,7 +50,9 @@ object TimeUtils {
 
     fun iso8601ToDateWithTime(context: Context, text: String): String {
         return try {
-            val courseDateFormat = SimpleDateFormat(FORMAT_ISO_8601, Locale.getDefault())
+            val courseDateFormat = SimpleDateFormat(FORMAT_ISO_8601, POSIX_LOCALE).apply {
+                timeZone = UTC_TIME_ZONE
+            }
             val applicationDateFormat = SimpleDateFormat(
                 context.getString(R.string.core_full_date_with_time), Locale.getDefault()
             )

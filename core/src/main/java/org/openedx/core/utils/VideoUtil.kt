@@ -22,15 +22,24 @@ object VideoUtil : KoinComponent {
      * @return `true` if video url is valid, `false` otherwise.
      */
     fun isValidVideoUrl(videoUrl: String): Boolean {
-        return videoHasFormat(videoUrl, *SUPPORTED_VIDEO_FORMATS) && isVideoWhiteListed(videoUrl)
+        val hasValidFormat = videoHasFormat(videoUrl, *SUPPORTED_VIDEO_FORMATS)
+        val isBlackListed = isVideoURLBlackListed(videoUrl)
+
+        return hasValidFormat && isBlackListed.not()
     }
 
-    private fun isVideoWhiteListed(videoUrl: String): Boolean {
+    /**
+     * Determines whether the given video URL is blacklisted.
+     *
+     * Retrieves the list of blacklist URL prefixes from the video player configuration
+     * and checks if the provided URL starts with any of those prefixes.
+     *
+     * @param videoUrl the URL of the video to check against the blacklist
+     * @return `true` if the video URL starts with any configured blacklist prefix, `false` otherwise
+     */
+    private fun isVideoURLBlackListed(videoUrl: String): Boolean {
         val blacklistPrefixes = config.getVideoPlayerConfig().blacklistUrls
-        return videoUrl
-            .takeIf { u -> blacklistPrefixes.none { prefix -> u.startsWith(prefix) } }
-            .orEmpty()
-            .isNotEmpty()
+        return blacklistPrefixes.any { videoUrl.startsWith(it) }
     }
 
     /**

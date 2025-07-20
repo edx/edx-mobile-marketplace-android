@@ -1,9 +1,14 @@
 package org.openedx.core.utils
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.openedx.core.AppDataConstants.VIDEO_FORMAT_M3U8
 import org.openedx.core.AppDataConstants.VIDEO_FORMAT_MP4
+import org.openedx.core.config.Config
 
-object VideoUtil {
+object VideoUtil : KoinComponent {
+
+    private val config by inject<Config>()
 
     val SUPPORTED_VIDEO_FORMATS = arrayOf(
         VIDEO_FORMAT_MP4,
@@ -17,7 +22,24 @@ object VideoUtil {
      * @return `true` if video url is valid, `false` otherwise.
      */
     fun isValidVideoUrl(videoUrl: String): Boolean {
-        return videoHasFormat(videoUrl, *SUPPORTED_VIDEO_FORMATS)
+        val hasValidFormat = videoHasFormat(videoUrl, *SUPPORTED_VIDEO_FORMATS)
+        val isBlackListed = isVideoURLBlackListed(videoUrl)
+
+        return hasValidFormat && isBlackListed.not()
+    }
+
+    /**
+     * Determines whether the given video URL is blacklisted.
+     *
+     * Retrieves the list of blacklist URL prefixes from the video player configuration
+     * and checks if the provided URL starts with any of those prefixes.
+     *
+     * @param videoUrl the URL of the video to check against the blacklist
+     * @return `true` if the video URL starts with any configured blacklist prefix, `false` otherwise
+     */
+    private fun isVideoURLBlackListed(videoUrl: String): Boolean {
+        val blacklistPrefixes = config.getVideoPlayerConfig().blacklistUrls
+        return blacklistPrefixes.any { videoUrl.startsWith(it) }
     }
 
     /**

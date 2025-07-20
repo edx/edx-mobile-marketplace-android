@@ -127,6 +127,10 @@ class Config(context: Context) {
         return getObjectOrNewInstance(OPTIMIZELY, OptimizelyConfig::class.java)
     }
 
+    fun getVideoPlayerConfig(): VideoPlayerConfig {
+        return getObjectOrNewInstance(VIDEO_PLAYER, VideoPlayerConfig::class.java)
+    }
+
     private fun getString(key: String, defaultValue: String = ""): String {
         val element = getObject(key)
         return if (element != null) {
@@ -189,6 +193,7 @@ class Config(context: Context) {
         private const val UI_COMPONENTS = "UI_COMPONENTS"
         private const val PLATFORM_NAME = "PLATFORM_NAME"
         private const val OPTIMIZELY = "OPTIMIZELY"
+        private const val VIDEO_PLAYER = "VIDEO_PLAYER"
     }
 
     enum class ViewType {

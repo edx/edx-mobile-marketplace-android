@@ -5,21 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.WindowManager
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -29,7 +19,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
@@ -51,8 +40,6 @@ import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.ui.theme.OpenEdXTheme
-import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appTypography
 import org.openedx.course.R
 import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
 import org.openedx.core.R as CoreR
@@ -160,7 +147,13 @@ class VideoFullScreenFragment : DialogFragment() {
             )
 
             if (showDoubleSpeedBadge) {
-                DoubleSpeedBadge(Modifier.align(Alignment.TopCenter))
+                Image(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 6.dp),
+                    painter = painterResource(R.drawable.ic_course_double_speed_badge),
+                    contentDescription = stringResource(R.string.course_accessibility_double_playback_speed),
+                )
             }
         }
     }
@@ -180,34 +173,5 @@ class VideoFullScreenFragment : DialogFragment() {
     companion object {
         const val TAG = "VideoFullScreenFragment"
         fun newInstance() = VideoFullScreenFragment()
-    }
-}
-
-@Composable
-private fun DoubleSpeedBadge(
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .padding(top = 4.dp)
-            .height(26.dp)
-            .clip(CircleShape)
-            .background(androidx.compose.ui.graphics.Color(0xB3000000))
-            .padding(horizontal = 14.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(R.string.course_double_speed),
-            color = MaterialTheme.appColors.onSecondary,
-            style = MaterialTheme.appTypography.bodyMedium
-        )
-        Spacer(Modifier.width(4.dp))
-        Icon(
-            modifier = Modifier.size((MaterialTheme.appTypography.bodySmall.fontSize.value + 4).dp),
-            painter = painterResource(id = R.drawable.ic_course_video_forward),
-            contentDescription = null,
-            tint = MaterialTheme.appColors.onSecondary
-        )
     }
 }

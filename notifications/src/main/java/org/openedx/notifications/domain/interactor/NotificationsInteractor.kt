@@ -4,7 +4,6 @@ import org.openedx.notifications.data.repository.NotificationsRepository
 import org.openedx.notifications.domain.model.InboxNotifications
 import org.openedx.notifications.domain.model.NotificationsConfiguration
 import org.openedx.notifications.domain.model.NotificationsCount
-import org.openedx.notifications.domain.model.NotificationsUpdateResponse
 
 class NotificationsInteractor(
     private val repository: NotificationsRepository,
@@ -31,7 +30,7 @@ class NotificationsInteractor(
 
     suspend fun updateNotificationsConfiguration(
         isDiscussionPushEnabled: Boolean,
-    ): NotificationsUpdateResponse {
+    ): NotificationsConfiguration {
         return repository.updateNotificationsConfiguration(
             isDiscussionPushEnabled = isDiscussionPushEnabled,
         )

@@ -32,7 +32,6 @@ import org.openedx.core.utils.Logger
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
 import org.openedx.notifications.domain.model.NotificationsConfiguration
-import org.openedx.notifications.domain.model.NotificationsUpdateResponse
 import org.openedx.notifications.presentation.NotificationsAnalytics
 import java.net.UnknownHostException
 
@@ -55,13 +54,6 @@ class NotificationsSettingsViewModelTest {
     private val somethingWrong = "Service is unavailable. Please try again later."
 
     private val mockNotificationsConfiguration = NotificationsConfiguration(true)
-    private val mockNotificationsUpdateResponse = NotificationsUpdateResponse(
-        status = "",
-        updatedValue = true,
-        notificationType = "",
-        channel = "",
-        app = "",
-    )
 
     @Before
     fun setUp() {
@@ -150,8 +142,8 @@ class NotificationsSettingsViewModelTest {
         every { notificationManager.areNotificationsEnabled() } returns true
         every { preferences.notifications.discussionsPushEnabled } returns true
         coEvery { interactor.fetchNotificationsConfiguration() } returns mockNotificationsConfiguration
-        coEvery { interactor.updateNotificationsConfiguration(any()) } returns mockNotificationsUpdateResponse.copy(
-            updatedValue = false
+        coEvery { interactor.updateNotificationsConfiguration(any()) } returns mockNotificationsConfiguration.copy(
+            discussionsPushEnabled = false
         )
 
         viewModel = NotificationsSettingsViewModel(context, interactor, analytics, preferences)
@@ -220,7 +212,7 @@ class NotificationsSettingsViewModelTest {
 
         // Permission Enabled
         every { notificationManager.areNotificationsEnabled() } returns true
-        coEvery { interactor.updateNotificationsConfiguration(any()) } returns mockNotificationsUpdateResponse
+        coEvery { interactor.updateNotificationsConfiguration(any()) } returns mockNotificationsConfiguration
 
         viewModel.setDiscussionNotificationPreference(true)
         advanceUntilIdle()

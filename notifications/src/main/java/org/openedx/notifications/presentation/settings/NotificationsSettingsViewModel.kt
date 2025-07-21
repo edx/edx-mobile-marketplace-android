@@ -58,7 +58,7 @@ class NotificationsSettingsViewModel(
             viewModelScope.launch {
                 try {
                     val response = interactor.updateNotificationsConfiguration(value)
-                    enablePushNotifications(enabled = response.updatedValue)
+                    enablePushNotifications(enabled = response.discussionsPushEnabled)
                 } catch (e: Exception) {
                     logger.e(throwable = e, metadata = mapOf("preference" to value))
                     showErrorMessage()

@@ -2,7 +2,7 @@ package org.openedx.course.presentation.unit.video
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
@@ -108,7 +108,7 @@ class EncodedVideoUnitViewModel(
                 val selectionFlags =
                     if (language == state.value.selectedLanguage) C.SELECTION_FLAG_DEFAULT else 0
 
-                MediaItem.SubtitleConfiguration.Builder(Uri.parse(uri))
+                MediaItem.SubtitleConfiguration.Builder(uri.toUri())
                     .setMimeType(MimeTypes.APPLICATION_SUBRIP)
                     .setSelectionFlags(selectionFlags)
                     .setLanguage(language)
@@ -278,7 +278,8 @@ class EncodedVideoUnitViewModel(
                     setViewportSize(videoQuality.width, videoQuality.height, false)
                 }
             }
-            .setRendererDisabled(C.TRACK_TYPE_TEXT, isSubtitlesDisabled)
+            .setPreferredTextLanguage(_state.value.selectedLanguage)
+            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, isSubtitlesDisabled)
             .build()
 
         val factory = AdaptiveTrackSelection.Factory()

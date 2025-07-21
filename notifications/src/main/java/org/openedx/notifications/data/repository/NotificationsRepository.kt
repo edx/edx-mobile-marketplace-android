@@ -9,7 +9,6 @@ import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.model.InboxNotifications
 import org.openedx.notifications.domain.model.NotificationsConfiguration
 import org.openedx.notifications.domain.model.NotificationsCount
-import org.openedx.notifications.domain.model.NotificationsUpdateResponse
 
 class NotificationsRepository(
     private val api: NotificationsApi,
@@ -49,7 +48,7 @@ class NotificationsRepository(
 
     suspend fun updateNotificationsConfiguration(
         isDiscussionPushEnabled: Boolean,
-    ): NotificationsUpdateResponse {
+    ): NotificationsConfiguration {
         val response = api.updateNotificationsConfiguration(
             NotificationsUpdateBody(
                 notificationApp = APIConstants.APP_NAME_DISCUSSION,
@@ -58,7 +57,7 @@ class NotificationsRepository(
                 value = isDiscussionPushEnabled,
             )
         ).mapToDomain()
-        updateNotificationsPreference(response.updatedValue)
+        updateNotificationsPreference(response.discussionsPushEnabled)
         return response
     }
 

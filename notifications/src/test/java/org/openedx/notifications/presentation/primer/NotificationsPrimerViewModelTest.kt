@@ -19,7 +19,7 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.notifications.data.storage.NotificationsPreferences
 import org.openedx.notifications.domain.interactor.NotificationsInteractor
-import org.openedx.notifications.domain.model.NotificationsUpdateResponse
+import org.openedx.notifications.domain.model.NotificationsConfiguration
 import org.openedx.notifications.presentation.NotificationsAnalytics
 
 
@@ -36,19 +36,15 @@ class NotificationsPrimerViewModelTest {
     private val analytics: NotificationsAnalytics = mockk(relaxed = true)
     private val preferences: NotificationsPreferences = mockk(relaxed = true)
 
-    private val mockNotificationsUpdateResponse = NotificationsUpdateResponse(
-        status = "",
-        updatedValue = true,
-        notificationType = "",
-        channel = "",
-        app = "",
+    private val mockNotificationsConfiguration = NotificationsConfiguration(
+        discussionsPushEnabled = true,
     )
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
 
-        coEvery { interactor.updateNotificationsConfiguration(any()) } returns mockNotificationsUpdateResponse
+        coEvery { interactor.updateNotificationsConfiguration(any()) } returns mockNotificationsConfiguration
     }
 
     @Test

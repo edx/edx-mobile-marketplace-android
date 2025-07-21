@@ -19,6 +19,7 @@ import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.catalog.WebViewLink
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
+import org.openedx.discussion.domain.model.DiscussionConfig
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
 import kotlin.coroutines.CoroutineContext
 
@@ -28,7 +29,7 @@ class DeepLinkRouter(
     private val corePreferences: CorePreferences,
     private val discoveryInteractor: DiscoveryInteractor,
     private val courseInteractor: CourseInteractor,
-    private val discussionInteractor: DiscussionInteractor
+    private val discussionInteractor: DiscussionInteractor,
 ) : CoroutineScope {
 
     private val logger = Logger(TAG)
@@ -84,7 +85,8 @@ class DeepLinkRouter(
             }
             // Profile
             DeepLinkType.PROFILE,
-            DeepLinkType.USER_PROFILE -> {
+            DeepLinkType.USER_PROFILE,
+                -> {
                 navigateToProfile(fm = fm)
                 return
             }
@@ -178,6 +180,22 @@ class DeepLinkRouter(
                     )
                 }
 
+                else -> {
+                    // ignore
+                }
+            }
+
+            // Course Discussions
+            val isPostingEnabled = getCourseDiscussionConfig(courseId)?.isPostingEnabled ?: run {
+                navigateToDashboard(fm = fm)
+                navigateToCourseDiscussion(
+                    fm = fm,
+                    deepLink = deepLink
+                )
+                return@launch
+            }
+
+            when (deepLink.type) {
                 // Discussions
                 DeepLinkType.DISCUSSION_TOPIC -> {
                     navigateToDashboard(fm = fm)
@@ -199,7 +217,8 @@ class DeepLinkRouter(
                     )
                     navigateToDiscussionPost(
                         fm = fm,
-                        deepLink = deepLink
+                        deepLink = deepLink,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
 
@@ -211,7 +230,8 @@ class DeepLinkRouter(
                     )
                     navigateToDiscussionComment(
                         fm = fm,
-                        deepLink = deepLink
+                        deepLink = deepLink,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
 
@@ -223,7 +243,8 @@ class DeepLinkRouter(
                     )
                     navigateToDiscussionResponse(
                         fm = fm,
-                        deepLink = deepLink
+                        deepLink = deepLink,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
 
@@ -297,7 +318,7 @@ class DeepLinkRouter(
     private fun navigateToCourseDashboard(
         fm: FragmentManager,
         deepLink: DeepLink,
-        courseTitle: String
+        courseTitle: String,
     ) {
         deepLink.courseId?.let { courseId ->
             appRouter.navigateToCourseOutline(
@@ -337,7 +358,7 @@ class DeepLinkRouter(
                 fm = fm,
                 courseId = courseId,
                 courseTitle = "",
-                openTab = "DISCUSSIONS"
+                openTab = "DISCUSSIONS",
             )
         }
     }
@@ -435,7 +456,11 @@ class DeepLinkRouter(
         }
     }
 
-    private fun navigateToDiscussionPost(fm: FragmentManager, deepLink: DeepLink) {
+    private fun navigateToDiscussionPost(
+        fm: FragmentManager,
+        deepLink: DeepLink,
+        isPostingEnabled: Boolean,
+    ) {
         deepLink.courseId?.let { courseId ->
             deepLink.topicId?.let { topicId ->
                 deepLink.threadId?.let { threadId ->
@@ -459,11 +484,15 @@ class DeepLinkRouter(
                                 courseId,
                                 topicId
                             )
+                            val responseId = deepLink.responseId ?: ""
                             launch(Dispatchers.Main) {
                                 appRouter.navigateToDiscussionComments(
                                     fm = fm,
                                     courseId = courseId,
-                                    thread = thread
+                                    thread = thread,
+                                    responseId = responseId,
+                                    commentId = "",
+                                    isPostingEnabled = isPostingEnabled,
                                 )
                             }
                         } catch (e: Exception) {
@@ -475,7 +504,10 @@ class DeepLinkRouter(
         }
     }
 
-    private fun navigateToDiscussionResponse(fm: FragmentManager, deepLink: DeepLink) {
+    private fun navigateToDiscussionResponse(
+        fm: FragmentManager, deepLink: DeepLink,
+        isPostingEnabled: Boolean,
+    ) {
         val courseId = deepLink.courseId
         val topicId = deepLink.topicId
         val threadId = deepLink.threadId
@@ -507,7 +539,8 @@ class DeepLinkRouter(
                     appRouter.navigateToDiscussionComments(
                         fm = fm,
                         courseId = courseId,
-                        thread = thread
+                        thread = thread,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
                 val response = discussionInteractor.getResponse(commentId)
@@ -517,7 +550,8 @@ class DeepLinkRouter(
                         courseId = courseId,
                         threadId = threadId,
                         comment = response,
-                        isClosed = false
+                        isClosed = false,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
             } catch (e: Exception) {
@@ -526,13 +560,16 @@ class DeepLinkRouter(
         }
     }
 
-    private fun navigateToDiscussionComment(fm: FragmentManager, deepLink: DeepLink) {
+    private fun navigateToDiscussionComment(
+        fm: FragmentManager,
+        deepLink: DeepLink,
+        isPostingEnabled: Boolean,
+    ) {
         val courseId = deepLink.courseId
         val topicId = deepLink.topicId
         val threadId = deepLink.threadId
-        val commentId = deepLink.commentId
         val responseId = deepLink.responseId
-        if (courseId == null || topicId == null || threadId == null || commentId == null || responseId == null) {
+        if (courseId == null || topicId == null || threadId == null || responseId == null) {
             return
         }
         launch {
@@ -559,7 +596,8 @@ class DeepLinkRouter(
                     appRouter.navigateToDiscussionComments(
                         fm = fm,
                         courseId = courseId,
-                        thread = thread
+                        thread = thread,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
                 val comment = discussionInteractor.getResponse(responseId)
@@ -569,7 +607,8 @@ class DeepLinkRouter(
                         courseId = courseId,
                         threadId = threadId,
                         comment = comment,
-                        isClosed = false
+                        isClosed = false,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
             } catch (e: Exception) {
@@ -608,6 +647,15 @@ class DeepLinkRouter(
     private suspend fun getCourseDetails(courseId: String): Course? {
         return try {
             discoveryInteractor.getCourseDetails(courseId)
+        } catch (e: Exception) {
+            logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
+            null
+        }
+    }
+
+    private suspend fun getCourseDiscussionConfig(courseId: String): DiscussionConfig? {
+        return try {
+            discussionInteractor.getCourseDiscussionConfig(courseId, true)
         } catch (e: Exception) {
             logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
             null

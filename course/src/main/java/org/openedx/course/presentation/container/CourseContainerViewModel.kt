@@ -353,17 +353,28 @@ class CourseContainerViewModel(
                     courseNotifier.send(CourseOpenBlock(resumeBlockId))
                 }
             }
-            // Handle cases where the tab is not found
-            if (_courseContainerTabs.value.contains(CourseContainerTab.DISCUSSIONS).not()
-                && openTab.equals(CourseContainerTab.DISCUSSIONS.name, ignoreCase = true)
-            ) {
-                viewModelScope.launch {
-                    _errorMessage.value =
-                        resourceManager.getString(R.string.course_discussions_unavailable_message)
-                }
-                openTab = ""
-            }
+            // Handle cases where the discussion tab is not found
+            handleDeepLinkMissingDiscussions()
             _dataReady.value = true
+        }
+    }
+
+    private fun handleDeepLinkMissingDiscussions() {
+        val wantsDiscussions = openTab.equals(
+            CourseContainerTab.DISCUSSIONS.name,
+            ignoreCase = true
+        )
+        val hasDiscussionsTab = CourseContainerTab.DISCUSSIONS in _courseContainerTabs.value
+
+        if (wantsDiscussions && !hasDiscussionsTab) {
+            // Surface the error to the user
+            viewModelScope.launch {
+                _errorMessage.value = resourceManager.getString(
+                    R.string.course_discussions_unavailable_message
+                )
+            }
+            // Reset the tab so navigation can choose a safe default
+            openTab = ""
         }
     }
 

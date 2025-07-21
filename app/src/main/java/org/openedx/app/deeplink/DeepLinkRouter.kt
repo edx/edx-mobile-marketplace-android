@@ -184,8 +184,9 @@ class DeepLinkRouter(
                     // ignore
                 }
             }
+
             // Course Discussions
-            val discussionConfig = getCourseDiscussionConfig(courseId) ?: run {
+            val isPostingEnabled = getCourseDiscussionConfig(courseId)?.isPostingEnabled ?: run {
                 navigateToDashboard(fm = fm)
                 navigateToCourseDiscussion(
                     fm = fm,
@@ -193,6 +194,7 @@ class DeepLinkRouter(
                 )
                 return@launch
             }
+
             when (deepLink.type) {
                 // Discussions
                 DeepLinkType.DISCUSSION_TOPIC -> {
@@ -216,11 +218,11 @@ class DeepLinkRouter(
                     navigateToDiscussionPost(
                         fm = fm,
                         deepLink = deepLink,
-                        isPostingEnabled = discussionConfig.isPostingEnabled,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
 
-                DeepLinkType.DISCUSSION_COMMENT -> {
+                DeepLinkType.DISCUSSION_COMMENT, DeepLinkType.FORUM_COMMENT -> {
                     navigateToDashboard(fm = fm)
                     navigateToCourseDiscussion(
                         fm = fm,
@@ -229,20 +231,7 @@ class DeepLinkRouter(
                     navigateToDiscussionComment(
                         fm = fm,
                         deepLink = deepLink,
-                        isPostingEnabled = discussionConfig.isPostingEnabled,
-                    )
-                }
-
-                DeepLinkType.FORUM_COMMENT -> {
-                    navigateToDashboard(fm = fm)
-                    navigateToCourseDiscussion(
-                        fm = fm,
-                        deepLink = deepLink
-                    )
-                    navigateToDiscussionForumComment(
-                        fm = fm,
-                        deepLink = deepLink,
-                        isPostingEnabled = discussionConfig.isPostingEnabled,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
 
@@ -255,7 +244,7 @@ class DeepLinkRouter(
                     navigateToDiscussionResponse(
                         fm = fm,
                         deepLink = deepLink,
-                        isPostingEnabled = discussionConfig.isPostingEnabled,
+                        isPostingEnabled = isPostingEnabled,
                     )
                 }
 
@@ -581,64 +570,6 @@ class DeepLinkRouter(
         val threadId = deepLink.threadId
         val responseId = deepLink.responseId
         if (courseId == null || topicId == null || threadId == null || responseId == null) {
-            return
-        }
-        launch {
-            try {
-                discussionInteractor.getCourseTopics(courseId)
-                    .find { it.id == topicId }?.let { topic ->
-                        launch(Dispatchers.Main) {
-                            appRouter.navigateToDiscussionThread(
-                                fm = fm,
-                                action = DiscussionTopicsViewModel.TOPIC,
-                                courseId = courseId,
-                                topicId = topicId,
-                                title = topic.name,
-                                viewType = FragmentViewType.FULL_CONTENT,
-                            )
-                        }
-                    }
-                val thread = discussionInteractor.getThread(
-                    threadId,
-                    courseId,
-                    topicId
-                )
-                launch(Dispatchers.Main) {
-                    appRouter.navigateToDiscussionComments(
-                        fm = fm,
-                        courseId = courseId,
-                        thread = thread,
-                        isPostingEnabled = isPostingEnabled,
-                    )
-                }
-                val comment = discussionInteractor.getResponse(responseId)
-                launch(Dispatchers.Main) {
-                    appRouter.navigateToDiscussionResponses(
-                        fm = fm,
-                        courseId = courseId,
-                        threadId = threadId,
-                        comment = comment,
-                        isClosed = false,
-                        isPostingEnabled = isPostingEnabled,
-                    )
-                }
-            } catch (e: Exception) {
-                logger.e(throwable = e, metadata = deepLink.toMap())
-            }
-        }
-    }
-
-    private fun navigateToDiscussionForumComment(
-        fm: FragmentManager,
-        deepLink: DeepLink,
-        isPostingEnabled: Boolean,
-    ) {
-        val courseId = deepLink.courseId
-        val topicId = deepLink.topicId
-        val threadId = deepLink.threadId
-        val commentId = deepLink.commentId
-        val responseId = deepLink.responseId
-        if (courseId == null || topicId == null || threadId == null || commentId == null || responseId == null) {
             return
         }
         launch {

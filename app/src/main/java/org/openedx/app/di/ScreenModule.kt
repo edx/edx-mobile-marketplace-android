@@ -456,6 +456,8 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
+            get(),
         )
     }
     viewModel { (courseId: String, threadId: String, isPostingEnabled: Boolean, comment: DiscussionComment) ->
@@ -469,11 +471,15 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
+            get(),
         )
     }
     viewModel { (courseId: String) ->
         DiscussionAddThreadViewModel(
             courseId,
+            get(),
+            get(),
             get(),
             get(),
             get(),

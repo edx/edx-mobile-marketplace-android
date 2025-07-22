@@ -131,6 +131,10 @@ class Config(context: Context) {
         return getObjectOrNewInstance(VIDEO_PLAYER, VideoPlayerConfig::class.java)
     }
 
+    fun getRecaptchaConfig(): RecaptchaConfig {
+        return getObjectOrNewInstance(RECAPTCHA, RecaptchaConfig::class.java)
+    }
+
     private fun getString(key: String, defaultValue: String = ""): String {
         val element = getObject(key)
         return if (element != null) {
@@ -194,6 +198,7 @@ class Config(context: Context) {
         private const val PLATFORM_NAME = "PLATFORM_NAME"
         private const val OPTIMIZELY = "OPTIMIZELY"
         private const val VIDEO_PLAYER = "VIDEO_PLAYER"
+        private const val RECAPTCHA = "RECAPTCHA"
     }
 
     enum class ViewType {

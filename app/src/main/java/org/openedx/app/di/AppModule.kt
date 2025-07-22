@@ -4,9 +4,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.google.android.recaptcha.Recaptcha
+import com.google.android.recaptcha.RecaptchaClient
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidApplication
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -48,6 +51,7 @@ import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.CalendarManager
 import org.openedx.core.system.DummyPushManager
 import org.openedx.core.system.PushGlobalManager
+import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
@@ -234,4 +238,13 @@ val appModule = module {
     factory { OAuthHelper(get(), get(), get()) }
 
     factory { FileUtil(get()) }
+
+    single<RecaptchaClient> {
+        val config = this.get<Config>()
+        val siteKey = config.getRecaptchaConfig().siteKey
+        runBlocking(Dispatchers.IO) {
+            Recaptcha.fetchClient(get(), siteKey)
+        }
+    }
+    factory { RecaptchaManager(get()) }
 }

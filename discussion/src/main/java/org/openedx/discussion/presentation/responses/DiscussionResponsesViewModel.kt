@@ -4,13 +4,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
+import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
@@ -19,13 +21,16 @@ import org.openedx.discussion.presentation.DiscussionAnalyticsType
 import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionResponseAdded
+import org.openedx.core.R as CoreR
 
 class DiscussionResponsesViewModel(
     val courseId: String,
     val threadId: String,
     val isPostingEnabled: Boolean,
     private var comment: DiscussionComment,
+    private val config: Config,
     private val interactor: DiscussionInteractor,
+    private val recaptchaManager: RecaptchaManager,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
     private val corePreferences: CorePreferences,
@@ -178,7 +183,16 @@ class DiscussionResponsesViewModel(
     fun createComment(rawBody: String) {
         viewModelScope.launch {
             try {
-                val response = interactor.createComment(comment.threadId, rawBody, comment.id)
+                val isCaptchaEnabled = config.getRecaptchaConfig().isEnabled &&
+                        interactor.getCourseDiscussionConfig(courseId).isCaptchaEnabled
+                val token = if (isCaptchaEnabled) recaptchaManager.getActionCommentToken() else ""
+
+                val response = interactor.createComment(
+                    threadId = comment.threadId,
+                    rawBody = rawBody,
+                    parentId = comment.id,
+                    captchaToken = token,
+                )
                 response.isAuthor = response.author == corePreferences.user?.username
 
                 comment = comment.copy(childCount = comment.childCount + 1)
@@ -204,10 +218,10 @@ class DiscussionResponsesViewModel(
         logger.e(throwable = e)
         if (e.isInternetError()) {
             _uiMessage.value =
-                UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
+                UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection))
         } else {
             _uiMessage.value =
-                UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
+                UIMessage.SnackBarMessage(resourceManager.getString(R.string.discussion_something_went_wrong_error))
         }
     }
 

@@ -4,21 +4,26 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import org.openedx.core.R
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
+import org.openedx.core.config.Config
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
+import org.openedx.core.R as CoreR
 
 class DiscussionAddThreadViewModel(
     private val courseId: String,
+    private val config: Config,
     private val interactor: DiscussionInteractor,
+    private val recaptchaManager: RecaptchaManager,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
     private val analytics: DiscussionAnalytics,
@@ -47,16 +52,21 @@ class DiscussionAddThreadViewModel(
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                _newThread.value = interactor.createThread(topicId, courseId, type, title, rawBody)
+                val isCaptchaEnabled = config.getRecaptchaConfig().isEnabled &&
+                        interactor.getCourseDiscussionConfig(courseId).isCaptchaEnabled
+                val token = if (isCaptchaEnabled) recaptchaManager.getActionThreadToken() else ""
+
+                _newThread.value =
+                    interactor.createThread(topicId, courseId, type, title, rawBody, token)
                 logPostCreatedEvent(topicId, type, _newThread.value?.author ?: "")
             } catch (e: Exception) {
                 logger.e(throwable = e)
                 if (e.isInternetError()) {
                     _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
+                        UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection))
                 } else {
                     _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
+                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.discussion_something_went_wrong_error))
                 }
             }
             _isLoading.value = false

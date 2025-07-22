@@ -158,9 +158,9 @@ class DiscussionRepository(
     suspend fun createComment(
         threadId: String,
         rawBody: String,
-        parentId: String?
-    ) =
-        api.createComment(CommentBody(threadId, rawBody, parentId)).mapToDomain()
+        parentId: String?,
+        captchaToken: String,
+    ) = api.createComment(CommentBody(threadId, rawBody, parentId, captchaToken)).mapToDomain()
 
 
     suspend fun createThread(
@@ -169,7 +169,9 @@ class DiscussionRepository(
         type: String,
         title: String,
         rawBody: String,
-    ) = api.createThread(ThreadBody(type, topicId, courseId, title, rawBody)).mapToDomain()
+        captchaToken: String,
+    ) = api.createThread(ThreadBody(type, topicId, courseId, title, rawBody, captchaToken))
+        .mapToDomain()
 
     suspend fun markBlocksCompletion(courseId: String, blocksId: List<String>) {
         val username = preferencesManager.user?.username ?: ""

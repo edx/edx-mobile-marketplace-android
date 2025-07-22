@@ -63,10 +63,19 @@ data class DiscussionConfig(
 
     @SerializedName("show_discussions")
     val showDiscussions: Boolean,
+
+    @SerializedName("captcha_settings")
+    val captchaSettings: CaptchaSettings,
 ) {
+    data class CaptchaSettings(
+        @SerializedName("enabled")
+        val enabled: Boolean = false,
+    )
+
     fun mapToDomain(): DomainDiscussionConfig {
         return DomainDiscussionConfig(
             isPostingEnabled = isPostingEnabled,
+            isCaptchaEnabled = captchaSettings.enabled,
         )
     }
 }

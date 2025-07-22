@@ -82,8 +82,9 @@ class DiscussionInteractor(
     suspend fun createComment(
         threadId: String,
         rawBody: String,
-        parentId: String?
-    ) = repository.createComment(threadId, rawBody, parentId)
+        parentId: String?,
+        captchaToken: String,
+    ) = repository.createComment(threadId, rawBody, parentId, captchaToken)
 
     suspend fun createThread(
         topicId: String,
@@ -91,7 +92,8 @@ class DiscussionInteractor(
         type: String,
         title: String,
         rawBody: String,
-    ) = repository.createThread(topicId, courseId, type, title, rawBody)
+        captchaToken: String,
+    ) = repository.createThread(topicId, courseId, type, title, rawBody, captchaToken)
 
     suspend fun markBlocksCompletion(courseId: String, blocksId: List<String>) =
         repository.markBlocksCompletion(courseId, blocksId)

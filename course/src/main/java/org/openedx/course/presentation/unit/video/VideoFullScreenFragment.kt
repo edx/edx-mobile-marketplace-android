@@ -138,8 +138,7 @@ class VideoFullScreenFragment : DialogFragment() {
                     playerView.enableLongPressDoubleSpeed(
                         player = viewModel.exoPlayer!!,
                         scope = scope,
-                        onShowBadge = { showDoubleSpeedBadge = true },
-                        onHideBadge = { showDoubleSpeedBadge = false }
+                        onBadgeVisibilityChange = { showDoubleSpeedBadge = it },
                     )
 
                     playerView

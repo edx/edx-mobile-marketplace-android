@@ -211,8 +211,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.playerView.enableLongPressDoubleSpeed(
             player = viewModel.exoPlayer!!,
             scope = viewLifecycleOwner.lifecycleScope,
-            onShowBadge = { binding.doubleSpeedBadge.isVisible = true },
-            onHideBadge = { binding.doubleSpeedBadge.isVisible = false }
+            onBadgeVisibilityChange = { binding.doubleSpeedBadge.isVisible = it },
         )
     }
 

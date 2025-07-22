@@ -53,6 +53,7 @@
     <string name="course_accessibility_stop_downloading_course_section">Stop downloading course section</string>
     <string name="course_accessibility_section_completed">Section completed</string>
     <string name="course_accessibility_section_uncompleted">Section uncompleted</string>
+    <string name="course_accessibility_double_playback_speed">Playback speed, 2×</string>
 
     <string name="course_download_queue_title">Downloads</string>
     <string name="course_download_untitled">(Untitled)</string>
@@ -74,5 +75,4 @@
     <string name="course_find_new_course_button">Find a new course</string>
     <string name="course_error_not_started_title">This course will begin on %s. Come back then to start learning!</string>
     <string name="course_an_error_occurred">An error occurred while loading your course</string>
-    <string name="course_accessibility_double_playback_speed">Playback speed, 2×</string>
 </resources>

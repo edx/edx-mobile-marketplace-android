@@ -597,8 +597,7 @@ private fun AllVideosDownloadItem(
 fun PlayerView.enableLongPressDoubleSpeed(
     player: Player,
     scope: CoroutineScope,
-    onShowBadge: () -> Unit,
-    onHideBadge: () -> Unit,
+    onBadgeVisibilityChange: (Boolean) -> Unit,
 ) {
     val threshold = ViewConfiguration.getLongPressTimeout().toLong()
     var prevSpeed = VIDEO_NORMAL_SPEED
@@ -611,7 +610,7 @@ fun PlayerView.enableLongPressDoubleSpeed(
                 job?.cancel()
                 job = scope.launch {
                     delay(threshold)
-                    onShowBadge()
+                    onBadgeVisibilityChange(true)
                     player.playbackParameters = PlaybackParameters(VIDEO_DOUBLE_SPEED)
                 }
             }
@@ -621,7 +620,7 @@ fun PlayerView.enableLongPressDoubleSpeed(
                 job?.cancel()
                 if (player.playbackParameters.speed == VIDEO_DOUBLE_SPEED) {
                     player.playbackParameters = PlaybackParameters(prevSpeed)
-                    onHideBadge()
+                    onBadgeVisibilityChange(false)
                 } else if (event.action == MotionEvent.ACTION_UP) {
                     view.performClick()
                 }

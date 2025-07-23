@@ -1,6 +1,8 @@
 package org.openedx.course.presentation.ui
 
 import android.content.res.Configuration
+import android.view.MotionEvent
+import android.view.ViewConfiguration
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -50,7 +52,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentManager
+import androidx.media3.common.PlaybackParameters
+import androidx.media3.common.Player
+import androidx.media3.ui.PlayerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.openedx.core.AppDataConstants
+import org.openedx.core.AppDataConstants.VIDEO_DOUBLE_SPEED
+import org.openedx.core.AppDataConstants.VIDEO_NORMAL_SPEED
 import org.openedx.core.BlockType
 import org.openedx.core.NoContentScreenType
 import org.openedx.core.UIMessage
@@ -581,6 +592,43 @@ private fun AllVideosDownloadItem(
         )
     }
     Divider()
+}
+
+fun PlayerView.enableLongPressDoubleSpeed(
+    player: Player,
+    scope: CoroutineScope,
+    onBadgeVisibilityChange: (Boolean) -> Unit,
+) {
+    val threshold = ViewConfiguration.getLongPressTimeout().toLong()
+    var prevSpeed = VIDEO_NORMAL_SPEED
+    var job: Job? = null
+
+    setOnTouchListener { view, event ->
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> if (player.isPlaying) {
+                prevSpeed = player.playbackParameters.speed
+                job?.cancel()
+                job = scope.launch {
+                    delay(threshold)
+                    onBadgeVisibilityChange(true)
+                    player.playbackParameters = PlaybackParameters(VIDEO_DOUBLE_SPEED)
+                }
+            }
+
+            MotionEvent.ACTION_UP,
+            MotionEvent.ACTION_CANCEL -> {
+                job?.cancel()
+                if (player.playbackParameters.speed == VIDEO_DOUBLE_SPEED) {
+                    player.playbackParameters = PlaybackParameters(prevSpeed)
+                    onBadgeVisibilityChange(false)
+                } else if (event.action == MotionEvent.ACTION_UP) {
+                    view.performClick()
+                }
+            }
+        }
+        // return false so the PlayerView still handles buttons
+        false
+    }
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)

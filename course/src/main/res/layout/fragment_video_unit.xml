@@ -36,6 +36,16 @@
             app:resize_mode="fit"
             app:surface_type="texture_view" />
 
+        <ImageView
+            android:id="@+id/doubleSpeedBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="6dp"
+            android:contentDescription="@string/course_accessibility_double_playback_speed"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_course_double_speed_badge" />
+
     </androidx.cardview.widget.CardView>
 
     <androidx.compose.ui.platform.ComposeView

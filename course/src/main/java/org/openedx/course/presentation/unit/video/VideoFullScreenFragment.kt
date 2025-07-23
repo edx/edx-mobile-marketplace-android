@@ -1,21 +1,33 @@
 package org.openedx.course.presentation.unit.video
 
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
@@ -28,6 +40,8 @@ import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.ui.theme.OpenEdXTheme
+import org.openedx.course.R
+import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
 import org.openedx.core.R as CoreR
 
 class VideoFullScreenFragment : DialogFragment() {
@@ -74,7 +88,7 @@ class VideoFullScreenFragment : DialogFragment() {
                 isAppearanceLightStatusBars = false
                 isAppearanceLightNavigationBars = false
             }
-            setBackgroundDrawable(ColorDrawable(Color.BLACK))
+            setBackgroundDrawable(Color.BLACK.toDrawable())
             attributes = attributes.apply { dimAmount = 0f }
         }
     }
@@ -84,6 +98,8 @@ class VideoFullScreenFragment : DialogFragment() {
     private fun PlayerComposeView() {
         val currentView = LocalView.current
         val lifecycleOwner = LocalLifecycleOwner.current
+        val scope = rememberCoroutineScope()
+        var showDoubleSpeedBadge by remember { mutableStateOf(false) }
 
         DisposableEffect(Unit) {
             val observer = LifecycleEventObserver { _, event ->
@@ -98,23 +114,47 @@ class VideoFullScreenFragment : DialogFragment() {
                 viewModel.leaveFullscreen()
             }
         }
-        AndroidView(
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .systemBarsPadding(),
-            factory = {
-                currentView.keepScreenOn = true
-                PlayerView(it).apply {
-                    player = viewModel.exoPlayer
-                    setShowNextButton(false)
-                    setShowPreviousButton(false)
-                    setShowSubtitleButton(true)
-                    setFullscreenButtonClickListener { _ ->
-                        dismiss()
+                .systemBarsPadding()
+        ) {
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding(),
+                factory = { context ->
+                    val playerView = PlayerView(context).apply {
+                        player = viewModel.exoPlayer
+                        setShowNextButton(false)
+                        setShowPreviousButton(false)
+                        setShowSubtitleButton(true)
+                        setFullscreenButtonClickListener {
+                            dismiss()
+                        }
                     }
-                }
-            },
-        )
+
+                    playerView.enableLongPressDoubleSpeed(
+                        player = viewModel.exoPlayer!!,
+                        scope = scope,
+                        onBadgeVisibilityChange = { showDoubleSpeedBadge = it },
+                    )
+
+                    playerView
+                },
+            )
+
+            if (showDoubleSpeedBadge) {
+                Image(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 6.dp),
+                    painter = painterResource(R.drawable.ic_course_double_speed_badge),
+                    contentDescription = stringResource(R.string.course_accessibility_double_playback_speed),
+                )
+            }
+        }
     }
 
     override fun onPause() {

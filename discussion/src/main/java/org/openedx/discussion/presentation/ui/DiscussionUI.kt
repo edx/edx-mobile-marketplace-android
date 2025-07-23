@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
@@ -81,6 +82,17 @@ fun ThreadMainItem(
         thread.users[thread.author]?.image?.imageUrlFull
     } else {
         CoreR.drawable.core_ic_default_profile_picture
+    }
+
+    val followText = if (thread.following) {
+        stringResource(id = R.string.discussion_following)
+    } else {
+        stringResource(id = R.string.discussion_follow)
+    }
+    val followIcon = if (thread.following) {
+        R.drawable.discussion_star_filled
+    } else {
+        R.drawable.discussion_star
     }
 
     val voteIcon = if (thread.voted) {
@@ -147,8 +159,8 @@ fun ThreadMainItem(
                 )
             }
             IconText(
-                text = stringResource(id = R.string.discussion_follow),
-                painter = painterResource(if (thread.following) R.drawable.discussion_star_filled else R.drawable.discussion_star),
+                text = followText,
+                painter = painterResource(followIcon),
                 textStyle = MaterialTheme.appTypography.labelLarge,
                 color = MaterialTheme.appColors.textPrimary,
                 onClick = {

@@ -10,21 +10,16 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Checkbox
-import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
@@ -125,8 +120,8 @@ class DiscussionAddThreadFragment : Fragment() {
                     topics = viewModel.getHandledTopics(),
                     uiMessage = uiMessage,
                     isLoading = isLoading,
-                    onPostDiscussionClick = { type, id, title, rawBody, bool ->
-                        viewModel.createThread(id, type, title, rawBody, bool)
+                    onPostDiscussionClick = { type, id, title, rawBody ->
+                        viewModel.createThread(id, type, title, rawBody)
                     },
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
@@ -169,7 +164,7 @@ private fun DiscussionAddThreadScreen(
     topics: List<Pair<String, String>>,
     uiMessage: UIMessage?,
     isLoading: Boolean,
-    onPostDiscussionClick: (String, String, String, String, Boolean) -> Unit,
+    onPostDiscussionClick: (String, String, String, String) -> Unit,
     onBackClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -194,9 +189,6 @@ private fun DiscussionAddThreadScreen(
     }
     var postToTopic by rememberSaveable {
         mutableStateOf(topicData)
-    }
-    var followPost by rememberSaveable {
-        mutableStateOf(true)
     }
     val expandedList by rememberSaveable {
         mutableStateOf(topics)
@@ -345,10 +337,11 @@ private fun DiscussionAddThreadScreen(
                                     color = MaterialTheme.appColors.textPrimary
                                 )
                                 Spacer(Modifier.height(16.dp))
-                                Tabs(tabs = listOf(
-                                    stringResource(id = discussionR.string.discussion_discussion),
-                                    stringResource(id = discussionR.string.discussion_question)
-                                ), currentPage = currentPage,
+                                Tabs(
+                                    tabs = listOf(
+                                        stringResource(id = discussionR.string.discussion_discussion),
+                                        stringResource(id = discussionR.string.discussion_question)
+                                    ), currentPage = currentPage,
                                     onItemClick = { bool ->
                                         if (bool) {
                                             discussionType = DiscussionType.QUESTION.value
@@ -404,35 +397,6 @@ private fun DiscussionAddThreadScreen(
                                         discussionValue = value
                                     }
                                 )
-                                Spacer(Modifier.height(16.dp))
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Checkbox(
-                                        modifier = Modifier.size(24.dp),
-                                        colors = CheckboxDefaults.colors(
-                                            checkedColor = MaterialTheme.appColors.primary,
-                                            uncheckedColor = MaterialTheme.appColors.textFieldText
-                                        ),
-                                        checked = followPost,
-                                        onCheckedChange = {
-                                            followPost = it
-                                        })
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        text = if (currentPage == 0) {
-                                            stringResource(id = discussionR.string.discussion_follow_discussion)
-                                        } else {
-                                            stringResource(id = discussionR.string.discussion_follow_question)
-                                        },
-                                        color = MaterialTheme.appColors.textFieldText,
-                                        style = MaterialTheme.appTypography.labelLarge,
-                                        modifier = Modifier.noRippleClickable {
-                                            followPost = !followPost
-                                        }
-                                    )
-                                }
                                 Spacer(Modifier.height(44.dp))
                                 if (isLoading) {
                                     CircularProgressIndicator(color = MaterialTheme.appColors.primary)
@@ -450,7 +414,6 @@ private fun DiscussionAddThreadScreen(
                                                 postToTopic.second,
                                                 titleValue,
                                                 discussionValue,
-                                                followPost
                                             )
                                         }
                                     )
@@ -571,8 +534,7 @@ private fun DiscussionAddThreadScreenPreview() {
             isLoading = false,
             onBackClick = {
             },
-            onPostDiscussionClick = { _, _, _, _, _ ->
-
+            onPostDiscussionClick = { _, _, _, _ ->
             }
         )
     }
@@ -591,8 +553,7 @@ private fun DiscussionAddThreadScreenTabletPreview() {
             isLoading = false,
             onBackClick = {
             },
-            onPostDiscussionClick = { _, _, _, _, _ ->
-
+            onPostDiscussionClick = { _, _, _, _ ->
             }
         )
     }

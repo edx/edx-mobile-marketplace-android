@@ -133,14 +133,13 @@ class DiscussionAddThreadViewModelTest {
                 any(),
                 any(),
                 any(),
-                any()
             )
         } throws UnknownHostException()
 
-        viewModel.createThread("", "", "", "", false)
+        viewModel.createThread("", "", "", "")
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assert(noInternet == message?.message)
@@ -159,14 +158,13 @@ class DiscussionAddThreadViewModelTest {
                 any(),
                 any(),
                 any(),
-                any()
             )
         } throws Exception()
 
-        viewModel.createThread("", "", "", "", false)
+        viewModel.createThread("", "", "", "")
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assert(somethingWrong == message?.message)
@@ -185,14 +183,13 @@ class DiscussionAddThreadViewModelTest {
                 any(),
                 any(),
                 any(),
-                any()
             )
         } returns mockThread
         every { analytics.logEvent(any(), any()) } returns Unit
-        viewModel.createThread("", "", "", "", false)
+        viewModel.createThread("", "", "", "")
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any()) }
         verify { analytics.logEvent(any(), any()) }
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.newThread.value != null)

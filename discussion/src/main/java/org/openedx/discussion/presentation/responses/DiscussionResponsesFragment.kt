@@ -51,6 +51,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
@@ -88,6 +89,7 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment
@@ -235,11 +237,7 @@ private fun DiscussionResponsesScreen(
     var commentValue by rememberSaveable {
         mutableStateOf("")
     }
-    val sendButtonColor = if (commentValue.isEmpty()) {
-        MaterialTheme.appColors.textFieldBorder
-    } else {
-        MaterialTheme.appColors.primaryButtonBackground
-    }
+    val sendButtonAlpha = if (commentValue.isEmpty()) 0.3f else 1f
 
     val iconButtonColor = if (commentValue.isEmpty()) {
         MaterialTheme.appColors.textFieldBackgroundVariant
@@ -373,7 +371,7 @@ private fun DiscussionResponsesScreen(
                                                         .padding(horizontal = paddingContent)
                                                         .padding(top = 24.dp, bottom = 8.dp),
                                                     text = pluralStringResource(
-                                                        id = org.openedx.discussion.R.plurals.discussion_comments,
+                                                        id = R.plurals.discussion_comments,
                                                         uiState.mainComment.childCount,
                                                         uiState.mainComment.childCount
                                                     ),
@@ -460,7 +458,7 @@ private fun DiscussionResponsesScreen(
                                                 shape = MaterialTheme.appShapes.buttonShape,
                                                 placeholder = {
                                                     Text(
-                                                        text = stringResource(id = org.openedx.discussion.R.string.discussion_add_comment),
+                                                        text = stringResource(id = R.string.discussion_add_comment),
                                                         color = MaterialTheme.appColors.textFieldHint,
                                                         style = MaterialTheme.appTypography.labelLarge,
                                                     )
@@ -476,7 +474,8 @@ private fun DiscussionResponsesScreen(
                                                 modifier = Modifier
                                                     .size(48.dp)
                                                     .clip(CircleShape)
-                                                    .background(sendButtonColor)
+                                                    .alpha(sendButtonAlpha)
+                                                    .background(MaterialTheme.appColors.primaryButtonBackground)
                                                     .clickable {
                                                         keyboardController?.hide()
                                                         focusManager.clearFocus()
@@ -489,7 +488,7 @@ private fun DiscussionResponsesScreen(
                                             ) {
                                                 Icon(
                                                     modifier = Modifier.padding(7.dp),
-                                                    painter = painterResource(id = org.openedx.discussion.R.drawable.discussion_ic_send),
+                                                    painter = painterResource(id = R.drawable.discussion_ic_send),
                                                     contentDescription = null,
                                                     tint = iconButtonColor
                                                 )
@@ -549,7 +548,7 @@ private fun DiscussionResponsesScreenPreview() {
             onBackClick = {},
             isClosed = false,
             onUserPhotoClick = {},
-            isPostingEnabled = false,
+            isPostingEnabled = true,
         )
     }
 }
@@ -581,7 +580,7 @@ private fun DiscussionResponsesScreenTabletPreview() {
             onBackClick = {},
             isClosed = false,
             onUserPhotoClick = {},
-            isPostingEnabled = false,
+            isPostingEnabled = true,
         )
     }
 }

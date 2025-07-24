@@ -40,3 +40,8 @@ fun <T> List<T>?.isNotEmptyThenLet(block: (List<T>) -> Unit) {
         block(this)
     }
 }
+
+fun <T> List<T>?.isNotNullAndEmpty(): Boolean {
+    return this != null && this.isEmpty()
+}
+

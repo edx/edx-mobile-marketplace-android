@@ -4,6 +4,7 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 import org.openedx.core.data.model.room.CourseEnrollmentDetailsEntity
 import org.openedx.core.extension.isNotNull
+import org.openedx.core.extension.isTrue
 import java.util.Date
 
 @Parcelize
@@ -19,7 +20,7 @@ data class CourseEnrollmentDetails(
 ) : Parcelable {
 
     val hasAccess: Boolean
-        get() = courseAccessDetails.coursewareAccess?.hasAccess ?: false
+        get() = courseAccessDetails.coursewareAccess?.hasAccess.isTrue()
 
     val isAuditAccessExpired: Boolean
         get() = courseAccessDetails.auditAccessExpires.isNotNull() &&

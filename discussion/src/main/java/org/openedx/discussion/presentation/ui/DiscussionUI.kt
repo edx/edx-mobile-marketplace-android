@@ -55,6 +55,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.TextConverter
+import org.openedx.core.extension.isTrue
 import org.openedx.core.ui.AutoSizeText
 import org.openedx.core.ui.HyperlinkImageText
 import org.openedx.core.ui.IconText
@@ -78,8 +79,8 @@ fun ThreadMainItem(
     onClick: (String, Boolean) -> Unit,
     onUserPhotoClick: (String) -> Unit
 ) {
-    val profileImageUrl = if (thread.users?.get(thread.author)?.image?.hasImage == true) {
-        thread.users[thread.author]?.image?.imageUrlFull
+    val profileImageUrl = if (thread.users?.get(thread.author)?.image?.hasImage.isTrue()) {
+        thread.users?.get(thread.author)?.image?.imageUrlFull
     } else {
         CoreR.drawable.core_ic_default_profile_picture
     }
@@ -222,10 +223,10 @@ fun CommentItem(
     onAddCommentClick: () -> Unit = {},
     onUserPhotoClick: (String) -> Unit,
 ) {
-    val profileImageUrl = if (comment.profileImage?.hasImage == true) {
-        comment.profileImage.imageUrlFull
-    } else if (comment.users?.get(comment.author)?.image?.hasImage == true) {
-        comment.users[comment.author]?.image?.imageUrlFull
+    val profileImageUrl = if (comment.profileImage?.hasImage.isTrue()) {
+        comment.profileImage?.imageUrlFull
+    } else if (comment.users?.get(comment.author)?.image?.hasImage.isTrue()) {
+        comment.users?.get(comment.author)?.image?.imageUrlFull
     } else {
         CoreR.drawable.core_ic_default_profile_picture
     }
@@ -398,10 +399,10 @@ fun CommentMainItem(
     onClick: (String, String, Boolean) -> Unit,
     onUserPhotoClick: (String) -> Unit
 ) {
-    val profileImageUrl = if (comment.profileImage?.hasImage == true) {
-        comment.profileImage.imageUrlFull
-    } else if (comment.users?.get(comment.author)?.image?.hasImage == true) {
-        comment.users[comment.author]?.image?.imageUrlFull
+    val profileImageUrl = if (comment.profileImage?.hasImage.isTrue()) {
+        comment.profileImage?.imageUrlFull
+    } else if (comment.users?.get(comment.author)?.image?.hasImage.isTrue()) {
+        comment.users?.get(comment.author)?.image?.imageUrlFull
     } else {
         CoreR.drawable.core_ic_default_profile_picture
     }

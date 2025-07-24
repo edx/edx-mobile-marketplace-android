@@ -8,6 +8,7 @@ import org.openedx.core.data.model.BlockCounts
 import org.openedx.core.data.model.EncodedVideos
 import org.openedx.core.data.model.StudentViewData
 import org.openedx.core.data.model.VideoInfo
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.domain.model.AssignmentProgress as DomainAssignmentProgress
 import org.openedx.core.domain.model.Block as DomainBlock
@@ -98,12 +99,12 @@ data class BlockDb(
                     type = type ?: "",
                     displayName = displayName ?: "",
                     descendants = descendants ?: emptyList(),
-                    graded = graded ?: false,
+                    graded = graded.isTrue(),
                     studentViewData = StudentViewDataDb.createFrom(studentViewData),
-                    studentViewMultiDevice = studentViewMultiDevice ?: false,
+                    studentViewMultiDevice = studentViewMultiDevice.isTrue(),
                     blockCounts = BlockCountsDb.createFrom(blockCounts),
                     completion = completion ?: 0.0,
-                    containsGatedContent = containsGatedContent ?: false,
+                    containsGatedContent = containsGatedContent.isTrue(),
                     assignmentProgress = assignmentProgress?.mapToRoomEntity(),
                     due = due
                 )
@@ -138,7 +139,7 @@ data class StudentViewDataDb(
 
         fun createFrom(studentViewData: StudentViewData?): StudentViewDataDb {
             return StudentViewDataDb(
-                onlyOnWeb = studentViewData?.onlyOnWeb ?: false,
+                onlyOnWeb = studentViewData?.onlyOnWeb.isTrue(),
                 duration = studentViewData?.duration.toString(),
                 transcripts = studentViewData?.transcripts,
                 encodedVideos = EncodedVideosDb.createFrom(studentViewData?.encodedVideos),

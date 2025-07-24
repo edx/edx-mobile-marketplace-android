@@ -68,7 +68,7 @@ import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.DiscoveryAnalyticsScreen
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
-import org.openedx.discovery.presentation.catalog.WebViewLink
+import org.openedx.discovery.presentation.catalog.WebViewLink.Authority
 import java.util.concurrent.atomic.AtomicReference
 import org.openedx.core.R as CoreR
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
@@ -256,7 +256,7 @@ private fun CourseInfoScreen(
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
-    onUriClick: (String, WebViewLink.Authority) -> Unit,
+    onUriClick: (String, Authority) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current

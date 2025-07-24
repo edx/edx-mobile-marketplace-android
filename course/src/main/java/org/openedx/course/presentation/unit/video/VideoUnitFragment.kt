@@ -24,6 +24,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.extension.computeWindowSizeClasses
 import org.openedx.core.extension.dpToPixel
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.objectToString
 import org.openedx.core.extension.stringToObject
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
@@ -125,11 +126,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(requireActivity())
         val currentBounds = windowMetrics.bounds
         val layoutParams = binding.playerView.layoutParams as FrameLayout.LayoutParams
-        if (orientation == Configuration.ORIENTATION_PORTRAIT || windowSize?.isTablet == true) {
+        if (orientation == Configuration.ORIENTATION_PORTRAIT || windowSize?.isTablet.isTrue()) {
             val width = currentBounds.width() - requireContext().dpToPixel(32)
             val minHeight = requireContext().dpToPixel(194).roundToInt()
             val height = (width / 16f * 9f).roundToInt()
-            layoutParams.height = if (windowSize?.isTablet == true) {
+            layoutParams.height = if (windowSize?.isTablet.isTrue()) {
                 requireContext().dpToPixel(320).roundToInt()
             } else if (height < minHeight) {
                 minHeight

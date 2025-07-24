@@ -2,6 +2,7 @@ package org.openedx.core.data.model
 
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.BlockType
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.domain.model.Block as DomainBlock
 import org.openedx.core.domain.model.BlockCounts as DomainBlockCounts
@@ -65,12 +66,12 @@ data class Block(
             displayName = displayName ?: "",
             descendants = descendants ?: emptyList(),
             descendantsType = descendantsType,
-            graded = graded ?: false,
+            graded = graded.isTrue(),
             studentViewData = studentViewData?.mapToDomain(),
-            studentViewMultiDevice = studentViewMultiDevice ?: false,
+            studentViewMultiDevice = studentViewMultiDevice.isTrue(),
             blockCounts = blockCounts?.mapToDomain()!!,
             completion = completion ?: 0.0,
-            containsGatedContent = containsGatedContent ?: false,
+            containsGatedContent = containsGatedContent.isTrue(),
             assignmentProgress = assignmentProgress?.mapToDomain(),
             due = TimeUtils.iso8601ToDate(due ?: ""),
         )
@@ -93,7 +94,7 @@ data class StudentViewData(
 ) {
     fun mapToDomain(): DomainStudentViewData {
         return DomainStudentViewData(
-            onlyOnWeb = onlyOnWeb ?: false,
+            onlyOnWeb = onlyOnWeb.isTrue(),
             duration = duration ?: "",
             transcripts = transcripts,
             encodedVideos = encodedVideos?.mapToDomain(),

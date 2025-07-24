@@ -16,6 +16,7 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.ui.DefaultPlayerUiCo
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.requestApplyInsetsWhenAttached
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.global.viewBinding
@@ -121,7 +122,7 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
                 binding.youtubePlayerView.setCustomPlayerUi(defPlayerUiController.rootView)
 
                 val videoId = viewModel.videoUrl.split("watch?v=")[1]
-                if (viewModel.isPlaying == true) {
+                if (viewModel.isPlaying.isTrue()) {
                     youTubePlayer.loadVideo(videoId, viewModel.currentVideoTime.toFloat() / 1000)
                 } else {
                     youTubePlayer.cueVideo(videoId, viewModel.currentVideoTime.toFloat() / 1000)
@@ -166,5 +167,4 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
             return fragment
         }
     }
-
 }

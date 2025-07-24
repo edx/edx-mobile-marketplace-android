@@ -13,6 +13,7 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.extension.isNotNullOrEmpty
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.TimeUtils
 import java.lang.reflect.Type
 
@@ -69,7 +70,7 @@ data class CourseStructureModel(
             media = media?.mapToDomain(),
             courseAccessDetails = courseAccessDetails.mapToDomain(),
             certificate = certificate?.mapToDomain(),
-            isSelfPaced = isSelfPaced ?: false,
+            isSelfPaced = isSelfPaced.isTrue(),
             progress = progress?.mapToDomain(),
             enrollmentDetails = enrollmentDetails.mapToDomain(),
             productInfo = courseModes?.find { it.isVerifiedMode() }
@@ -93,7 +94,7 @@ data class CourseStructureModel(
             media = MediaDb.createFrom(media),
             courseAccessDetails = courseAccessDetails.mapToRoomEntity(),
             certificate = certificate?.mapToRoomEntity(),
-            isSelfPaced = isSelfPaced ?: false,
+            isSelfPaced = isSelfPaced.isTrue(),
             progress = progress?.mapToRoomEntity() ?: ProgressDb.DEFAULT_PROGRESS,
             enrollmentDetails = enrollmentDetails.mapToRoomEntity()
         )

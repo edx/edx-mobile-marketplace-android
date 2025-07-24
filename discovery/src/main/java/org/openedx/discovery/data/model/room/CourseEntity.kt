@@ -5,6 +5,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import org.openedx.core.data.model.room.MediaDb
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.TimeUtils
 import org.openedx.discovery.data.model.CourseDetails
 import org.openedx.discovery.domain.model.Course
@@ -92,9 +93,9 @@ data class CourseEntity(
                     effort = effort ?: "",
                     enrollmentStart = enrollmentStart ?: "",
                     enrollmentEnd = enrollmentEnd ?: "",
-                    hidden = hidden ?: false,
-                    invitationOnly = invitationOnly ?: false,
-                    mobileAvailable = mobileAvailable ?: false,
+                    hidden = hidden.isTrue(),
+                    invitationOnly = invitationOnly.isTrue(),
+                    mobileAvailable = mobileAvailable.isTrue(),
                     name = name ?: "",
                     number = number ?: "",
                     org = organization ?: "",
@@ -106,7 +107,7 @@ data class CourseEntity(
                     pacing = pacing ?: "",
                     overview = overview ?: "",
                     media = MediaDb.createFrom(media),
-                    isEnrolled = isEnrolled ?: false
+                    isEnrolled = isEnrolled.isTrue()
                 )
             }
         }

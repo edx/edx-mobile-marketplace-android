@@ -3,6 +3,7 @@ package org.openedx.core.domain.model
 import android.webkit.URLUtil
 import org.openedx.core.AppDataConstants
 import org.openedx.core.BlockType
+import org.openedx.core.extension.isTrue
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
@@ -32,7 +33,7 @@ data class Block(
 ) {
     val isDownloadable: Boolean
         get() {
-            return studentViewData != null && studentViewData.encodedVideos?.hasDownloadableVideo == true
+            return studentViewData != null && studentViewData.encodedVideos?.hasDownloadableVideo.isTrue()
         }
 
     val downloadableType: FileType
@@ -127,7 +128,7 @@ data class EncodedVideos(
                 isPreferredVideoInfo(fallback)
 
     val hasYoutubeUrl: Boolean
-        get() = youtube?.url?.isNotEmpty() == true
+        get() = youtube?.url?.isNotEmpty().isTrue()
 
     fun getPreferredVideoInfoForStreaming(preferredVideoStreaming: VideoQuality): VideoInfo {
         return when (preferredVideoStreaming) {

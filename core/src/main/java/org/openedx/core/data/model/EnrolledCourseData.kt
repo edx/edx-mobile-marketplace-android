@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 import org.openedx.core.data.model.room.MediaDb
 import org.openedx.core.data.model.room.discovery.EnrolledCourseDataDb
 import org.openedx.core.domain.model.EnrolledCourseData
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.TimeUtils
 
 data class EnrolledCourseData(
@@ -70,7 +71,7 @@ data class EnrolledCourseData(
             courseHandouts = courseHandouts ?: "",
             discussionUrl = discussionUrl ?: "",
             videoOutline = videoOutline ?: "",
-            isSelfPaced = isSelfPaced ?: false
+            isSelfPaced = isSelfPaced.isTrue()
         )
     }
 
@@ -95,7 +96,7 @@ data class EnrolledCourseData(
             courseHandouts = courseHandouts ?: "",
             discussionUrl = discussionUrl ?: "",
             videoOutline = videoOutline ?: "",
-            isSelfPaced = isSelfPaced ?: false
+            isSelfPaced = isSelfPaced.isTrue()
         )
     }
 }

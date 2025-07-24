@@ -83,6 +83,7 @@ import org.openedx.core.domain.model.AssignmentProgress
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseBannerType
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.nonZero
 import org.openedx.core.extension.toFileSize
 import org.openedx.core.module.db.DownloadModel
@@ -596,7 +597,7 @@ fun CourseSection(
     onDownloadClick: (blocksIds: List<String>) -> Unit,
 ) {
     val arrowRotation by animateFloatAsState(
-        targetValue = if (courseSectionsState == true) -90f else 90f, label = ""
+        targetValue = if (courseSectionsState.isTrue()) -90f else 90f, label = ""
     )
     val subSectionIds = courseSubSections?.map { it.id }.orEmpty()
     val filteredStatuses = downloadedStateMap.filterKeys { it in subSectionIds }.values
@@ -648,7 +649,7 @@ fun CourseSection(
         )
         courseSubSections?.forEach { subSectionBlock ->
             AnimatedVisibility(
-                visible = courseSectionsState == true
+                visible = courseSectionsState.isTrue()
             ) {
                 CourseSubSectionItem(
                     block = subSectionBlock,

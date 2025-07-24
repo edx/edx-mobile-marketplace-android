@@ -1,6 +1,7 @@
 package org.openedx.core.domain.model
 
 import org.openedx.core.domain.model.iap.ProductInfo
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.TimeUtils
 import java.util.Date
 
@@ -29,7 +30,7 @@ data class CourseStructure(
     val isUpgradeable: Boolean
         get() = enrollmentDetails.isAuditMode &&
                 isStarted &&
-                courseAccessDetails.coursewareAccess?.hasAccess == true &&
+                courseAccessDetails.coursewareAccess?.hasAccess.isTrue() &&
                 enrollmentDetails.isUpgradeDeadlinePassed.not() &&
                 productInfo != null
 }

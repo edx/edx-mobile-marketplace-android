@@ -55,6 +55,7 @@ import org.openedx.auth.R
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.extension.TextConverter
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.tagId
 import org.openedx.core.ui.HyperlinkText
 import org.openedx.core.ui.SheetContent
@@ -81,7 +82,7 @@ fun RequiredFields(
             -> {
                 InputRegistrationField(
                     modifier = Modifier.fillMaxWidth(),
-                    isErrorShown = showErrorMap[field.name] ?: true,
+                    isErrorShown = showErrorMap[field.name].isTrue(),
                     registrationField = field,
                     onValueChanged = { serverName, value, isErrorShown ->
                         if (!isErrorShown) {
@@ -114,7 +115,7 @@ fun RequiredFields(
             RegistrationFieldType.SELECT -> {
                 SelectableRegisterField(
                     registrationField = field,
-                    isErrorShown = showErrorMap[field.name] ?: true,
+                    isErrorShown = showErrorMap[field.name].isTrue(),
                     initialValue = selectableNamesMap[field.name] ?: "",
                     onClick = { serverName, list ->
                         onSelectClick(serverName, field, list)
@@ -127,7 +128,7 @@ fun RequiredFields(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(150.dp),
-                    isErrorShown = showErrorMap[field.name] ?: true,
+                    isErrorShown = showErrorMap[field.name].isTrue(),
                     registrationField = field,
                     onValueChanged = { serverName, value, isErrorShown ->
                         if (!isErrorShown) {
@@ -160,8 +161,7 @@ fun OptionalFields(
                 RegistrationFieldType.TEXT, RegistrationFieldType.EMAIL, RegistrationFieldType.CONFIRM_EMAIL, RegistrationFieldType.PASSWORD -> {
                     InputRegistrationField(
                         modifier = Modifier.fillMaxWidth(),
-                        isErrorShown = showErrorMap[field.name]
-                            ?: true,
+                        isErrorShown = showErrorMap[field.name].isTrue(),
                         registrationField = field,
                         onValueChanged = { serverName, value, isErrorShown ->
                             if (!isErrorShown) {
@@ -200,8 +200,7 @@ fun OptionalFields(
                 RegistrationFieldType.SELECT -> {
                     SelectableRegisterField(
                         registrationField = field,
-                        isErrorShown = showErrorMap[field.name]
-                            ?: true,
+                        isErrorShown = showErrorMap[field.name].isTrue(),
                         initialValue = selectableNamesMap[field.name]
                             ?: "",
                         onClick = { serverName, list ->
@@ -214,8 +213,7 @@ fun OptionalFields(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(150.dp),
-                        isErrorShown = showErrorMap[field.name]
-                            ?: true,
+                        isErrorShown = showErrorMap[field.name].isTrue(),
                         registrationField = field,
                         onValueChanged = { serverName, value, isErrorShown ->
                             if (!isErrorShown) {

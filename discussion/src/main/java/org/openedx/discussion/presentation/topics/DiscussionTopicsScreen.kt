@@ -42,6 +42,7 @@ import androidx.fragment.app.FragmentManager
 import org.openedx.core.FragmentViewType
 import org.openedx.core.NoContentScreenType
 import org.openedx.core.UIMessage
+import org.openedx.core.extension.isNotNullAndEmpty
 import org.openedx.core.ui.CircularProgress
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.NoContentScreen
@@ -264,7 +265,7 @@ private fun DiscussionTopicsUI(
                                                         title
                                                     )
                                                 })
-                                                if (uiState.data.getOrNull(index + 1)?.children?.isEmpty() == true) {
+                                                if (uiState.data.getOrNull(index + 1)?.children.isNotNullAndEmpty()) {
                                                     Divider()
                                                 }
                                             }

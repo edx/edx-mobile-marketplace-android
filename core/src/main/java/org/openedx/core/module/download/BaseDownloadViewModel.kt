@@ -10,6 +10,7 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.BlockType
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
+import org.openedx.core.extension.isTrue
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.db.DownloadModel
@@ -100,7 +101,7 @@ abstract class BaseDownloadViewModel(
 
     fun isBlockDownloading(id: String): Boolean {
         val blockDownloadingState = downloadModelsStatus[id]
-        return blockDownloadingState?.isWaitingOrDownloading == true
+        return blockDownloadingState?.isWaitingOrDownloading.isTrue()
     }
 
     fun isBlockDownloaded(id: String): Boolean {
@@ -225,10 +226,12 @@ abstract class BaseDownloadViewModel(
                 if (blockDescendant.type == BlockType.VERTICAL) {
                     for (unitBlockId in blockDescendant.descendants) {
                         val block = allBlocks[unitBlockId]
-                        if (block?.isDownloadable == true) {
-                            val id = sequentialBlock.id
-                            val children = downloadableChildrenMap[id] ?: listOf()
-                            downloadableChildrenMap[id] = children + block.id
+                        block?.let {
+                            if (block.isDownloadable.isTrue()) {
+                                val id = sequentialBlock.id
+                                val children = downloadableChildrenMap[id] ?: listOf()
+                                downloadableChildrenMap[id] = children + block.id
+                            }
                         }
                     }
                 }
@@ -239,10 +242,12 @@ abstract class BaseDownloadViewModel(
     protected fun addDownloadableChildrenForVerticalBlock(verticalBlock: Block) {
         for (unitBlockId in verticalBlock.descendants) {
             val block = allBlocks[unitBlockId]
-            if (block?.isDownloadable == true) {
-                val id = verticalBlock.id
-                val children = downloadableChildrenMap[id] ?: listOf()
-                downloadableChildrenMap[id] = children + block.id
+            block?.let {
+                if (block.isDownloadable.isTrue()) {
+                    val id = verticalBlock.id
+                    val children = downloadableChildrenMap[id] ?: listOf()
+                    downloadableChildrenMap[id] = children + block.id
+                }
             }
         }
     }

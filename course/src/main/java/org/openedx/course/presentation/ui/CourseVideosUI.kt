@@ -74,6 +74,7 @@ import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.domain.model.Progress
 import org.openedx.core.domain.model.VideoSettings
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.toFileSize
 import org.openedx.core.module.download.DownloadModelsSize
 import org.openedx.core.presentation.course.CourseViewMode
@@ -348,8 +349,8 @@ private fun CourseVideosUI(
             val downloadModelsSize =
                 (uiState as? CourseVideosUIState.CourseData)?.downloadModelsSize
             val isDownloadedAllVideos =
-                downloadModelsSize?.isAllBlocksDownloadedOrDownloading == true &&
-                        downloadModelsSize.remainingCount == 0
+                downloadModelsSize?.isAllBlocksDownloadedOrDownloading.isTrue() &&
+                        downloadModelsSize?.remainingCount == 0
             val dialogTextId = if (isDownloadedAllVideos)
                 R.string.course_delete_downloads_confirmation_text else
                 R.string.course_delete_while_downloading_confirmation_text

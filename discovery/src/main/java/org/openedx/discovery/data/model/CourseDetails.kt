@@ -2,6 +2,7 @@ package org.openedx.discovery.data.model
 
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.data.model.Media
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.TimeUtils
 import org.openedx.discovery.domain.model.Course
 
@@ -58,9 +59,9 @@ data class CourseDetails(
             effort = effort ?: "",
             enrollmentStart = TimeUtils.iso8601ToDate(enrollmentStart ?: ""),
             enrollmentEnd = TimeUtils.iso8601ToDate(enrollmentEnd ?: ""),
-            hidden = hidden ?: false,
-            invitationOnly = invitationOnly ?: false,
-            mobileAvailable = mobileAvailable ?: false,
+            hidden = hidden.isTrue(),
+            invitationOnly = invitationOnly.isTrue(),
+            mobileAvailable = mobileAvailable.isTrue(),
             name = name ?: "",
             number = number ?: "",
             org = organization ?: "",
@@ -71,7 +72,7 @@ data class CourseDetails(
             startType = startType ?: "",
             pacing = pacing ?: "",
             overview = overview ?: "",
-            isEnrolled = isEnrolled ?: false,
+            isEnrolled = isEnrolled.isTrue(),
             media = media?.mapToDomain() ?: org.openedx.core.domain.model.Media()
         )
     }

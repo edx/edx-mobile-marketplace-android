@@ -6,6 +6,7 @@ import org.openedx.core.data.model.room.discovery.ProgressDb
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.extension.isNotNullOrEmpty
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.domain.model.Progress as ProgressDomain
 
@@ -36,7 +37,7 @@ data class EnrolledCourse(
             auditAccessExpires = TimeUtils.iso8601ToDate(auditAccessExpires ?: ""),
             created = created ?: "",
             mode = mode ?: "",
-            isActive = isActive ?: false,
+            isActive = isActive.isTrue(),
             course = course?.mapToDomain()!!,
             certificate = certificate?.mapToDomain(),
             progress = progress?.mapToDomain() ?: ProgressDomain.DEFAULT_PROGRESS,
@@ -54,7 +55,7 @@ data class EnrolledCourse(
             auditAccessExpires = auditAccessExpires ?: "",
             created = created ?: "",
             mode = mode ?: "",
-            isActive = isActive ?: false,
+            isActive = isActive.isTrue(),
             course = course?.mapToRoomEntity()!!,
             certificate = certificate?.mapToRoomEntity(),
             progress = progress?.mapToRoomEntity() ?: ProgressDb.DEFAULT_PROGRESS,

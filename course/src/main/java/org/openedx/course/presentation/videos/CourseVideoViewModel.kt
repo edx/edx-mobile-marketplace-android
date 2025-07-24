@@ -15,6 +15,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.VideoSettings
+import org.openedx.core.extension.isTrue
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.download.BaseDownloadViewModel
@@ -178,7 +179,7 @@ class CourseVideoViewModel(
         if (_uiState.value is CourseVideosUIState.CourseData) {
             val state = _uiState.value as CourseVideosUIState.CourseData
             val courseSectionsState = state.courseSectionsState.toMutableMap()
-            courseSectionsState[blockId] = !(state.courseSectionsState[blockId] ?: false)
+            courseSectionsState[blockId] = !(state.courseSectionsState[blockId].isTrue())
 
             _uiState.value = state.copy(courseSectionsState = courseSectionsState)
         }

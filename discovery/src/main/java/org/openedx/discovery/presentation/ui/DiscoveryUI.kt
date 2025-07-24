@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.openedx.core.extension.isLinkValid
+import org.openedx.core.extension.isTrue
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -67,7 +68,7 @@ fun ImageHeader(
         } else {
             ContentScale.Crop
         }
-    val imageUrl = if (courseImage?.isLinkValid() == true) {
+    val imageUrl = if (courseImage?.isLinkValid().isTrue()) {
         courseImage
     } else {
         apiHostUrl + courseImage
@@ -127,8 +128,8 @@ fun DiscoveryCourseItem(
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
-                    .error(org.openedx.core.R.drawable.core_no_image_course)
-                    .placeholder(org.openedx.core.R.drawable.core_no_image_course)
+                    .error(CoreR.drawable.core_no_image_course)
+                    .placeholder(CoreR.drawable.core_no_image_course)
                     .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,

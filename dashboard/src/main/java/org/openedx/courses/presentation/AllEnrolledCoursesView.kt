@@ -77,6 +77,7 @@ import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
 import org.openedx.core.domain.model.Progress
+import org.openedx.core.extension.isTrue
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
@@ -349,7 +350,7 @@ private fun AllEnrolledCoursesView(
                                     }
                                 }
 
-                                state.courses?.isEmpty() == true -> {
+                                state.courses?.isEmpty().isTrue() -> {
                                     Box(
                                         modifier = Modifier.fillMaxSize(),
                                         contentAlignment = Alignment.Center

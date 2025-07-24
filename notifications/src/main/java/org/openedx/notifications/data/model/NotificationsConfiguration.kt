@@ -1,6 +1,7 @@
 package org.openedx.notifications.data.model
 
 import com.google.gson.annotations.SerializedName
+import org.openedx.core.extension.isTrue
 import org.openedx.notifications.domain.model.NotificationsConfiguration
 
 data class NotificationsConfiguration(
@@ -11,7 +12,7 @@ data class NotificationsConfiguration(
     fun mapToDomain(): NotificationsConfiguration {
         return NotificationsConfiguration(
             discussionsPushEnabled = data.discussion
-                .notificationTypes[CORE_NOTIFICATION_TYPE]?.push ?: false
+                .notificationTypes[CORE_NOTIFICATION_TYPE]?.push.isTrue()
         )
     }
 

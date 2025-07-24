@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 import org.openedx.core.domain.model.CourseDatesBannerInfo
 import org.openedx.core.domain.model.CourseDatesResult
 import org.openedx.core.domain.model.DatesSection
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.utils.addDays
 import org.openedx.core.utils.clearTime
@@ -28,11 +29,11 @@ data class CourseDates(
 
     private fun getDatesBannerInfo(): CourseDatesBannerInfo {
         return CourseDatesBannerInfo(
-            missedDeadlines = datesBannerInfo?.missedDeadlines ?: false,
-            missedGatedContent = datesBannerInfo?.missedGatedContent ?: false,
+            missedDeadlines = datesBannerInfo?.missedDeadlines.isTrue(),
+            missedGatedContent = datesBannerInfo?.missedGatedContent.isTrue(),
             verifiedUpgradeLink = datesBannerInfo?.verifiedUpgradeLink ?: "",
-            contentTypeGatingEnabled = datesBannerInfo?.contentTypeGatingEnabled ?: false,
-            hasEnded = hasEnded ?: false,
+            contentTypeGatingEnabled = datesBannerInfo?.contentTypeGatingEnabled.isTrue(),
+            hasEnded = hasEnded.isTrue(),
         )
     }
 

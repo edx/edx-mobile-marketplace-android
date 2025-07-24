@@ -8,6 +8,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import org.openedx.core.extension.isEmailValid
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.EmailUtil
 
 open class DefaultWebViewClient(
@@ -80,8 +81,8 @@ open class DefaultWebViewClient(
                 null
             }
             hostForThisPage != null && hostForThisPage != uri.host ||
-                    externalLinkValue?.toBoolean() == true
-        } ?: false
+                    externalLinkValue?.toBoolean().isTrue()
+        }.isTrue()
     }
 
     companion object {

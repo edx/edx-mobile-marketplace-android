@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import kotlinx.coroutines.launch
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.extension.isTrue
 import org.openedx.core.system.notifier.CourseCompletionSet
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseVideoPositionChanged
@@ -39,7 +40,7 @@ class VideoViewModel(
                         videoUrl,
                         currentVideoTime,
                         videoDuration,
-                        isPlaying ?: false
+                        isPlaying.isTrue()
                     )
                 )
             }

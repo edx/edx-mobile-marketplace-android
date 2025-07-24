@@ -9,6 +9,7 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.extension.isTrue
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
@@ -78,7 +79,7 @@ class EditProfileViewModel(
         _uiState.value = EditProfileUIState(account, true, isLimitedProfile)
         viewModelScope.launch {
             try {
-                if (deleteImage.value == true) {
+                if (deleteImage.value.isTrue()) {
                     interactor.deleteProfileImage()
                 }
                 val updatedAccount = interactor.updateAccount(fields)

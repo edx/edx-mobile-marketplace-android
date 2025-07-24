@@ -23,6 +23,7 @@ import org.openedx.app.deeplink.DeepLink
 import org.openedx.auth.presentation.logistration.LogistrationFragment
 import org.openedx.auth.presentation.signin.SignInFragment
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.requestApplyInsetsWhenAttached
 import org.openedx.core.presentation.global.InsetHolder
 import org.openedx.core.presentation.global.WindowSizeHolder
@@ -151,7 +152,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
             }
 
             val extras = intent.extras
-            if (extras?.containsKey(DeepLink.Keys.SCREEN_NAME.value) == true) {
+            if (extras?.containsKey(DeepLink.Keys.SCREEN_NAME.value).isTrue()) {
                 handlePushNotification(extras)
             }
         }
@@ -177,12 +178,12 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         this.intent = intent
 
         val extras = intent?.extras
-        if (extras?.containsKey(DeepLink.Keys.SCREEN_NAME.value) == true) {
+        if (extras?.containsKey(DeepLink.Keys.SCREEN_NAME.value).isTrue()) {
             handlePushNotification(extras)
         }
 
         if (viewModel.isBranchEnabled) {
-            if (intent?.getBooleanExtra(BRANCH_FORCE_NEW_SESSION, false) == true) {
+            if (intent?.getBooleanExtra(BRANCH_FORCE_NEW_SESSION, false).isTrue()) {
                 Branch.sessionBuilder(this)
                     .withCallback(branchCallback)
                     .reInit()
@@ -225,7 +226,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         }
     }
 
-    private fun handlePushNotification(data: Bundle) {
+    private fun handlePushNotification(data: Bundle?) {
         val deepLink = DeepLink(data.toStringMap())
         viewModel.handleDiscussionNotification(deepLink)
         viewModel.makeExternalRoute(supportFragmentManager, deepLink)

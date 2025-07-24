@@ -88,11 +88,11 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment
 import org.openedx.discussion.presentation.ui.CommentMainItem
-import org.openedx.discussion.R as discussionR
 
 class DiscussionResponsesFragment : Fragment() {
 
@@ -310,7 +310,7 @@ private fun DiscussionResponsesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 48.dp),
-                        text = stringResource(id = discussionR.string.discussion_comments_title),
+                        text = stringResource(id = R.string.discussion_comments_title),
                         color = MaterialTheme.appColors.textPrimary,
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.appTypography.titleMedium,
@@ -373,7 +373,7 @@ private fun DiscussionResponsesScreen(
                                                         .padding(horizontal = paddingContent)
                                                         .padding(top = 24.dp, bottom = 8.dp),
                                                     text = pluralStringResource(
-                                                        id = org.openedx.discussion.R.plurals.discussion_comments,
+                                                        id = R.plurals.discussion_comments,
                                                         uiState.mainComment.childCount,
                                                         uiState.mainComment.childCount
                                                     ),
@@ -460,7 +460,7 @@ private fun DiscussionResponsesScreen(
                                                 shape = MaterialTheme.appShapes.buttonShape,
                                                 placeholder = {
                                                     Text(
-                                                        text = stringResource(id = org.openedx.discussion.R.string.discussion_add_comment),
+                                                        text = stringResource(id = R.string.discussion_add_comment),
                                                         color = MaterialTheme.appColors.textFieldHint,
                                                         style = MaterialTheme.appTypography.labelLarge,
                                                     )
@@ -489,7 +489,7 @@ private fun DiscussionResponsesScreen(
                                             ) {
                                                 Icon(
                                                     modifier = Modifier.padding(7.dp),
-                                                    painter = painterResource(id = org.openedx.discussion.R.drawable.discussion_ic_send),
+                                                    painter = painterResource(id = R.drawable.discussion_ic_send),
                                                     contentDescription = null,
                                                     tint = iconButtonColor
                                                 )

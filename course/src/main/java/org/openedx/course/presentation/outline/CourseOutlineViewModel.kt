@@ -26,6 +26,7 @@ import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.extension.getSequentialBlocks
 import org.openedx.core.extension.getVerticalBlocks
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.extension.isTrue
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.download.BaseDownloadViewModel
@@ -165,7 +166,7 @@ class CourseOutlineViewModel(
         return if (_uiState.value is CourseOutlineUIState.CourseData) {
             val state = _uiState.value as CourseOutlineUIState.CourseData
             val courseSectionsState = state.courseSectionsState.toMutableMap()
-            courseSectionsState[blockId] = !(state.courseSectionsState[blockId] ?: false)
+            courseSectionsState[blockId] = !(state.courseSectionsState[blockId].isTrue())
 
             _uiState.value = CourseOutlineUIState.CourseData(
                 courseStructure = state.courseStructure,
@@ -178,7 +179,7 @@ class CourseOutlineViewModel(
                 datesBannerInfo = state.datesBannerInfo
             )
 
-            courseSectionsState[blockId] ?: false
+            courseSectionsState[blockId].isTrue()
 
         } else {
             false

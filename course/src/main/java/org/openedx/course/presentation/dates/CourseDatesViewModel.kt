@@ -23,6 +23,7 @@ import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.extension.getSequentialBlocks
 import org.openedx.core.extension.getVerticalBlocks
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.extension.isTrue
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncUIState
 import org.openedx.core.system.CalendarManager
@@ -116,7 +117,7 @@ class CourseDatesViewModel(
         viewModelScope.launch {
             try {
                 courseStructure = interactor.getCourseStructure(courseId = courseId)
-                isSelfPaced = courseStructure?.isSelfPaced ?: false
+                isSelfPaced = courseStructure?.isSelfPaced.isTrue()
                 val datesResponse = interactor.getCourseDates(courseId = courseId)
                 if (datesResponse.datesSection.isEmpty()) {
                     _uiState.value = DatesUIState.Error

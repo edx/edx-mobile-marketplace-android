@@ -3,6 +3,7 @@ package org.openedx.core.data.model
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.data.model.room.discovery.CoursewareAccessDb
 import org.openedx.core.domain.model.CoursewareAccess
+import org.openedx.core.extension.isTrue
 
 data class CoursewareAccess(
     @SerializedName("has_access")
@@ -21,7 +22,7 @@ data class CoursewareAccess(
 
     fun mapToDomain(): CoursewareAccess {
         return CoursewareAccess(
-            hasAccess = hasAccess ?: false,
+            hasAccess = hasAccess.isTrue(),
             errorCode = errorCode ?: "",
             developerMessage = developerMessage ?: "",
             userMessage = userMessage ?: "",
@@ -32,7 +33,7 @@ data class CoursewareAccess(
 
     fun mapToRoomEntity(): CoursewareAccessDb {
         return CoursewareAccessDb(
-            hasAccess = hasAccess ?: false,
+            hasAccess = hasAccess.isTrue(),
             errorCode = errorCode ?: "",
             developerMessage = developerMessage ?: "",
             userMessage = userMessage ?: "",

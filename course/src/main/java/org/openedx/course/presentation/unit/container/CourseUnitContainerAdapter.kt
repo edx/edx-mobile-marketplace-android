@@ -4,6 +4,7 @@ import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import org.openedx.core.FragmentViewType
 import org.openedx.core.domain.model.Block
+import org.openedx.core.extension.isTrue
 import org.openedx.course.presentation.unit.NotSupportedUnitFragment
 import org.openedx.course.presentation.unit.html.HtmlUnitFragment
 import org.openedx.course.presentation.unit.video.VideoUnitFragment
@@ -24,8 +25,8 @@ class CourseUnitContainerAdapter(
     private fun unitBlockFragment(block: Block): Fragment {
         return when {
             (block.isVideoBlock &&
-                    (block.studentViewData?.encodedVideos?.hasVideoUrl == true ||
-                            block.studentViewData?.encodedVideos?.hasYoutubeUrl == true)) -> {
+                    (block.studentViewData?.encodedVideos?.hasVideoUrl.isTrue() ||
+                            block.studentViewData?.encodedVideos?.hasYoutubeUrl.isTrue())) -> {
                 val encodedVideos = block.studentViewData?.encodedVideos!!
                 with(encodedVideos) {
                     val downloadModel = viewModel.getDownloadModelById(block.id)

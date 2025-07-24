@@ -5,6 +5,7 @@ import com.google.gson.internal.bind.util.ISO8601Utils
 import kotlinx.parcelize.Parcelize
 import org.openedx.core.data.model.room.CourseInfoOverviewDB
 import org.openedx.core.domain.model.iap.ProductInfo
+import org.openedx.core.extension.isTrue
 import java.util.Date
 
 @Parcelize
@@ -25,7 +26,7 @@ data class CourseInfoOverview(
 ) : Parcelable {
 
     val isStarted: Boolean
-        get() = start?.before(Date()) ?: false
+        get() = start?.before(Date()).isTrue()
 
     fun mapToRoomEntity() = CourseInfoOverviewDB(
         name = name,

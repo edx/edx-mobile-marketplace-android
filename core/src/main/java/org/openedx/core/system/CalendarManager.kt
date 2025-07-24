@@ -16,6 +16,7 @@ import io.branch.referral.util.LinkProperties
 import org.openedx.core.R
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.CourseDateBlock
+import org.openedx.core.extension.isTrue
 import org.openedx.core.utils.Logger
 import org.openedx.core.utils.toCalendar
 import java.util.Calendar
@@ -135,12 +136,15 @@ class CalendarManager(
                 calendarTitle
             ), null
         )
-        if (cursor?.moveToFirst() == true) {
-            if (cursor.getString(cursor.getColumnIndex(CalendarContract.Calendars.NAME))
-                    .equals(calendarTitle)
-            ) {
-                calendarId =
-                    cursor.getInt(cursor.getColumnIndex(CalendarContract.Calendars._ID)).toLong()
+        cursor?.let {
+            if (cursor.moveToFirst().isTrue()) {
+                if (cursor.getString(cursor.getColumnIndex(CalendarContract.Calendars.NAME))
+                        .equals(calendarTitle)
+                ) {
+                    calendarId =
+                        cursor.getInt(cursor.getColumnIndex(CalendarContract.Calendars._ID))
+                            .toLong()
+                }
             }
         }
         cursor?.close()

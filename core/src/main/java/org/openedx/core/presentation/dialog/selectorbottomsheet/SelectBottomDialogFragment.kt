@@ -1,7 +1,6 @@
 package org.openedx.core.presentation.dialog.selectorbottomsheet
 
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -25,7 +24,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.DialogFragment
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -39,6 +37,7 @@ import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
+import androidx.core.graphics.drawable.toDrawable
 
 class SelectBottomDialogFragment : BottomSheetDialogFragment() {
 
@@ -47,7 +46,7 @@ class SelectBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.values = requireArguments().parcelableArrayList(ARG_LIST_VALUES)!!
-        setStyle(DialogFragment.STYLE_NORMAL, R.style.BottomSheetDialog)
+        setStyle(STYLE_NORMAL, R.style.BottomSheetDialog)
     }
 
     override fun onCreateView(
@@ -56,7 +55,7 @@ class SelectBottomDialogFragment : BottomSheetDialogFragment() {
         savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
         if (dialog != null && dialog!!.window != null) {
-            dialog!!.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dialog!!.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             (dialog as? BottomSheetDialog)?.behavior?.apply {
                 state = BottomSheetBehavior.STATE_EXPANDED
                 skipCollapsed = true
@@ -129,5 +128,4 @@ class SelectBottomDialogFragment : BottomSheetDialogFragment() {
             return dialog
         }
     }
-
 }

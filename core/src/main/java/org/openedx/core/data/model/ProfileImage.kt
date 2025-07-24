@@ -2,6 +2,7 @@ package org.openedx.core.data.model
 
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.domain.model.ProfileImage
+import org.openedx.core.extension.isTrue
 
 data class ProfileImage(
     @SerializedName("image_url_full")
@@ -22,7 +23,7 @@ data class ProfileImage(
             imageUrlLarge = imageUrlLarge ?: "",
             imageUrlMedium = imageUrlMedium ?: "",
             imageUrlSmall = imageUrlSmall ?: "",
-            hasImage = hasImage ?: false
+            hasImage = hasImage.isTrue()
         )
     }
 }

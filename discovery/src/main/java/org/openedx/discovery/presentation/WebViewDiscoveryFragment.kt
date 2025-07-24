@@ -58,6 +58,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
+import org.openedx.core.extension.isTrue
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIAction
@@ -367,8 +368,8 @@ private fun HandleWebViewBackNavigation(
     val onBackPressedCallback = remember {
         object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (webView?.canGoBack() == true) {
-                    webView.goBack()
+                if (webView?.canGoBack().isTrue()) {
+                    webView?.goBack()
                 } else {
                     this.isEnabled = false
                     backDispatcher?.onBackPressed()

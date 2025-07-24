@@ -1,8 +1,11 @@
 package org.openedx.core.data.model
 
 import com.google.gson.annotations.SerializedName
-import org.openedx.core.data.model.room.discovery.*
 import org.openedx.core.domain.model.Media
+import org.openedx.core.domain.model.BannerImage as DomainBannerImage
+import org.openedx.core.domain.model.CourseImage as DomainCourseImage
+import org.openedx.core.domain.model.CourseVideo as DomainCourseVideo
+import org.openedx.core.domain.model.Image as DomainImage
 
 data class Media(
     @SerializedName("banner_image")
@@ -15,7 +18,7 @@ data class Media(
     val image: Image?,
 ) {
 
-    fun mapToDomain(): org.openedx.core.domain.model.Media {
+    fun mapToDomain(): Media {
         return Media(
             bannerImage = bannerImage?.mapToDomain(),
             courseImage = courseImage?.mapToDomain(),
@@ -34,8 +37,8 @@ data class Image(
     @SerializedName("small")
     val small: String?,
 ) {
-    fun mapToDomain(): org.openedx.core.domain.model.Image {
-        return org.openedx.core.domain.model.Image(
+    fun mapToDomain(): DomainImage {
+        return DomainImage(
             large = large ?: "",
             raw = raw ?: "",
             small = small ?: ""
@@ -47,8 +50,8 @@ data class CourseVideo(
     @SerializedName("uri")
     val uri: String?,
 ) {
-    fun mapToDomain(): org.openedx.core.domain.model.CourseVideo {
-        return org.openedx.core.domain.model.CourseVideo(
+    fun mapToDomain(): DomainCourseVideo {
+        return DomainCourseVideo(
             uri = uri ?: ""
         )
     }
@@ -58,10 +61,10 @@ data class CourseImage(
     @SerializedName("uri")
     val uri: String?,
     @SerializedName("name")
-    val name: String?
+    val name: String?,
 ) {
-    fun mapToDomain(): org.openedx.core.domain.model.CourseImage {
-        return org.openedx.core.domain.model.CourseImage(
+    fun mapToDomain(): DomainCourseImage {
+        return DomainCourseImage(
             uri = uri ?: "",
             name = name ?: ""
         )
@@ -74,8 +77,8 @@ data class BannerImage(
     @SerializedName("uri_absolute")
     val uriAbsolute: String?,
 ) {
-    fun mapToDomain(): org.openedx.core.domain.model.BannerImage {
-        return org.openedx.core.domain.model.BannerImage(
+    fun mapToDomain(): DomainBannerImage {
+        return DomainBannerImage(
             uri = uri ?: "",
             uriAbsolute = uriAbsolute ?: ""
         )

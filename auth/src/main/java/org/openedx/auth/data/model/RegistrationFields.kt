@@ -3,6 +3,7 @@ package org.openedx.auth.data.model
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
+import org.openedx.core.extension.isTrue
 
 data class RegistrationFields(
     @SerializedName("fields")
@@ -38,9 +39,9 @@ data class RegistrationFields(
                 type = RegistrationFieldType.returnLocalTypeFromServerType(type),
                 placeholder = placeholder ?: "",
                 instructions = instructions ?: "",
-                exposed = exposed ?: false,
-                required = required ?: false,
-                defaultValue = defaultValue ?: true,
+                exposed = exposed.isTrue(),
+                required = required.isTrue(),
+                defaultValue = defaultValue.isTrue(),
                 restrictions = restrictions?.mapToDomain() ?: RegistrationField.Restrictions(),
                 options = options?.map { it.mapToDomain() } ?: emptyList()
             )

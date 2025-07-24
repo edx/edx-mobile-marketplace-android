@@ -44,6 +44,7 @@ import androidx.fragment.app.Fragment
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.loadUrl
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.extension.toastMessage
@@ -65,7 +66,7 @@ import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.DiscoveryAnalyticsScreen
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
-import org.openedx.discovery.presentation.catalog.WebViewLink
+import org.openedx.discovery.presentation.catalog.WebViewLink.Authority
 import org.openedx.core.R as coreR
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
 
@@ -76,7 +77,7 @@ class ProgramFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        isNestedFragment = arguments?.getBoolean(ARG_NESTED_FRAGMENT, false) ?: false
+        isNestedFragment = arguments?.getBoolean(ARG_NESTED_FRAGMENT, false).isTrue()
         if (isNestedFragment.not()) {
             lifecycle.addObserver(viewModel)
         }
@@ -130,7 +131,7 @@ class ProgramFragment : Fragment() {
                     contentUrl = getInitialUrl(),
                     cookieManager = viewModel.cookieManager,
                     canShowBackBtn = arguments?.getString(ARG_PATH_ID, "")
-                        ?.isNotEmpty() == true,
+                        ?.isNotEmpty().isTrue(),
                     isNestedFragment = isNestedFragment,
                     uriScheme = viewModel.uriScheme,
                     userAgent = viewModel.appUserAgent,
@@ -249,7 +250,7 @@ private fun ProgramInfoScreen(
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
     onBackClick: () -> Unit,
-    onUriClick: (String, WebViewLink.Authority) -> Unit,
+    onUriClick: (String, Authority) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current

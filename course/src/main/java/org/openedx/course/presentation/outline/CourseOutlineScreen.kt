@@ -280,7 +280,7 @@ private fun CourseOutlineUI(
                                     }
 
                                     val certificate = uiState.courseStructure.certificate
-                                    if (certificate?.isCertificateEarned() == true) {
+                                    if (certificate?.isCertificateEarned().isTrue()) {
                                         item {
                                             CourseMessage(
                                                 modifier = Modifier
@@ -295,7 +295,7 @@ private fun CourseOutlineUI(
                                                 action = stringResource(R.string.course_view_certificate),
                                                 onActionClick = {
                                                     onCertificateClick(
-                                                        certificate.certificateURL ?: ""
+                                                        certificate?.certificateURL ?: ""
                                                     )
                                                 }
                                             )

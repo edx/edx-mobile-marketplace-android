@@ -31,6 +31,7 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.BlockType
+import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.serializable
 import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.presentation.global.InsetHolder
@@ -77,7 +78,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             blocks.getOrNull(position)?.let { currentBlock ->
                 val encodedVideo = currentBlock.studentViewData?.encodedVideos
                 binding.mediaRouteButton.isVisible = currentBlock.type == BlockType.VIDEO
-                        && encodedVideo?.hasNonYoutubeVideo == true
+                        && encodedVideo?.hasNonYoutubeVideo.isTrue()
             }
         }
     }
@@ -289,7 +290,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             binding.subSectionUnitsTitle.isGone = true
         }
 
-        if (viewModel.unitsListShowed.value == true) handleUnitsClick()
+        if (viewModel.unitsListShowed.value.isTrue()) handleUnitsClick()
 
         val chapterEndDialogTag = ChapterEndFragmentDialog::class.simpleName
         (requireActivity().supportFragmentManager

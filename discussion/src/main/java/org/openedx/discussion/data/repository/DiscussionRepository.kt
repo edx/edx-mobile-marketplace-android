@@ -169,8 +169,7 @@ class DiscussionRepository(
         type: String,
         title: String,
         rawBody: String,
-        follow: Boolean
-    ) = api.createThread(ThreadBody(type, topicId, courseId, title, rawBody, follow)).mapToDomain()
+    ) = api.createThread(ThreadBody(type, topicId, courseId, title, rawBody)).mapToDomain()
 
     suspend fun markBlocksCompletion(courseId: String, blocksId: List<String>) {
         val username = preferencesManager.user?.username ?: ""

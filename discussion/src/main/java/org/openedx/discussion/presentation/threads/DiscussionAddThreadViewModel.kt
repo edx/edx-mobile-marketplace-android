@@ -43,13 +43,12 @@ class DiscussionAddThreadViewModel(
         type: String,
         title: String,
         rawBody: String,
-        follow: Boolean
     ) {
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                _newThread.value = interactor.createThread(topicId, courseId, type, title, rawBody, follow)
-                logPostCreatedEvent(topicId, type, follow, _newThread.value?.author ?: "")
+                _newThread.value = interactor.createThread(topicId, courseId, type, title, rawBody)
+                logPostCreatedEvent(topicId, type, _newThread.value?.author ?: "")
             } catch (e: Exception) {
                 logger.e(throwable = e)
                 if (e.isInternetError()) {

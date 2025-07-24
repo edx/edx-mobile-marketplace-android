@@ -20,8 +20,6 @@
     <string name="discussion_discussion">Обговорення</string>
     <string name="discussion_question">Питання</string>
     <string name="discussion_title">Заголовок</string>
-    <string name="discussion_follow_discussion">Слідкувати за цією дискусією</string>
-    <string name="discussion_follow_question">Слідкувати за цим питанням</string>
     <string name="discussion_post_discussion">Опублікувати обговорення</string>
     <string name="discussion_post_question">Опублікувати питання</string>
     <string name="discussion_general">Загальні</string>

@@ -69,7 +69,6 @@ open class BaseDiscussionViewModel(
     fun logPostCreatedEvent(
         topicId: String,
         postType: String,
-        followPost: Boolean,
         author: String,
     ) {
         logEvent(
@@ -77,7 +76,8 @@ open class BaseDiscussionViewModel(
             params = buildMap {
                 put(DiscussionAnalyticsKey.TOPIC_ID.key, topicId)
                 put(DiscussionAnalyticsKey.POST_TYPE.key, postType)
-                put(DiscussionAnalyticsKey.FOLLOW_POST.key, followPost)
+                // Assuming followPost is always true when creating a post
+                put(DiscussionAnalyticsKey.FOLLOW_POST.key, true)
                 put(DiscussionAnalyticsKey.AUTHOR.key, author)
             }
         )

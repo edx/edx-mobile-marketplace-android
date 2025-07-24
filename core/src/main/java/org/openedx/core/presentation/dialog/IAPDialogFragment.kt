@@ -76,7 +76,7 @@ class IAPDialogFragment : DialogFragment() {
                 val uiMessage by iapViewModel.uiMessage.collectAsState(null)
                 val scaffoldState = rememberScaffoldState()
 
-                var selectedOption by remember { mutableStateOf(CourseTrack.FREE) }
+                var selectedOption by remember { mutableStateOf(CourseTrack.CERTIFICATE) }
 
                 val isFullScreenLoader =
                     (iapState as? IAPUIState.Loading)?.loaderType == IAPLoaderType.FULL_SCREEN

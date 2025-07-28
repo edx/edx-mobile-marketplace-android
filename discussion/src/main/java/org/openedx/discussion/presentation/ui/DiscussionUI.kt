@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
@@ -128,15 +127,16 @@ fun ThreadMainItem(
             Spacer(Modifier.width(16.dp))
             Column(
                 modifier = Modifier
-                    .wrapContentWidth()
-                    .clickable {
-                        if (thread.author.isNotEmpty()) {
-                            onUserPhotoClick(thread.author)
-                        }
-                    },
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
+                    modifier = Modifier
+                        .clickable {
+                            if (thread.author.isNotEmpty()) {
+                                onUserPhotoClick(thread.author)
+                            }
+                        },
                     text = thread.author.ifEmpty { stringResource(id = R.string.discussion_anonymous) },
                     color = MaterialTheme.appColors.textPrimary,
                     style = MaterialTheme.appTypography.titleMedium
@@ -147,7 +147,6 @@ fun ThreadMainItem(
                     color = MaterialTheme.appColors.textPrimaryVariant
                 )
             }
-            Spacer(Modifier.weight(1f))
             IconText(
                 text = stringResource(id = R.string.discussion_follow),
                 painter = painterResource(if (thread.following) R.drawable.discussion_star_filled else R.drawable.discussion_star),
@@ -297,13 +296,14 @@ fun CommentItem(
                 Spacer(Modifier.width(12.dp))
                 Column(
                     modifier = Modifier
-                        .wrapContentWidth()
-                        .clickable {
-                            onUserPhotoClick(comment.author)
-                        },
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
+                        modifier = Modifier
+                            .clickable {
+                                onUserPhotoClick(comment.author)
+                            },
                         text = comment.author,
                         color = MaterialTheme.appColors.textPrimary,
                         style = MaterialTheme.appTypography.titleSmall
@@ -314,7 +314,6 @@ fun CommentItem(
                         color = MaterialTheme.appColors.textPrimaryVariant
                     )
                 }
-                Spacer(Modifier.weight(1f))
                 IconText(
                     text = reportText,
                     painter = painterResource(id = R.drawable.discussion_ic_report),
@@ -449,13 +448,14 @@ fun CommentMainItem(
                 Spacer(Modifier.width(12.dp))
                 Column(
                     modifier = Modifier
-                        .wrapContentWidth()
-                        .clickable {
-                            onUserPhotoClick(comment.author)
-                        },
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
+                        modifier = Modifier
+                            .clickable {
+                                onUserPhotoClick(comment.author)
+                            },
                         text = comment.author,
                         color = MaterialTheme.appColors.textPrimary,
                         style = MaterialTheme.appTypography.titleMedium
@@ -466,7 +466,6 @@ fun CommentMainItem(
                         color = MaterialTheme.appColors.textPrimaryVariant
                     )
                 }
-                Spacer(Modifier.weight(1f))
             }
             Spacer(modifier = Modifier.height(14.dp))
             HyperlinkImageText(

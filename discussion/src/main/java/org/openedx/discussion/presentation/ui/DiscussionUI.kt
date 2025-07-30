@@ -114,7 +114,7 @@ fun ThreadMainItem(
     val context = LocalContext.current
 
     Column(
-        modifier = modifier
+        modifier = modifier.background(MaterialTheme.appColors.background)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
@@ -139,15 +139,16 @@ fun ThreadMainItem(
             Spacer(Modifier.width(16.dp))
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .clickable {
-                        if (thread.author.isNotEmpty()) {
-                            onUserPhotoClick(thread.author)
-                        }
-                    },
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
+                    modifier = Modifier
+                        .clickable {
+                            if (thread.author.isNotEmpty()) {
+                                onUserPhotoClick(thread.author)
+                            }
+                        },
                     text = thread.author.ifEmpty { stringResource(id = R.string.discussion_anonymous) },
                     color = MaterialTheme.appColors.textPrimary,
                     style = MaterialTheme.appTypography.titleMedium
@@ -307,13 +308,14 @@ fun CommentItem(
                 Spacer(Modifier.width(12.dp))
                 Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .clickable {
-                            onUserPhotoClick(comment.author)
-                        },
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
+                        modifier = Modifier
+                            .clickable {
+                                onUserPhotoClick(comment.author)
+                            },
                         text = comment.author,
                         color = MaterialTheme.appColors.textPrimary,
                         style = MaterialTheme.appTypography.titleSmall
@@ -458,13 +460,14 @@ fun CommentMainItem(
                 Spacer(Modifier.width(12.dp))
                 Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .clickable {
-                            onUserPhotoClick(comment.author)
-                        },
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
+                        modifier = Modifier
+                            .clickable {
+                                onUserPhotoClick(comment.author)
+                            },
                         text = comment.author,
                         color = MaterialTheme.appColors.textPrimary,
                         style = MaterialTheme.appTypography.titleMedium
@@ -744,12 +747,14 @@ private fun CommentItemPreview() {
 @Preview
 @Composable
 private fun ThreadMainItemPreview() {
-    ThreadMainItem(
-        modifier = Modifier.fillMaxWidth(),
-        thread = mockThread,
-        onClick = { _, _ -> },
-        onUserPhotoClick = {}
-    )
+    OpenEdXTheme {
+        ThreadMainItem(
+            modifier = Modifier.fillMaxWidth(),
+            thread = mockThread,
+            onClick = { _, _ -> },
+            onUserPhotoClick = {}
+        )
+    }
 }
 
 private val mockComment = DiscussionComment(

@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.extension.isTrue
+import org.openedx.core.extension.orTrue
 
 data class RegistrationFields(
     @SerializedName("fields")
@@ -41,7 +42,7 @@ data class RegistrationFields(
                 instructions = instructions ?: "",
                 exposed = exposed.isTrue(),
                 required = required.isTrue(),
-                defaultValue = defaultValue.isTrue(),
+                defaultValue = defaultValue.orTrue(),
                 restrictions = restrictions?.mapToDomain() ?: RegistrationField.Restrictions(),
                 options = options?.map { it.mapToDomain() } ?: emptyList()
             )

@@ -227,7 +227,7 @@ abstract class BaseDownloadViewModel(
                     for (unitBlockId in blockDescendant.descendants) {
                         val block = allBlocks[unitBlockId]
                         block?.let {
-                            if (block.isDownloadable.isTrue()) {
+                            if (block.isDownloadable) {
                                 val id = sequentialBlock.id
                                 val children = downloadableChildrenMap[id] ?: listOf()
                                 downloadableChildrenMap[id] = children + block.id
@@ -243,7 +243,7 @@ abstract class BaseDownloadViewModel(
         for (unitBlockId in verticalBlock.descendants) {
             val block = allBlocks[unitBlockId]
             block?.let {
-                if (block.isDownloadable.isTrue()) {
+                if (block.isDownloadable) {
                     val id = verticalBlock.id
                     val children = downloadableChildrenMap[id] ?: listOf()
                     downloadableChildrenMap[id] = children + block.id

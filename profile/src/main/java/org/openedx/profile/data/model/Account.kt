@@ -3,6 +3,7 @@ package org.openedx.profile.data.model
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.data.model.ProfileImage
 import org.openedx.core.extension.isTrue
+import org.openedx.core.extension.orTrue
 import org.openedx.profile.domain.model.Account
 import java.util.Date
 import org.openedx.profile.domain.model.Account as DomainAccount
@@ -57,7 +58,7 @@ data class Account(
             requiresParentalConsent = requiresParentalConsent.isTrue(),
             name = name ?: "",
             country = country ?: "",
-            isActive = isActive.isTrue(),
+            isActive = isActive.orTrue(),
             profileImage = profileImage!!.mapToDomain(),
             yearOfBirth = yearOfBirth,
             levelOfEducation = levelOfEducation ?: "",

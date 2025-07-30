@@ -89,6 +89,8 @@ data class AppColors(
     val notificationPrimerCardBackground: Color,
 
     val highlightDiscussionResponse: Color,
+    val certificatePreviewHeading: Color,
+    val certificatePreviewMessage: Color,
 ) {
     val primary: Color get() = material.primary
     val primaryVariant: Color get() = material.primaryVariant

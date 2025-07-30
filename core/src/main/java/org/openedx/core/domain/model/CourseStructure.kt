@@ -11,6 +11,7 @@ data class CourseStructure(
     val name: String,
     val number: String,
     val org: String,
+    val orgLogo: String,
     val start: Date?,
     val startDisplay: String,
     val startType: String,

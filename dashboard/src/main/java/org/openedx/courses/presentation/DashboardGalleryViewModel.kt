@@ -268,6 +268,8 @@ class DashboardGalleryViewModel(
                         screenName = IAPFlowSource.COURSE_ENROLLMENT.screen,
                         courseId = course.course.id,
                         courseName = course.course.name,
+                        orgName = course.course.org,
+                        orgLogo = course.course.orgLogo,
                         isSelfPaced = course.course.isSelfPaced,
                         productInfo = course.productInfo
                     ).show(

@@ -41,3 +41,8 @@ fun String.takeIfNotEmpty(): String? {
 fun String?.isNotNullOrEmpty(): Boolean {
     return this.isNullOrEmpty().not()
 }
+
+fun String.toTitleCase(): String =
+    lowercase().split(" ").joinToString(" ") { word ->
+        word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+    }

@@ -151,6 +151,8 @@ class IAPInteractor(
                         billingProcessor.querySyncDetails(purchase.products[0]).productDetailsList?.firstOrNull()
                     val purchaseProductFlow = PurchaseFlowData(
                         courseId = courseVerified.course.id,
+                        orgName = courseVerified.course.org,
+                        orgLogo = courseVerified.course.orgLogo,
                         isSelfPaced = courseVerified.course.isSelfPaced,
                         productInfo = courseVerified.productInfo,
                     ).apply {

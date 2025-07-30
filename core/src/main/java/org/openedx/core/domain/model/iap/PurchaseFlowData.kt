@@ -9,6 +9,8 @@ data class PurchaseFlowData(
     var screenName: String? = null,
     var courseId: String? = null,
     var courseName: String? = null,
+    var orgName: String? = null,
+    var orgLogo: String? = null,
     var courseExpiresDate: String? = null,
     var isSelfPaced: Boolean? = null,
     var componentId: String? = null,
@@ -29,6 +31,8 @@ data class PurchaseFlowData(
         screenName = null
         courseId = null
         courseName = null
+        orgName = null
+        orgLogo = null
         isSelfPaced = null
         componentId = null
         productInfo = null

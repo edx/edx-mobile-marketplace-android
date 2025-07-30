@@ -70,6 +70,8 @@ data class EnrolledCourseDataDb(
     val number: String,
     @ColumnInfo("org")
     val org: String,
+    @ColumnInfo("orgLogo")
+    val orgLogo: String?,
     @ColumnInfo("start")
     val start: String,
     @ColumnInfo("startDisplay")
@@ -109,6 +111,7 @@ data class EnrolledCourseDataDb(
             name,
             number,
             org,
+            "",
             TimeUtils.iso8601ToDate(start),
             startDisplay,
             startType,

@@ -256,8 +256,14 @@ class IAPDialogFragment : DialogFragment() {
                             )
                         } else {
                             ValuePropUpgradeFeatures(
-                                Modifier.padding(contentPadding),
-                                iapViewModel.purchaseData.courseName!!
+                                modifier = Modifier.padding(contentPadding),
+                                previewCertificate = iapViewModel.isCertificatePreviewEnabled,
+                                appName = iapViewModel.appData.appName,
+                                courseName = iapViewModel.purchaseData.courseName!!,
+                                fullName = iapViewModel.user?.name,
+                                orgName = iapViewModel.purchaseData.orgName
+                                    ?: iapViewModel.appData.appName,
+                                orgLogo = iapViewModel.purchaseData.orgLogo
                             )
                         }
                     } else {
@@ -287,21 +293,25 @@ class IAPDialogFragment : DialogFragment() {
             screenName: String = "",
             courseId: String = "",
             courseName: String = "",
+            orgName: String? = "",
+            orgLogo: String? = "",
             courseExpiresDate: String = "",
             isSelfPaced: Boolean = false,
             componentId: String? = null,
             productInfo: ProductInfo? = null,
         ): IAPDialogFragment {
-            val purchaseFlowData = PurchaseFlowData().apply {
-                this.iapFlow = iapFlow
-                this.screenName = screenName
-                this.courseId = courseId
-                this.courseName = courseName
-                this.courseExpiresDate = courseExpiresDate
-                this.isSelfPaced = isSelfPaced
-                this.componentId = componentId
-                this.productInfo = productInfo
-            }
+            val purchaseFlowData = PurchaseFlowData(
+                iapFlow = iapFlow,
+                screenName = screenName,
+                courseId = courseId,
+                courseName = courseName,
+                orgName = orgName,
+                orgLogo = orgLogo,
+                courseExpiresDate = courseExpiresDate,
+                isSelfPaced = isSelfPaced,
+                componentId = componentId,
+                productInfo = productInfo
+            )
             return newInstance(purchaseFlowData)
         }
 

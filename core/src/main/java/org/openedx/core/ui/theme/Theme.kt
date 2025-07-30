@@ -107,6 +107,9 @@ private val DarkColorPalette = AppColors(
     notificationPrimerCardBackground = dark_notification_primer_card_background,
 
     highlightDiscussionResponse = dark_highlight_discussion_response,
+
+    certificatePreviewHeading = dark_certificate_preview_headline,
+    certificatePreviewMessage = dark_certificate_preview_message,
 )
 
 private val LightColorPalette = AppColors(
@@ -206,6 +209,9 @@ private val LightColorPalette = AppColors(
     notificationPrimerCardBackground = light_notification_primer_card_background,
 
     highlightDiscussionResponse = light_highlight_discussion_response,
+
+    certificatePreviewHeading = light_certificate_preview_headline,
+    certificatePreviewMessage = light_certificate_preview_message,
 )
 
 val MaterialTheme.appColors: AppColors

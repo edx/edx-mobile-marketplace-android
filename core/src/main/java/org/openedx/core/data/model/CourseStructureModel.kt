@@ -29,6 +29,8 @@ data class CourseStructureModel(
     var number: String?,
     @SerializedName("org")
     var org: String?,
+    @SerializedName("org_logo")
+    var orgLogo: String?,
     @SerializedName("start")
     var start: String?,
     @SerializedName("start_display")
@@ -62,6 +64,7 @@ data class CourseStructureModel(
             name = name ?: "",
             number = number ?: "",
             org = org ?: "",
+            orgLogo = orgLogo ?: "",
             start = TimeUtils.iso8601ToDate(start ?: ""),
             startDisplay = startDisplay ?: "",
             startType = startType ?: "",
@@ -86,6 +89,7 @@ data class CourseStructureModel(
             name = name ?: "",
             number = number ?: "",
             org = org ?: "",
+            orgLogo = orgLogo ?: "",
             start = start ?: "",
             startDisplay = startDisplay ?: "",
             startType = startType ?: "",

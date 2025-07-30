@@ -394,6 +394,8 @@ fun CourseDashboard(
                     screenName = IAPFlowSource.TRACK_SELECTION.screen,
                     courseId = viewModel.courseId,
                     courseName = viewModel.courseName,
+                    orgName = viewModel.courseDetails?.courseInfoOverview?.org,
+                    orgLogo = viewModel.courseDetails?.courseInfoOverview?.orgLogo,
                     courseExpiresDate = courseExpiresDate,
                     isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
                     productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
@@ -449,6 +451,8 @@ fun CourseDashboard(
                                             screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
                                             courseId = viewModel.courseId,
                                             courseName = viewModel.courseName,
+                                            orgName = viewModel.courseDetails?.courseInfoOverview?.org,
+                                            orgLogo = viewModel.courseDetails?.courseInfoOverview?.orgLogo,
                                             isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
                                             productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
                                         ).show(
@@ -958,6 +962,8 @@ private fun SetupCourseAccessErrorButtons(
                     screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
                     courseId = viewModel.courseId,
                     courseName = viewModel.courseName,
+                    orgName = viewModel.courseDetails?.courseInfoOverview?.org,
+                    orgLogo = viewModel.courseDetails?.courseInfoOverview?.orgLogo,
                     isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
                     productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
                 ).show(

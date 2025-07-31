@@ -78,10 +78,11 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
+import org.openedx.discovery.R
 import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.DiscoveryRouter
 import org.openedx.discovery.presentation.ui.DiscoveryCourseItem
-import org.openedx.discovery.R as discoveryR
+import org.openedx.core.R as CoreR
 
 class CourseSearchFragment : Fragment() {
 
@@ -92,7 +93,7 @@ class CourseSearchFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
@@ -289,7 +290,7 @@ private fun CourseSearchScreen(
                                 .testTag("txt_search_title")
                                 .fillMaxWidth()
                                 .padding(horizontal = 56.dp),
-                            text = stringResource(id = org.openedx.core.R.string.core_search),
+                            text = stringResource(id = CoreR.string.core_search),
                             color = MaterialTheme.appColors.textPrimary,
                             style = MaterialTheme.appTypography.titleMedium,
                             maxLines = 1,
@@ -329,10 +330,10 @@ private fun CourseSearchScreen(
                     ) {
                         val typingText =
                             if (textFieldValue.text.isEmpty()) {
-                                stringResource(id = discoveryR.string.discovery_start_typing_to_find)
+                                stringResource(id = R.string.discovery_start_typing_to_find)
                             } else {
                                 pluralStringResource(
-                                    id = discoveryR.plurals.discovery_found_courses,
+                                    id = R.plurals.discovery_found_courses,
                                     (state as? CourseSearchUIState.Courses)?.numCourses ?: 0,
                                     (state as? CourseSearchUIState.Courses)?.numCourses ?: 0
                                 )
@@ -346,7 +347,7 @@ private fun CourseSearchScreen(
                                 Column {
                                     Text(
                                         modifier = Modifier.testTag("txt_search_results_title"),
-                                        text = stringResource(id = discoveryR.string.discovery_search_results),
+                                        text = stringResource(id = R.string.discovery_search_results),
                                         color = MaterialTheme.appColors.textPrimary,
                                         style = MaterialTheme.appTypography.displaySmall
                                     )

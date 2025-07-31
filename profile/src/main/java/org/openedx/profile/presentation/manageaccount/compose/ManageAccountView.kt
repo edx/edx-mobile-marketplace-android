@@ -37,7 +37,6 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
@@ -54,10 +53,11 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
+import org.openedx.profile.R
 import org.openedx.profile.presentation.manageaccount.ManageAccountUIState
 import org.openedx.profile.presentation.ui.ProfileTopic
 import org.openedx.profile.presentation.ui.mockAccount
-import org.openedx.profile.R as ProfileR
+import org.openedx.core.R as CoreR
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -66,7 +66,7 @@ internal fun ManageAccountView(
     uiState: ManageAccountUIState,
     uiMessage: UIMessage?,
     refreshing: Boolean,
-    onAction: (ManageAccountViewAction) -> Unit
+    onAction: (ManageAccountViewAction) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -119,7 +119,7 @@ internal fun ManageAccountView(
                 Toolbar(
                     modifier = topBarWidth
                         .displayCutoutForLandscape(),
-                    label = stringResource(id = R.string.core_manage_account),
+                    label = stringResource(id = CoreR.string.core_manage_account),
                     canShowBackBtn = true,
                     labelTint = MaterialTheme.appColors.settingsTitleContent,
                     iconTint = MaterialTheme.appColors.settingsTitleContent,
@@ -169,18 +169,18 @@ internal fun ManageAccountView(
                                         subtitle = uiState.account.email ?: ""
                                     )
                                     OpenEdXOutlinePrimaryButton(
-                                        text = stringResource(id = ProfileR.string.profile_edit_profile),
+                                        text = stringResource(id = R.string.profile_edit_profile),
                                         onClick = {
                                             onAction(ManageAccountViewAction.EditAccountClick)
                                         },
                                     )
                                     OpenEdXTertiaryButton(
-                                        text = stringResource(id = ProfileR.string.profile_delete_profile),
+                                        text = stringResource(id = R.string.profile_delete_profile),
                                         onClick = { onAction(ManageAccountViewAction.DeleteAccount) },
                                         content = {
                                             IconText(
-                                                text = stringResource(id = ProfileR.string.profile_delete_profile),
-                                                painter = painterResource(id = ProfileR.drawable.profile_ic_trash),
+                                                text = stringResource(id = R.string.profile_delete_profile),
+                                                painter = painterResource(id = R.drawable.profile_ic_trash),
                                                 textStyle = MaterialTheme.appTypography.labelLarge,
                                                 color = MaterialTheme.appColors.error,
                                             )

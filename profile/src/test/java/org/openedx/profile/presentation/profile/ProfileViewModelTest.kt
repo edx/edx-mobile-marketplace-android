@@ -37,6 +37,7 @@ import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.profile.system.notifier.AccountUpdated
 import org.openedx.profile.system.notifier.ProfileNotifier
 import java.net.UnknownHostException
+import org.openedx.profile.domain.model.Account as DomainAccount
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelTest {
@@ -53,7 +54,7 @@ class ProfileViewModelTest {
     private val analytics = mockk<ProfileAnalytics>()
     private val router = mockk<ProfileRouter>()
 
-    private val account = org.openedx.profile.domain.model.Account(
+    private val account = DomainAccount(
         username = "",
         bio = "",
         requiresParentalConsent = false,

@@ -41,6 +41,7 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.whatsnew.R
+import org.openedx.core.R as CoreR
 
 @Composable
 fun PageIndicator(
@@ -137,7 +138,7 @@ fun NavigationUnitsButtons(
     hasPrevPage: Boolean,
     hasNextPage: Boolean,
     onPrevClick: () -> Unit,
-    onNextClick: () -> Unit
+    onNextClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier.padding(horizontal = 12.dp),
@@ -158,7 +159,7 @@ fun NavigationUnitsButtons(
 @Composable
 fun PrevButton(
     hasPrevPage: Boolean,
-    onPrevClick: () -> Unit
+    onPrevClick: () -> Unit,
 ) {
     val prevButtonAnimationFactor by animateFloatAsState(
         targetValue = if (hasPrevPage) 1f else 0f,
@@ -178,7 +179,7 @@ fun PrevButton(
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(
-                painter = painterResource(id = org.openedx.core.R.drawable.core_ic_back),
+                painter = painterResource(id = CoreR.drawable.core_ic_back),
                 contentDescription = null,
                 tint = MaterialTheme.appColors.primary
             )
@@ -195,7 +196,7 @@ fun PrevButton(
 @Composable
 fun NextFinishButton(
     onNextClick: () -> Unit,
-    hasNextPage: Boolean
+    hasNextPage: Boolean,
 ) {
     OpenEdXPrimaryButton(
         modifier = Modifier
@@ -222,7 +223,7 @@ fun NextFinishButton(
                     )
                     Spacer(Modifier.width(8.dp))
                     Icon(
-                        painter = painterResource(id = org.openedx.core.R.drawable.core_ic_forward),
+                        painter = painterResource(id = CoreR.drawable.core_ic_forward),
                         contentDescription = null,
                         tint = MaterialTheme.appColors.secondaryButtonText,
                     )
@@ -239,7 +240,7 @@ fun NextFinishButton(
                     )
                     Spacer(Modifier.width(8.dp))
                     Icon(
-                        painter = painterResource(id = org.openedx.core.R.drawable.core_ic_check),
+                        painter = painterResource(id = CoreR.drawable.core_ic_check),
                         contentDescription = null,
                         tint = MaterialTheme.appColors.secondaryButtonText,
                     )

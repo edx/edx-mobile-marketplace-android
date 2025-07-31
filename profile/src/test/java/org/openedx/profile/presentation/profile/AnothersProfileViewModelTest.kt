@@ -28,6 +28,7 @@ import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.presentation.anothersaccount.AnothersProfileUIState
 import org.openedx.profile.presentation.anothersaccount.AnothersProfileViewModel
 import java.net.UnknownHostException
+import org.openedx.profile.domain.model.Account as DomainAccount
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AnothersProfileViewModelTest {
@@ -41,7 +42,7 @@ class AnothersProfileViewModelTest {
     private val interactor = mockk<ProfileInteractor>()
     private val username = "username"
 
-    private val account = org.openedx.profile.domain.model.Account(
+    private val account = DomainAccount(
         username = "",
         bio = "",
         requiresParentalConsent = false,

@@ -113,6 +113,7 @@ import org.openedx.course.presentation.ui.CourseVideosScreen
 import org.openedx.course.presentation.ui.DatesShiftedSnackBar
 import org.openedx.discussion.presentation.topics.DiscussionTopicsScreen
 import java.util.Date
+import org.openedx.core.R as CoreR
 
 class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
@@ -788,9 +789,9 @@ private fun AuditExpiredUpgradableView(
                         color = MaterialTheme.appColors.textDark
                     )
 
-                    CheckmarkView(stringResource(id = org.openedx.core.R.string.iap_earn_certificate))
-                    CheckmarkView(stringResource(id = org.openedx.core.R.string.iap_unlock_access))
-                    CheckmarkView(stringResource(id = org.openedx.core.R.string.iap_full_access_course))
+                    CheckmarkView(stringResource(id = CoreR.string.iap_earn_certificate))
+                    CheckmarkView(stringResource(id = CoreR.string.iap_unlock_access))
+                    CheckmarkView(stringResource(id = CoreR.string.iap_full_access_course))
 
                 }
                 OpenEdXOutlineBrandButton(
@@ -818,7 +819,7 @@ private fun AuditExpiredUpgradableView(
                         OpenEdXBrandButton(
                             modifier = Modifier.fillMaxWidth(),
                             text = stringResource(
-                                id = org.openedx.core.R.string.iap_upgrade_price,
+                                id = CoreR.string.iap_upgrade_price,
                                 viewModel.purchaseFlowData.formattedPrice ?: 0.0,
                             ),
                             onClick = {

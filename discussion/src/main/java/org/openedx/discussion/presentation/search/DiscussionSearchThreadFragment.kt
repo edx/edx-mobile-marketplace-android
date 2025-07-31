@@ -60,7 +60,6 @@ import androidx.fragment.app.Fragment
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.ui.BackBtn
@@ -75,10 +74,12 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.ui.ThreadItem
-import org.openedx.discussion.R as discussionR
+import org.openedx.core.R as CoreR
+import org.openedx.discussion.domain.model.Thread as DomainThread
 
 class DiscussionSearchThreadFragment : Fragment() {
 
@@ -167,7 +168,7 @@ private fun DiscussionSearchThreadScreen(
     uiMessage: UIMessage?,
     refreshing: Boolean,
     canLoadMore: Boolean,
-    onItemClick: (org.openedx.discussion.domain.model.Thread) -> Unit,
+    onItemClick: (DomainThread) -> Unit,
     onSearchTextChanged: (String) -> Unit,
     onSwipeRefresh: () -> Unit,
     paginationCallback: () -> Unit,
@@ -258,7 +259,7 @@ private fun DiscussionSearchThreadScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 56.dp),
-                            text = stringResource(id = R.string.core_search),
+                            text = stringResource(id = CoreR.string.core_search),
                             color = MaterialTheme.appColors.textPrimary,
                             style = MaterialTheme.appTypography.titleMedium,
                             maxLines = 1,
@@ -298,10 +299,10 @@ private fun DiscussionSearchThreadScreen(
                     ) {
                         val typingText =
                             if (textFieldValue.text.isEmpty()) {
-                                stringResource(id = discussionR.string.discussion_start_typing_to_find)
+                                stringResource(id = R.string.discussion_start_typing_to_find)
                             } else {
                                 pluralStringResource(
-                                    id = discussionR.plurals.discussion_found_threads,
+                                    id = R.plurals.discussion_found_threads,
                                     (uiState as? DiscussionSearchThreadUIState.Threads)?.count ?: 0,
                                     (uiState as? DiscussionSearchThreadUIState.Threads)?.count ?: 0
                                 )
@@ -314,7 +315,7 @@ private fun DiscussionSearchThreadScreen(
                             item {
                                 Column {
                                     Text(
-                                        text = stringResource(id = discussionR.string.discussion_search_results),
+                                        text = stringResource(id = R.string.discussion_search_results),
                                         color = MaterialTheme.appColors.textPrimary,
                                         style = MaterialTheme.appTypography.displaySmall
                                     )
@@ -419,7 +420,7 @@ fun DiscussionSearchThreadScreenTabletPreview() {
     }
 }
 
-private val mockThread = org.openedx.discussion.domain.model.Thread(
+private val mockThread = DomainThread(
     id = "",
     author = "",
     authorLabel = "",

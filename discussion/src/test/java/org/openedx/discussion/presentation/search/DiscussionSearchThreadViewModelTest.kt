@@ -33,6 +33,7 @@ import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 import java.net.UnknownHostException
+import org.openedx.discussion.domain.model.Thread as DomainThread
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DiscussionSearchThreadViewModelTest {
@@ -51,7 +52,7 @@ class DiscussionSearchThreadViewModelTest {
 
     //region thread
 
-    private val mockThread = org.openedx.discussion.domain.model.Thread(
+    private val mockThread = DomainThread(
         "",
         "",
         "",

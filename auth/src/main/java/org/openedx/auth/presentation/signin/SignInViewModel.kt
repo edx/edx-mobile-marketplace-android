@@ -39,7 +39,7 @@ import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.Logger
 import retrofit2.HttpException
-import org.openedx.core.R as CoreRes
+import org.openedx.core.R as CoreR
 
 class SignInViewModel(
     private val interactor: AuthInteractor,
@@ -112,13 +112,13 @@ class SignInViewModel(
                 logSignInErrorEvent(AuthType.PASSWORD, e)
                 if (e is EdxError.InvalidGrantException) {
                     _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(CoreRes.string.core_error_invalid_grant))
+                        UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_invalid_grant))
                 } else if (e.isInternetError()) {
                     _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(CoreRes.string.core_error_no_connection))
+                        UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection))
                 } else {
                     _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(CoreRes.string.core_error_unknown_error))
+                        UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_unknown_error))
                 }
             }
             _uiState.update { it.copy(showProgress = false) }
@@ -150,7 +150,7 @@ class SignInViewModel(
                     logSignInErrorEvent(authType, Exception(OAuthHelper.ACCESS_TOKEN_EMPTY_MESSAGE))
                 }
             }.onFailure { exception ->
-                logger.e (throwable = exception)
+                logger.e(throwable = exception)
                 _uiState.update { it.copy(showProgress = false) }
                 logSignInErrorEvent(authType, exception)
             }
@@ -176,7 +176,7 @@ class SignInViewModel(
         runCatching {
             interactor.loginSocial(token, authType)
         }.onFailure { error ->
-            logger.e (throwable = error)
+            logger.e(throwable = error)
             logSignInErrorEvent(authType, error)
             onUnknownError()
         }.onSuccess {
@@ -194,7 +194,7 @@ class SignInViewModel(
             logger.e { it() }
         }
         _uiMessage.value = UIMessage.SnackBarMessage(
-            resourceManager.getString(CoreRes.string.core_error_unknown_error)
+            resourceManager.getString(CoreR.string.core_error_unknown_error)
         )
         _uiState.update { it.copy(showProgress = false) }
     }

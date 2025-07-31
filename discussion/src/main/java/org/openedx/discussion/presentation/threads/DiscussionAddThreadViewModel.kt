@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
-import org.openedx.core.config.Config
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
@@ -21,9 +20,7 @@ import org.openedx.core.R as CoreR
 
 class DiscussionAddThreadViewModel(
     private val courseId: String,
-    private val config: Config,
     private val interactor: DiscussionInteractor,
-    private val recaptchaManager: RecaptchaManager,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
     private val analytics: DiscussionAnalytics,
@@ -52,12 +49,13 @@ class DiscussionAddThreadViewModel(
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                val isCaptchaEnabled = config.getRecaptchaConfig().isEnabled &&
-                        interactor.getCourseDiscussionConfig(courseId).isCaptchaEnabled
-                val token = if (isCaptchaEnabled) recaptchaManager.getActionThreadToken() else ""
-
-                _newThread.value =
-                    interactor.createThread(topicId, courseId, type, title, rawBody, token)
+                val reCaptchaToken = interactor.getRecaptchaToken(
+                    courseId = courseId,
+                    recaptchaAction = RecaptchaManager.RecaptchaActionThread
+                )
+                _newThread.value = interactor.createThread(
+                    topicId, courseId, type, title, rawBody, reCaptchaToken
+                )
                 logPostCreatedEvent(topicId, type, _newThread.value?.author ?: "")
             } catch (e: Exception) {
                 logger.e(throwable = e)

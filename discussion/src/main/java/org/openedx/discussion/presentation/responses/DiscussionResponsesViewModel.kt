@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
-import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.RecaptchaManager
@@ -28,9 +27,7 @@ class DiscussionResponsesViewModel(
     val threadId: String,
     val isPostingEnabled: Boolean,
     private var comment: DiscussionComment,
-    private val config: Config,
     private val interactor: DiscussionInteractor,
-    private val recaptchaManager: RecaptchaManager,
     private val resourceManager: ResourceManager,
     private val notifier: DiscussionNotifier,
     private val corePreferences: CorePreferences,
@@ -183,15 +180,15 @@ class DiscussionResponsesViewModel(
     fun createComment(rawBody: String) {
         viewModelScope.launch {
             try {
-                val isCaptchaEnabled = config.getRecaptchaConfig().isEnabled &&
-                        interactor.getCourseDiscussionConfig(courseId).isCaptchaEnabled
-                val token = if (isCaptchaEnabled) recaptchaManager.getActionCommentToken() else ""
-
+                val reCaptchaToken = interactor.getRecaptchaToken(
+                    courseId = courseId,
+                    recaptchaAction = RecaptchaManager.RecaptchaActionComment
+                )
                 val response = interactor.createComment(
                     threadId = comment.threadId,
                     rawBody = rawBody,
                     parentId = comment.id,
-                    captchaToken = token,
+                    captchaToken = reCaptchaToken,
                 )
                 response.isAuthor = response.author == corePreferences.user?.username
 

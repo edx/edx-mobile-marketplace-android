@@ -20,13 +20,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.openedx.discussion.R
 import org.openedx.core.UIMessage
-import org.openedx.core.config.Config
 import org.openedx.core.extension.TextConverter
-import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
@@ -49,8 +47,7 @@ class DiscussionAddThreadViewModelTest {
     private val interactor = mockk<DiscussionInteractor>()
     private val analytics = mockk<DiscussionAnalytics>()
     private val notifier = mockk<DiscussionNotifier>(relaxed = true)
-    private val config = mockk<Config>(relaxed = true)
-    private val recaptchaManager = mockk<RecaptchaManager>(relaxed = true)
+
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong. Please try again later."
 
@@ -114,6 +111,7 @@ class DiscussionAddThreadViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        coEvery { interactor.getRecaptchaToken("", any()) } returns ""
         every { resourceManager.getString(CoreR.string.core_error_no_connection) } returns noInternet
         every { resourceManager.getString(R.string.discussion_something_went_wrong_error) } returns somethingWrong
         mockkConstructor(Logger::class)
@@ -129,15 +127,7 @@ class DiscussionAddThreadViewModelTest {
     @Test
     fun `createThread no internet connection exception`() = runTest {
         val viewModel =
-            DiscussionAddThreadViewModel(
-                "",
-                config,
-                interactor,
-                recaptchaManager,
-                resourceManager,
-                notifier,
-                analytics
-            )
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery {
             interactor.createThread(
                 any(),
@@ -163,15 +153,7 @@ class DiscussionAddThreadViewModelTest {
     @Test
     fun `createThread unknown exception`() = runTest {
         val viewModel =
-            DiscussionAddThreadViewModel(
-                "",
-                config,
-                interactor,
-                recaptchaManager,
-                resourceManager,
-                notifier,
-                analytics
-            )
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery {
             interactor.createThread(
                 any(),
@@ -197,15 +179,7 @@ class DiscussionAddThreadViewModelTest {
     @Test
     fun `createThread success`() = runTest {
         val viewModel =
-            DiscussionAddThreadViewModel(
-                "",
-                config,
-                interactor,
-                recaptchaManager,
-                resourceManager,
-                notifier,
-                analytics
-            )
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery {
             interactor.createThread(
                 any(),
@@ -230,15 +204,7 @@ class DiscussionAddThreadViewModelTest {
     @Test
     fun `sendThreadAdded notifier test`() = runTest {
         val viewModel =
-            DiscussionAddThreadViewModel(
-                "",
-                config,
-                interactor,
-                recaptchaManager,
-                resourceManager,
-                notifier,
-                analytics
-            )
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery { notifier.send(mockk<DiscussionThreadAdded>()) }
         viewModel.sendThreadAdded()
         advanceUntilIdle()
@@ -247,15 +213,7 @@ class DiscussionAddThreadViewModelTest {
     @Test
     fun `getHandledTopicById existed id`() = runTest {
         val viewModel =
-            DiscussionAddThreadViewModel(
-                "",
-                config,
-                interactor,
-                recaptchaManager,
-                resourceManager,
-                notifier,
-                analytics
-            )
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery { interactor.getCachedTopics(any()) } returns topics
 
         advanceUntilIdle()
@@ -266,15 +224,7 @@ class DiscussionAddThreadViewModelTest {
     @Test
     fun `getHandledTopicById  no existed id`() = runTest {
         val viewModel =
-            DiscussionAddThreadViewModel(
-                "",
-                config,
-                interactor,
-                recaptchaManager,
-                resourceManager,
-                notifier,
-                analytics
-            )
+            DiscussionAddThreadViewModel("", interactor, resourceManager, notifier, analytics)
         coEvery { interactor.getCachedTopics(any()) } returns topics
 
         advanceUntilIdle()

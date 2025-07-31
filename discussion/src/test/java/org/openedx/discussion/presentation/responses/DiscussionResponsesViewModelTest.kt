@@ -22,11 +22,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.UIMessage
-import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.extension.LinkedImageText
-import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.discussion.R
@@ -51,8 +49,7 @@ class DiscussionResponsesViewModelTest {
     private val preferencesManager = mockk<CorePreferences>()
     private val analytics = mockk<DiscussionAnalytics>()
     private val notifier = mockk<DiscussionNotifier>(relaxed = true)
-    private val config = mockk<Config>(relaxed = true)
-    private val recaptchaManager = mockk<RecaptchaManager>(relaxed = true)
+
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong. Please try again later."
 
@@ -97,6 +94,7 @@ class DiscussionResponsesViewModelTest {
         Dispatchers.setMain(dispatcher)
         every { analytics.logScreenEvent(any(), any()) } returns Unit
         every { preferencesManager.user?.username } returns ""
+        coEvery { interactor.getRecaptchaToken("", any()) } returns ""
         every { resourceManager.getString(CoreR.string.core_error_no_connection) } returns noInternet
         every { resourceManager.getString(R.string.discussion_something_went_wrong_error) } returns somethingWrong
         mockkConstructor(Logger::class)
@@ -118,9 +116,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -145,9 +141,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -175,9 +169,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -205,9 +197,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -234,9 +224,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -264,9 +252,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -298,9 +284,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -327,9 +311,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -356,9 +338,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -387,9 +367,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -418,9 +396,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -447,9 +423,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -476,9 +450,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -506,9 +478,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -538,9 +508,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -551,7 +519,7 @@ class DiscussionResponsesViewModelTest {
                 any(),
                 any(),
                 any(),
-                any()
+                any(),
             )
         } throws UnknownHostException()
 
@@ -576,9 +544,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -607,9 +573,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -638,9 +602,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -666,9 +628,7 @@ class DiscussionResponsesViewModelTest {
             "",
             true,
             mockComment.copy(id = "0"),
-            config,
             interactor,
-            recaptchaManager,
             resourceManager,
             notifier,
             preferencesManager,
@@ -682,5 +642,4 @@ class DiscussionResponsesViewModelTest {
 
         assert(viewModel.uiState.value is DiscussionResponsesUIState.Success)
     }
-
 }

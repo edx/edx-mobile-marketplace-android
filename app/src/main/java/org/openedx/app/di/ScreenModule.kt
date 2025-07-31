@@ -417,7 +417,7 @@ val screenModule = module {
     viewModel { CourseSearchViewModel(get(), get(), get(), get(), get()) }
     viewModel { SelectDialogViewModel(get()) }
 
-    single { DiscussionRepository(get(), get(), get()) }
+    single { DiscussionRepository(get(), get(), get(), get(), get()) }
     factory { DiscussionInteractor(get()) }
     viewModel { (courseId: String, courseTitle: String) ->
         DiscussionTopicsViewModel(
@@ -456,8 +456,6 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            get(),
-            get(),
         )
     }
     viewModel { (courseId: String, threadId: String, isPostingEnabled: Boolean, comment: DiscussionComment) ->
@@ -471,15 +469,11 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            get(),
-            get(),
         )
     }
     viewModel { (courseId: String) ->
         DiscussionAddThreadViewModel(
             courseId,
-            get(),
-            get(),
             get(),
             get(),
             get(),

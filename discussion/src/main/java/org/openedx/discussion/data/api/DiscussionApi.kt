@@ -132,12 +132,14 @@ interface DiscussionApi {
         @Query("requested_fields") requestedFields: List<String> = listOf("profile_image")
     ): CommentsResponse
 
+    /** Android header to aid platform-aware site-key selection **/
     @Headers("Mobile-Platform-Identifier: android")
     @POST("/api/discussion/v1/comments/")
     suspend fun createComment(
         @Body commentBody: CommentBody
     ): CommentResult
 
+    /** Android header to aid platform-aware site-key selection **/
     @Headers("Mobile-Platform-Identifier: android")
     @POST("/api/discussion/v1/threads/")
     suspend fun createThread(@Body threadBody: ThreadBody): ThreadsResponse.Thread

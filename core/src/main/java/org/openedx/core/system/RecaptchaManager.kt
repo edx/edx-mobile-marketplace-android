@@ -6,6 +6,7 @@ import com.google.android.recaptcha.Recaptcha
 import com.google.android.recaptcha.RecaptchaAction
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -19,7 +20,7 @@ class RecaptchaManager(
 ) {
     private val logger = Logger(TAG)
 
-    private val clientDeferred = CoroutineScope(dispatcher).async {
+    private val clientDeferred = CoroutineScope(dispatcher).async(start = CoroutineStart.LAZY) {
         Recaptcha.fetchClient(context as Application, config.getRecaptchaConfig().siteKey)
     }
 

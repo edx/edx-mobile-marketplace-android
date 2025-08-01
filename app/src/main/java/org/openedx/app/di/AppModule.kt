@@ -236,5 +236,5 @@ val appModule = module {
 
     factory { FileUtil(get()) }
 
-    factory { RecaptchaManager(get(), get()) }
+    single { RecaptchaManager(get(), get()) }
 }

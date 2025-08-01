@@ -1090,7 +1090,9 @@ fun OpenEdXBrandButton(
         shape = MaterialTheme.appShapes.buttonShape,
         colors = ButtonDefaults.buttonColors(
             backgroundColor = backgroundColor,
-            disabledBackgroundColor = backgroundColor.copy(alpha = 0.3f)
+            disabledBackgroundColor = backgroundColor.copy(alpha = 0.3f),
+            contentColor = textColor,
+            disabledContentColor = textColor.copy(alpha = 0.3f),
         ),
         elevation = null,
         enabled = enabled,
@@ -1101,7 +1103,6 @@ fun OpenEdXBrandButton(
                 modifier = Modifier.testTag("txt_${text.tagId()}"),
                 text = text,
                 style = MaterialTheme.appTypography.labelLarge,
-                color = textColor,
                 textAlign = TextAlign.Center
             )
         } else {

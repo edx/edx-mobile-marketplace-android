@@ -65,6 +65,7 @@ class DiscussionThreadsViewModelTest {
 
     private val mockDiscussionConfig = DiscussionConfig(
         isPostingEnabled = true,
+        isCaptchaEnabled = true,
     )
 
     //region mockThread

@@ -415,7 +415,8 @@ private fun DiscussionAddThreadScreen(
                                                 titleValue,
                                                 discussionValue,
                                             )
-                                        }
+                                        },
+                                        enabled = titleValue.isNotEmpty() && discussionValue.isNotEmpty()
                                     )
                                 }
                                 Spacer(Modifier.height(40.dp))

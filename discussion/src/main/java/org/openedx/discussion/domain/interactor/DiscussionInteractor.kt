@@ -1,5 +1,6 @@
 package org.openedx.discussion.domain.interactor
 
+import com.google.android.recaptcha.RecaptchaAction
 import org.openedx.discussion.data.repository.DiscussionRepository
 import org.openedx.discussion.domain.model.DiscussionComment
 
@@ -9,6 +10,9 @@ class DiscussionInteractor(
 
     suspend fun getCourseDiscussionConfig(courseId: String, forceRefresh: Boolean = false) =
         repository.getCourseDiscussionConfig(courseId, forceRefresh)
+
+    suspend fun getRecaptchaToken(courseId: String, recaptchaAction: RecaptchaAction) =
+        repository.getRecaptchaToken(courseId, recaptchaAction)
 
     suspend fun getCourseTopics(courseId: String) = repository.getCourseTopics(courseId)
 
@@ -82,8 +86,9 @@ class DiscussionInteractor(
     suspend fun createComment(
         threadId: String,
         rawBody: String,
-        parentId: String?
-    ) = repository.createComment(threadId, rawBody, parentId)
+        parentId: String?,
+        captchaToken: String,
+    ) = repository.createComment(threadId, rawBody, parentId, captchaToken)
 
     suspend fun createThread(
         topicId: String,
@@ -91,7 +96,8 @@ class DiscussionInteractor(
         type: String,
         title: String,
         rawBody: String,
-    ) = repository.createThread(topicId, courseId, type, title, rawBody)
+        captchaToken: String,
+    ) = repository.createThread(topicId, courseId, type, title, rawBody, captchaToken)
 
     suspend fun markBlocksCompletion(courseId: String, blocksId: List<String>) =
         repository.markBlocksCompletion(courseId, blocksId)

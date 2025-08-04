@@ -417,7 +417,7 @@ val screenModule = module {
     viewModel { CourseSearchViewModel(get(), get(), get(), get(), get()) }
     viewModel { SelectDialogViewModel(get()) }
 
-    single { DiscussionRepository(get(), get(), get()) }
+    single { DiscussionRepository(get(), get(), get(), get(), get()) }
     factory { DiscussionInteractor(get()) }
     viewModel { (courseId: String, courseTitle: String) ->
         DiscussionTopicsViewModel(

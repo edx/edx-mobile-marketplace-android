@@ -1,7 +1,10 @@
 package org.openedx.discussion.data.repository
 
+import com.google.android.recaptcha.RecaptchaAction
+import org.openedx.core.config.Config
 import org.openedx.core.data.model.BlocksCompletionBody
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.R
 import org.openedx.discussion.data.api.DiscussionApi
@@ -21,8 +24,10 @@ import java.util.concurrent.TimeUnit
 
 class DiscussionRepository(
     private val api: DiscussionApi,
+    private val config: Config,
     private val preferencesManager: CorePreferences,
-    private val resourceManager: ResourceManager
+    private val resourceManager: ResourceManager,
+    private val recaptchaManager: RecaptchaManager,
 ) {
     private val cacheDurationMs = TimeUnit.HOURS.toMillis(1)
 
@@ -42,12 +47,18 @@ class DiscussionRepository(
         val canUseCachedConfig =
             !forceRefresh && cached != null && (currentTime - cached.timestamp) < cacheDurationMs
         if (canUseCachedConfig) {
-            return cached!!.config.mapToDomain()
+            return cached.config.mapToDomain()
         }
 
         return api.getCourseDiscussionConfig(courseId).also { freshConfig ->
             discussionConfigCache[courseId] = CachedDiscussionConfig(freshConfig, currentTime)
         }.mapToDomain()
+    }
+
+    suspend fun getRecaptchaToken(courseId: String, recaptchaAction: RecaptchaAction): String {
+        val isCaptchaEnabled = config.getRecaptchaConfig().isEnabled &&
+                getCourseDiscussionConfig(courseId, false).isCaptchaEnabled
+        return if (isCaptchaEnabled) recaptchaManager.getActionToken(recaptchaAction) else ""
     }
 
     suspend fun getCourseTopics(courseId: String): List<Topic> {
@@ -158,9 +169,9 @@ class DiscussionRepository(
     suspend fun createComment(
         threadId: String,
         rawBody: String,
-        parentId: String?
-    ) =
-        api.createComment(CommentBody(threadId, rawBody, parentId)).mapToDomain()
+        parentId: String?,
+        captchaToken: String,
+    ) = api.createComment(CommentBody(threadId, rawBody, parentId, captchaToken)).mapToDomain()
 
 
     suspend fun createThread(
@@ -169,7 +180,9 @@ class DiscussionRepository(
         type: String,
         title: String,
         rawBody: String,
-    ) = api.createThread(ThreadBody(type, topicId, courseId, title, rawBody)).mapToDomain()
+        captchaToken: String,
+    ) = api.createThread(ThreadBody(type, topicId, courseId, title, rawBody, captchaToken))
+        .mapToDomain()
 
     suspend fun markBlocksCompletion(courseId: String, blocksId: List<String>) {
         val username = preferencesManager.user?.username ?: ""

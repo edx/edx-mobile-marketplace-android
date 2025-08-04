@@ -8,5 +8,7 @@ data class CommentBody(
     @SerializedName("raw_body")
     val rawBody: String,
     @SerializedName("parent_id")
-    val parentId: String?
+    val parentId: String?,
+    @SerializedName("captcha_token")
+    val captchaToken: String,
 )

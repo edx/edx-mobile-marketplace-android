@@ -26,13 +26,13 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.CommentsData
 import org.openedx.discussion.domain.model.DiscussionComment
@@ -44,6 +44,7 @@ import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 import java.net.UnknownHostException
+import org.openedx.core.R as CoreR
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DiscussionCommentsViewModelTest {
@@ -60,7 +61,7 @@ class DiscussionCommentsViewModelTest {
     private val notifier = mockk<DiscussionNotifier>(relaxed = true)
 
     private val noInternet = "Slow or no internet connection"
-    private val somethingWrong = "Something went wrong"
+    private val somethingWrong = "Something went wrong. Please try again later."
 
     //region mockThread
 
@@ -143,8 +144,9 @@ class DiscussionCommentsViewModelTest {
         Dispatchers.setMain(dispatcher)
         every { analytics.logScreenEvent(any(), any()) } returns Unit
         every { preferencesManager.user?.username } returns ""
-        every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
-        every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
+        coEvery { interactor.getRecaptchaToken("", any()) } returns ""
+        every { resourceManager.getString(CoreR.string.core_error_no_connection) } returns noInternet
+        every { resourceManager.getString(R.string.discussion_something_went_wrong_error) } returns somethingWrong
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
@@ -1030,12 +1032,19 @@ class DiscussionCommentsViewModelTest {
             preferencesManager,
             analytics,
         )
-        coEvery { interactor.createComment(any(), any(), any()) } throws UnknownHostException()
+        coEvery {
+            interactor.createComment(
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } throws UnknownHostException()
 
         viewModel.createComment("")
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.createComment(any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.createComment(any(), any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         Assert.assertEquals(noInternet, message?.message)
@@ -1063,12 +1072,12 @@ class DiscussionCommentsViewModelTest {
             preferencesManager,
             analytics,
         )
-        coEvery { interactor.createComment(any(), any(), any()) } throws Exception()
+        coEvery { interactor.createComment(any(), any(), any(), any()) } throws Exception()
 
         viewModel.createComment("")
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.createComment(any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.createComment(any(), any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         Assert.assertEquals(somethingWrong, message?.message)
@@ -1097,12 +1106,12 @@ class DiscussionCommentsViewModelTest {
                 preferencesManager,
                 analytics,
             )
-        coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
+        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
 
         viewModel.createComment("")
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.createComment(any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.createComment(any(), any(), any(), any()) }
 
         assert(viewModel.uiMessage.value != null)
         assert(viewModel.uiState.value is DiscussionCommentsUIState.Success)
@@ -1129,7 +1138,7 @@ class DiscussionCommentsViewModelTest {
             preferencesManager,
             analytics,
         )
-        coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
+        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")
@@ -1158,7 +1167,7 @@ class DiscussionCommentsViewModelTest {
             preferencesManager,
             analytics,
         )
-        coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
+        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")
@@ -1188,7 +1197,7 @@ class DiscussionCommentsViewModelTest {
             preferencesManager,
             analytics,
         )
-        coEvery { interactor.createComment(any(), any(), any()) } returns mockComment
+        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")
@@ -1196,5 +1205,4 @@ class DiscussionCommentsViewModelTest {
 
         assert(viewModel.uiState.value is DiscussionCommentsUIState.Success)
     }
-
 }

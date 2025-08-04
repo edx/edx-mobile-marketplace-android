@@ -13,6 +13,8 @@ data class ThreadBody(
     val title: String,
     @SerializedName("raw_body")
     val rawBody: String,
+    @SerializedName("captcha_token")
+    val captchaToken: String,
     @SerializedName("following")
-    val following: Boolean = true
+    val following: Boolean = true,
 )

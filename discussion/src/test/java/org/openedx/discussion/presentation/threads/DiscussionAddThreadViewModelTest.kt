@@ -20,11 +20,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
@@ -33,6 +33,7 @@ import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
 import java.net.UnknownHostException
+import org.openedx.core.R as CoreR
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DiscussionAddThreadViewModelTest {
@@ -48,7 +49,7 @@ class DiscussionAddThreadViewModelTest {
     private val notifier = mockk<DiscussionNotifier>(relaxed = true)
 
     private val noInternet = "Slow or no internet connection"
-    private val somethingWrong = "Something went wrong"
+    private val somethingWrong = "Something went wrong. Please try again later."
 
     //region mockThread
 
@@ -110,8 +111,9 @@ class DiscussionAddThreadViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-        every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
-        every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
+        coEvery { interactor.getRecaptchaToken("", any()) } returns ""
+        every { resourceManager.getString(CoreR.string.core_error_no_connection) } returns noInternet
+        every { resourceManager.getString(R.string.discussion_something_went_wrong_error) } returns somethingWrong
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
@@ -133,13 +135,14 @@ class DiscussionAddThreadViewModelTest {
                 any(),
                 any(),
                 any(),
+                any(),
             )
         } throws UnknownHostException()
 
         viewModel.createThread("", "", "", "")
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assert(noInternet == message?.message)
@@ -158,13 +161,14 @@ class DiscussionAddThreadViewModelTest {
                 any(),
                 any(),
                 any(),
+                any(),
             )
         } throws Exception()
 
         viewModel.createThread("", "", "", "")
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any(), any()) }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assert(somethingWrong == message?.message)
@@ -183,13 +187,14 @@ class DiscussionAddThreadViewModelTest {
                 any(),
                 any(),
                 any(),
+                any(),
             )
         } returns mockThread
         every { analytics.logEvent(any(), any()) } returns Unit
         viewModel.createThread("", "", "", "")
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { interactor.createThread(any(), any(), any(), any(), any(), any()) }
         verify { analytics.logEvent(any(), any()) }
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.newThread.value != null)

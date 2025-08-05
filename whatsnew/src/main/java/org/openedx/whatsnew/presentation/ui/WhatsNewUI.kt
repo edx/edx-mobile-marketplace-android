@@ -144,14 +144,21 @@ fun NavigationUnitsButtons(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        PrevButton(
-            hasPrevPage = hasPrevPage,
-            onPrevClick = onPrevClick
-        )
-        NextFinishButton(
-            hasNextPage = hasNextPage,
-            onNextClick = onNextClick
-        )
+        if (hasPrevPage || hasNextPage) {
+            PrevButton(
+                hasPrevPage = hasPrevPage,
+                onPrevClick = onPrevClick
+            )
+
+            NextFinishButton(
+                hasNextPage = hasNextPage,
+                onNextClick = onNextClick
+            )
+        } else {
+            FinishButton(
+                onFinishClick = onNextClick
+            )
+        }
     }
 }
 
@@ -249,6 +256,33 @@ fun NextFinishButton(
     }
 }
 
+@Composable
+private fun FinishButton(
+    onFinishClick: () -> Unit,
+) {
+    OpenEdXPrimaryButton(
+        text = stringResource(id = R.string.whats_new_navigation_done),
+        onClick = onFinishClick
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                modifier = Modifier.testTag("txt_done"),
+                text = stringResource(id = R.string.whats_new_navigation_done),
+                style = MaterialTheme.appTypography.labelLarge
+            )
+            Spacer(Modifier.width(8.dp))
+            Icon(
+                painter = painterResource(id = org.openedx.core.R.drawable.core_ic_check),
+                contentDescription = null,
+                tint = MaterialTheme.appColors.secondaryButtonText,
+            )
+        }
+    }
+}
+
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -284,6 +318,20 @@ private fun NavigationUnitsButtonsPrevInTheEnd() {
     OpenEdXTheme {
         NavigationUnitsButtons(
             hasPrevPage = true,
+            hasNextPage = false,
+            onPrevClick = {},
+            onNextClick = {}
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun NavigationUnitsButtonsFinish() {
+    OpenEdXTheme {
+        NavigationUnitsButtons(
+            hasPrevPage = false,
             hasNextPage = false,
             onPrevClick = {},
             onNextClick = {}

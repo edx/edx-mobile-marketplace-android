@@ -1,5 +1,15 @@
 [
   {
+    "version": "6.2",
+    "messages": [
+      {
+        "image": "screen_1",
+        "title": "Never miss a Conversation",
+        "message": "Get notified when someone responds to your posts, comments, or followed discussions.\nCustomise your preferences in the app settings."
+      }
+    ]
+  },
+  {
     "version": "6.0",
     "messages": [
       {

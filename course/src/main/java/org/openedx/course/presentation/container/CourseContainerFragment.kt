@@ -72,7 +72,6 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
-import org.openedx.core.extension.isNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.dialog.IAPDialogFragment
@@ -204,13 +203,8 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
     private fun initCourseView() {
         binding.composeCollapsingLayout.setContent {
-            val dataReady = viewModel.dataReady.observeAsState(null)
-            if (dataReady.value.isNull()) {
-                return@setContent
-            }
             CourseDashboard(
                 viewModel = viewModel,
-                isDataReady = dataReady.value.isTrue(),
                 isResumed = isResumed,
                 fragmentActivity = requireActivity(),
                 onRefresh = { page ->
@@ -340,7 +334,6 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 @Composable
 fun CourseDashboard(
     viewModel: CourseContainerViewModel,
-    isDataReady: Boolean,
     isResumed: Boolean,
     fragmentActivity: FragmentActivity,
     onRefresh: (page: Int) -> Unit,
@@ -357,6 +350,7 @@ fun CourseDashboard(
             scaffoldState = scaffoldState,
             backgroundColor = MaterialTheme.appColors.background
         ) { paddingValues ->
+            val dataReady = viewModel.dataReady.observeAsState()
             val isNavigationEnabled by viewModel.isNavigationEnabled.collectAsState()
             val refreshing by viewModel.refreshing.collectAsState(true)
             val courseImage by viewModel.courseImage.collectAsState()
@@ -387,7 +381,7 @@ fun CourseDashboard(
             }
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
-            if (isDataReady && canShowTrackSelection) {
+            if (dataReady.value.isTrue() && canShowTrackSelection) {
                 val courseExpiresDate =
                     viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires?.let {
                         TimeUtils.getCourseAccessFormattedDate(
@@ -439,7 +433,7 @@ fun CourseDashboard(
                                 )
                             },
                             upgradeButton = {
-                                if (isDataReady && canShowValuePropButton) {
+                                if (dataReady.value.isTrue() && canShowValuePropButton) {
                                     val horizontalPadding =
                                         if (!windowSize.isTablet) 16.dp else 98.dp
                                     UpgradeToAccessView(

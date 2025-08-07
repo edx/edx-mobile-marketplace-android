@@ -5,8 +5,6 @@ def appId = config.getOrDefault("APPLICATION_ID", "org.openedx.app")
 def themeDirectory = config.getOrDefault("THEME_DIRECTORY", "openedx")
 def firebaseConfig = config.get('FIREBASE')
 def firebaseEnabled = firebaseConfig?.getOrDefault('ENABLED', false)
-def fullstoryConfig = config.get("FULLSTORY")
-def fullstoryEnabled = fullstoryConfig?.getOrDefault('ENABLED', false)
 
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
@@ -29,19 +27,6 @@ if (firebaseEnabled) {
     }
 
     preBuild.dependsOn(removeGoogleServicesJson)
-}
-
-if (fullstoryEnabled) {
-    apply plugin: 'fullstory'
-    def fullstoryOrgId = fullstoryConfig?.get("ORG_ID")
-
-    fullstory {
-        org fullstoryOrgId
-        composeEnabled true
-        composeSelectorVersion 4
-        enabledVariants 'debug|release'
-        logcatLevel 'error'
-    }
 }
 
 android {

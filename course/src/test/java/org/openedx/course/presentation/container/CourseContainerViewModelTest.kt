@@ -108,6 +108,7 @@ class CourseContainerViewModelTest {
         name = "Course name",
         number = "",
         org = "Org",
+        orgLogo = "",
         start = Date(0),
         startDisplay = "",
         startType = "",
@@ -159,7 +160,7 @@ class CourseContainerViewModelTest {
             null, "", false, null
         ),
         courseInfoOverview = CourseInfoOverview(
-            "Open edX Demo Course", "", "OpenedX", null,
+            "Open edX Demo Course", "", "OpenedX", "", null,
             "", "", null, false, null,
             CourseSharingUtmParameters("", ""),
             "", listOf(), null

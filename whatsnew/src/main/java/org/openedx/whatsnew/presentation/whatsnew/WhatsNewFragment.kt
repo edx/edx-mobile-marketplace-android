@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -274,16 +275,18 @@ private fun WhatsNewScreenPortrait(
                 }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
-                    PageIndicator(
-                        numberOfPages = pagerState.pageCount,
-                        selectedPage = pagerState.currentPage,
-                        defaultRadius = 12.dp,
-                        selectedLength = 24.dp,
-                        space = 4.dp,
-                        animationDurationInMillis = 500,
-                    )
+                    if (pagerState.pageCount > 1) {
+                        PageIndicator(
+                            numberOfPages = pagerState.pageCount,
+                            selectedPage = pagerState.currentPage,
+                            defaultRadius = 12.dp,
+                            selectedLength = 24.dp,
+                            space = 4.dp,
+                            animationDurationInMillis = 500,
+                        )
+                        Spacer(Modifier.height(20.dp))
+                    }
 
                     Crossfade(
                         targetState = message,
@@ -314,6 +317,7 @@ private fun WhatsNewScreenPortrait(
                             )
                         }
                     }
+                    Spacer(Modifier.height(20.dp))
 
                     NavigationUnitsButtons(
                         hasPrevPage = pagerState.canScrollBackward && pagerState.currentPage != 0,

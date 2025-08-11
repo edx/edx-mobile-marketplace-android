@@ -46,10 +46,7 @@ android {
     kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
-            freeCompilerArgs.addAll(List.of(
-                    "-Xstring-concat=inline",
-                    "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
-            ))
+            freeCompilerArgs.addAll(List.of("-Xstring-concat=inline"))
         }
     }
     buildFeatures {

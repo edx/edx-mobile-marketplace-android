@@ -7,7 +7,7 @@ import org.openedx.dashboard.R
 
 enum class CourseStatusFilter(
     val key: String,
-    @StringRes
+    @field:StringRes
     override val labelResId: Int,
     override val icon: ImageVector? = null,
 ) : TabItem {

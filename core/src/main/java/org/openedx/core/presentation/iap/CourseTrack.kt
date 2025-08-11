@@ -4,8 +4,8 @@ import androidx.annotation.StringRes
 import org.openedx.core.R
 
 enum class CourseTrack(
-    @StringRes val title: Int,
-    @StringRes val description: Int,
+    @field:StringRes val title: Int,
+    @field:StringRes val description: Int,
 ) {
     CERTIFICATE(
         title = R.string.iap_earn_a_certificate,

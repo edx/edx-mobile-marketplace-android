@@ -4,7 +4,7 @@ import androidx.annotation.StringRes
 import org.openedx.profile.R
 
 enum class CalendarColor(
-    @StringRes
+    @field:StringRes
     val title: Int,
     val color: Long
 ) {

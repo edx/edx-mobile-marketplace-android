@@ -88,11 +88,7 @@ class UnlockContentViewModel(
         productInfo = null,
     )
 
-    private val eventLogger = IAPEventLogger(
-        analytics = analytics,
-        isSilentIAPFlow = false,
-        purchaseFlowData = purchaseData
-    )
+    private val eventLogger = IAPEventLogger(analytics = analytics, purchaseFlowData = purchaseData)
 
     init {
         viewModelScope.launch(Dispatchers.IO) {

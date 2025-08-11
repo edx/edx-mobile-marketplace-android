@@ -3,7 +3,6 @@ package org.openedx.course.presentation.unit.container
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import org.openedx.core.FragmentViewType
-import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.course.presentation.unit.NotSupportedUnitFragment
 import org.openedx.course.presentation.unit.html.HtmlUnitFragment
@@ -25,7 +24,7 @@ class CourseUnitContainerAdapter(
 
     private fun unitBlockFragment(block: Block): Fragment {
         return when {
-            (block.authorizationDenialReason == AuthorizationDenialReason.FEATURE_BASED_ENROLLMENTS) -> {
+            (block.isPaidContent()) -> {
                 if (viewModel.isIAPEnabled) {
                     UnlockContentFragment.newInstance(viewModel.courseId, block.id)
                 } else {

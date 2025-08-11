@@ -142,7 +142,7 @@ class UnlockContentFragment : Fragment() {
 private fun GradedAssignmentLockedCard(
     modifier: Modifier = Modifier,
     uiState: UnlockContentUIState,
-    onUpgradeClick: () -> Unit = { }
+    onUpgradeClick: () -> Unit,
 ) {
     Column(
         modifier = modifier

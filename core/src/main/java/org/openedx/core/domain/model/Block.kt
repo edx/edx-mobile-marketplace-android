@@ -78,6 +78,9 @@ data class Block(
         return count
     }
 
+    fun isPaidContent(): Boolean =
+        authorizationDenialReason == AuthorizationDenialReason.FEATURE_BASED_ENROLLMENTS
+
     val isVideoBlock get() = type == BlockType.VIDEO
     val isDiscussionBlock get() = type == BlockType.DISCUSSION
     val isHTMLBlock get() = type == BlockType.HTML

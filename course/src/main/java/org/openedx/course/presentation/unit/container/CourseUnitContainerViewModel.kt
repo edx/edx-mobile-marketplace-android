@@ -24,7 +24,6 @@ import org.openedx.core.extension.indexOfFirstFromIndex
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.presentation.course.CourseViewMode
-import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSectionChanged
@@ -44,7 +43,6 @@ class CourseUnitContainerViewModel(
     private val notifier: CourseNotifier,
     private val analytics: CourseAnalytics,
     private val corePreferences: CorePreferences,
-    private val appData: AppData,
     iapNotifier: IAPNotifier,
 ) : BaseViewModel() {
 

@@ -32,7 +32,6 @@ import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.presentation.course.CourseViewMode
-import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.Logger
@@ -54,7 +53,6 @@ class CourseUnitContainerViewModelTest {
     private val notifier = mockk<CourseNotifier>()
     private val analytics = mockk<CourseAnalytics>()
     private val corePreferences = mockk<CorePreferences>()
-    private val appData = mockk<AppData>()
     private val iapNotifier = mockk<IAPNotifier>()
 
     private val assignmentProgress = AssignmentProgress(
@@ -211,7 +209,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
 
@@ -239,7 +236,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
 
@@ -267,7 +263,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
 
@@ -297,7 +292,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
@@ -325,7 +319,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
@@ -355,7 +348,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
@@ -385,7 +377,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
@@ -415,7 +406,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
@@ -445,7 +435,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
         coEvery { interactor.getCourseStructure("") } returns courseStructure
@@ -475,7 +464,6 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                appData,
                 iapNotifier,
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure

@@ -23,12 +23,12 @@ def config = configHelper.fetchConfig()
 def themeDirectory = config.getOrDefault("THEME_DIRECTORY", "openedx")
 
 android {
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"

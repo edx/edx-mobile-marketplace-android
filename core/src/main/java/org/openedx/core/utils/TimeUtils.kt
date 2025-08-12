@@ -18,7 +18,11 @@ import kotlin.math.ceil
 
 object TimeUtils {
 
-    private val POSIX_LOCALE = Locale("en", "US", "POSIX")
+    private val POSIX_LOCALE = Locale.Builder()
+        .setLanguage("en")
+        .setRegion("US")
+        .setVariant("POSIX")
+        .build()
     private val UTC_TIME_ZONE = TimeZone.getTimeZone("UTC")
 
     private const val FORMAT_ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss'Z'"

@@ -3,7 +3,8 @@ package org.openedx.core.utils
 import org.openedx.core.AppDataConstants.USER_MAX_YEAR
 import org.openedx.core.AppDataConstants.defaultLocale
 import org.openedx.core.domain.model.RegistrationField
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 object LocaleUtils {
 
@@ -37,14 +38,14 @@ object LocaleUtils {
     fun getCountryByCountryCode(code: String): String? {
         val countryISO = Locale.getISOCountries().firstOrNull { it == code }
         return countryISO?.let {
-            Locale("", it).getDisplayCountry(defaultLocale)
+            Locale.Builder().setRegion(it).build().getDisplayCountry(defaultLocale)
         }
     }
 
     fun getLanguageByLanguageCode(code: String): String? {
         val countryISO = Locale.getISOLanguages().firstOrNull { it == code }
         return countryISO?.let {
-            Locale(it, "").getDisplayLanguage(defaultLocale)
+            Locale.Builder().setLanguage(it).build().getDisplayLanguage(defaultLocale)
         }
     }
 
@@ -52,7 +53,11 @@ object LocaleUtils {
         .asSequence()
         .minus(disabledCountries)
         .map {
-            RegistrationField.Option(it, Locale("", it).getDisplayCountry(defaultLocale), "")
+            RegistrationField.Option(
+                it,
+                Locale.Builder().setRegion(it).build().getDisplayCountry(defaultLocale),
+                ""
+            )
         }
         .sortedBy { it.name }
         .toList()
@@ -62,13 +67,17 @@ object LocaleUtils {
         .asSequence()
         .filter { it.length == 2 }
         .map {
-            RegistrationField.Option(it, Locale(it, "").getDisplayLanguage(defaultLocale), "")
+            RegistrationField.Option(
+                it,
+                Locale.Builder().setLanguage(it).build().getDisplayLanguage(defaultLocale),
+                ""
+            )
         }
         .sortedBy { it.name }
         .toList()
 
     fun getDisplayLanguage(languageCode: String): String {
-        return Locale(languageCode, "").getDisplayLanguage(defaultLocale)
+        return Locale.Builder().setLanguage(languageCode).build().getDisplayLanguage(defaultLocale)
     }
 
 }

@@ -7,29 +7,29 @@ plugins {
 }
 
 android {
-    compileSdk 34
+    compileSdk = 34
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        minSdk 24
-        targetSdk 34
+        minSdk = 24
+        targetSdk = 34
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
-    namespace 'org.openedx.dashboard'
+    namespace = 'org.openedx.dashboard'
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
         compilerOptions {
@@ -39,20 +39,20 @@ android {
     }
 
     buildFeatures {
-        viewBinding true
-        compose true
+        viewBinding = true
+        compose = true
     }
 
     flavorDimensions += "env"
     productFlavors {
         prod {
-            dimension 'env'
+            dimension = 'env'
         }
         develop {
-            dimension 'env'
+            dimension = 'env'
         }
         stage {
-            dimension 'env'
+            dimension = 'env'
         }
     }
 }

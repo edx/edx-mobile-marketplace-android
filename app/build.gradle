@@ -30,37 +30,37 @@ if (firebaseEnabled) {
 }
 
 android {
-    compileSdk 34
+    compileSdk = 34
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        applicationId appId
-        minSdk 24
-        targetSdk 34
-        versionCode 6002000
-        versionName "6.2.0"
+        applicationId = appId
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 6002000
+        versionName = "6.2.0"
 
         resourceConfigurations += ["en", "uk"]
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    namespace 'org.openedx.app'
+    namespace = 'org.openedx.app'
 
     flavorDimensions += "env"
     productFlavors {
         prod {
-            dimension 'env'
+            dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
         }
         develop {
-            dimension 'env'
+            dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
         }
         stage {
-            dimension 'env'
+            dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
         }
@@ -80,20 +80,20 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled = true
+            shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
             if (firebaseEnabled) {
                 firebaseCrashlytics {
-                    mappingFileUploadEnabled true
+                    mappingFileUploadEnabled = true
                 }
             }
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
         compilerOptions {
@@ -102,9 +102,9 @@ android {
         }
     }
     buildFeatures {
-        viewBinding true
-        compose true
-        buildConfig true
+        viewBinding = true
+        compose = true
+        buildConfig = true
     }
     bundle {
         language {

@@ -12,10 +12,9 @@ class Config(context: Context) {
 
     private var configProperties: JsonObject = try {
         val inputStream = context.assets.open("config/config.json")
-        val parser = JsonParser()
-        val config = parser.parse(InputStreamReader(inputStream))
+        val config = JsonParser.parseReader(InputStreamReader(inputStream))
         config.asJsonObject
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         JsonObject()
     }
 

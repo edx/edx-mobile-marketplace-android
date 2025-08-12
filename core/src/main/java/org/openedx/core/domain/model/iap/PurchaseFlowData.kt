@@ -2,6 +2,7 @@ package org.openedx.core.domain.model.iap
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import java.util.Date
 
 @Parcelize
 data class PurchaseFlowData(
@@ -11,7 +12,7 @@ data class PurchaseFlowData(
     var courseName: String? = null,
     var orgName: String? = null,
     var orgLogo: String? = null,
-    var courseExpiresDate: String? = null,
+    var courseExpiresDate: Date? = null,
     var isSelfPaced: Boolean? = null,
     var componentId: String? = null,
     var productInfo: ProductInfo? = null,

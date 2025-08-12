@@ -26,6 +26,7 @@ import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
+import org.openedx.core.domain.model.toPurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.presentation.IAPAnalytics
@@ -214,14 +215,10 @@ class DashboardListViewModel(
             IAPAction.ACTION_USER_INITIATED -> {
                 if (course != null) {
                     IAPDialogFragment.newInstance(
-                        iapFlow = IAPFlow.USER_INITIATED,
-                        screenName = IAPFlowSource.COURSE_ENROLLMENT.screen,
-                        courseId = course.course.id,
-                        courseName = course.course.name,
-                        orgName = course.course.org,
-                        orgLogo = course.course.orgLogo,
-                        isSelfPaced = course.course.isSelfPaced,
-                        productInfo = course.productInfo
+                        course.toPurchaseFlowData(
+                            iapFlow = IAPFlow.USER_INITIATED,
+                            screenName = IAPFlowSource.COURSE_ENROLLMENT.screen,
+                        )
                     ).show(
                         fragmentManager,
                         IAPDialogFragment.TAG
@@ -230,13 +227,12 @@ class DashboardListViewModel(
             }
 
             IAPAction.ACTION_COMPLETION -> {
-                IAPDialogFragment.newInstance(
-                    IAPFlow.SILENT,
-                    IAPFlowSource.COURSE_ENROLLMENT.screen
-                ).show(
-                    fragmentManager,
-                    IAPDialogFragment.TAG
-                )
+                eventLogger.purchaseFlowData?.apply {
+                    this.iapFlow = IAPFlow.SILENT
+                    this.screenName = IAPFlowSource.COURSE_ENROLLMENT.screen
+                }?.let {
+                    IAPDialogFragment.newInstance(it).show(fragmentManager, IAPDialogFragment.TAG)
+                }
                 clearIAPState()
             }
 

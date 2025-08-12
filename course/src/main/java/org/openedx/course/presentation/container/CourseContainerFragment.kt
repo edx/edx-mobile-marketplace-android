@@ -72,6 +72,7 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
+import org.openedx.core.domain.model.toPurchaseFlowData
 import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.dialog.IAPDialogFragment
@@ -382,23 +383,11 @@ fun CourseDashboard(
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
             if (dataReady.value.isTrue() && canShowTrackSelection) {
-                val courseExpiresDate =
-                    viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires?.let {
-                        TimeUtils.getCourseAccessFormattedDate(
-                            LocalContext.current,
-                            it
-                        )
-                    } ?: ""
                 IAPDialogFragment.newInstance(
-                    iapFlow = IAPFlow.USER_INITIATED,
-                    screenName = IAPFlowSource.TRACK_SELECTION.screen,
-                    courseId = viewModel.courseId,
-                    courseName = viewModel.courseName,
-                    orgName = viewModel.courseDetails?.courseInfoOverview?.org,
-                    orgLogo = viewModel.courseDetails?.courseInfoOverview?.orgLogo,
-                    courseExpiresDate = courseExpiresDate,
-                    isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
-                    productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
+                    viewModel.courseDetails!!.toPurchaseFlowData(
+                        iapFlow = IAPFlow.USER_INITIATED,
+                        screenName = IAPFlowSource.TRACK_SELECTION.screen,
+                    )
                 ).show(
                     fragmentManager,
                     IAPDialogFragment.TAG
@@ -447,14 +436,10 @@ fun CourseDashboard(
                                         type = UpgradeToAccessViewType.COURSE,
                                     ) {
                                         IAPDialogFragment.newInstance(
-                                            iapFlow = IAPFlow.USER_INITIATED,
-                                            screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
-                                            courseId = viewModel.courseId,
-                                            courseName = viewModel.courseName,
-                                            orgName = viewModel.courseDetails?.courseInfoOverview?.org,
-                                            orgLogo = viewModel.courseDetails?.courseInfoOverview?.orgLogo,
-                                            isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
-                                            productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
+                                            viewModel.courseDetails!!.toPurchaseFlowData(
+                                                iapFlow = IAPFlow.USER_INITIATED,
+                                                screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
+                                            )
                                         ).show(
                                             fragmentManager,
                                             IAPDialogFragment.TAG
@@ -958,14 +943,10 @@ private fun SetupCourseAccessErrorButtons(
                 type = UpgradeToAccessViewType.AUDIT_EXPIRED,
             ) {
                 IAPDialogFragment.newInstance(
-                    iapFlow = IAPFlow.USER_INITIATED,
-                    screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
-                    courseId = viewModel.courseId,
-                    courseName = viewModel.courseName,
-                    orgName = viewModel.courseDetails?.courseInfoOverview?.org,
-                    orgLogo = viewModel.courseDetails?.courseInfoOverview?.orgLogo,
-                    isSelfPaced = viewModel.courseDetails?.courseInfoOverview?.isSelfPaced.isTrue(),
-                    productInfo = viewModel.courseDetails?.courseInfoOverview?.productInfo!!
+                    viewModel.courseDetails!!.toPurchaseFlowData(
+                        iapFlow = IAPFlow.USER_INITIATED,
+                        screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
+                    )
                 ).show(
                     fragmentManager,
                     IAPDialogFragment.TAG

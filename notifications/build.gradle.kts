@@ -10,6 +10,7 @@ plugins {
 android {
     namespace = "org.openedx.notifications"
     compileSdk = 34
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
         minSdk = 24

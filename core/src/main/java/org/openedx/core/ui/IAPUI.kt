@@ -127,9 +127,7 @@ fun CertificatePreview(
             contentDescription = null,
             contentScale = ContentScale.FillBounds
         )
-        Row(
-            modifier = Modifier.padding(all = 14.dp)
-        ) {
+        Row(modifier = Modifier.padding(all = 12.dp)) {
             Column(
                 modifier = Modifier
                     .weight(0.7F)
@@ -138,14 +136,14 @@ fun CertificatePreview(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = stringResource(R.string.core_verified_text),
+                    text = stringResource(R.string.iap_certificate_verified_text),
                     color = MaterialTheme.appColors.certificatePreviewHeading,
                     textAlign = TextAlign.Start,
                     style = MaterialTheme.appTypography.titleSmall.copy(fontStyle = FontStyle.Italic)
                 )
                 Text(
                     modifier = Modifier.padding(horizontal = 2.dp),
-                    text = stringResource(R.string.core_certificate_text),
+                    text = stringResource(R.string.iap_certificate_text),
                     color = MaterialTheme.appColors.certificatePreviewHeading,
                     textAlign = TextAlign.Start,
                     style = MaterialTheme.appTypography.labelTiny.copy(fontWeight = FontWeight.Bold)
@@ -155,7 +153,7 @@ fun CertificatePreview(
 
                 Text(
                     modifier = Modifier.padding(horizontal = 2.dp),
-                    text = stringResource(R.string.core_certify_message_1),
+                    text = stringResource(R.string.iap_certificate_certify_message_1),
                     color = MaterialTheme.appColors.certificatePreviewMessage,
                     textAlign = TextAlign.Start,
                     style = MaterialTheme.appTypography.bodyTiny
@@ -172,7 +170,7 @@ fun CertificatePreview(
 
                 Text(
                     modifier = Modifier.padding(horizontal = 2.dp),
-                    text = stringResource(R.string.core_certify_message_2),
+                    text = stringResource(R.string.iap_certificate_certify_message_2),
                     color = MaterialTheme.appColors.certificatePreviewHeading,
                     textAlign = TextAlign.Start,
                     style = MaterialTheme.appTypography.bodyTiny
@@ -196,14 +194,18 @@ fun CertificatePreview(
 
                 Text(
                     modifier = Modifier.fillMaxWidth(0.85f),
-                    text = stringResource(R.string.core_organization_message, orgName, appName),
+                    text = stringResource(
+                        R.string.iap_certificate_organization_message,
+                        orgName,
+                        appName
+                    ),
                     color = MaterialTheme.appColors.certificatePreviewMessage,
                     textAlign = TextAlign.Start,
                     style = MaterialTheme.appTypography.bodyTiny
                 )
                 Spacer(modifier = Modifier.weight(1f))
 
-                Row(modifier = Modifier.fillMaxWidth(0.85f)) {
+                Row(modifier = Modifier.fillMaxWidth(0.9f)) {
                     Image(
                         modifier = Modifier
                             .width(38.dp)
@@ -221,7 +223,7 @@ fun CertificatePreview(
                     ) {
                         Text(
                             modifier = Modifier.wrapContentSize(),
-                            text = stringResource(R.string.core_verified_certificate_text),
+                            text = stringResource(R.string.iap_certificate_verified_certificate_text),
                             color = MaterialTheme.appColors.certificatePreviewMessage,
                             textAlign = TextAlign.Start,
                             style = MaterialTheme.appTypography.bodyTiny.copy(
@@ -232,7 +234,7 @@ fun CertificatePreview(
                         Spacer(modifier = Modifier.height(1.dp))
                         Text(
                             modifier = Modifier.wrapContentSize(),
-                            text = stringResource(R.string.core_issued_date_text),
+                            text = stringResource(R.string.iap_certificate_issued_date_text),
                             color = MaterialTheme.appColors.certificatePreviewMessage,
                             textAlign = TextAlign.Start,
                             style = MaterialTheme.appTypography.bodyTiny.copy(
@@ -249,9 +251,10 @@ fun CertificatePreview(
                     ) {
                         Text(
                             modifier = Modifier.wrapContentSize(),
-                            text = stringResource(R.string.core_valid_certificate_id_label),
+                            text = stringResource(R.string.iap_certificate_valid_certificate_id_label),
                             color = MaterialTheme.appColors.certificatePreviewMessage,
                             textAlign = TextAlign.Start,
+                            maxLines = 1,
                             style = MaterialTheme.appTypography.bodyTiny.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 4.sp
@@ -260,7 +263,7 @@ fun CertificatePreview(
                         Spacer(modifier = Modifier.height(1.dp))
                         Text(
                             modifier = Modifier.wrapContentSize(),
-                            text = stringResource(R.string.core_valid_certificate_id_sample),
+                            text = stringResource(R.string.iap_certificate_valid_certificate_id_sample),
                             color = MaterialTheme.appColors.certificatePreviewMessage,
                             maxLines = 1,
                             textAlign = TextAlign.Start,
@@ -274,7 +277,7 @@ fun CertificatePreview(
 
             Column(
                 modifier = Modifier
-                    .weight(0.35f)
+                    .weight(0.30f)
                     .fillMaxHeight()
                     .padding(start = 8.dp),
                 horizontalAlignment = Alignment.End
@@ -289,9 +292,9 @@ fun CertificatePreview(
                     contentDescription = null,
                 )
 
-                SignatureInfo(stringResource(R.string.core_certificate_preview_author_1))
-                SignatureInfo(stringResource(R.string.core_certificate_preview_author_2))
-                SignatureInfo(stringResource(R.string.core_certificate_preview_author_3))
+                SignatureInfo(stringResource(R.string.iap_certificate_preview_author_1))
+                SignatureInfo(stringResource(R.string.iap_certificate_preview_author_2))
+                SignatureInfo(stringResource(R.string.iap_certificate_preview_author_3))
             }
         }
     }
@@ -318,14 +321,14 @@ fun SignatureInfo(name: String) {
     Spacer(modifier = Modifier.height(0.5.dp))
     Text(
         modifier = Modifier.wrapContentSize(),
-        text = stringResource(R.string.core_professor_text),
+        text = stringResource(R.string.iap_certificate_professor_text),
         color = MaterialTheme.appColors.textPrimaryLight,
         style = MaterialTheme.appTypography.bodyTiny
     )
     Spacer(modifier = Modifier.height(0.5.dp))
     Text(
         modifier = Modifier.wrapContentSize(),
-        text = stringResource(R.string.core_universityx_text),
+        text = stringResource(R.string.iap_certificate_universityx_text),
         color = MaterialTheme.appColors.textPrimaryLight,
         style = MaterialTheme.appTypography.bodyTiny
     )
@@ -814,7 +817,7 @@ private fun PreviewValuePropUpgradeFeatures() {
             courseName = "Test Course",
             fullName = "john doe",
             orgName = "Google",
-            orgLogo = "https://cdn.freebiesupply.com/images/large/2x/google-logo-transparent.png"
+            orgLogo = "https://example/example.png"
         )
     }
 }

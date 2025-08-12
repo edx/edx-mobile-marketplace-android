@@ -249,18 +249,19 @@
     <string name="iap_locked_content_description">Upgrade to gain access to locked features like this one and get the most out of your course.</string>
 
     <!-- Certificate Preview -->
-    <string name="core_verified_text">Verified</string>
-    <string name="core_certificate_text">Certificate</string>
-    <string name="core_certify_message_1">This is to certify that</string>
-    <string name="core_certify_message_2">has successfully completed all courses and received passing grades for a Verified Certificate in</string>
-    <string name="core_organization_message">a course offered by %1$s, an online learning partnership between %1$s and %2$s.</string>
-    <string name="core_verified_certificate_text">Verified Certificate</string>
-    <string name="core_issued_date_text">Issued April 2016</string>
-    <string name="core_valid_certificate_id_label">Valid certificate ID</string>
-    <string name="core_valid_certificate_id_sample">12345678901234567890</string>
-    <string name="core_certificate_preview_author_1">Maurilio Pugliesi</string>
-    <string name="core_certificate_preview_author_2">Justine Doe, Ph.D.</string>
-    <string name="core_certificate_preview_author_3">Helga Svobodová</string>
-    <string name="core_professor_text">Professor</string>
-    <string name="core_universityx_text">UniversityX</string>
+    <string name="iap_certificate_verified_text">Verified</string>
+    <string name="iap_certificate_text">Certificate</string>
+    <string name="iap_certificate_certify_message_1">This is to certify that</string>
+    <string name="iap_certificate_certify_message_2">has successfully completed all courses and received passing grades for a Verified Certificate in</string>
+    <string name="iap_certificate_organization_message">a course offered by %1$s, an online learning partnership between %1$s and %2$s.</string>
+    <string name="iap_certificate_verified_certificate_text">Verified Certificate</string>
+    <string name="iap_certificate_issued_date_text">Issued April 2016</string>
+    <string name="iap_certificate_valid_certificate_id_label">Valid certificate ID</string>
+    <string name="iap_certificate_valid_certificate_id_sample">12345678901234567890</string>
+    <string name="iap_certificate_preview_author_1">Maurilio Pugliesi</string>
+    <string name="iap_certificate_preview_author_2">Justine Doe, Ph.D.</string>
+    <string name="iap_certificate_preview_author_3">Helga Svobodová</string>
+    <string name="iap_certificate_professor_text">Professor</string>
+    <string name="iap_certificate_universityx_text">UniversityX</string>
+
 </resources>

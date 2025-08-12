@@ -148,7 +148,6 @@ class CourseUnitContainerViewModelTest {
         name = "Course name",
         number = "",
         org = "Org",
-        orgLogo = "",
         start = Date(),
         startDisplay = "",
         startType = "",

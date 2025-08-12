@@ -125,7 +125,6 @@ class CourseDatesViewModelTest {
         name = "Course name",
         number = "",
         org = "Org",
-        orgLogo = "",
         start = Date(0),
         startDisplay = "",
         startType = "",

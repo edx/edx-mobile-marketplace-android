@@ -26,8 +26,6 @@ data class CourseStructureEntity(
     val number: String,
     @ColumnInfo("org")
     val org: String,
-    @ColumnInfo("orgLogo")
-    val orgLogo: String?,
     @ColumnInfo("start")
     val start: String?,
     @ColumnInfo("startDisplay")
@@ -57,7 +55,6 @@ data class CourseStructureEntity(
             name,
             number,
             org,
-            orgLogo ?: "",
             TimeUtils.iso8601ToDate(start ?: ""),
             startDisplay,
             startType,

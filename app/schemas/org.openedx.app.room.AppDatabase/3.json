@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "51f346d87f884811db71b4862fdded6a",
+    "identityHash": "819b595be1779d8ba31ebef212e6ced4",
     "entities": [
       {
         "tableName": "course_discovery_table",
@@ -416,7 +416,7 @@
       },
       {
         "tableName": "course_structure_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`root` TEXT NOT NULL, `id` TEXT NOT NULL, `blocks` TEXT NOT NULL, `name` TEXT NOT NULL, `number` TEXT NOT NULL, `org` TEXT NOT NULL, `orgLogo` TEXT, `start` TEXT, `startDisplay` TEXT NOT NULL, `startType` TEXT NOT NULL, `end` TEXT, `isSelfPaced` INTEGER NOT NULL, `bannerImage` TEXT, `courseImage` TEXT, `courseVideo` TEXT, `image` TEXT, `hasUnmetPrerequisites` INTEGER NOT NULL, `isTooEarly` INTEGER NOT NULL, `isStaff` INTEGER NOT NULL, `auditAccessExpires` TEXT, `hasAccess` INTEGER, `errorCode` TEXT, `developerMessage` TEXT, `userMessage` TEXT, `additionalContextUserMessage` TEXT, `userFragment` TEXT, `certificateURL` TEXT, `created` TEXT, `mode` TEXT, `isActive` INTEGER NOT NULL, `upgradeDeadline` TEXT, `assignments_completed` INTEGER NOT NULL, `total_assignments_count` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`root` TEXT NOT NULL, `id` TEXT NOT NULL, `blocks` TEXT NOT NULL, `name` TEXT NOT NULL, `number` TEXT NOT NULL, `org` TEXT NOT NULL, `start` TEXT, `startDisplay` TEXT NOT NULL, `startType` TEXT NOT NULL, `end` TEXT, `isSelfPaced` INTEGER NOT NULL, `bannerImage` TEXT, `courseImage` TEXT, `courseVideo` TEXT, `image` TEXT, `hasUnmetPrerequisites` INTEGER NOT NULL, `isTooEarly` INTEGER NOT NULL, `isStaff` INTEGER NOT NULL, `auditAccessExpires` TEXT, `hasAccess` INTEGER, `errorCode` TEXT, `developerMessage` TEXT, `userMessage` TEXT, `additionalContextUserMessage` TEXT, `userFragment` TEXT, `certificateURL` TEXT, `created` TEXT, `mode` TEXT, `isActive` INTEGER NOT NULL, `upgradeDeadline` TEXT, `assignments_completed` INTEGER NOT NULL, `total_assignments_count` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "root",
@@ -453,11 +453,6 @@
             "columnName": "org",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "orgLogo",
-            "columnName": "orgLogo",
-            "affinity": "TEXT"
           },
           {
             "fieldPath": "start",
@@ -905,7 +900,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '51f346d87f884811db71b4862fdded6a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '819b595be1779d8ba31ebef212e6ced4')"
     ]
   }
 }

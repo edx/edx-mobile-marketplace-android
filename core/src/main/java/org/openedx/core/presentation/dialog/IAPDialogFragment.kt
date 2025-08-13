@@ -268,7 +268,7 @@ class IAPDialogFragment : DialogFragment() {
                                 previewCertificate = iapViewModel.isCertificatePreviewEnabled,
                                 appName = iapViewModel.appData.appName,
                                 courseName = iapViewModel.purchaseData.courseName!!,
-                                fullName = iapViewModel.user?.name,
+                                learnerName = iapViewModel.user?.name,
                                 orgName = iapViewModel.purchaseData.orgName
                                     ?: iapViewModel.appData.appName,
                                 orgLogo = iapViewModel.purchaseData.orgLogo

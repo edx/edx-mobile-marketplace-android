@@ -73,6 +73,7 @@ import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.toPurchaseFlowData
+import org.openedx.core.extension.isNotNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.dialog.IAPDialogFragment
@@ -382,7 +383,9 @@ fun CourseDashboard(
             }
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
-            if (dataReady.value.isTrue() && canShowTrackSelection) {
+            if (dataReady.value.isTrue() && canShowTrackSelection &&
+                viewModel.courseDetails.isNotNull()
+            ) {
                 IAPDialogFragment.newInstance(
                     viewModel.courseDetails!!.toPurchaseFlowData(
                         iapFlow = IAPFlow.USER_INITIATED,
@@ -424,7 +427,9 @@ fun CourseDashboard(
                                 )
                             },
                             upgradeButton = {
-                                if (dataReady.value.isTrue() && canShowValuePropButton) {
+                                if (dataReady.value.isTrue() && canShowValuePropButton &&
+                                    viewModel.courseDetails.isNotNull()
+                                ) {
                                     val horizontalPadding =
                                         if (!windowSize.isTablet) 16.dp else 98.dp
                                     UpgradeToAccessView(
@@ -942,15 +947,17 @@ private fun SetupCourseAccessErrorButtons(
                     .fillMaxWidth(),
                 type = UpgradeToAccessViewType.AUDIT_EXPIRED,
             ) {
-                IAPDialogFragment.newInstance(
-                    viewModel.courseDetails!!.toPurchaseFlowData(
-                        iapFlow = IAPFlow.USER_INITIATED,
-                        screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
+                viewModel.courseDetails?.let {
+                    IAPDialogFragment.newInstance(
+                        it.toPurchaseFlowData(
+                            iapFlow = IAPFlow.USER_INITIATED,
+                            screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
+                        )
+                    ).show(
+                        fragmentManager,
+                        IAPDialogFragment.TAG
                     )
-                ).show(
-                    fragmentManager,
-                    IAPDialogFragment.TAG
-                )
+                }
             }
         }
 

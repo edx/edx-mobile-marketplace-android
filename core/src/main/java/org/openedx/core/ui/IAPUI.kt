@@ -70,7 +70,7 @@ fun ValuePropUpgradeFeatures(
     modifier: Modifier = Modifier,
     previewCertificate: Boolean,
     appName: String,
-    fullName: String?,
+    learnerName: String?,
     courseName: String,
     orgName: String,
     orgLogo: String?
@@ -97,7 +97,7 @@ fun ValuePropUpgradeFeatures(
         CheckmarkView(stringResource(id = R.string.iap_unlock_access))
         CheckmarkView(stringResource(id = R.string.iap_full_access_course))
         if (previewCertificate) {
-            CertificatePreview(appName, fullName, courseName, orgName, orgLogo)
+            CertificatePreview(appName, learnerName, courseName, orgName, orgLogo)
         }
     }
 }
@@ -105,7 +105,7 @@ fun ValuePropUpgradeFeatures(
 @Composable
 fun CertificatePreview(
     appName: String,
-    fullName: String?,
+    learnerName: String?,
     courseName: String,
     orgName: String,
     orgLogo: String?
@@ -151,30 +151,18 @@ fun CertificatePreview(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    modifier = Modifier.padding(horizontal = 2.dp),
-                    text = stringResource(R.string.iap_certificate_certify_message_1),
-                    color = MaterialTheme.appColors.certificatePreviewMessage,
-                    textAlign = TextAlign.Start,
-                    style = MaterialTheme.appTypography.bodyTiny
-                )
+                CertificateBodyText(stringResource(R.string.iap_certificate_certify_message_1))
 
                 Text(
                     modifier = Modifier.padding(horizontal = 2.dp),
-                    text = fullName?.toTitleCase() ?: "",
+                    text = learnerName?.toTitleCase() ?: "",
                     color = MaterialTheme.appColors.certificatePreviewHeading,
                     textAlign = TextAlign.Start,
                     style = MaterialTheme.appTypography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    modifier = Modifier.padding(horizontal = 2.dp),
-                    text = stringResource(R.string.iap_certificate_certify_message_2),
-                    color = MaterialTheme.appColors.certificatePreviewHeading,
-                    textAlign = TextAlign.Start,
-                    style = MaterialTheme.appTypography.bodyTiny
-                )
+                CertificateBodyText(stringResource(R.string.iap_certificate_certify_message_2))
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -183,7 +171,7 @@ fun CertificatePreview(
                     text = courseName,
                     color = MaterialTheme.appColors.certificatePreviewHeading,
                     textAlign = TextAlign.Start,
-                    maxLines = 3,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.appTypography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
@@ -192,17 +180,14 @@ fun CertificatePreview(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    modifier = Modifier.fillMaxWidth(0.85f),
-                    text = stringResource(
+                CertificateBodyText(
+                    stringResource(
                         R.string.iap_certificate_organization_message,
                         orgName,
                         appName
-                    ),
-                    color = MaterialTheme.appColors.certificatePreviewMessage,
-                    textAlign = TextAlign.Start,
-                    style = MaterialTheme.appTypography.bodyTiny
+                    )
                 )
+
                 Spacer(modifier = Modifier.weight(1f))
 
                 Row(modifier = Modifier.fillMaxWidth(0.9f)) {
@@ -216,62 +201,19 @@ fun CertificatePreview(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
 
-                    Column(
-                        modifier = Modifier
-                            .wrapContentSize()
-                            .align(Alignment.CenterVertically)
-                    ) {
-                        Text(
-                            modifier = Modifier.wrapContentSize(),
-                            text = stringResource(R.string.iap_certificate_verified_certificate_text),
-                            color = MaterialTheme.appColors.certificatePreviewMessage,
-                            textAlign = TextAlign.Start,
-                            style = MaterialTheme.appTypography.bodyTiny.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 4.sp
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(1.dp))
-                        Text(
-                            modifier = Modifier.wrapContentSize(),
-                            text = stringResource(R.string.iap_certificate_issued_date_text),
-                            color = MaterialTheme.appColors.certificatePreviewMessage,
-                            textAlign = TextAlign.Start,
-                            style = MaterialTheme.appTypography.bodyTiny.copy(
-                                fontSize = 4.sp
-                            )
-                        )
-                    }
+                    CertificateFooterItem(
+                        modifier = Modifier.align(Alignment.CenterVertically),
+                        itemTitle = stringResource(R.string.iap_certificate_verified_certificate_text),
+                        itemValue = stringResource(R.string.iap_certificate_issued_date_text),
+                    )
+
                     Spacer(modifier = Modifier.width(14.dp))
 
-                    Column(
-                        modifier = Modifier
-                            .wrapContentSize()
-                            .align(Alignment.CenterVertically)
-                    ) {
-                        Text(
-                            modifier = Modifier.wrapContentSize(),
-                            text = stringResource(R.string.iap_certificate_valid_certificate_id_label),
-                            color = MaterialTheme.appColors.certificatePreviewMessage,
-                            textAlign = TextAlign.Start,
-                            maxLines = 1,
-                            style = MaterialTheme.appTypography.bodyTiny.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 4.sp
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(1.dp))
-                        Text(
-                            modifier = Modifier.wrapContentSize(),
-                            text = stringResource(R.string.iap_certificate_valid_certificate_id_sample),
-                            color = MaterialTheme.appColors.certificatePreviewMessage,
-                            maxLines = 1,
-                            textAlign = TextAlign.Start,
-                            style = MaterialTheme.appTypography.bodyTiny.copy(
-                                fontSize = 4.sp
-                            )
-                        )
-                    }
+                    CertificateFooterItem(
+                        modifier = Modifier.align(Alignment.CenterVertically),
+                        itemTitle = stringResource(R.string.iap_certificate_valid_certificate_id_label),
+                        itemValue = stringResource(R.string.iap_certificate_valid_certificate_id_sample),
+                    )
                 }
             }
 
@@ -297,6 +239,53 @@ fun CertificatePreview(
                 SignatureInfo(stringResource(R.string.iap_certificate_preview_author_3))
             }
         }
+    }
+}
+
+@Composable
+fun CertificateBodyText(
+    description: String,
+) {
+    Text(
+        modifier = Modifier.padding(horizontal = 2.dp),
+        text = description,
+        color = MaterialTheme.appColors.certificatePreviewMessage,
+        textAlign = TextAlign.Start,
+        style = MaterialTheme.appTypography.bodyTiny
+    )
+}
+
+@Composable
+fun CertificateFooterItem(
+    modifier: Modifier = Modifier,
+    itemTitle: String,
+    itemValue: String,
+) {
+    Column(
+        modifier = Modifier
+            .wrapContentSize()
+            .then(modifier)
+    ) {
+        Text(
+            modifier = Modifier.wrapContentSize(),
+            text = itemTitle,
+            color = MaterialTheme.appColors.certificatePreviewMessage,
+            textAlign = TextAlign.Start,
+            style = MaterialTheme.appTypography.bodyTiny.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 4.sp
+            )
+        )
+        Spacer(modifier = Modifier.height(1.dp))
+        Text(
+            modifier = Modifier.wrapContentSize(),
+            text = itemValue,
+            color = MaterialTheme.appColors.certificatePreviewMessage,
+            textAlign = TextAlign.Start,
+            style = MaterialTheme.appTypography.bodyTiny.copy(
+                fontSize = 4.sp
+            )
+        )
     }
 }
 
@@ -815,7 +804,7 @@ private fun PreviewValuePropUpgradeFeatures() {
             previewCertificate = true,
             appName = "Open edX",
             courseName = "Test Course",
-            fullName = "john doe",
+            learnerName = "john doe",
             orgName = "Google",
             orgLogo = "https://example/example.png"
         )

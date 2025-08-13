@@ -255,7 +255,7 @@
     <string name="iap_certificate_certify_message_2">has successfully completed all courses and received passing grades for a Verified Certificate in</string>
     <string name="iap_certificate_organization_message">a course offered by %1$s, an online learning partnership between %1$s and %2$s.</string>
     <string name="iap_certificate_verified_certificate_text">Verified Certificate</string>
-    <string name="iap_certificate_issued_date_text">Issued April 2016</string>
+    <string name="iap_certificate_issued_date_text">Issued April 2026</string>
     <string name="iap_certificate_valid_certificate_id_label">Valid certificate ID</string>
     <string name="iap_certificate_valid_certificate_id_sample">12345678901234567890</string>
     <string name="iap_certificate_preview_author_1">Maurilio Pugliesi</string>

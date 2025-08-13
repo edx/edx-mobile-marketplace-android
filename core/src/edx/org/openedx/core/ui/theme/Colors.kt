@@ -95,8 +95,8 @@ val light_notification_primer_badge = Color(0xFF132D26) // Accent a-900
 val light_notification_primer_card_background = light_primary_card_info_background
 val light_highlight_discussion_response = light_primary_card_info_background
 
-val light_certificate_preview_headline = light_primary
-val light_certificate_preview_message = light_onSurface
+val light_certificate_preview_headline = light_text_primary
+val light_certificate_preview_message = light_text_primary_variant
 
 // Dark theme colors scheme
 val dark_primary = Color(0xFFFBFAF9) // Light 200

@@ -34,6 +34,7 @@ data class PurchaseFlowData(
         courseName = null
         orgName = null
         orgLogo = null
+        courseExpiresDate = null
         isSelfPaced = null
         componentId = null
         productInfo = null

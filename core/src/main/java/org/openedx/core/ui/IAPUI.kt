@@ -75,12 +75,59 @@ fun ValuePropUpgradeFeatures(
     orgName: String,
     orgLogo: String?
 ) {
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    if (isLandscape) {
+        Row(
+            modifier = modifier
+                .background(color = MaterialTheme.appColors.background)
+                .verticalScroll(rememberScrollState())
+                .padding(all = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(32.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ValuePropContent(Modifier.weight(0.6f), courseName)
+            if (previewCertificate) {
+                CertificatePreview(
+                    Modifier.weight(0.4f),
+                    appName,
+                    learnerName,
+                    courseName,
+                    orgName,
+                    orgLogo
+                )
+            }
+        }
+    } else {
+        Column(
+            modifier = modifier
+                .background(color = MaterialTheme.appColors.background)
+                .verticalScroll(rememberScrollState())
+                .padding(all = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 32.dp),
+        ) {
+            val widthModifier = Modifier.fillMaxWidth()
+            ValuePropContent(widthModifier, courseName)
+            if (previewCertificate) {
+                CertificatePreview(
+                    widthModifier,
+                    appName,
+                    learnerName,
+                    courseName,
+                    orgName,
+                    orgLogo
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ValuePropContent(modifier: Modifier, courseName: String) {
     Column(
-        modifier = modifier
-            .background(color = MaterialTheme.appColors.background)
-            .verticalScroll(rememberScrollState())
-            .padding(all = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp)
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(space = 32.dp),
     ) {
         Text(
             modifier = Modifier.padding(vertical = 32.dp),
@@ -96,14 +143,12 @@ fun ValuePropUpgradeFeatures(
         CheckmarkView(stringResource(id = R.string.iap_earn_certificate))
         CheckmarkView(stringResource(id = R.string.iap_unlock_access))
         CheckmarkView(stringResource(id = R.string.iap_full_access_course))
-        if (previewCertificate) {
-            CertificatePreview(appName, learnerName, courseName, orgName, orgLogo)
-        }
     }
 }
 
 @Composable
 fun CertificatePreview(
+    modifier: Modifier,
     appName: String,
     learnerName: String?,
     courseName: String,
@@ -111,8 +156,7 @@ fun CertificatePreview(
     orgLogo: String?
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .aspectRatio(1.5f)
             .padding(horizontal = 4.dp)
             .clip(shape = RoundedCornerShape(6.dp))
@@ -121,18 +165,18 @@ fun CertificatePreview(
     ) {
         Image(
             modifier = Modifier
-                .fillMaxWidth(0.65f)
+                .fillMaxWidth(0.675f)
                 .fillMaxHeight(),
             painter = painterResource(id = R.drawable.core_ic_certificate_preview_background),
             contentDescription = null,
             contentScale = ContentScale.FillBounds
         )
-        Row(modifier = Modifier.padding(all = 12.dp)) {
+        Row(modifier = Modifier.padding(all = 14.dp)) {
             Column(
                 modifier = Modifier
                     .weight(0.7F)
                     .fillMaxHeight()
-                    .padding(end = 36.dp),
+                    .padding(end = 40.dp),
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
@@ -271,6 +315,7 @@ fun CertificateFooterItem(
             text = itemTitle,
             color = MaterialTheme.appColors.certificatePreviewMessage,
             textAlign = TextAlign.Start,
+            maxLines = 1,
             style = MaterialTheme.appTypography.bodyTiny.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 4.sp
@@ -282,6 +327,7 @@ fun CertificateFooterItem(
             text = itemValue,
             color = MaterialTheme.appColors.certificatePreviewMessage,
             textAlign = TextAlign.Start,
+            maxLines = 1,
             style = MaterialTheme.appTypography.bodyTiny.copy(
                 fontSize = 4.sp
             )

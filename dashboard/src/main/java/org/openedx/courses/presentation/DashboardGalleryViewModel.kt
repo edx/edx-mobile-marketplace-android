@@ -147,7 +147,7 @@ class DashboardGalleryViewModel(
                     }
                 } else {
                     _uiState.value =
-                        DashboardGalleryUIState.Courses(cachedCourseEnrollments.mapToDomain())
+                        DashboardGalleryUIState.Courses(cachedCourseEnrollments.mapToDomain(), true)
                 }
                 if (networkConnection.isOnline()) {
                     isLoading = true
@@ -160,7 +160,7 @@ class DashboardGalleryViewModel(
                     if (response.primary == null && response.enrollments.courses.isEmpty()) {
                         _uiState.value = DashboardGalleryUIState.Empty
                     } else {
-                        _uiState.value = DashboardGalleryUIState.Courses(response)
+                        _uiState.value = DashboardGalleryUIState.Courses(response, false)
                     }
                     if (isIAPFlow) {
                         courseId?.let {
@@ -187,7 +187,7 @@ class DashboardGalleryViewModel(
                         _uiState.value = DashboardGalleryUIState.Empty
                     } else {
                         _uiState.value =
-                            DashboardGalleryUIState.Courses(courseEnrollments.mapToDomain())
+                            DashboardGalleryUIState.Courses(courseEnrollments.mapToDomain(), true)
                     }
                 }
             } catch (e: Exception) {

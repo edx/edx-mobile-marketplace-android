@@ -138,7 +138,7 @@ class IAPInteractor(
             val courseId = purchase.getCourseId()
 
             userAccountId == userId && enrolledCourses.any { enrolledCourse ->
-                courseId == enrolledCourse.course.id
+                courseId == enrolledCourse.course.id && enrolledCourse.isAuditMode
             }
         }
         if (userPurchases.isNotEmpty()) {

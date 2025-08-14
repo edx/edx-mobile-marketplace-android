@@ -21,7 +21,7 @@ data class EnrolledCourse(
     val productInfo: ProductInfo?,
 ) : Parcelable {
 
-    private val isAuditMode: Boolean
+    val isAuditMode: Boolean
         get() = EnrollmentMode.AUDIT.toString().equals(mode, ignoreCase = true)
 
     val isVerifiedMode: Boolean

@@ -83,14 +83,14 @@ fun ValuePropUpgradeFeatures(
             modifier = modifier
                 .background(color = MaterialTheme.appColors.background)
                 .verticalScroll(rememberScrollState())
-                .padding(all = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(32.dp),
+                .padding(all = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ValuePropContent(Modifier.weight(0.6f), courseName)
+            ValuePropContent(Modifier.weight(0.55f), courseName)
             if (previewCertificate) {
                 CertificatePreview(
-                    Modifier.weight(0.4f),
+                    Modifier.weight(0.45f),
                     appName,
                     learnerName,
                     courseName,
@@ -104,7 +104,7 @@ fun ValuePropUpgradeFeatures(
             modifier = modifier
                 .background(color = MaterialTheme.appColors.background)
                 .verticalScroll(rememberScrollState())
-                .padding(all = 16.dp),
+                .padding(all = 14.dp),
             verticalArrangement = Arrangement.spacedBy(space = 32.dp),
         ) {
             val widthModifier = Modifier.fillMaxWidth()
@@ -127,10 +127,10 @@ fun ValuePropUpgradeFeatures(
 fun ValuePropContent(modifier: Modifier, courseName: String) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(space = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(space = 28.dp),
     ) {
         Text(
-            modifier = Modifier.padding(vertical = 32.dp),
+            modifier = Modifier.padding(bottom = 28.dp),
             text = stringResource(
                 id = R.string.iap_upgrade_course,
                 courseName
@@ -157,7 +157,7 @@ fun CertificatePreview(
 ) {
     Box(
         modifier = modifier
-            .aspectRatio(1.5f)
+            .aspectRatio(1.45f)
             .padding(horizontal = 4.dp)
             .clip(shape = RoundedCornerShape(6.dp))
             .background(Color.White)
@@ -171,7 +171,7 @@ fun CertificatePreview(
             contentDescription = null,
             contentScale = ContentScale.FillBounds
         )
-        Row(modifier = Modifier.padding(all = 14.dp)) {
+        Row(modifier = Modifier.padding(all = 16.dp)) {
             Column(
                 modifier = Modifier
                     .weight(0.7F)
@@ -215,7 +215,7 @@ fun CertificatePreview(
                     text = courseName,
                     color = MaterialTheme.appColors.certificatePreviewHeading,
                     textAlign = TextAlign.Start,
-                    maxLines = 2,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.appTypography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
@@ -340,7 +340,7 @@ fun SignatureInfo(name: String) {
     Spacer(modifier = Modifier.height(12.dp))
     Image(
         modifier = Modifier
-            .height(16.dp)
+            .height(14.dp)
             .wrapContentWidth(),
         painter = painterResource(id = R.drawable.core_ic_certificate_preview_signature),
         contentDescription = null,

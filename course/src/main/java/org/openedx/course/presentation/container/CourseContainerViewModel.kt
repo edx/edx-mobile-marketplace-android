@@ -304,7 +304,7 @@ class CourseContainerViewModel(
             )
             if (waitForCourseModeTransition) {
                 return
-            } else {
+            } else if (isFromValueProp || isExpiredCoursePurchase) {
                 // Refresh the course structure data once the IAP flow is completed
                 // to ensure the latest access state and content are reflected.
                 updateData()

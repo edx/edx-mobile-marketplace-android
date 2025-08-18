@@ -16,6 +16,10 @@ object AppDataConstants {
     // Equal 1GB
     const val DOWNLOADS_CONFIRMATION_SIZE = 1024 * 1024 * 1024L
 
+    // Initial retry count that controls whether the enrollment mode transition is attempted
+    // immediately or after the base delay, depending on the current count.
+    const val ENROLLMENT_MODE_RETRY_INITIAL_COUNT = 1
+
     // Max retry attempts allowed for checking enrollment mode transition after purchase.
     const val ENROLLMENT_MODE_RETRY_THRESHOLD = 3
 

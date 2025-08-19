@@ -12,7 +12,7 @@ import org.openedx.core.ui.TabItem
 import org.openedx.course.R
 
 enum class CourseContainerTab(
-    @StringRes
+    @field:StringRes
     override val labelResId: Int,
     override val icon: ImageVector,
 ) : TabItem {

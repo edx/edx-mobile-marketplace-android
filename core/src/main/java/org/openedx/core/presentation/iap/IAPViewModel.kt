@@ -70,8 +70,7 @@ class IAPViewModel(
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
             if (purchase.getCourseId() == purchaseFlowData.courseId) {
-                _uiState.value =
-                    IAPUIState.Loading(loaderType = IAPLoaderType.FULL_SCREEN)
+                _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.FULL_SCREEN)
                 purchaseFlowData.purchaseToken = purchase.purchaseToken
                 createOrder(purchaseFlowData)
             }
@@ -95,7 +94,7 @@ class IAPViewModel(
                     is CourseDataUpdated.CourseEnrollmentDataUpdated -> {
                         if (purchaseFlowData.screenName in listOf(
                                 IAPFlowSource.COURSE_ENROLLMENT.screen,
-                                IAPFlowSource.PROFILE.screen
+                                IAPFlowSource.PROFILE.screen,
                             )
                         ) {
                             val isVerifiedMode =
@@ -107,7 +106,8 @@ class IAPViewModel(
                     is CourseDataUpdated.CourseDashboardDataUpdate -> {
                         if (purchaseFlowData.screenName in listOf(
                                 IAPFlowSource.COURSE_DASHBOARD.screen,
-                                IAPFlowSource.TRACK_SELECTION.screen
+                                IAPFlowSource.TRACK_SELECTION.screen,
+                                IAPFlowSource.COURSE_COMPONENT.screen,
                             )
                         ) {
                             val isVerifiedMode =
@@ -122,11 +122,16 @@ class IAPViewModel(
         if (iapInteractor.isUpgradeEnabled) {
             when (purchaseFlowData.iapFlow) {
                 IAPFlow.USER_INITIATED -> {
-                    eventLogger.loadIAPScreenEvent()
-                    loadPrice()
+                    if (purchaseFlowData.screenName == IAPFlowSource.COURSE_COMPONENT.screen) {
+                        _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.FULL_SCREEN)
+                        createOrder(purchaseFlowData)
+                    } else {
+                        eventLogger.loadIAPScreenEvent()
+                        loadPrice()
+                    }
                 }
 
-                IAPFlow.SILENT, IAPFlow.RESTORE -> {
+                in listOf(IAPFlow.SILENT, IAPFlow.RESTORE) -> {
                     _uiState.value = IAPUIState.Loading(IAPLoaderType.FULL_SCREEN)
                     purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
                     updateCourseData()
@@ -240,7 +245,13 @@ class IAPViewModel(
                         eventLogger.upgradeSuccessEvent()
                     }
                     purchaseFlowData.isConsumed = true
-                    _uiState.value = IAPUIState.CourseDataUpdated
+                    // The IAP dialog will be dismissed by `CourseUnitContainerFragment` after
+                    // refreshing the course components
+                    if (eventLogger.purchaseFlowData?.screenName != IAPFlowSource.COURSE_COMPONENT.screen) {
+                        _uiState.value = IAPUIState.CourseDataUpdated
+                    } else {
+                        iapNotifier.send(CourseDataUpdated.CourseUnitDataUpdate)
+                    }
                     _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.iap_success_message)))
                 }.onFailure {
                     logger.e(throwable = it)
@@ -354,7 +365,7 @@ class IAPViewModel(
 
     fun clearIAPFLow() {
         _uiState.value = IAPUIState.Clear
-        purchaseFlowData.reset()
+        purchaseFlowData.resetAll()
     }
 
     companion object {

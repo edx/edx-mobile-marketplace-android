@@ -2,6 +2,7 @@ package org.openedx.core.data.model
 
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.BlockType
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.domain.model.Block as DomainBlock
 import org.openedx.core.domain.model.BlockCounts as DomainBlockCounts
@@ -38,6 +39,10 @@ data class Block(
     val completion: Double?,
     @SerializedName("contains_gated_content")
     val containsGatedContent: Boolean?,
+    @SerializedName("authorization_denial_reason")
+    val authorizationDenialReason: String?,
+    @SerializedName("authorization_denial_message")
+    val authorizationDenialMessage: String?,
     @SerializedName("assignment_progress")
     val assignmentProgress: AssignmentProgress?,
     @SerializedName("due")
@@ -71,6 +76,7 @@ data class Block(
             blockCounts = blockCounts?.mapToDomain()!!,
             completion = completion ?: 0.0,
             containsGatedContent = containsGatedContent ?: false,
+            authorizationDenialReason = AuthorizationDenialReason.from(authorizationDenialReason),
             assignmentProgress = assignmentProgress?.mapToDomain(),
             due = TimeUtils.iso8601ToDate(due ?: ""),
         )

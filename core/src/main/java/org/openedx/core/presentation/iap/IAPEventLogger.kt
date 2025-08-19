@@ -124,9 +124,6 @@ class IAPEventLogger(
                 IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED
         val params = buildMap {
             put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            purchaseFlowData?.screenName?.takeIfNotEmpty()?.let { screenName ->
-                put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
-            }
             putAll(getIAPEventParams())
         }
         analytics.logScreenEvent(screenName = event.eventName, params = params)

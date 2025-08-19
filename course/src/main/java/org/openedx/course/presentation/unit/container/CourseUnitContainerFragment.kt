@@ -26,6 +26,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.cast.framework.CastButtonFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -33,6 +37,7 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.BlockType
 import org.openedx.core.extension.serializable
 import org.openedx.core.presentation.course.CourseViewMode
+import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.InsetHolder
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
@@ -295,6 +300,27 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         (requireActivity().supportFragmentManager
             .findFragmentByTag(chapterEndDialogTag) as? ChapterEndFragmentDialog)?.let { fragment ->
             fragment.listener = dialogListener
+        }
+
+        viewModel.refreshComponent.onEach { refresh ->
+            if (refresh) {
+                val currentComponentIndex = binding.viewPager.currentItem
+                initViewPager() // update the adapter with new data
+                binding.viewPager.currentItem = currentComponentIndex
+                dismissIAPDialog()
+            }
+        }
+            .flowOn(Dispatchers.Main)
+            .launchIn(lifecycleScope)
+    }
+
+    private fun dismissIAPDialog() {
+        lifecycleScope.launch {
+            delay(1000) // Delay to ensure the screen refresh is complete
+            val iapDialogFragment = requireActivity()
+                .supportFragmentManager
+                .findFragmentByTag(IAPDialogFragment.TAG) as? IAPDialogFragment
+            iapDialogFragment?.dismiss()
         }
     }
 

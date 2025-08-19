@@ -29,7 +29,7 @@ object ApiConstants {
     const val AUTH_TYPE_MICROSOFT = "azuread-oauth2"
 
     const val COURSE_KEY = "course_key"
-    const val BLOCKS_API_VERSION = "v3"
+    const val BLOCKS_API_VERSION = "v4"
     const val HEADER_STALE_IF_ERROR = "stale-if-error=0"
 
     object RegistrationFields {

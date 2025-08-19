@@ -9,7 +9,6 @@ import org.openedx.core.module.db.FileType
 import org.openedx.core.utils.VideoUtil
 import java.util.Date
 
-
 data class Block(
     val id: String,
     val blockId: String,
@@ -26,6 +25,7 @@ data class Block(
     val descendantsType: BlockType,
     val completion: Double,
     val containsGatedContent: Boolean = false,
+    val authorizationDenialReason: AuthorizationDenialReason,
     val downloadModel: DownloadModel? = null,
     val assignmentProgress: AssignmentProgress?,
     val due: Date?
@@ -77,6 +77,9 @@ data class Block(
         }
         return count
     }
+
+    fun isPaidContent(): Boolean =
+        authorizationDenialReason == AuthorizationDenialReason.FEATURE_BASED_ENROLLMENTS
 
     val isVideoBlock get() = type == BlockType.VIDEO
     val isDiscussionBlock get() = type == BlockType.DISCUSSION
@@ -237,3 +240,14 @@ data class VideoInfo(
 data class BlockCounts(
     val video: Int,
 )
+
+enum class AuthorizationDenialReason(val rawValue: String) {
+    FEATURE_BASED_ENROLLMENTS("Feature-based Enrollments"),
+    UNKNOWN("Unknown");
+
+    companion object {
+        fun from(value: String?): AuthorizationDenialReason {
+            return entries.find { it.rawValue == value } ?: UNKNOWN
+        }
+    }
+}

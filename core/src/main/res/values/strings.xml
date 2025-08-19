@@ -244,4 +244,7 @@
     <string name="core_match_device">Match device</string>
     <string name="core_match_device_description">Matches your device settings automatically.</string>
 
+    <!--  Locked Content  -->
+    <string name="iap_locked_content_title">Graded assignment are locked</string>
+    <string name="iap_locked_content_description">Upgrade to gain access to locked features like this one and get the most out of your course.</string>
 </resources>

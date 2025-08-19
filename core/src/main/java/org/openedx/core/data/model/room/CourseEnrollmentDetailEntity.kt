@@ -55,6 +55,8 @@ data class CourseInfoOverviewDB(
     val number: String,
     @ColumnInfo("org")
     val org: String,
+    @ColumnInfo("orgLogo")
+    val orgLogo: String?,
     @ColumnInfo("start")
     val start: String?,
     @ColumnInfo("startDisplay")
@@ -81,6 +83,7 @@ data class CourseInfoOverviewDB(
             name = name,
             number = number,
             org = org,
+            orgLogo = orgLogo ?: "",
             start = TimeUtils.iso8601ToDate(start ?: ""),
             startDisplay = startDisplay,
             startType = startType,

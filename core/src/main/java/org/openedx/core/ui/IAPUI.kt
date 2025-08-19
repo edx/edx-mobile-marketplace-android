@@ -2,17 +2,25 @@ package org.openedx.core.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Card
@@ -25,19 +33,30 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import org.openedx.core.R
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isNotNullOrEmpty
+import org.openedx.core.extension.toTitleCase
 import org.openedx.core.presentation.iap.CourseTrack
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPErrorDialogType
@@ -47,16 +66,71 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 
 @Composable
-fun ValuePropUpgradeFeatures(modifier: Modifier = Modifier, courseName: String) {
+fun ValuePropUpgradeFeatures(
+    modifier: Modifier = Modifier,
+    previewCertificate: Boolean,
+    appName: String,
+    learnerName: String?,
+    courseName: String,
+    orgName: String,
+    orgLogo: String?
+) {
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    if (isLandscape) {
+        Row(
+            modifier = modifier
+                .background(color = MaterialTheme.appColors.background)
+                .verticalScroll(rememberScrollState())
+                .padding(all = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ValuePropContent(Modifier.weight(0.55f), courseName)
+            if (previewCertificate) {
+                CertificatePreview(
+                    Modifier.weight(0.45f),
+                    appName,
+                    learnerName,
+                    courseName,
+                    orgName,
+                    orgLogo
+                )
+            }
+        }
+    } else {
+        Column(
+            modifier = modifier
+                .background(color = MaterialTheme.appColors.background)
+                .verticalScroll(rememberScrollState())
+                .padding(all = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 32.dp),
+        ) {
+            val widthModifier = Modifier.fillMaxWidth()
+            ValuePropContent(widthModifier, courseName)
+            if (previewCertificate) {
+                CertificatePreview(
+                    widthModifier,
+                    appName,
+                    learnerName,
+                    courseName,
+                    orgName,
+                    orgLogo
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ValuePropContent(modifier: Modifier, courseName: String) {
     Column(
-        modifier = modifier
-            .background(color = MaterialTheme.appColors.background)
-            .verticalScroll(rememberScrollState())
-            .padding(all = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp)
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(space = 28.dp),
     ) {
         Text(
-            modifier = Modifier.padding(vertical = 32.dp),
+            modifier = Modifier.padding(bottom = 28.dp),
             text = stringResource(
                 id = R.string.iap_upgrade_course,
                 courseName
@@ -70,6 +144,229 @@ fun ValuePropUpgradeFeatures(modifier: Modifier = Modifier, courseName: String) 
         CheckmarkView(stringResource(id = R.string.iap_unlock_access))
         CheckmarkView(stringResource(id = R.string.iap_full_access_course))
     }
+}
+
+@Composable
+fun CertificatePreview(
+    modifier: Modifier,
+    appName: String,
+    learnerName: String?,
+    courseName: String,
+    orgName: String,
+    orgLogo: String?
+) {
+    Box(
+        modifier = modifier
+            .aspectRatio(1.45f)
+            .padding(horizontal = 4.dp)
+            .clip(shape = RoundedCornerShape(6.dp))
+            .background(Color.White)
+            .border(width = 1.dp, Color.LightGray, shape = RoundedCornerShape(6.dp))
+    ) {
+        Image(
+            modifier = Modifier
+                .fillMaxWidth(0.675f)
+                .fillMaxHeight(),
+            painter = painterResource(id = R.drawable.core_ic_certificate_preview_background),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds
+        )
+        Row(modifier = Modifier.padding(all = 16.dp)) {
+            Column(
+                modifier = Modifier
+                    .weight(0.7F)
+                    .fillMaxHeight()
+                    .padding(end = 40.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = stringResource(R.string.iap_certificate_verified_text),
+                    color = MaterialTheme.appColors.certificatePreviewHeading,
+                    textAlign = TextAlign.Start,
+                    style = MaterialTheme.appTypography.titleSmall.copy(fontStyle = FontStyle.Italic)
+                )
+                Text(
+                    modifier = Modifier.padding(horizontal = 2.dp),
+                    text = stringResource(R.string.iap_certificate_text),
+                    color = MaterialTheme.appColors.certificatePreviewHeading,
+                    textAlign = TextAlign.Start,
+                    style = MaterialTheme.appTypography.labelTiny.copy(fontWeight = FontWeight.Bold)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                CertificateBodyText(stringResource(R.string.iap_certificate_certify_message_1))
+
+                Text(
+                    modifier = Modifier.padding(horizontal = 2.dp),
+                    text = learnerName?.toTitleCase() ?: "",
+                    color = MaterialTheme.appColors.certificatePreviewHeading,
+                    textAlign = TextAlign.Start,
+                    style = MaterialTheme.appTypography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                CertificateBodyText(stringResource(R.string.iap_certificate_certify_message_2))
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    modifier = Modifier.padding(horizontal = 2.dp),
+                    text = courseName,
+                    color = MaterialTheme.appColors.certificatePreviewHeading,
+                    textAlign = TextAlign.Start,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.appTypography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 18.sp,
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                CertificateBodyText(
+                    stringResource(
+                        R.string.iap_certificate_organization_message,
+                        orgName,
+                        appName
+                    )
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(modifier = Modifier.fillMaxWidth(0.9f)) {
+                    Image(
+                        modifier = Modifier
+                            .width(38.dp)
+                            .height(24.dp),
+                        painter = painterResource(R.drawable.core_ic_logo),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(MaterialTheme.appColors.certificatePreviewHeading),
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    CertificateFooterItem(
+                        modifier = Modifier.align(Alignment.CenterVertically),
+                        itemTitle = stringResource(R.string.iap_certificate_verified_certificate_text),
+                        itemValue = stringResource(R.string.iap_certificate_issued_date_text),
+                    )
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    CertificateFooterItem(
+                        modifier = Modifier.align(Alignment.CenterVertically),
+                        itemTitle = stringResource(R.string.iap_certificate_valid_certificate_id_label),
+                        itemValue = stringResource(R.string.iap_certificate_valid_certificate_id_sample),
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(0.30f)
+                    .fillMaxHeight()
+                    .padding(start = 8.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                AsyncImage(
+                    modifier = Modifier
+                        .height(28.dp)
+                        .wrapContentWidth(),
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(orgLogo)
+                        .build(),
+                    contentDescription = null,
+                )
+
+                SignatureInfo(stringResource(R.string.iap_certificate_preview_author_1))
+                SignatureInfo(stringResource(R.string.iap_certificate_preview_author_2))
+                SignatureInfo(stringResource(R.string.iap_certificate_preview_author_3))
+            }
+        }
+    }
+}
+
+@Composable
+fun CertificateBodyText(
+    description: String,
+) {
+    Text(
+        modifier = Modifier.padding(horizontal = 2.dp),
+        text = description,
+        color = MaterialTheme.appColors.certificatePreviewMessage,
+        textAlign = TextAlign.Start,
+        style = MaterialTheme.appTypography.bodyTiny
+    )
+}
+
+@Composable
+fun CertificateFooterItem(
+    modifier: Modifier = Modifier,
+    itemTitle: String,
+    itemValue: String,
+) {
+    Column(
+        modifier = Modifier
+            .wrapContentSize()
+            .then(modifier)
+    ) {
+        Text(
+            modifier = Modifier.wrapContentSize(),
+            text = itemTitle,
+            color = MaterialTheme.appColors.certificatePreviewMessage,
+            textAlign = TextAlign.Start,
+            maxLines = 1,
+            style = MaterialTheme.appTypography.bodyTiny.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 4.sp
+            )
+        )
+        Spacer(modifier = Modifier.height(1.dp))
+        Text(
+            modifier = Modifier.wrapContentSize(),
+            text = itemValue,
+            color = MaterialTheme.appColors.certificatePreviewMessage,
+            textAlign = TextAlign.Start,
+            maxLines = 1,
+            style = MaterialTheme.appTypography.bodyTiny.copy(
+                fontSize = 4.sp
+            )
+        )
+    }
+}
+
+@Composable
+fun SignatureInfo(name: String) {
+    Spacer(modifier = Modifier.height(12.dp))
+    Image(
+        modifier = Modifier
+            .height(14.dp)
+            .wrapContentWidth(),
+        painter = painterResource(id = R.drawable.core_ic_certificate_preview_signature),
+        contentDescription = null,
+        contentScale = ContentScale.FillHeight
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    Text(
+        modifier = Modifier.wrapContentSize(),
+        text = name,
+        color = MaterialTheme.appColors.certificatePreviewMessage,
+        style = MaterialTheme.appTypography.bodyTiny
+    )
+    Spacer(modifier = Modifier.height(0.5.dp))
+    Text(
+        modifier = Modifier.wrapContentSize(),
+        text = stringResource(R.string.iap_certificate_professor_text),
+        color = MaterialTheme.appColors.textPrimaryLight,
+        style = MaterialTheme.appTypography.bodyTiny
+    )
+    Spacer(modifier = Modifier.height(0.5.dp))
+    Text(
+        modifier = Modifier.wrapContentSize(),
+        text = stringResource(R.string.iap_certificate_universityx_text),
+        color = MaterialTheme.appColors.textPrimaryLight,
+        style = MaterialTheme.appTypography.bodyTiny
+    )
 }
 
 @Composable
@@ -548,7 +845,15 @@ fun PurchasesFulfillmentCompletedDialog(onConfirm: () -> Unit, onDismiss: () -> 
 @Composable
 private fun PreviewValuePropUpgradeFeatures() {
     OpenEdXTheme {
-        ValuePropUpgradeFeatures(modifier = Modifier.background(Color.White), "Test Course")
+        ValuePropUpgradeFeatures(
+            modifier = Modifier.background(Color.White),
+            previewCertificate = true,
+            appName = "Open edX",
+            courseName = "Test Course",
+            learnerName = "john doe",
+            orgName = "Google",
+            orgLogo = "https://example/example.png"
+        )
     }
 }
 
@@ -563,7 +868,8 @@ private fun PreviewUpgradeErrorDialog() {
             confirmText = "Confirm",
             onConfirm = {},
             dismissText = "Dismiss",
-            onDismiss = {})
+            onDismiss = {}
+        )
     }
 }
 

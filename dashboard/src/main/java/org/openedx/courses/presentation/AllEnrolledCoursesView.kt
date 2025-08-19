@@ -587,6 +587,7 @@ private val mockCourseEnrolled = EnrolledCourse(
         name = "name",
         number = "",
         org = "Org",
+        orgLogo = "",
         start = Date(),
         startDisplay = "",
         startType = "",

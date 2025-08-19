@@ -509,10 +509,14 @@ val screenModule = module {
     viewModel { (purchaseFlowData: PurchaseFlowData) ->
         IAPViewModel(
             purchaseFlowData = purchaseFlowData,
-            get(),
-            get(),
-            get(),
-            get(),
+            iapInteractor = get(),
+            resourceManager = get(),
+            iapNotifier = get(),
+            config = get(),
+            featureManager = get(),
+            appData = get(),
+            corePreferences = get(),
+            analytics = get(),
         )
     }
 

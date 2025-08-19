@@ -159,7 +159,7 @@ class CourseContainerViewModelTest {
             null, "", false, null
         ),
         courseInfoOverview = CourseInfoOverview(
-            "Open edX Demo Course", "", "OpenedX", null,
+            "Open edX Demo Course", "", "OpenedX", "", null,
             "", "", null, false, null,
             CourseSharingUtmParameters("", ""),
             "", listOf(), null

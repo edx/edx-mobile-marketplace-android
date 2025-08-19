@@ -27,9 +27,13 @@ data class AppTypography(
     val bodyLarge: TextStyle,
     val bodyMedium: TextStyle,
     val bodySmall: TextStyle,
+    val bodyXSmall: TextStyle,
+    val bodyTiny: TextStyle,
     val labelLarge: TextStyle,
     val labelMedium: TextStyle,
-    val labelSmall: TextStyle
+    val labelSmall: TextStyle,
+    val labelXlSmall: TextStyle,
+    val labelTiny: TextStyle
 )
 
 val fontFamily = FontFamily(
@@ -136,6 +140,20 @@ internal val LocalTypography = staticCompositionLocalOf {
             letterSpacing = 0.4.sp,
             fontFamily = fontFamily
         ),
+        bodyXSmall = TextStyle(
+            fontSize = 10.sp,
+            lineHeight = 10.sp,
+            fontWeight = FontWeight.Normal,
+            letterSpacing = 0.4.sp,
+            fontFamily = fontFamily
+        ),
+        bodyTiny = TextStyle(
+            fontSize = 6.sp,
+            lineHeight = 8.sp,
+            fontWeight = FontWeight.Normal,
+            letterSpacing = 0.4.sp,
+            fontFamily = fontFamily
+        ),
         labelLarge = TextStyle(
             fontSize = 14.sp,
             lineHeight = 20.sp,
@@ -155,6 +173,20 @@ internal val LocalTypography = staticCompositionLocalOf {
             lineHeight = 16.sp,
             fontWeight = FontWeight.Normal,
             letterSpacing = 0.sp,
+            fontFamily = fontFamily
+        ),
+        labelXlSmall = TextStyle(
+            fontSize = 8.sp,
+            lineHeight = 16.sp,
+            fontWeight = FontWeight.Normal,
+            letterSpacing = 0.5.sp,
+            fontFamily = fontFamily
+        ),
+        labelTiny = TextStyle(
+            fontSize = 6.sp,
+            lineHeight = 16.sp,
+            fontWeight = FontWeight.Normal,
+            letterSpacing = 0.5.sp,
             fontFamily = fontFamily
         ),
         defaultFontFamily = fontFamily

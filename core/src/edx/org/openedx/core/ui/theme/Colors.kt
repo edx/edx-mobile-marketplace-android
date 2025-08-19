@@ -95,6 +95,9 @@ val light_notification_primer_badge = Color(0xFF132D26) // Accent a-900
 val light_notification_primer_card_background = light_primary_card_info_background
 val light_highlight_discussion_response = light_primary_card_info_background
 
+val light_certificate_preview_headline = light_text_primary
+val light_certificate_preview_message = light_text_primary_variant
+
 // Dark theme colors scheme
 val dark_primary = Color(0xFFFBFAF9) // Light 200
 val dark_primary_variant = Color(0xFFF2F0EF) // Light 300
@@ -184,3 +187,6 @@ val dark_inbox_time_marker_color = Color(0xFFADADAD)
 val dark_notification_primer_badge = Color(0xFF5DE3C0) // Accent a-500
 val dark_notification_primer_card_background = Color(0xFF132925)
 val dark_highlight_discussion_response = Color(0xFF4C6A64)
+
+val dark_certificate_preview_headline = dark_background
+val dark_certificate_preview_message = Color(0xFF454545)

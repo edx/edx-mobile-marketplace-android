@@ -12,6 +12,8 @@ data class CourseInfoOverview(
     val number: String,
     @SerializedName("org")
     val org: String,
+    @SerializedName("org_logo")
+    val orgLogo: String,
     @SerializedName("start")
     val start: String?,
     @SerializedName("start_display")
@@ -50,6 +52,7 @@ data class CourseInfoOverview(
         name = name,
         number = number,
         org = org,
+        orgLogo = orgLogo,
         start = TimeUtils.iso8601ToDate(start ?: ""),
         startDisplay = startDisplay,
         startType = startType,

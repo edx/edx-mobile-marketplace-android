@@ -17,4 +17,6 @@ value class FeatureRequest(
  */
 object FeatureRequests {
     val DemoFeature = FeatureRequest("demo_feature_key")
+    val ValuePropCertificatePreview = FeatureRequest("value_prop_certificate_preview")
+    val CertificatePreviewEnabled = FeatureRequest("certificate_preview_enabled")
 }

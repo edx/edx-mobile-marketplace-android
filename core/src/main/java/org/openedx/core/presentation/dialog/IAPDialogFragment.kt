@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -37,7 +38,6 @@ import org.koin.core.parameter.parametersOf
 import org.openedx.core.R
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
-import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.extension.parcelable
@@ -55,6 +55,7 @@ import org.openedx.core.ui.UnlockingAccessView
 import org.openedx.core.ui.ValuePropUpgradeFeatures
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
+import org.openedx.core.utils.TimeUtils
 
 class IAPDialogFragment : DialogFragment() {
 
@@ -244,11 +245,18 @@ class IAPDialogFragment : DialogFragment() {
                         UnlockingAccessView()
                     } else if (TextUtils.isEmpty(iapViewModel.purchaseData.courseName).not()) {
                         if (iapViewModel.purchaseData.screenName == IAPFlowSource.TRACK_SELECTION.screen) {
+                            val courseExpiresDate =
+                                iapViewModel.purchaseData.courseExpiresDate?.let {
+                                    TimeUtils.getCourseAccessFormattedDate(
+                                        LocalContext.current,
+                                        it
+                                    )
+                                } ?: ""
                             TrackSelectionFeature(
                                 modifier = Modifier.padding(contentPadding),
                                 courseName = iapViewModel.purchaseData.courseName!!,
                                 price = iapViewModel.purchaseData.formattedPrice ?: "",
-                                expiryDate = iapViewModel.purchaseData.courseExpiresDate ?: "",
+                                expiryDate = courseExpiresDate,
                                 selectedTrack = selectedOption,
                                 onTrackSelection = { option ->
                                     selectedOption = option
@@ -256,8 +264,14 @@ class IAPDialogFragment : DialogFragment() {
                             )
                         } else {
                             ValuePropUpgradeFeatures(
-                                Modifier.padding(contentPadding),
-                                iapViewModel.purchaseData.courseName!!
+                                modifier = Modifier.padding(contentPadding),
+                                previewCertificate = iapViewModel.isCertificatePreviewEnabled,
+                                appName = iapViewModel.appData.appName,
+                                courseName = iapViewModel.purchaseData.courseName!!,
+                                learnerName = iapViewModel.user?.name,
+                                orgName = iapViewModel.purchaseData.orgName
+                                    ?: iapViewModel.appData.appName,
+                                orgLogo = iapViewModel.purchaseData.orgLogo
                             )
                         }
                     } else {
@@ -279,31 +293,7 @@ class IAPDialogFragment : DialogFragment() {
 
     companion object {
         const val TAG = "IAPDialogFragment"
-
         private const val ARG_PURCHASE_FLOW_DATA = "purchase_flow_data"
-
-        fun newInstance(
-            iapFlow: IAPFlow,
-            screenName: String = "",
-            courseId: String = "",
-            courseName: String = "",
-            courseExpiresDate: String = "",
-            isSelfPaced: Boolean = false,
-            componentId: String? = null,
-            productInfo: ProductInfo? = null,
-        ): IAPDialogFragment {
-            val purchaseFlowData = PurchaseFlowData().apply {
-                this.iapFlow = iapFlow
-                this.screenName = screenName
-                this.courseId = courseId
-                this.courseName = courseName
-                this.courseExpiresDate = courseExpiresDate
-                this.isSelfPaced = isSelfPaced
-                this.componentId = componentId
-                this.productInfo = productInfo
-            }
-            return newInstance(purchaseFlowData)
-        }
 
         fun newInstance(purchaseFlowData: PurchaseFlowData): IAPDialogFragment {
             val fragment = IAPDialogFragment()

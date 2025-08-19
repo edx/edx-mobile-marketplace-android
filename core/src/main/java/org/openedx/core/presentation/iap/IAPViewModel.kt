@@ -21,6 +21,8 @@ import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
+import org.openedx.core.config.Config
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
@@ -28,10 +30,13 @@ import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.toIAPException
+import org.openedx.core.feature.FeatureManager
+import org.openedx.core.feature.FeatureRequests
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseId
 import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.IAPAnalytics
+import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.IAPNotifier
@@ -44,9 +49,12 @@ class IAPViewModel(
     private val iapInteractor: IAPInteractor,
     private val resourceManager: ResourceManager,
     private val iapNotifier: IAPNotifier,
+    private val config: Config,
+    private val featureManager: FeatureManager,
+    val appData: AppData,
+    corePreferences: CorePreferences,
     analytics: IAPAnalytics,
 ) : BaseViewModel() {
-
     private val logger = Logger(TAG)
 
     private val _uiState = MutableStateFlow<IAPUIState>(IAPUIState.Loading(IAPLoaderType.PRICE))
@@ -65,7 +73,12 @@ class IAPViewModel(
         isSilentIAPFlow = purchaseData.isSilentIAPFlow(),
         purchaseFlowData = purchaseData
     )
+
+    val user = corePreferences.user
+
     private var checkingCourseMode: Boolean = false
+    var isCertificatePreviewEnabled: Boolean = false
+        private set
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
@@ -88,6 +101,14 @@ class IAPViewModel(
     }
 
     init {
+        viewModelScope.launch {
+            if (config.getOptimizelyConfig().enabled) {
+                isCertificatePreviewEnabled =
+                    featureManager.getDecision(FeatureRequests.ValuePropCertificatePreview)
+                        ?.getBoolean(FeatureRequests.CertificatePreviewEnabled.key, false) ?: false
+            }
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
             iapNotifier.notifier.onEach { event ->
                 when (event) {

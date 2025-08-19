@@ -3,7 +3,6 @@ package org.openedx.app
 import android.content.Context
 import org.openedx.app.analytics.Analytics
 import org.openedx.app.analytics.FirebaseAnalytics
-import org.openedx.app.analytics.FullstoryAnalytics
 import org.openedx.app.analytics.SegmentAnalytics
 import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.core.config.Config
@@ -36,10 +35,6 @@ class AnalyticsManager(
         val segmentConfig = config.getSegmentConfig()
         if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank()) {
             addAnalyticsTracker(SegmentAnalytics(context = context, config = config))
-        }
-
-        if (config.getFullstoryConfig().isEnabled) {
-            addAnalyticsTracker(FullstoryAnalytics())
         }
     }
 

@@ -9,9 +9,9 @@ import org.openedx.core.R
 
 open class FullScreenState(
     val imageVector: ImageVector,
-    @StringRes val titleResId: Int,
-    @StringRes val descriptionResId: Int,
-    @StringRes val actionButtonResId: Int? = null,
+    @field:StringRes val titleResId: Int,
+    @field:StringRes val descriptionResId: Int,
+    @field:StringRes val actionButtonResId: Int? = null,
 ) {
     companion object {
         val NetworkError = FullScreenState(

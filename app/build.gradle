@@ -5,8 +5,6 @@ def appId = config.getOrDefault("APPLICATION_ID", "org.openedx.app")
 def themeDirectory = config.getOrDefault("THEME_DIRECTORY", "openedx")
 def firebaseConfig = config.get('FIREBASE')
 def firebaseEnabled = firebaseConfig?.getOrDefault('ENABLED', false)
-def fullstoryConfig = config.get("FULLSTORY")
-def fullstoryEnabled = fullstoryConfig?.getOrDefault('ENABLED', false)
 
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
@@ -31,50 +29,38 @@ if (firebaseEnabled) {
     preBuild.dependsOn(removeGoogleServicesJson)
 }
 
-if (fullstoryEnabled) {
-    apply plugin: 'fullstory'
-    def fullstoryOrgId = fullstoryConfig?.get("ORG_ID")
-
-    fullstory {
-        org fullstoryOrgId
-        composeEnabled true
-        composeSelectorVersion 4
-        enabledVariants 'debug|release'
-        logcatLevel 'error'
-    }
-}
-
 android {
-    compileSdk 34
+    compileSdk = 35
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        applicationId appId
-        minSdk 24
-        targetSdk 34
-        versionCode 6002000
-        versionName "6.2.0"
+        applicationId = appId
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 6002000
+        versionName = "6.2.0"
 
         resourceConfigurations += ["en", "uk"]
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    namespace 'org.openedx.app'
+    namespace = 'org.openedx.app'
 
     flavorDimensions += "env"
     productFlavors {
         prod {
-            dimension 'env'
+            dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
         }
         develop {
-            dimension 'env'
+            dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
         }
         stage {
-            dimension 'env'
+            dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
         }
@@ -94,34 +80,31 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled = true
+            shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
             if (firebaseEnabled) {
                 firebaseCrashlytics {
-                    mappingFileUploadEnabled true
+                    mappingFileUploadEnabled = true
                 }
             }
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
-            freeCompilerArgs.addAll(List.of(
-                    "-Xstring-concat=inline",
-                    "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
-            ))
+            freeCompilerArgs.addAll(List.of("-Xstring-concat=inline"))
         }
     }
     buildFeatures {
-        viewBinding true
-        compose true
-        buildConfig true
+        viewBinding = true
+        compose = true
+        buildConfig = true
     }
     bundle {
         language {

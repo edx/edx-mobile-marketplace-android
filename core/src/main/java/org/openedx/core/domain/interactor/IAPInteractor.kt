@@ -105,7 +105,11 @@ class IAPInteractor(
 
     suspend fun consumePurchaseByToken(purchaseToken: String) {
         val result = billingProcessor.consumePurchase(purchaseToken)
-        if (result.responseCode != BillingResponseCode.OK) {
+        if (result.responseCode !in listOf(
+                BillingResponseCode.OK,
+                BillingResponseCode.ITEM_NOT_OWNED
+            )
+        ) {
             throw IAPException(
                 requestType = IAPRequestType.CONSUME_CODE,
                 httpErrorCode = result.responseCode,

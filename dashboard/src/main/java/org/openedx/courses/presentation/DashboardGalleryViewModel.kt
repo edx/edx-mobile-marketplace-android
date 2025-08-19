@@ -109,12 +109,18 @@ class DashboardGalleryViewModel(
     private val eventLogger = IAPEventLogger(analytics = iapAnalytics, isSilentIAPFlow = true)
 
     private var isLoading = false
+    private var courseUnfulfillmentProcessed = false
 
     init {
         collectAppEvent()
         collectDiscoveryNotifier()
         collectIapNotifier()
         getCourses()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        courseUnfulfillmentProcessed = false
     }
 
     private fun collectAppEvent() {
@@ -340,6 +346,7 @@ class DashboardGalleryViewModel(
     }
 
     private fun detectUnfulfilledPurchase() {
+        if (courseUnfulfillmentProcessed) return
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val enrolledCourses =
@@ -375,6 +382,7 @@ class DashboardGalleryViewModel(
             } catch (e: Exception) {
                 logger.e(throwable = e)
             }
+            courseUnfulfillmentProcessed = true
         }
     }
 

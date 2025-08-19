@@ -23,30 +23,31 @@ def config = configHelper.fetchConfig()
 def themeDirectory = config.getOrDefault("THEME_DIRECTORY", "openedx")
 
 android {
-    compileSdk 34
+    compileSdk = 35
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        minSdk 24
-        targetSdk 34
+        minSdk = 24
+        targetSdk = 35
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
-    namespace 'org.openedx.core'
+    namespace = 'org.openedx.core'
 
     flavorDimensions += "env"
     productFlavors {
         prod {
-            dimension 'env'
+            dimension = 'env'
             insertBuildConfigFields(currentFlavour, it)
         }
         develop {
-            dimension 'env'
+            dimension = 'env'
             insertBuildConfigFields(currentFlavour, it)
         }
         stage {
-            dimension 'env'
+            dimension = 'env'
             insertBuildConfigFields(currentFlavour, it)
         }
     }
@@ -73,28 +74,25 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
-            freeCompilerArgs.addAll(List.of(
-                    "-Xstring-concat=inline",
-                    "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
-            ))
+            freeCompilerArgs.addAll(List.of("-Xstring-concat=inline"))
         }
     }
 
     buildFeatures {
-        viewBinding true
-        compose true
-        buildConfig true
+        viewBinding = true
+        compose = true
+        buildConfig = true
     }
 }
 
@@ -120,10 +118,6 @@ dependencies {
     api "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     api "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     api "androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version"
-
-    // Fullstory
-    api 'com.fullstory:instrumentation-full:1.47.0@aar'
-    api 'com.fullstory:compose:1.47.0@aar'
 
     // Room
     api "androidx.room:room-runtime:$room_version"

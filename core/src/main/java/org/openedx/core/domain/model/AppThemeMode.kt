@@ -5,8 +5,8 @@ import org.openedx.core.R
 
 enum class AppThemeMode(
     val value: String,
-    @StringRes val titleResId: Int,
-    @StringRes val descriptionResId: Int = 0,
+    @field:StringRes val titleResId: Int,
+    @field:StringRes val descriptionResId: Int = 0,
 ) {
     LIGHT(
         value = "light",

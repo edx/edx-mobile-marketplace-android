@@ -108,12 +108,18 @@ class DashboardGalleryViewModel(
     private val eventLogger = IAPEventLogger(analytics = iapAnalytics, isSilentIAPFlow = true)
 
     private var isLoading = false
+    private var courseUnfulfillmentProcessed = false
 
     init {
         collectAppEvent()
         collectDiscoveryNotifier()
         collectIapNotifier()
         getCourses()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        courseUnfulfillmentProcessed = false
     }
 
     private fun collectAppEvent() {
@@ -146,7 +152,7 @@ class DashboardGalleryViewModel(
                     }
                 } else {
                     _uiState.value =
-                        DashboardGalleryUIState.Courses(cachedCourseEnrollments.mapToDomain())
+                        DashboardGalleryUIState.Courses(cachedCourseEnrollments.mapToDomain(), true)
                 }
                 if (networkConnection.isOnline()) {
                     isLoading = true
@@ -159,7 +165,7 @@ class DashboardGalleryViewModel(
                     if (response.primary == null && response.enrollments.courses.isEmpty()) {
                         _uiState.value = DashboardGalleryUIState.Empty
                     } else {
-                        _uiState.value = DashboardGalleryUIState.Courses(response)
+                        _uiState.value = DashboardGalleryUIState.Courses(response, false)
                     }
                     if (isIAPFlow) {
                         courseId?.let {
@@ -186,7 +192,7 @@ class DashboardGalleryViewModel(
                         _uiState.value = DashboardGalleryUIState.Empty
                     } else {
                         _uiState.value =
-                            DashboardGalleryUIState.Courses(courseEnrollments.mapToDomain())
+                            DashboardGalleryUIState.Courses(courseEnrollments.mapToDomain(), true)
                     }
                 }
             } catch (e: Exception) {
@@ -341,6 +347,7 @@ class DashboardGalleryViewModel(
     }
 
     private fun detectUnfulfilledPurchase() {
+        if (courseUnfulfillmentProcessed) return
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val enrolledCourses =
@@ -376,6 +383,7 @@ class DashboardGalleryViewModel(
             } catch (e: Exception) {
                 logger.e(throwable = e)
             }
+            courseUnfulfillmentProcessed = true
         }
     }
 

@@ -109,6 +109,7 @@ class DashboardListViewModel(
         get() = _appUpgradeEvent
 
     private val eventLogger = IAPEventLogger(analytics = iapAnalytics, isSilentIAPFlow = true)
+    private var courseUnfulfillmentProcessed = false
 
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
@@ -135,6 +136,11 @@ class DashboardListViewModel(
     init {
         getCourses()
         collectAppEvent()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        courseUnfulfillmentProcessed = false
     }
 
     fun getCourses() {
@@ -342,6 +348,7 @@ class DashboardListViewModel(
     }
 
     private fun detectUnfulfilledPurchase() {
+        if (courseUnfulfillmentProcessed) return
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
                 interactor.getAllUserCourses(status = CourseStatusFilter.ALL).courses
@@ -377,6 +384,7 @@ class DashboardListViewModel(
             }.onFailure {
                 logger.d { "Error getting enrolled courses: $it" }
             }
+            courseUnfulfillmentProcessed = true
         }
     }
 

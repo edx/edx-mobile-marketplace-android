@@ -2,6 +2,7 @@ package org.openedx.core.domain.model.iap
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import org.openedx.core.AppDataConstants
 
 @Parcelize
 data class PurchaseFlowData(
@@ -21,7 +22,7 @@ data class PurchaseFlowData(
     var purchaseToken: String? = null
 
     var flowStartTime: Long = 0
-    var courseModeTransitionRetryCount: Long = 0
+    var courseModeTransitionRetryCount: Int = AppDataConstants.ENROLLMENT_MODE_RETRY_INITIAL_COUNT
     var isConsumed: Boolean = false
 
     fun reset() {
@@ -37,8 +38,8 @@ data class PurchaseFlowData(
         formattedPrice = null
         purchaseToken = null
         flowStartTime = 0
-        courseModeTransitionRetryCount = 0
         isConsumed = false
+        resetTransitionRetryCount()
     }
 
     fun isSilentIAPFlow(): Boolean? {
@@ -55,6 +56,10 @@ data class PurchaseFlowData(
                 null
             }
         }
+    }
+
+    fun resetTransitionRetryCount() {
+        courseModeTransitionRetryCount = AppDataConstants.ENROLLMENT_MODE_RETRY_INITIAL_COUNT
     }
 }
 

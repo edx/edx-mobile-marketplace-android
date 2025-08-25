@@ -253,10 +253,11 @@ class IAPViewModel(
     private fun updateCourseData() {
         viewModelScope.launch(Dispatchers.IO) {
             purchaseFlowData.courseId?.let { courseId ->
-                iapNotifier.send(UpdateCourseData(courseId = courseId, isFromValueProp = true))
                 if (!checkingCourseMode) {
+                    delay(purchaseData.courseModeTransitionRetryCount * AppDataConstants.ENROLLMENT_MODE_RETRY_BASE_DELAY_MS)
                     purchaseFlowData.courseModeTransitionRetryCount++
                 }
+                iapNotifier.send(UpdateCourseData(courseId = courseId, isFromValueProp = true))
             }
         }
     }
@@ -306,12 +307,9 @@ class IAPViewModel(
                     errorMessage = resourceManager.getString(R.string.iap_course_not_fullfilled)
                 )
             )
-            purchaseFlowData.courseModeTransitionRetryCount = 0
+            purchaseFlowData.resetTransitionRetryCount()
         } else {
-            viewModelScope.launch {
-                delay(purchaseData.courseModeTransitionRetryCount * AppDataConstants.ENROLLMENT_MODE_RETRY_BASE_DELAY_MS)
-                updateCourseData()
-            }
+            updateCourseData()
         }
     }
 

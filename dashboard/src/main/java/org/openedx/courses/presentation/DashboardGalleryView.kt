@@ -278,8 +278,8 @@ private fun DashboardGalleryView(
                                 },
                                 onIAPAction = onIAPAction,
                             )
-                            LaunchedEffect(uiState.userCourses.hasEnrolledCourses()) {
-                                if (uiState.userCourses.hasEnrolledCourses()) {
+                            LaunchedEffect(uiState.isCachedData) {
+                                if (!uiState.isCachedData && uiState.userCourses.hasEnrolledCourses()) {
                                     onIAPAction(IAPAction.ACTION_UNFULFILLED, null, null)
                                 }
                             }
@@ -1095,7 +1095,7 @@ private fun ViewAllItemPreview() {
 private fun DashboardGalleryViewPreview() {
     OpenEdXTheme {
         DashboardGalleryView(
-            uiState = DashboardGalleryUIState.Courses(mockUserCourses),
+            uiState = DashboardGalleryUIState.Courses(mockUserCourses, false),
             iapUiState = null,
             apiHostUrl = "",
             uiMessage = null,

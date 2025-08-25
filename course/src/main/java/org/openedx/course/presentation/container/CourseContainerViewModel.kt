@@ -538,6 +538,7 @@ class CourseContainerViewModel(
 
     private fun updateCourseData() {
         viewModelScope.launch(Dispatchers.IO) {
+            delay(purchaseFlowData.courseModeTransitionRetryCount * AppDataConstants.ENROLLMENT_MODE_RETRY_BASE_DELAY_MS)
             purchaseFlowData.courseId?.let {
                 iapNotifier.send(UpdateCourseData(courseId = it, isExpiredCoursePurchase = true))
             }
@@ -583,12 +584,9 @@ class CourseContainerViewModel(
                     errorMessage = resourceManager.getString(CoreR.string.iap_course_not_fullfilled)
                 )
             )
-            purchaseFlowData.courseModeTransitionRetryCount = 0
+            purchaseFlowData.resetTransitionRetryCount()
         } else {
-            viewModelScope.launch {
-                delay(purchaseFlowData.courseModeTransitionRetryCount * AppDataConstants.ENROLLMENT_MODE_RETRY_BASE_DELAY_MS)
-                updateCourseData()
-            }
+            updateCourseData()
         }
     }
 

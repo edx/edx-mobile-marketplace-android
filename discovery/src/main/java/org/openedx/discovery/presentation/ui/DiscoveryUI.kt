@@ -127,8 +127,8 @@ fun DiscoveryCourseItem(
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
-                    .error(org.openedx.core.R.drawable.core_no_image_course)
-                    .placeholder(org.openedx.core.R.drawable.core_no_image_course)
+                    .error(CoreR.drawable.core_no_image_course)
+                    .placeholder(CoreR.drawable.core_no_image_course)
                     .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,

@@ -86,8 +86,8 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionType
-import org.openedx.discussion.R as discussionR
 
 class DiscussionAddThreadFragment : Fragment() {
 
@@ -255,7 +255,7 @@ private fun DiscussionAddThreadScreen(
             sheetBackgroundColor = MaterialTheme.appColors.background,
             sheetContent = {
                 SheetContent(
-                    title = stringResource(id = discussionR.string.discussion_topic),
+                    title = stringResource(id = R.string.discussion_topic),
                     searchValue = searchValue,
                     expandedList = expandedList,
                     onItemClick = { item ->
@@ -303,9 +303,9 @@ private fun DiscussionAddThreadScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = 48.dp),
                                 text = if (currentPage == 0) {
-                                    stringResource(id = discussionR.string.discussion_create_post)
+                                    stringResource(id = R.string.discussion_create_post)
                                 } else {
-                                    stringResource(id = discussionR.string.discussion_create_question)
+                                    stringResource(id = R.string.discussion_create_question)
                                 },
                                 color = MaterialTheme.appColors.textPrimary,
                                 textAlign = TextAlign.Center,
@@ -332,15 +332,15 @@ private fun DiscussionAddThreadScreen(
                             ) {
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(id = discussionR.string.discussion_select_post_type),
+                                    text = stringResource(id = R.string.discussion_select_post_type),
                                     style = MaterialTheme.appTypography.titleMedium,
                                     color = MaterialTheme.appColors.textPrimary
                                 )
                                 Spacer(Modifier.height(16.dp))
                                 Tabs(
                                     tabs = listOf(
-                                        stringResource(id = discussionR.string.discussion_discussion),
-                                        stringResource(id = discussionR.string.discussion_question)
+                                        stringResource(id = R.string.discussion_discussion),
+                                        stringResource(id = R.string.discussion_question)
                                     ), currentPage = currentPage,
                                     onItemClick = { bool ->
                                         if (bool) {
@@ -367,7 +367,7 @@ private fun DiscussionAddThreadScreen(
                                 OpenEdXOutlinedTextField(
                                     modifier = Modifier
                                         .fillMaxWidth(),
-                                    stringResource(id = discussionR.string.discussion_title),
+                                    stringResource(id = R.string.discussion_title),
                                     isSingleLine = true,
                                     withRequiredMark = true,
                                     imeAction = ImeAction.Next,
@@ -383,8 +383,8 @@ private fun DiscussionAddThreadScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(150.dp),
-                                    title = if (currentPage == 0) stringResource(id = org.openedx.discussion.R.string.discussion_discussion) else stringResource(
-                                        id = discussionR.string.discussion_question
+                                    title = if (currentPage == 0) stringResource(id = R.string.discussion_discussion) else stringResource(
+                                        id = R.string.discussion_question
                                     ),
                                     isSingleLine = false,
                                     withRequiredMark = true,
@@ -404,9 +404,9 @@ private fun DiscussionAddThreadScreen(
                                     OpenEdXBrandButton(
                                         modifier = buttonWidth,
                                         text = if (currentPage == 0) {
-                                            stringResource(id = discussionR.string.discussion_create_post)
+                                            stringResource(id = R.string.discussion_create_post)
                                         } else {
-                                            stringResource(id = discussionR.string.discussion_create_question)
+                                            stringResource(id = R.string.discussion_create_question)
                                         },
                                         onClick = {
                                             onPostDiscussionClick(
@@ -482,10 +482,10 @@ private fun SelectableField(
     text: String,
     onClick: () -> Unit,
 ) {
-    Column() {
+    Column {
         Text(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResource(id = discussionR.string.discussion_topic),
+            text = stringResource(id = R.string.discussion_topic),
             style = MaterialTheme.appTypography.labelLarge,
             color = MaterialTheme.appColors.textPrimary
         )
@@ -525,7 +525,7 @@ private fun SelectableField(
 @Preview(uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun DiscussionAddThreadScreenPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         DiscussionAddThreadScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             topicData = Pair("", "General"),
@@ -544,7 +544,7 @@ private fun DiscussionAddThreadScreenPreview() {
 @Preview(uiMode = UI_MODE_NIGHT_YES, device = Devices.NEXUS_9)
 @Composable
 private fun DiscussionAddThreadScreenTabletPreview() {
-    OpenEdXTheme() {
+    OpenEdXTheme {
         DiscussionAddThreadScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             topicData = Pair("", "General"),

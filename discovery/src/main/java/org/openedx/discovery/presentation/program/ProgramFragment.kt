@@ -65,9 +65,8 @@ import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.DiscoveryAnalyticsScreen
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
-import org.openedx.discovery.presentation.catalog.WebViewLink
+import org.openedx.discovery.presentation.catalog.WebViewLink.Authority
 import org.openedx.core.R as coreR
-import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
 
 class ProgramFragment : Fragment() {
 
@@ -156,7 +155,7 @@ class ProgramFragment : Fragment() {
                     },
                     onUriClick = { param, type ->
                         when (type) {
-                            linkAuthority.ENROLLED_COURSE_INFO -> {
+                            Authority.ENROLLED_COURSE_INFO -> {
                                 viewModel.onEnrolledCourseClick(
                                     fragmentManager = requireActivity().supportFragmentManager,
                                     courseId = param,
@@ -164,15 +163,15 @@ class ProgramFragment : Fragment() {
                                 )
                             }
 
-                            linkAuthority.ENROLLED_PROGRAM_INFO -> {
+                            Authority.ENROLLED_PROGRAM_INFO -> {
                                 viewModel.onProgramCardClick(
                                     fragmentManager = requireActivity().supportFragmentManager,
                                     pathId = param
                                 )
                             }
 
-                            linkAuthority.PROGRAM_INFO,
-                            linkAuthority.COURSE_INFO,
+                            Authority.PROGRAM_INFO,
+                            Authority.COURSE_INFO,
                             -> {
                                 viewModel.onViewCourseClick(
                                     fragmentManager = requireActivity().supportFragmentManager,
@@ -181,15 +180,15 @@ class ProgramFragment : Fragment() {
                                 )
                             }
 
-                            linkAuthority.ENROLL -> {
+                            Authority.ENROLL -> {
                                 viewModel.enrollInACourse(param)
                             }
 
-                            linkAuthority.COURSE -> {
+                            Authority.COURSE -> {
                                 viewModel.navigateToDiscovery()
                             }
 
-                            linkAuthority.EXTERNAL -> {
+                            Authority.EXTERNAL -> {
                                 ActionDialogFragment.newInstance(
                                     title = getString(coreR.string.core_leaving_the_app),
                                     message = getString(
@@ -249,7 +248,7 @@ private fun ProgramInfoScreen(
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
     onBackClick: () -> Unit,
-    onUriClick: (String, WebViewLink.Authority) -> Unit,
+    onUriClick: (String, Authority) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current

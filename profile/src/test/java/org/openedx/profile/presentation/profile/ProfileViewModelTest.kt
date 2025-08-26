@@ -70,7 +70,7 @@ class ProfileViewModelTest {
         mailingAddress = "",
         email = "",
         dateJoined = null,
-        accountPrivacy = org.openedx.profile.domain.model.Account.Privacy.PRIVATE
+        accountPrivacy = Account.Privacy.PRIVATE
     )
 
     private val noInternet = "Slow or no internet connection"

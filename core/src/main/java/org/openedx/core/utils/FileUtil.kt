@@ -3,6 +3,7 @@ package org.openedx.core.utils
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import org.openedx.core.R
 import java.io.File
 import java.util.Collections
 
@@ -10,7 +11,7 @@ class FileUtil(val context: Context) {
 
     fun getExternalAppDir(): File {
         val dir = context.externalCacheDir.toString() + File.separator +
-                context.getString(org.openedx.core.R.string.app_name).replace(Regex("\\s"), "_")
+                context.getString(R.string.app_name).replace(Regex("\\s"), "_")
         val file = File(dir)
         file.mkdirs()
         return file

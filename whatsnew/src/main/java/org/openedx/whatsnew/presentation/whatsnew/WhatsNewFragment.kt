@@ -65,10 +65,12 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
+import org.openedx.whatsnew.R
 import org.openedx.whatsnew.domain.model.WhatsNewItem
 import org.openedx.whatsnew.domain.model.WhatsNewMessage
 import org.openedx.whatsnew.presentation.ui.NavigationUnitsButtons
 import org.openedx.whatsnew.presentation.ui.PageIndicator
+import org.openedx.core.R as CoreR
 
 class WhatsNewFragment : Fragment() {
 
@@ -209,7 +211,7 @@ private fun WhatsNewTopBar(
                     modifier = Modifier
                         .testTag("txt_screen_title")
                         .fillMaxWidth(),
-                    text = stringResource(id = org.openedx.whatsnew.R.string.whats_new_title),
+                    text = stringResource(id = R.string.whats_new_title),
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.appColors.textPrimary,
                     style = MaterialTheme.appTypography.titleMedium
@@ -222,7 +224,7 @@ private fun WhatsNewTopBar(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = stringResource(id = org.openedx.core.R.string.core_cancel),
+                        contentDescription = stringResource(id = CoreR.string.core_cancel),
                         tint = MaterialTheme.appColors.primary
                     )
                 }
@@ -460,7 +462,7 @@ private fun WhatsNewScreenLandscape(
 }
 
 val whatsNewMessagePreview = WhatsNewMessage(
-    image = org.openedx.core.R.drawable.core_no_image_course,
+    image = CoreR.drawable.core_no_image_course,
     title = "title",
     message = "Message message message"
 )

@@ -24,14 +24,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import org.openedx.core.R
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.profile.R
 import org.openedx.profile.domain.model.Account
-import org.openedx.profile.R as ProfileR
+import org.openedx.core.R as CoreR
 
 @Composable
 fun ProfileTopic(image: String, title: String, subtitle: String) {
@@ -42,11 +42,11 @@ fun ProfileTopic(image: String, title: String, subtitle: String) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(image)
-                .error(R.drawable.core_ic_default_profile_picture)
-                .placeholder(R.drawable.core_ic_default_profile_picture)
+                .error(CoreR.drawable.core_ic_default_profile_picture)
+                .placeholder(CoreR.drawable.core_ic_default_profile_picture)
                 .build(),
             contentDescription = stringResource(
-                id = R.string.core_accessibility_user_profile_image,
+                id = CoreR.string.core_accessibility_user_profile_image,
                 title
             ),
             modifier = Modifier
@@ -99,7 +99,7 @@ fun ProfileInfoSection(account: Account) {
                     if (account.bio.isNotEmpty()) {
                         Text(
                             modifier = Modifier.fillMaxWidth(),
-                            text = stringResource(id = ProfileR.string.profile_about_me),
+                            text = stringResource(id = R.string.profile_about_me),
                             style = MaterialTheme.appTypography.titleSmall,
                             color = MaterialTheme.appColors.textPrimary
                         )

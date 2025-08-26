@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OpenEdXBrandButton
@@ -72,9 +71,10 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
+import org.openedx.profile.R
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.profile.presentation.settings.SettingsViewModel
-import org.openedx.profile.R as profileR
+import org.openedx.core.R as CoreR
 
 class DeleteProfileFragment : Fragment() {
 
@@ -90,7 +90,7 @@ class DeleteProfileFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
@@ -134,7 +134,7 @@ fun DeleteProfileScreen(
     uiState: DeleteProfileFragmentUIState,
     uiMessage: UIMessage?,
     onDeleteClick: (String) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberScrollState()
@@ -194,7 +194,7 @@ fun DeleteProfileScreen(
                 Toolbar(
                     modifier = topBarWidth
                         .displayCutoutForLandscape(),
-                    label = stringResource(id = profileR.string.profile_delete_account),
+                    label = stringResource(id = R.string.profile_delete_account),
                     labelTint = MaterialTheme.appColors.settingsTitleContent,
                     iconTint = MaterialTheme.appColors.settingsTitleContent,
                     canShowBackBtn = true,
@@ -217,7 +217,7 @@ fun DeleteProfileScreen(
                             modifier = Modifier
                                 .size(145.dp)
                                 .align(Alignment.CenterHorizontally),
-                            painter = painterResource(id = profileR.drawable.profile_ic_warning),
+                            painter = painterResource(id = R.drawable.profile_ic_warning),
                             contentDescription = null,
                         )
                         Spacer(Modifier.height(32.dp))
@@ -226,21 +226,21 @@ fun DeleteProfileScreen(
                                 .testTag("txt_delete_account_title")
                                 .fillMaxWidth(),
                             text = buildAnnotatedString {
-                                append(stringResource(id = profileR.string.profile_you_want_to))
+                                append(stringResource(id = R.string.profile_you_want_to))
                                 append(" ")
-                                append(stringResource(id = profileR.string.profile_delete_your_account))
+                                append(stringResource(id = R.string.profile_delete_your_account))
                                 addStyle(
                                     style = SpanStyle(
                                         color = MaterialTheme.appColors.textPrimary
                                     ),
                                     start = 0,
-                                    end = stringResource(id = profileR.string.profile_you_want_to).length
+                                    end = stringResource(id = R.string.profile_you_want_to).length
                                 )
                                 addStyle(
                                     style = SpanStyle(
                                         color = MaterialTheme.appColors.error
                                     ),
-                                    start = stringResource(id = profileR.string.profile_you_want_to).length + 1,
+                                    start = stringResource(id = R.string.profile_you_want_to).length + 1,
                                     end = this.length
                                 )
                             },
@@ -252,7 +252,7 @@ fun DeleteProfileScreen(
                             modifier = Modifier
                                 .testTag("txt_delete_account_description")
                                 .fillMaxWidth(),
-                            text = stringResource(id = profileR.string.profile_confirm_action),
+                            text = stringResource(id = R.string.profile_confirm_action),
                             style = MaterialTheme.appTypography.labelLarge,
                             color = MaterialTheme.appColors.textSecondary,
                             textAlign = TextAlign.Center
@@ -261,7 +261,7 @@ fun DeleteProfileScreen(
                         OpenEdXOutlinedTextField(
                             modifier = Modifier
                                 .fillMaxWidth(),
-                            title = stringResource(id = R.string.core_password),
+                            title = stringResource(id = CoreR.string.core_password),
                             onValueChanged = {
                                 password = it
                             },
@@ -276,7 +276,7 @@ fun DeleteProfileScreen(
                         )
                         Spacer(Modifier.height(38.dp))
                         OpenEdXBrandButton(
-                            text = stringResource(id = profileR.string.profile_yes_delete_account),
+                            text = stringResource(id = R.string.profile_yes_delete_account),
                             enabled = uiState !is DeleteProfileFragmentUIState.Loading && password.isNotEmpty(),
                             backgroundColor = MaterialTheme.appColors.error,
                             onClick = {

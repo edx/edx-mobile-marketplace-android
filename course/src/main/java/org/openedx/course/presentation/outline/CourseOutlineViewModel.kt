@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.openedx.core.BlockType
-import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
@@ -42,13 +41,14 @@ import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.system.notifier.RefreshPLSBanner
 import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.Logger
+import org.openedx.course.R
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseAnalyticsKey
 import org.openedx.course.presentation.CourseRouter
-import org.openedx.course.R as courseR
+import org.openedx.core.R as CoreR
 
 class CourseOutlineViewModel(
     val courseId: String,
@@ -149,7 +149,7 @@ class CourseOutlineViewModel(
                 super.saveDownloadModels(folder, id)
             } else {
                 viewModelScope.launch {
-                    _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(courseR.string.course_can_download_only_with_wifi)))
+                    _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.course_can_download_only_with_wifi)))
                 }
             }
         } else {
@@ -252,8 +252,8 @@ class CourseOutlineViewModel(
         logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
         _uiState.value = CourseOutlineUIState.Error
         val errorMessage = when {
-            e.isInternetError() -> R.string.core_error_no_connection
-            else -> R.string.core_error_unknown_error
+            e.isInternetError() -> CoreR.string.core_error_no_connection
+            else -> CoreR.string.core_error_unknown_error
         }
         _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(errorMessage)))
     }
@@ -308,9 +308,9 @@ class CourseOutlineViewModel(
             } catch (e: Exception) {
                 logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
+                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection)))
                 } else {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_dates_shift_dates_unsuccessful_msg)))
+                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_dates_shift_dates_unsuccessful_msg)))
                 }
                 onResetDates(false)
             }

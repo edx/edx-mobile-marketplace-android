@@ -29,6 +29,7 @@ import org.openedx.core.extension.TextConverter
 import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
@@ -51,7 +52,7 @@ class DiscussionSearchThreadViewModelTest {
 
     //region thread
 
-    private val mockThread = org.openedx.discussion.domain.model.Thread(
+    private val mockThread = Thread(
         "",
         "",
         "",

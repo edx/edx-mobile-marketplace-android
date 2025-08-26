@@ -94,12 +94,13 @@ import org.openedx.course.R
 import org.openedx.course.presentation.videos.CourseVideoViewModel
 import org.openedx.course.presentation.videos.CourseVideosUIState
 import java.util.Date
+import org.openedx.core.R as CoreR
 
 @Composable
 fun CourseVideosScreen(
     windowSize: WindowSize,
     viewModel: CourseVideoViewModel,
-    fragmentManager: FragmentManager
+    fragmentManager: FragmentManager,
 ) {
     val uiState by viewModel.uiState.collectAsState(CourseVideosUIState.Loading)
     val uiMessage by viewModel.uiMessage.collectAsState(null)
@@ -176,7 +177,7 @@ private fun CourseVideosUI(
     onDownloadClick: (blocksIds: List<String>) -> Unit,
     onDownloadAllClick: (Boolean) -> Unit,
     onDownloadQueueClick: () -> Unit,
-    onVideoDownloadQualityClick: () -> Unit
+    onVideoDownloadQualityClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -326,7 +327,7 @@ private fun CourseVideosUI(
                 },
                 confirmButton = {
                     OpenEdXTertiaryButton(
-                        text = stringResource(id = org.openedx.core.R.string.core_confirm),
+                        text = stringResource(id = CoreR.string.core_confirm),
                         onClick = {
                             isDownloadConfirmationShowed = false
                             onDownloadAllClick(false)
@@ -335,7 +336,7 @@ private fun CourseVideosUI(
                 },
                 dismissButton = {
                     OpenEdXTertiaryButton(
-                        text = stringResource(id = org.openedx.core.R.string.core_dismiss),
+                        text = stringResource(id = CoreR.string.core_dismiss),
                         onClick = {
                             isDownloadConfirmationShowed = false
                         }
@@ -357,7 +358,7 @@ private fun CourseVideosUI(
             AlertDialog(
                 title = {
                     Text(
-                        text = stringResource(id = org.openedx.core.R.string.core_warning)
+                        text = stringResource(id = CoreR.string.core_warning)
                     )
                 },
                 text = {
@@ -370,7 +371,7 @@ private fun CourseVideosUI(
                 },
                 confirmButton = {
                     OpenEdXTertiaryButton(
-                        text = stringResource(id = org.openedx.core.R.string.core_delete),
+                        text = stringResource(id = CoreR.string.core_delete),
                         onClick = {
                             isDeleteDownloadsConfirmationShowed = false
                             onDownloadAllClick(true)
@@ -379,7 +380,7 @@ private fun CourseVideosUI(
                 },
                 dismissButton = {
                     OpenEdXTertiaryButton(
-                        text = stringResource(id = org.openedx.core.R.string.core_cancel),
+                        text = stringResource(id = CoreR.string.core_cancel),
                         onClick = {
                             isDeleteDownloadsConfirmationShowed = false
                         }
@@ -392,7 +393,7 @@ private fun CourseVideosUI(
             AlertDialog(
                 title = {
                     Text(
-                        text = stringResource(id = org.openedx.core.R.string.core_warning)
+                        text = stringResource(id = CoreR.string.core_warning)
                     )
                 },
                 text = {
@@ -408,7 +409,7 @@ private fun CourseVideosUI(
                 },
                 confirmButton = {
                     OpenEdXTertiaryButton(
-                        text = stringResource(id = org.openedx.core.R.string.core_delete),
+                        text = stringResource(id = CoreR.string.core_delete),
                         onClick = {
                             deleteDownloadBlock?.let { block ->
                                 onDownloadClick(listOf(block.id))
@@ -419,7 +420,7 @@ private fun CourseVideosUI(
                 },
                 dismissButton = {
                     OpenEdXTertiaryButton(
-                        text = stringResource(id = org.openedx.core.R.string.core_cancel),
+                        text = stringResource(id = CoreR.string.core_cancel),
                         onClick = { deleteDownloadBlock = null }
                     )
                 }
@@ -435,7 +436,7 @@ private fun AllVideosDownloadItem(
     onShowDownloadConfirmationDialog: () -> Unit,
     onDownloadAllClick: (Boolean) -> Unit,
     onDownloadQueueClick: () -> Unit,
-    onVideoDownloadQualityClick: () -> Unit
+    onVideoDownloadQualityClick: () -> Unit,
 ) {
     val isDownloadingAllVideos =
         downloadModelsSize.isAllBlocksDownloadedOrDownloading &&
@@ -445,20 +446,20 @@ private fun AllVideosDownloadItem(
                 downloadModelsSize.remainingCount == 0
 
     val downloadVideoTitleRes = when {
-        isDownloadingAllVideos -> org.openedx.core.R.string.core_video_downloading_to_device
-        isDownloadedAllVideos -> org.openedx.core.R.string.core_video_downloaded_to_device
-        else -> org.openedx.core.R.string.core_video_download_to_device
+        isDownloadingAllVideos -> CoreR.string.core_video_downloading_to_device
+        isDownloadedAllVideos -> CoreR.string.core_video_downloaded_to_device
+        else -> CoreR.string.core_video_download_to_device
     }
     val downloadVideoSubTitle =
         if (isDownloadedAllVideos) {
             stringResource(
-                id = org.openedx.core.R.string.core_video_downloaded_subtitle,
+                id = CoreR.string.core_video_downloaded_subtitle,
                 downloadModelsSize.allCount,
                 downloadModelsSize.allSize.toFileSize()
             )
         } else {
             stringResource(
-                id = org.openedx.core.R.string.core_video_remaining_to_download,
+                id = CoreR.string.core_video_remaining_to_download,
                 downloadModelsSize.remainingCount,
                 downloadModelsSize.remainingSize.toFileSize()
             )
@@ -572,7 +573,7 @@ private fun AllVideosDownloadItem(
                 .padding(8.dp)
         ) {
             Text(
-                text = stringResource(id = org.openedx.core.R.string.core_video_download_quality),
+                text = stringResource(id = CoreR.string.core_video_download_quality),
                 color = MaterialTheme.appColors.textPrimary,
                 style = MaterialTheme.appTypography.titleMedium
             )
@@ -616,7 +617,8 @@ fun PlayerView.enableLongPressDoubleSpeed(
             }
 
             MotionEvent.ACTION_UP,
-            MotionEvent.ACTION_CANCEL -> {
+            MotionEvent.ACTION_CANCEL,
+                -> {
                 job?.cancel()
                 if (player.playbackParameters.speed == VIDEO_DOUBLE_SPEED) {
                     player.playbackParameters = PlaybackParameters(prevSpeed)

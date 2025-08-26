@@ -55,9 +55,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.auth.R
 import org.openedx.auth.presentation.ui.LoginTextField
 import org.openedx.core.AppUpdateState
-import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRequiredScreen
 import org.openedx.core.ui.BackBtn
@@ -73,7 +73,7 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
-import org.openedx.auth.R as authR
+import org.openedx.core.R as CoreR
 
 class RestorePasswordFragment : Fragment() {
 
@@ -186,7 +186,7 @@ private fun RestorePasswordScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp),
-            painter = painterResource(id = R.drawable.core_top_header),
+            painter = painterResource(id = CoreR.drawable.core_top_header),
             contentScale = ContentScale.FillBounds,
             contentDescription = null
         )
@@ -211,7 +211,7 @@ private fun RestorePasswordScreen(
                     modifier = Modifier
                         .testTag("txt_screen_title")
                         .fillMaxWidth(),
-                    text = stringResource(id = authR.string.auth_forgot_your_password),
+                    text = stringResource(id = R.string.auth_forgot_your_password),
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.appTypography.titleMedium
@@ -250,7 +250,7 @@ private fun RestorePasswordScreen(
                                     modifier = Modifier
                                         .testTag("txt_forgot_password_title")
                                         .fillMaxWidth(),
-                                    text = stringResource(id = authR.string.auth_forgot_your_password),
+                                    text = stringResource(id = R.string.auth_forgot_your_password),
                                     style = MaterialTheme.appTypography.displaySmall,
                                     color = MaterialTheme.appColors.textPrimary
                                 )
@@ -259,15 +259,15 @@ private fun RestorePasswordScreen(
                                     modifier = Modifier
                                         .testTag("txt_forgot_password_description")
                                         .fillMaxWidth(),
-                                    text = stringResource(id = authR.string.auth_please_enter_your_log_in),
+                                    text = stringResource(id = R.string.auth_please_enter_your_log_in),
                                     style = MaterialTheme.appTypography.titleSmall,
                                     color = MaterialTheme.appColors.textPrimary
                                 )
                                 Spacer(modifier = Modifier.height(32.dp))
                                 LoginTextField(
                                     modifier = Modifier.fillMaxWidth(),
-                                    title = stringResource(id = authR.string.auth_email),
-                                    description = stringResource(id = authR.string.auth_example_email),
+                                    title = stringResource(id = R.string.auth_email),
+                                    description = stringResource(id = R.string.auth_example_email),
                                     onValueChanged = {
                                         email = it
                                         isEmailError = false
@@ -283,7 +283,7 @@ private fun RestorePasswordScreen(
                                         }
                                     },
                                     isError = isEmailError,
-                                    errorMessages = stringResource(id = authR.string.auth_error_empty_email)
+                                    errorMessages = stringResource(id = R.string.auth_error_empty_email)
                                 )
                                 Spacer(Modifier.height(50.dp))
                                 if (uiState == RestorePasswordUIState.Loading) {
@@ -299,7 +299,7 @@ private fun RestorePasswordScreen(
                                 } else {
                                     OpenEdXBrandButton(
                                         modifier = buttonWidth,
-                                        text = stringResource(id = authR.string.auth_reset_password),
+                                        text = stringResource(id = R.string.auth_reset_password),
                                         onClick = {
                                             keyboardController?.hide()
                                             if (email.isNotEmpty()) {
@@ -324,7 +324,7 @@ private fun RestorePasswordScreen(
                             ) {
                                 Icon(
                                     modifier = Modifier.size(100.dp),
-                                    painter = painterResource(id = authR.drawable.auth_ic_email),
+                                    painter = painterResource(id = R.drawable.auth_ic_email),
                                     contentDescription = null,
                                     tint = MaterialTheme.appColors.textPrimary
                                 )
@@ -333,7 +333,7 @@ private fun RestorePasswordScreen(
                                     modifier = Modifier
                                         .fillMaxWidth(),
                                     textAlign = TextAlign.Center,
-                                    text = stringResource(id = authR.string.auth_check_your_email),
+                                    text = stringResource(id = R.string.auth_check_your_email),
                                     style = MaterialTheme.appTypography.titleLarge,
                                     color = MaterialTheme.appColors.textPrimary
                                 )
@@ -343,7 +343,7 @@ private fun RestorePasswordScreen(
                                         .fillMaxWidth(),
                                     textAlign = TextAlign.Center,
                                     text = stringResource(
-                                        authR.string.auth_restore_password_success,
+                                        R.string.auth_restore_password_success,
                                         uiState.email
                                     ),
                                     style = MaterialTheme.appTypography.bodyMedium,
@@ -352,7 +352,7 @@ private fun RestorePasswordScreen(
                                 Spacer(Modifier.height(48.dp))
                                 OpenEdXBrandButton(
                                     modifier = buttonWidth,
-                                    text = stringResource(id = R.string.core_sign_in),
+                                    text = stringResource(id = CoreR.string.core_sign_in),
                                     onClick = {
                                         onBackClick()
                                     }

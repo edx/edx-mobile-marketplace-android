@@ -265,7 +265,7 @@ class CourseDatesViewModel(
     fun logCourseComponentTapped(isSupported: Boolean, block: CourseDateBlock) {
         val params = buildMap<String, Any> {
             put(CourseAnalyticsKey.BLOCK_ID.key, block.blockId)
-            put(CourseAnalyticsKey.BLOCK_TYPE.key, block.dateType)
+            put(CourseAnalyticsKey.BLOCK_TYPE.key, block.dateType.toString())
             put(CourseAnalyticsKey.LINK.key, block.link)
             put(CourseAnalyticsKey.SUPPORTED.key, isSupported)
         }

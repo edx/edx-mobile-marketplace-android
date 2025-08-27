@@ -27,4 +27,8 @@ data class FirebaseConfig(
     fun isSegmentAnalyticsSource(): Boolean {
         return enabled && analyticsSource == AnalyticsSource.SEGMENT
     }
+
+    fun isFirebaseAnalyticsSource(): Boolean {
+        return enabled && analyticsSource == AnalyticsSource.FIREBASE
+    }
 }

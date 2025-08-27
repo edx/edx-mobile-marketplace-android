@@ -28,5 +28,9 @@ enum class DateType(val drawableResId: Int? = null) {
     @SerializedName("verification-deadline-date")
     VERIFICATION_DEADLINE_DATE(R.drawable.core_ic_calendar),
 
-    NONE,
+    NONE;
+
+    override fun toString(): String {
+        return name.lowercase()
+    }
 }

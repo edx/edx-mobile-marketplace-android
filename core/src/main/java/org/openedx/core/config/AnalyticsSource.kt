@@ -6,6 +6,9 @@ enum class AnalyticsSource {
     @SerializedName("segment")
     SEGMENT,
 
+    @SerializedName("firebase")
+    FIREBASE,
+
     @SerializedName("none")
     NONE,
 }

@@ -28,7 +28,7 @@ class AnalyticsManager(
 
     init {
         // Initialise all the analytics libraries here
-        if (config.getFirebaseConfig().enabled) {
+        if (config.getFirebaseConfig().isFirebaseAnalyticsSource()) {
             addAnalyticsTracker(FirebaseAnalytics(context = context))
         }
 

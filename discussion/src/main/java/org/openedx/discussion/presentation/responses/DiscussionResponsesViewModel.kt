@@ -56,7 +56,10 @@ class DiscussionResponsesViewModel(
 
     private val comments = mutableListOf<DiscussionComment>()
     private var page = 1
-    private var isLoading = false
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean>
+        get() = _isLoading
+//     var isLoading = false
 
     private suspend fun sendUpdatedComment() {
         notifier.send(DiscussionCommentDataChanged(comment))
@@ -80,7 +83,7 @@ class DiscussionResponsesViewModel(
     }
 
     fun fetchMore() {
-        if (!isLoading && page != -1) {
+        if (_isLoading.value != true && page != -1) {
             loadCommentsInternal()
         }
     }
@@ -88,7 +91,7 @@ class DiscussionResponsesViewModel(
     private fun loadCommentsInternal() {
         viewModelScope.launch {
             try {
-                isLoading = true
+               // _isLoading.postValue(true)
                 val response = interactor.getCommentsResponses(comment.id, page)
                 if (response.pagination.next.isNotEmpty()) {
                     _canLoadMore.value = true
@@ -104,7 +107,7 @@ class DiscussionResponsesViewModel(
             } catch (e: Exception) {
                 handleException(e)
             } finally {
-                isLoading = false
+              //  _isLoading.postValue(false)
                 _isUpdating.value = false
             }
         }
@@ -178,6 +181,7 @@ class DiscussionResponsesViewModel(
     }
 
     fun createComment(rawBody: String) {
+        _isLoading.postValue(true)
         viewModelScope.launch {
             try {
                 val reCaptchaToken = interactor.getRecaptchaToken(
@@ -207,6 +211,8 @@ class DiscussionResponsesViewModel(
                 notifier.send(DiscussionResponseAdded())
             } catch (e: Exception) {
                 handleException(e)
+            }finally {
+                _isLoading.postValue(false)
             }
         }
     }

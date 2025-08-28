@@ -67,6 +67,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import org.koin.android.ext.android.inject
@@ -127,6 +128,7 @@ class DiscussionResponsesFragment : Fragment() {
                 val uiState by viewModel.uiState.observeAsState(DiscussionResponsesUIState.Loading)
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
+                val isLoading by viewModel.isLoading.observeAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
 
                 DiscussionResponsesScreen(
@@ -134,6 +136,7 @@ class DiscussionResponsesFragment : Fragment() {
                     uiState = uiState,
                     uiMessage = uiMessage,
                     canLoadMore = canLoadMore,
+                    isloading = isLoading,
                     refreshing = refreshing,
                     isClosed = viewModel.isThreadClosed,
                     isPostingEnabled = viewModel.isPostingEnabled,
@@ -212,6 +215,7 @@ private fun DiscussionResponsesScreen(
     uiState: DiscussionResponsesUIState,
     uiMessage: UIMessage?,
     canLoadMore: Boolean,
+    isloading: Boolean,
     refreshing: Boolean,
     isClosed: Boolean,
     isPostingEnabled: Boolean,
@@ -243,7 +247,16 @@ private fun DiscussionResponsesScreen(
     } else {
         Color.White
     }
-
+    if (!uiState.equals(DiscussionResponsesUIState.Loading) && isloading){
+            Dialog(onDismissRequest = { /* Do nothing to prevent dismiss */ }) {
+                Box(
+                    Modifier
+                        .fillMaxSize(), contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                }
+            }
+    }
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = Modifier
@@ -535,6 +548,7 @@ private fun DiscussionResponsesScreenPreview() {
             ),
             uiMessage = null,
             canLoadMore = false,
+            isloading = false,
             refreshing = false,
             onSwipeRefresh = {},
             paginationCallBack = { },
@@ -567,6 +581,7 @@ private fun DiscussionResponsesScreenTabletPreview() {
             ),
             uiMessage = null,
             canLoadMore = false,
+            isloading = false,
             refreshing = false,
             onSwipeRefresh = {},
             paginationCallBack = { },

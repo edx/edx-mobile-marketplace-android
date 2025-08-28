@@ -67,6 +67,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.delay
@@ -96,6 +97,7 @@ import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.DiscussionRouter
+import org.openedx.discussion.presentation.responses.DiscussionResponsesUIState
 import org.openedx.discussion.presentation.ui.CommentItem
 import org.openedx.discussion.presentation.ui.ThreadMainItem
 
@@ -131,6 +133,7 @@ class DiscussionCommentsFragment : Fragment() {
                 val uiState by viewModel.uiState.observeAsState(DiscussionCommentsUIState.Loading)
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
+                val isLoading by viewModel.isLoading.observeAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
 
                 DiscussionCommentsScreen(
@@ -139,6 +142,7 @@ class DiscussionCommentsFragment : Fragment() {
                     uiMessage = uiMessage,
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
+                    isloading = isLoading,
                     refreshing = refreshing,
                     isPostingEnabled = viewModel.isPostingEnabled,
                     onCommentPulseEnd = { comment ->
@@ -256,6 +260,7 @@ private fun DiscussionCommentsScreen(
     uiMessage: UIMessage?,
     title: String,
     canLoadMore: Boolean,
+    isloading: Boolean,
     refreshing: Boolean,
     isPostingEnabled: Boolean,
     onCommentPulseEnd: (DiscussionComment) -> Unit = {},
@@ -310,7 +315,16 @@ private fun DiscussionCommentsScreen(
                 )
             )
         }
-
+        if (!uiState.equals(DiscussionResponsesUIState.Loading) && isloading){
+            Dialog(onDismissRequest = { /* Do nothing to prevent dismiss */ }) {
+                Box(
+                    Modifier
+                        .fillMaxSize(), contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                }
+            }
+        }
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
         Column(
@@ -575,6 +589,7 @@ private fun DiscussionCommentsScreenPreview() {
             uiMessage = null,
             title = "Test Screen",
             canLoadMore = false,
+            isloading = false,
             isPostingEnabled = false,
             paginationCallBack = {},
             onItemClick = { _, _, _ ->
@@ -606,6 +621,7 @@ private fun DiscussionCommentsScreenTabletPreview() {
             uiMessage = null,
             title = "Test Screen",
             canLoadMore = false,
+            isloading = false,
             isPostingEnabled = false,
             paginationCallBack = {},
             onItemClick = { _, _, _ ->

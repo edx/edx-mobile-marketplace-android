@@ -300,11 +300,12 @@ class DiscussionCommentsViewModel(
                 )
                 val response = interactor.createComment(thread.id, rawBody, null, reCaptchaToken)
                 response.isAuthor = response.author == corePreferences.user?.username
-
+                response.shouldHighlight = commentId.isEmpty()
                 thread = thread.copy(commentCount = thread.commentCount + 1)
                 sendThreadUpdated()
 
                 comments.add(0, response)
+                commentCount++
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
                 logResponseAddedEvent(
@@ -318,7 +319,6 @@ class DiscussionCommentsViewModel(
             }
         }
     }
-
     private fun handleException(e: Exception) {
         logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
         if (e.isInternetError()) {

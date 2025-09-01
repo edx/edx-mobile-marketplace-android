@@ -436,7 +436,8 @@ private fun Tabs(
     isLimited: Boolean = false,
 ) {
     val isFirstPage = currentPage == 0
-    TabRow(selectedTabIndex = currentPage,
+    TabRow(
+        selectedTabIndex = currentPage,
         backgroundColor = MaterialTheme.appColors.surface,
         modifier = Modifier
             .fillMaxWidth()

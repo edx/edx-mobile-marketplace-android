@@ -1,5 +1,6 @@
 package org.openedx.discussion.presentation.comments
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -64,7 +65,8 @@ class DiscussionCommentsViewModel(
     val isUpdating: LiveData<Boolean>
         get() = _isUpdating
 
-    private val comments = mutableListOf<DiscussionComment>()
+    private val comments = mutableStateListOf<DiscussionComment>()
+
     private var page = 1
     private var isLoading = false
 
@@ -300,7 +302,6 @@ class DiscussionCommentsViewModel(
                 )
                 val response = interactor.createComment(thread.id, rawBody, null, reCaptchaToken)
                 response.isAuthor = response.author == corePreferences.user?.username
-                response.shouldHighlight = commentId.isEmpty()
                 thread = thread.copy(commentCount = thread.commentCount + 1)
                 sendThreadUpdated()
 

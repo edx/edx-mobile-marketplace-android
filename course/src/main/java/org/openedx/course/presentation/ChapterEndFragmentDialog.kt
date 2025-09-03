@@ -49,6 +49,7 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.course.R
+import org.openedx.core.R as CoreR
 
 class ChapterEndFragmentDialog : DialogFragment() {
 
@@ -64,7 +65,7 @@ class ChapterEndFragmentDialog : DialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ) = ComposeView(requireContext()).apply {
         if (dialog != null && dialog!!.window != null) {
             dialog!!.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -125,7 +126,7 @@ class ChapterEndFragmentDialog : DialogFragment() {
         fun newInstance(
             sectionName: String,
             nextSectionName: String,
-            isVerticalNavigation: Boolean
+            isVerticalNavigation: Boolean,
         ): ChapterEndFragmentDialog {
             val dialog = ChapterEndFragmentDialog()
             dialog.arguments = bundleOf(
@@ -150,7 +151,7 @@ private fun ChapterEndDialogScreen(
     isVerticalNavigation: Boolean,
     onBackButtonClick: () -> Unit,
     onProceedButtonClick: () -> Unit,
-    onCancelButtonClick: () -> Unit
+    onCancelButtonClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -173,7 +174,7 @@ private fun ChapterEndDialogScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = stringResource(id = org.openedx.core.R.string.core_cancel),
+                        contentDescription = stringResource(id = CoreR.string.core_cancel),
                         tint = MaterialTheme.appColors.primary
                     )
                 }
@@ -207,7 +208,7 @@ private fun ChapterEndDialogScreen(
                     content = {
                         TextIcon(
                             text = stringResource(id = R.string.course_next_section),
-                            painter = painterResource(org.openedx.core.R.drawable.core_ic_forward),
+                            painter = painterResource(CoreR.drawable.core_ic_forward),
                             color = MaterialTheme.appColors.secondaryButtonText,
                             textStyle = MaterialTheme.appTypography.labelLarge,
                             iconModifier = Modifier.rotate(if (isVerticalNavigation) 90f else 0f)
@@ -242,7 +243,7 @@ private fun ChapterEndDialogScreenLandscape(
     nextSectionName: String,
     onBackButtonClick: () -> Unit,
     onProceedButtonClick: () -> Unit,
-    onCancelButtonClick: () -> Unit
+    onCancelButtonClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -266,7 +267,7 @@ private fun ChapterEndDialogScreenLandscape(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = stringResource(id = org.openedx.core.R.string.core_cancel),
+                        contentDescription = stringResource(id = CoreR.string.core_cancel),
                         tint = MaterialTheme.appColors.primary
                     )
                 }
@@ -315,7 +316,7 @@ private fun ChapterEndDialogScreenLandscape(
                             content = {
                                 TextIcon(
                                     text = stringResource(id = R.string.course_next_section),
-                                    painter = painterResource(org.openedx.core.R.drawable.core_ic_forward),
+                                    painter = painterResource(CoreR.drawable.core_ic_forward),
                                     color = MaterialTheme.appColors.secondaryButtonText,
                                     textStyle = MaterialTheme.appTypography.labelLarge
                                 )

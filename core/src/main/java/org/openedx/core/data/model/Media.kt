@@ -1,7 +1,6 @@
 package org.openedx.core.data.model
 
 import com.google.gson.annotations.SerializedName
-import org.openedx.core.data.model.room.discovery.*
 import org.openedx.core.domain.model.Media
 
 data class Media(
@@ -15,7 +14,7 @@ data class Media(
     val image: Image?,
 ) {
 
-    fun mapToDomain(): org.openedx.core.domain.model.Media {
+    fun mapToDomain(): Media {
         return Media(
             bannerImage = bannerImage?.mapToDomain(),
             courseImage = courseImage?.mapToDomain(),

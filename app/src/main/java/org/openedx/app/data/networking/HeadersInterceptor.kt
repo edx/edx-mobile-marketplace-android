@@ -4,6 +4,7 @@ import android.content.Context
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.openedx.app.BuildConfig
+import org.openedx.core.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 
@@ -29,7 +30,7 @@ class HeadersInterceptor(
                     addHeader(
                         "User-Agent",
                         httpAgent + " " +
-                                context.getString(org.openedx.core.R.string.app_name) + "/" +
+                                context.getString(R.string.app_name) + "/" +
                                 BuildConfig.APPLICATION_ID + "/" +
                                 BuildConfig.VERSION_NAME
                     )

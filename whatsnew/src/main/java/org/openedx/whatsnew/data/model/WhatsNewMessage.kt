@@ -2,6 +2,8 @@ package org.openedx.whatsnew.data.model
 
 import android.content.Context
 import com.google.gson.annotations.SerializedName
+import org.openedx.core.R
+import org.openedx.whatsnew.domain.model.WhatsNewMessage as DomainWhatsNewMessage
 
 data class WhatsNewMessage(
     @SerializedName("image")
@@ -9,9 +11,9 @@ data class WhatsNewMessage(
     @SerializedName("title")
     val title: String,
     @SerializedName("message")
-    val message: String
+    val message: String,
 ) {
-    fun mapToDomain(context: Context) = org.openedx.whatsnew.domain.model.WhatsNewMessage(
+    fun mapToDomain(context: Context) = DomainWhatsNewMessage(
         image = getDrawableIntFromString(context, image),
         title = title,
         message = message
@@ -20,7 +22,7 @@ data class WhatsNewMessage(
     private fun getDrawableIntFromString(context: Context, imageName: String): Int {
         val imageInt = context.resources.getIdentifier(imageName, "drawable", context.packageName)
         return if (imageInt == 0) {
-            org.openedx.core.R.drawable.core_no_image_course
+            R.drawable.core_no_image_course
         } else {
             imageInt
         }

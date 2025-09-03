@@ -68,10 +68,9 @@ import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.DiscoveryAnalyticsScreen
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
-import org.openedx.discovery.presentation.catalog.WebViewLink
+import org.openedx.discovery.presentation.catalog.WebViewLink.Authority
 import java.util.concurrent.atomic.AtomicReference
 import org.openedx.core.R as CoreR
-import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
 
 class CourseInfoFragment : Fragment() {
 
@@ -171,7 +170,7 @@ class CourseInfoFragment : Fragment() {
                     },
                     onUriClick = { param, type ->
                         when (type) {
-                            linkAuthority.PROGRAM_INFO -> {
+                            Authority.PROGRAM_INFO -> {
                                 viewModel.programInfoClickedEvent(param)
                                 viewModel.infoCardClicked(
                                     fragmentManager = requireActivity().supportFragmentManager,
@@ -180,7 +179,7 @@ class CourseInfoFragment : Fragment() {
                                 )
                             }
 
-                            linkAuthority.COURSE_INFO -> {
+                            Authority.COURSE_INFO -> {
                                 viewModel.courseInfoClickedEvent(param)
                                 viewModel.infoCardClicked(
                                     fragmentManager = requireActivity().supportFragmentManager,
@@ -189,7 +188,7 @@ class CourseInfoFragment : Fragment() {
                                 )
                             }
 
-                            linkAuthority.EXTERNAL -> {
+                            Authority.EXTERNAL -> {
                                 ActionDialogFragment.newInstance(
                                     title = getString(CoreR.string.core_leaving_the_app),
                                     message = getString(
@@ -204,7 +203,7 @@ class CourseInfoFragment : Fragment() {
                                 )
                             }
 
-                            linkAuthority.ENROLL -> {
+                            Authority.ENROLL -> {
                                 viewModel.courseEnrollClickedEvent(param)
                                 if ((uiState as CourseInfoUIState.CourseInfo).isPreLogin) {
                                     viewModel.navigateToSignUp(
@@ -256,7 +255,7 @@ private fun CourseInfoScreen(
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
-    onUriClick: (String, WebViewLink.Authority) -> Unit,
+    onUriClick: (String, Authority) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -366,8 +365,8 @@ private fun CourseInfoWebView(
     userAgent: String,
     isPreLogin: Boolean,
     onWebPageLoaded: () -> Unit,
-    onUriClick: (String, linkAuthority) -> Unit,
-    onWebPageLoadError: () -> Unit
+    onUriClick: (String, Authority) -> Unit,
+    onWebPageLoadError: () -> Unit,
 ) {
 
     val webView = CatalogWebViewScreen(

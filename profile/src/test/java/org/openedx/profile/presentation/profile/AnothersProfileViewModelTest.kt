@@ -25,6 +25,7 @@ import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
+import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.anothersaccount.AnothersProfileUIState
 import org.openedx.profile.presentation.anothersaccount.AnothersProfileViewModel
 import java.net.UnknownHostException
@@ -41,7 +42,7 @@ class AnothersProfileViewModelTest {
     private val interactor = mockk<ProfileInteractor>()
     private val username = "username"
 
-    private val account = org.openedx.profile.domain.model.Account(
+    private val account = Account(
         username = "",
         bio = "",
         requiresParentalConsent = false,
@@ -57,7 +58,7 @@ class AnothersProfileViewModelTest {
         mailingAddress = "",
         email = "",
         dateJoined = null,
-        accountPrivacy = org.openedx.profile.domain.model.Account.Privacy.PRIVATE
+        accountPrivacy = Account.Privacy.PRIVATE
     )
 
     private val noInternet = "Slow or no internet connection"

@@ -32,6 +32,7 @@ import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
+import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.profile.system.notifier.AccountUpdated
@@ -53,7 +54,7 @@ class ProfileViewModelTest {
     private val analytics = mockk<ProfileAnalytics>()
     private val router = mockk<ProfileRouter>()
 
-    private val account = org.openedx.profile.domain.model.Account(
+    private val account = Account(
         username = "",
         bio = "",
         requiresParentalConsent = false,
@@ -69,7 +70,7 @@ class ProfileViewModelTest {
         mailingAddress = "",
         email = "",
         dateJoined = null,
-        accountPrivacy = org.openedx.profile.domain.model.Account.Privacy.PRIVATE
+        accountPrivacy = Account.Privacy.PRIVATE
     )
 
     private val noInternet = "Slow or no internet connection"

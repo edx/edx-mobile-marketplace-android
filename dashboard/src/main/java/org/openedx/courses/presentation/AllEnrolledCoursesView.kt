@@ -67,7 +67,6 @@ import androidx.fragment.app.FragmentManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.koin.androidx.compose.koinViewModel
-import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.Certificate
 import org.openedx.core.domain.model.CourseAssignments
@@ -91,12 +90,14 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.TimeUtils
+import org.openedx.dashboard.R
 import org.openedx.dashboard.domain.CourseStatusFilter
 import java.util.Date
+import org.openedx.core.R as CoreR
 
 @Composable
 fun AllEnrolledCoursesView(
-    fragmentManager: FragmentManager
+    fragmentManager: FragmentManager,
 ) {
     val viewModel: AllEnrolledCoursesViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -154,7 +155,7 @@ private fun AllEnrolledCoursesView(
     state: AllEnrolledCoursesUIState,
     uiMessage: UIMessage?,
     hasInternetConnection: Boolean,
-    onAction: (AllEnrolledCoursesAction) -> Unit
+    onAction: (AllEnrolledCoursesAction) -> Unit,
 ) {
     val windowSize = rememberWindowSize()
     val layoutDirection = LocalLayoutDirection.current
@@ -417,8 +418,8 @@ fun CourseItem(
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(apiHostUrl + course.course.courseImage)
-                        .error(R.drawable.core_no_image_course)
-                        .placeholder(R.drawable.core_no_image_course)
+                        .error(CoreR.drawable.core_no_image_course)
+                        .placeholder(CoreR.drawable.core_no_image_course)
                         .build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
@@ -482,7 +483,7 @@ fun Header(
     ) {
         Text(
             modifier = Modifier.align(Alignment.CenterStart),
-            text = stringResource(id = org.openedx.dashboard.R.string.dashboard_all_courses),
+            text = stringResource(id = R.string.dashboard_all_courses),
             color = MaterialTheme.appColors.textDark,
             style = MaterialTheme.appTypography.headlineBold
         )
@@ -491,7 +492,7 @@ fun Header(
 
 @Composable
 fun EmptyState(
-    currentCourseStatus: CourseStatusFilter
+    currentCourseStatus: CourseStatusFilter,
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -502,7 +503,7 @@ fun EmptyState(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                painter = painterResource(id = org.openedx.dashboard.R.drawable.dashboard_ic_book),
+                painter = painterResource(id = R.drawable.dashboard_ic_book),
                 tint = MaterialTheme.appColors.textFieldBorder,
                 contentDescription = null
             )
@@ -512,7 +513,7 @@ fun EmptyState(
                     .testTag("txt_empty_state_title")
                     .fillMaxWidth(),
                 text = stringResource(
-                    id = org.openedx.dashboard.R.string.dashboard_no_status_courses,
+                    id = R.string.dashboard_no_status_courses,
                     stringResource(currentCourseStatus.labelResId)
                 ),
                 color = MaterialTheme.appColors.textDark,

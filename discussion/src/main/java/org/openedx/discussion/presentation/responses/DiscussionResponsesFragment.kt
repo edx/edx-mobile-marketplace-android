@@ -94,7 +94,6 @@ import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment
 import org.openedx.discussion.presentation.ui.CommentMainItem
-import org.openedx.discussion.R as discussionR
 
 class DiscussionResponsesFragment : Fragment() {
 
@@ -308,7 +307,7 @@ private fun DiscussionResponsesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 48.dp),
-                        text = stringResource(id = discussionR.string.discussion_comments_title),
+                        text = stringResource(id = R.string.discussion_comments_title),
                         color = MaterialTheme.appColors.textPrimary,
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.appTypography.titleMedium,

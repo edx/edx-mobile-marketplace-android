@@ -46,11 +46,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -71,8 +71,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.delay
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -233,7 +232,7 @@ private fun DiscussionResponsesScreen(
     val focusManager = LocalFocusManager.current
 
     val firstVisibleIndex = remember {
-        mutableStateOf(scrollState.firstVisibleItemIndex)
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val pullRefreshState =
         rememberPullRefreshState(refreshing = refreshing, onRefresh = { onSwipeRefresh() })
@@ -332,15 +331,9 @@ private fun DiscussionResponsesScreen(
                             var previousFirstId by remember { mutableStateOf<String?>(null) }
                             val currentFirstId = uiState.childComments.firstOrNull()?.id
                             LaunchedEffect(currentFirstId) {
-                                // Only scroll if a new item has appeared at the top
                                 if (currentFirstId != null && currentFirstId != previousFirstId) {
-                                    // Wait until the list is actually composed
-                                    snapshotFlow { scrollState.layoutInfo.totalItemsCount }
-                                        .filter { it > 0 } // Ensure list has content
-                                        .first() // Suspend until this is true
-
-                                    scrollState.animateScrollToItem(0) // Use animateScrollToItem for reliability
-
+                                     delay(100)
+                                    scrollState.animateScrollToItem(0)
                                     previousFirstId = currentFirstId
                                 }
                             }

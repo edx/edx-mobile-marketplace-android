@@ -191,6 +191,7 @@ class DiscussionResponsesViewModel(
                     captchaToken = reCaptchaToken,
                 )
                 response.isAuthor = response.author == corePreferences.user?.username
+
                 comment = comment.copy(childCount = comment.childCount + 1)
                 sendUpdatedComment()
 

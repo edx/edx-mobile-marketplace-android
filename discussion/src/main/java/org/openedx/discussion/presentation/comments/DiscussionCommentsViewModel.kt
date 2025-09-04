@@ -300,7 +300,6 @@ class DiscussionCommentsViewModel(
                 )
                 val response = interactor.createComment(thread.id, rawBody, null, reCaptchaToken)
                 response.isAuthor = response.author == corePreferences.user?.username
-                response.shouldHighlight = commentId.isEmpty()
                 thread = thread.copy(commentCount = thread.commentCount + 1)
                 sendThreadUpdated()
 

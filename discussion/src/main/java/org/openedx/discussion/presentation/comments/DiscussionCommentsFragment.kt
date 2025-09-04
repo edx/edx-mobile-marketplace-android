@@ -1,6 +1,5 @@
 package org.openedx.discussion.presentation.comments
 
-import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -48,7 +47,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -72,8 +70,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import okhttp3.internal.notify
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -252,7 +248,6 @@ class DiscussionCommentsFragment : Fragment() {
 
 }
 
-@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun DiscussionCommentsScreen(
@@ -361,7 +356,6 @@ private fun DiscussionCommentsScreen(
                 Box(Modifier.pullRefresh(pullRefreshState)) {
                     when (uiState) {
                         is DiscussionCommentsUIState.Success -> {
-
                             Column(
                                 Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -397,7 +391,7 @@ private fun DiscussionCommentsScreen(
                                         )
                                     }
                                     if (uiState.commentsData.isNotEmpty()) {
-                                        item(uiState.count) {
+                                        item {
                                             Text(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
@@ -679,4 +673,3 @@ private val mockComment = DiscussionComment(
     users = mapOf(),
     isAuthor = false,
 )
-

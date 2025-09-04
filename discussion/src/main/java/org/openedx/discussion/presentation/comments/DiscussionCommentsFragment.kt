@@ -41,6 +41,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -67,7 +68,6 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.delay
@@ -97,7 +97,6 @@ import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.DiscussionRouter
-import org.openedx.discussion.presentation.responses.DiscussionResponsesUIState
 import org.openedx.discussion.presentation.ui.CommentItem
 import org.openedx.discussion.presentation.ui.ThreadMainItem
 
@@ -133,7 +132,7 @@ class DiscussionCommentsFragment : Fragment() {
                 val uiState by viewModel.uiState.observeAsState(DiscussionCommentsUIState.Loading)
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
-                val isLoading by viewModel.isLoading.observeAsState(false)
+                val showProgress by viewModel.showProgress.collectAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
 
                 DiscussionCommentsScreen(
@@ -142,7 +141,7 @@ class DiscussionCommentsFragment : Fragment() {
                     uiMessage = uiMessage,
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
-                    isloading = isLoading,
+                    showProgress = showProgress,
                     refreshing = refreshing,
                     isPostingEnabled = viewModel.isPostingEnabled,
                     onCommentPulseEnd = { comment ->
@@ -260,7 +259,7 @@ private fun DiscussionCommentsScreen(
     uiMessage: UIMessage?,
     title: String,
     canLoadMore: Boolean,
-    isloading: Boolean,
+    showProgress: Boolean,
     refreshing: Boolean,
     isPostingEnabled: Boolean,
     onCommentPulseEnd: (DiscussionComment) -> Unit = {},
@@ -315,16 +314,7 @@ private fun DiscussionCommentsScreen(
                 )
             )
         }
-        if (!uiState.equals(DiscussionResponsesUIState.Loading) && isloading){
-            Dialog(onDismissRequest = { /* Do nothing to prevent dismiss */ }) {
-                Box(
-                    Modifier
-                        .fillMaxSize(), contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                }
-            }
-        }
+
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
         Column(
@@ -500,27 +490,34 @@ private fun DiscussionCommentsScreen(
                                                 ),
                                                 enabled = !uiState.thread.closed
                                             )
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(48.dp)
-                                                    .clip(CircleShape)
-                                                    .alpha(sendButtonAlpha)
-                                                    .background(MaterialTheme.appColors.primaryButtonBackground)
-                                                    .clickable {
-                                                        keyboardController?.hide()
-                                                        focusManager.clearFocus()
-                                                        if (responseValue.isNotEmpty()) {
-                                                            onAddResponseClick(responseValue.trim())
-                                                            responseValue = ""
-                                                        }
-                                                    },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
+                                            if (!showProgress) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(48.dp)
+                                                        .clip(CircleShape)
+                                                        .alpha(sendButtonAlpha)
+                                                        .background(MaterialTheme.appColors.primaryButtonBackground)
+                                                        .clickable {
+                                                            keyboardController?.hide()
+                                                            focusManager.clearFocus()
+                                                            if (responseValue.isNotEmpty()) {
+                                                                onAddResponseClick(responseValue.trim())
+                                                                responseValue = ""
+                                                            }
+                                                        },
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        modifier = Modifier.padding(7.dp),
+                                                        painter = painterResource(id = R.drawable.discussion_ic_send),
+                                                        contentDescription = stringResource(id = R.string.discussion_add_response),
+                                                        tint = MaterialTheme.appColors.primaryButtonText
+                                                    )
+                                                }
+                                            } else {
+                                                CircularProgressIndicator(
                                                     modifier = Modifier.padding(7.dp),
-                                                    painter = painterResource(id = R.drawable.discussion_ic_send),
-                                                    contentDescription = stringResource(id = R.string.discussion_add_response),
-                                                    tint = MaterialTheme.appColors.primaryButtonText
+                                                    color = MaterialTheme.appColors.primary,
                                                 )
                                             }
                                         }
@@ -579,7 +576,7 @@ private fun DiscussionCommentsScreenPreview() {
             uiMessage = null,
             title = "Test Screen",
             canLoadMore = false,
-            isloading = false,
+            showProgress = false,
             isPostingEnabled = false,
             paginationCallBack = {},
             onItemClick = { _, _, _ ->
@@ -611,7 +608,7 @@ private fun DiscussionCommentsScreenTabletPreview() {
             uiMessage = null,
             title = "Test Screen",
             canLoadMore = false,
-            isloading = false,
+            showProgress = false,
             isPostingEnabled = false,
             paginationCallBack = {},
             onItemClick = { _, _, _ ->

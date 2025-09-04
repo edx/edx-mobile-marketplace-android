@@ -5,6 +5,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
@@ -67,10 +70,10 @@ class DiscussionCommentsViewModel(
 
     private val comments = mutableStateListOf<DiscussionComment>()
     private var page = 1
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean>
-        get() = _isLoading
-    //private var isLoading = false
+    private var isLoading = false
+    private val _showProgress = MutableStateFlow(false)
+    val showProgress: StateFlow<Boolean> =
+        _showProgress.asStateFlow()
 
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
@@ -108,7 +111,7 @@ class DiscussionCommentsViewModel(
     private fun internalLoadComments(markReadIfSuccessful: Boolean) {
         viewModelScope.launch {
             try {
-                //isLoading = true
+                isLoading = true
                 val response = if (thread.type == DiscussionType.DISCUSSION) {
                     interactor.getThreadComments(thread.id, page)
                 } else {
@@ -147,7 +150,7 @@ class DiscussionCommentsViewModel(
             } catch (e: Exception) {
                 handleException(e)
             } finally {
-               // isLoading = false
+                isLoading = false
                 _isUpdating.value = false
             }
         }
@@ -188,7 +191,7 @@ class DiscussionCommentsViewModel(
     }
 
     fun fetchMore() {
-        if (_isLoading.value != true && page != -1) {
+        if (!isLoading && page != -1) {
             internalLoadComments(markReadIfSuccessful = false)
         }
     }
@@ -296,7 +299,7 @@ class DiscussionCommentsViewModel(
     }
 
     fun createComment(rawBody: String) {
-        _isLoading.postValue(true)
+        _showProgress.value = true
         viewModelScope.launch {
             try {
                 val reCaptchaToken = interactor.getRecaptchaToken(
@@ -321,8 +324,8 @@ class DiscussionCommentsViewModel(
                 notifier.send(DiscussionCommentAdded())
             } catch (e: Exception) {
                 handleException(e)
-            }finally {
-                _isLoading.postValue(false)
+            } finally {
+                _showProgress.value = false
             }
         }
     }

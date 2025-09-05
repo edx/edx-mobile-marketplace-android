@@ -44,6 +44,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -130,6 +131,7 @@ class DiscussionResponsesFragment : Fragment() {
                 val uiState by viewModel.uiState.observeAsState(DiscussionResponsesUIState.Loading)
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
+                val showProgress by viewModel.showProgress.collectAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
 
                 DiscussionResponsesScreen(
@@ -137,6 +139,7 @@ class DiscussionResponsesFragment : Fragment() {
                     uiState = uiState,
                     uiMessage = uiMessage,
                     canLoadMore = canLoadMore,
+                    showProgress = showProgress,
                     refreshing = refreshing,
                     isClosed = viewModel.isThreadClosed,
                     isPostingEnabled = viewModel.isPostingEnabled,
@@ -215,6 +218,7 @@ private fun DiscussionResponsesScreen(
     uiState: DiscussionResponsesUIState,
     uiMessage: UIMessage?,
     canLoadMore: Boolean,
+    showProgress: Boolean,
     refreshing: Boolean,
     isClosed: Boolean,
     isPostingEnabled: Boolean,
@@ -482,27 +486,36 @@ private fun DiscussionResponsesScreen(
                                                 ),
                                                 enabled = !isClosed
                                             )
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(48.dp)
-                                                    .clip(CircleShape)
-                                                    .alpha(sendButtonAlpha)
-                                                    .background(MaterialTheme.appColors.primaryButtonBackground)
-                                                    .clickable {
-                                                        keyboardController?.hide()
-                                                        focusManager.clearFocus()
-                                                        if (commentValue.isNotEmpty()) {
-                                                            addCommentClick(commentValue.trim())
-                                                            commentValue = ""
-                                                        }
-                                                    },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    modifier = Modifier.padding(7.dp),
-                                                    painter = painterResource(id = R.drawable.discussion_ic_send),
-                                                    contentDescription = null,
-                                                    tint = iconButtonColor
+                                            if (!showProgress) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(48.dp)
+                                                        .clip(CircleShape)
+                                                        .alpha(sendButtonAlpha)
+                                                        .background(MaterialTheme.appColors.primaryButtonBackground)
+                                                        .clickable {
+                                                            keyboardController?.hide()
+                                                            focusManager.clearFocus()
+                                                            if (commentValue.isNotEmpty()) {
+                                                                addCommentClick(commentValue.trim())
+                                                                commentValue = ""
+                                                            }
+                                                        },
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        modifier = Modifier.padding(7.dp),
+                                                        painter = painterResource(id = R.drawable.discussion_ic_send),
+                                                        contentDescription = null,
+                                                        tint = iconButtonColor
+                                                    )
+                                                }
+                                            } else {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier
+                                                        .size(48.dp)
+                                                        .padding(7.dp),
+                                                    color = MaterialTheme.appColors.primary,
                                                 )
                                             }
                                         }
@@ -548,6 +561,7 @@ private fun DiscussionResponsesScreenPreview() {
             ),
             uiMessage = null,
             canLoadMore = false,
+            showProgress = false,
             refreshing = false,
             onSwipeRefresh = {},
             paginationCallBack = { },
@@ -580,6 +594,7 @@ private fun DiscussionResponsesScreenTabletPreview() {
             ),
             uiMessage = null,
             canLoadMore = false,
+            showProgress = false,
             refreshing = false,
             onSwipeRefresh = {},
             paginationCallBack = { },

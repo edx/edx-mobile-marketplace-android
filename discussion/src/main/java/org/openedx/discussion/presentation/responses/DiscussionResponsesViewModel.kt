@@ -3,6 +3,9 @@ package org.openedx.discussion.presentation.responses
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
@@ -57,6 +60,9 @@ class DiscussionResponsesViewModel(
     private val comments = mutableListOf<DiscussionComment>()
     private var page = 1
     private var isLoading = false
+    private val _showProgress = MutableStateFlow(false)
+    val showProgress: StateFlow<Boolean> =
+        _showProgress.asStateFlow()
 
     private suspend fun sendUpdatedComment() {
         notifier.send(DiscussionCommentDataChanged(comment))
@@ -178,6 +184,7 @@ class DiscussionResponsesViewModel(
     }
 
     fun createComment(rawBody: String) {
+        _showProgress.value = true
         viewModelScope.launch {
             try {
                 val reCaptchaToken = interactor.getRecaptchaToken(
@@ -207,6 +214,8 @@ class DiscussionResponsesViewModel(
                 notifier.send(DiscussionResponseAdded())
             } catch (e: Exception) {
                 handleException(e)
+            } finally {
+                _showProgress.value = false
             }
         }
     }

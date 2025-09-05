@@ -41,6 +41,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -131,6 +132,7 @@ class DiscussionCommentsFragment : Fragment() {
                 val uiState by viewModel.uiState.observeAsState(DiscussionCommentsUIState.Loading)
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
+                val showProgress by viewModel.showProgress.collectAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
 
                 DiscussionCommentsScreen(
@@ -139,6 +141,7 @@ class DiscussionCommentsFragment : Fragment() {
                     uiMessage = uiMessage,
                     title = viewModel.title,
                     canLoadMore = canLoadMore,
+                    showProgress = showProgress,
                     refreshing = refreshing,
                     isPostingEnabled = viewModel.isPostingEnabled,
                     onCommentPulseEnd = { comment ->
@@ -256,6 +259,7 @@ private fun DiscussionCommentsScreen(
     uiMessage: UIMessage?,
     title: String,
     canLoadMore: Boolean,
+    showProgress: Boolean,
     refreshing: Boolean,
     isPostingEnabled: Boolean,
     onCommentPulseEnd: (DiscussionComment) -> Unit = {},
@@ -496,27 +500,36 @@ private fun DiscussionCommentsScreen(
                                                 ),
                                                 enabled = !uiState.thread.closed
                                             )
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(48.dp)
-                                                    .clip(CircleShape)
-                                                    .alpha(sendButtonAlpha)
-                                                    .background(MaterialTheme.appColors.primaryButtonBackground)
-                                                    .clickable {
-                                                        keyboardController?.hide()
-                                                        focusManager.clearFocus()
-                                                        if (responseValue.isNotEmpty()) {
-                                                            onAddResponseClick(responseValue.trim())
-                                                            responseValue = ""
-                                                        }
-                                                    },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    modifier = Modifier.padding(7.dp),
-                                                    painter = painterResource(id = R.drawable.discussion_ic_send),
-                                                    contentDescription = stringResource(id = R.string.discussion_add_response),
-                                                    tint = MaterialTheme.appColors.primaryButtonText
+                                            if (!showProgress) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(48.dp)
+                                                        .clip(CircleShape)
+                                                        .alpha(sendButtonAlpha)
+                                                        .background(MaterialTheme.appColors.primaryButtonBackground)
+                                                        .clickable {
+                                                            keyboardController?.hide()
+                                                            focusManager.clearFocus()
+                                                            if (responseValue.isNotEmpty()) {
+                                                                onAddResponseClick(responseValue.trim())
+                                                                responseValue = ""
+                                                            }
+                                                        },
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        modifier = Modifier.padding(7.dp),
+                                                        painter = painterResource(id = R.drawable.discussion_ic_send),
+                                                        contentDescription = stringResource(id = R.string.discussion_add_response),
+                                                        tint = MaterialTheme.appColors.primaryButtonText
+                                                    )
+                                                }
+                                            } else {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier
+                                                        .size(48.dp)
+                                                        .padding(7.dp),
+                                                    color = MaterialTheme.appColors.primary,
                                                 )
                                             }
                                         }
@@ -575,6 +588,7 @@ private fun DiscussionCommentsScreenPreview() {
             uiMessage = null,
             title = "Test Screen",
             canLoadMore = false,
+            showProgress = false,
             isPostingEnabled = false,
             paginationCallBack = {},
             onItemClick = { _, _, _ ->
@@ -606,6 +620,7 @@ private fun DiscussionCommentsScreenTabletPreview() {
             uiMessage = null,
             title = "Test Screen",
             canLoadMore = false,
+            showProgress = false,
             isPostingEnabled = false,
             paginationCallBack = {},
             onItemClick = { _, _, _ ->

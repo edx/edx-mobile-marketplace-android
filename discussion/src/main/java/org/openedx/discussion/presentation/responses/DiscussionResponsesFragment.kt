@@ -337,6 +337,7 @@ private fun DiscussionResponsesScreen(
                                     previousFirstId = currentFirstId
                                 }
                             }
+
                             Column(
                                 Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally

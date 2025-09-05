@@ -305,7 +305,6 @@ class DiscussionCommentsViewModel(
                 sendThreadUpdated()
 
                 comments.add(0, response)
-                commentCount++
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
                 logResponseAddedEvent(

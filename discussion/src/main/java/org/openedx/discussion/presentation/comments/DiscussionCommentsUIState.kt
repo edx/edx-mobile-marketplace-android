@@ -7,7 +7,7 @@ sealed class DiscussionCommentsUIState {
     data class Success(
         val thread: org.openedx.discussion.domain.model.Thread,
         val commentsData: List<DiscussionComment>,
-        val count: Int
+        val count: Int,
     ) : DiscussionCommentsUIState()
 
     object Loading : DiscussionCommentsUIState()

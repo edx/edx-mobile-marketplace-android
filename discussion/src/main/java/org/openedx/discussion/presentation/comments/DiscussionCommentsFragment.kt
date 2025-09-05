@@ -356,6 +356,16 @@ private fun DiscussionCommentsScreen(
                 Box(Modifier.pullRefresh(pullRefreshState)) {
                     when (uiState) {
                         is DiscussionCommentsUIState.Success -> {
+                            var previousFirstId by remember { mutableStateOf<String?>(null) }
+                            val currentFirstId = uiState.commentsData.firstOrNull()?.id
+                            LaunchedEffect(currentFirstId) {
+                                if (currentFirstId != null && currentFirstId != previousFirstId) {
+                                    delay(100)
+                                    scrollState.animateScrollToItem(0)
+                                    previousFirstId = currentFirstId
+                                }
+                            }
+
                             Column(
                                 Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally

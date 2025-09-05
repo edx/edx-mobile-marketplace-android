@@ -1,5 +1,6 @@
 package org.openedx.discussion.presentation.comments
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -64,7 +65,7 @@ class DiscussionCommentsViewModel(
     val isUpdating: LiveData<Boolean>
         get() = _isUpdating
 
-    private val comments = mutableListOf<DiscussionComment>()
+    private val comments = mutableStateListOf<DiscussionComment>()
     private var page = 1
     private var isLoading = false
 
@@ -305,6 +306,7 @@ class DiscussionCommentsViewModel(
                 sendThreadUpdated()
 
                 comments.add(0, response)
+                commentCount++
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
                 logResponseAddedEvent(

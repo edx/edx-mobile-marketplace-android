@@ -332,7 +332,7 @@ private fun DiscussionResponsesScreen(
                             val currentFirstId = uiState.childComments.firstOrNull()?.id
                             LaunchedEffect(currentFirstId) {
                                 if (currentFirstId != null && currentFirstId != previousFirstId) {
-                                     delay(100)
+                                    delay(100)
                                     scrollState.animateScrollToItem(0)
                                     previousFirstId = currentFirstId
                                 }

@@ -526,7 +526,7 @@ private fun DiscussionCommentsScreen(
                                                 }
                                             } else {
                                                 CircularProgressIndicator(
-                                                    modifier = Modifier.padding(7.dp),
+                                                    modifier = Modifier.size(48.dp).padding(7.dp),
                                                     color = MaterialTheme.appColors.primary,
                                                 )
                                             }

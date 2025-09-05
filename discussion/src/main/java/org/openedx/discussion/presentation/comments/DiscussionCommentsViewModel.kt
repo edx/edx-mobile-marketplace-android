@@ -300,6 +300,7 @@ class DiscussionCommentsViewModel(
                 )
                 val response = interactor.createComment(thread.id, rawBody, null, reCaptchaToken)
                 response.isAuthor = response.author == corePreferences.user?.username
+
                 thread = thread.copy(commentCount = thread.commentCount + 1)
                 sendThreadUpdated()
 
@@ -318,6 +319,7 @@ class DiscussionCommentsViewModel(
             }
         }
     }
+
     private fun handleException(e: Exception) {
         logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
         if (e.isInternetError()) {

@@ -43,8 +43,10 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -69,6 +71,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import kotlinx.coroutines.delay
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -228,7 +231,7 @@ private fun DiscussionResponsesScreen(
     val focusManager = LocalFocusManager.current
 
     val firstVisibleIndex = remember {
-        mutableStateOf(scrollState.firstVisibleItemIndex)
+        mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
     val pullRefreshState =
         rememberPullRefreshState(refreshing = refreshing, onRefresh = { onSwipeRefresh() })
@@ -324,6 +327,16 @@ private fun DiscussionResponsesScreen(
                 Box(Modifier.pullRefresh(pullRefreshState)) {
                     when (uiState) {
                         is DiscussionResponsesUIState.Success -> {
+                            var previousFirstId by remember { mutableStateOf<String?>(null) }
+                            val currentFirstId = uiState.childComments.firstOrNull()?.id
+                            LaunchedEffect(currentFirstId) {
+                                if (currentFirstId != null && currentFirstId != previousFirstId) {
+                                    delay(100)
+                                    scrollState.animateScrollToItem(0)
+                                    previousFirstId = currentFirstId
+                                }
+                            }
+
                             Column(
                                 Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally

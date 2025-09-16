@@ -16,6 +16,7 @@ data class RegistrationField(
     val options: List<Option>,
     val errorInstructions: String = "",
     val defaultValue: Boolean,
+    val captchaToken :String
 ) {
 
     data class Restrictions(
@@ -42,7 +43,8 @@ fun String.createHonorCodeField() = RegistrationField(
     defaultValue = true,
     restrictions = RegistrationField.Restrictions(),
     options = emptyList(),
-    errorInstructions = ""
+    errorInstructions = "",
+    captchaToken = ""
 )
 
 enum class RegistrationFieldType {

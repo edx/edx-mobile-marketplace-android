@@ -29,7 +29,10 @@ data class RegistrationFields(
         @SerializedName("restrictions")
         val restrictions: Restrictions?,
         @SerializedName("options")
-        val options: List<Option>?
+        val options: List<Option>?,
+        @SerializedName("captcha_token")
+        val captchaToken: String?,
+        
     ) {
         fun mapToDomain(): RegistrationField {
             return RegistrationField(
@@ -42,7 +45,10 @@ data class RegistrationFields(
                 required = required ?: false,
                 defaultValue = defaultValue ?: true,
                 restrictions = restrictions?.mapToDomain() ?: RegistrationField.Restrictions(),
-                options = options?.map { it.mapToDomain() } ?: emptyList()
+                options = options?.map { it.mapToDomain() } ?: emptyList(),
+                captchaToken = ""
+
+
             )
         }
     }

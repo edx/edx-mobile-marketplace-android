@@ -35,6 +35,9 @@ object ApiConstants {
     object RegistrationFields {
         const val HONOR_CODE = "honor_code"
         const val MARKETING_EMAILS = "marketing_emails_opt_in"
+
+        const val CAPTCHA_TOKEN = "captcha_token"
+
     }
 
     object IAPFields {

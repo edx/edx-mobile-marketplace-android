@@ -1,5 +1,6 @@
 package org.openedx.auth.presentation.signup
 
+import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
@@ -32,6 +33,7 @@ import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.domain.model.createHonorCodeField
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
@@ -86,7 +88,10 @@ class SignUpViewModel(
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             try {
-                updateFields(interactor.getRegistrationFields())
+                val reCaptchaToken = interactor.getRecaptchaToken(
+                    recaptchaAction = RecaptchaManager.RecaptchaActionRegistration
+                )
+                updateFields(interactor.getRegistrationFields(),reCaptchaToken)
             } catch (e: Exception) {
                 logger.e(throwable = e)
                 if (e.isInternetError()) {
@@ -110,7 +115,7 @@ class SignUpViewModel(
         }
     }
 
-    private fun updateFields(allFields: List<RegistrationField>) {
+    private fun updateFields(allFields: List<RegistrationField>, reCaptchaToken: String) {
         val mutableAllFields = allFields.toMutableList()
         val requiredFields = mutableListOf<RegistrationField>()
         val optionalFields = mutableListOf<RegistrationField>()
@@ -122,6 +127,12 @@ class SignUpViewModel(
             val marketingEmails =
                 allFields.find { it.name == ApiConstants.RegistrationFields.MARKETING_EMAILS }
             mutableAllFields.remove(honourCode)
+            val captchaTokenResponse=allFields.find { it.name == ApiConstants.RegistrationFields.CAPTCHA_TOKEN }
+            if(captchaTokenResponse!=null) {
+                val captchaToken =
+                    allFields.find { it.captchaToken == reCaptchaToken }
+                mutableAllFields.add(captchaToken!!)
+            }
             requiredFields.addAll(mutableAllFields.filter { it.required })
             optionalFields.addAll(mutableAllFields.filter { !it.required })
             requiredFields.remove(marketingEmails)
@@ -308,7 +319,7 @@ class SignUpViewModel(
                     socialAuth = socialAuth,
                 )
             }
-            updateFields(fields)
+            updateFields(fields, "")
         }.onSuccess {
             setUserId()
             logEvent(
@@ -336,7 +347,7 @@ class SignUpViewModel(
                 updatedFields.add(it.copy(errorInstructions = ""))
             }
         }
-        updateFields(updatedFields)
+        updateFields(updatedFields, "")
         _uiState.update { it.copy(isLoading = false) }
     }
 
@@ -365,7 +376,7 @@ class SignUpViewModel(
                 field
             }
         }
-        updateFields(updatedFields)
+        updateFields(updatedFields, "")
     }
 
     fun openLink(fragmentManager: FragmentManager, links: Map<String, String>, link: String) {

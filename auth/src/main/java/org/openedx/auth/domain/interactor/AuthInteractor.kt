@@ -1,5 +1,6 @@
 package org.openedx.auth.domain.interactor
 
+import com.google.android.recaptcha.RecaptchaAction
 import org.openedx.auth.data.model.AuthType
 import org.openedx.auth.data.model.ValidationFields
 import org.openedx.auth.data.repository.AuthRepository
@@ -17,6 +18,9 @@ class AuthInteractor(private val repository: AuthRepository) {
     suspend fun loginSocial(token: String?, authType: AuthType) {
         repository.socialLogin(token, authType)
     }
+
+    suspend fun getRecaptchaToken(recaptchaAction: RecaptchaAction) =
+        repository.getRecaptchaToken(recaptchaAction)
 
     suspend fun getRegistrationFields(): List<RegistrationField> {
         return repository.getRegistrationFields()

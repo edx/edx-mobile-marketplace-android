@@ -45,7 +45,7 @@ class RecaptchaManager(
         private const val TAG = "RecaptchaManager"
         val RecaptchaActionThread = RecaptchaAction.custom("thread")
         val RecaptchaActionComment = RecaptchaAction.custom("comment")
-        val RecaptchaActionRegistration = RecaptchaAction.custom("registration")
+        val RecaptchaActionRegistration = RecaptchaAction.custom("signup")
 
     }
 }

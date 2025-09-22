@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -120,29 +121,29 @@ class VideoFullScreenFragment : DialogFragment() {
                 .fillMaxSize()
                 .systemBarsPadding()
         ) {
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .systemBarsPadding(),
-                factory = { context ->
-                    val playerView = PlayerView(context).apply {
-                        player = viewModel.exoPlayer
-                        setShowNextButton(false)
-                        setShowPreviousButton(false)
-                        setShowSubtitleButton(true)
-                        setFullscreenButtonClickListener {
-                            dismiss()
-                        }
+            val context = LocalContext.current
+            val playerView = remember {
+                PlayerView(context).apply {
+                    player = viewModel.exoPlayer
+                    setShowNextButton(false)
+                    setShowPreviousButton(false)
+                    setShowSubtitleButton(true)
+                    setFullscreenButtonClickListener {
+                        dismiss()
                     }
-
-                    playerView.enableLongPressDoubleSpeed(
+                    enableLongPressDoubleSpeed(
                         player = viewModel.exoPlayer!!,
                         scope = scope,
                         onBadgeVisibilityChange = { showDoubleSpeedBadge = it },
                     )
+                }
+            }
 
-                    playerView
-                },
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding(),
+                factory = { playerView }
             )
 
             if (showDoubleSpeedBadge) {

@@ -75,7 +75,6 @@ private fun CheckboxFieldPreview() {
                 restrictions = RegistrationField.Restrictions(),
                 options = listOf(),
                 errorInstructions = "",
-                captchaToken = ""
             )
         ) {}
     }

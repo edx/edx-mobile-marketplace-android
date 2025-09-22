@@ -675,5 +675,4 @@ private val field = RegistrationField(
     restrictions = RegistrationField.Restrictions(),
     options = listOf(option, option),
     errorInstructions = "",
-    captchaToken = ""
 )

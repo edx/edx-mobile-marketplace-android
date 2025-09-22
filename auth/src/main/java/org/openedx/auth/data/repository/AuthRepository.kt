@@ -1,5 +1,6 @@
 package org.openedx.auth.data.repository
 
+import com.google.android.recaptcha.RecaptchaAction
 import org.openedx.auth.data.api.AuthApi
 import org.openedx.auth.data.model.AuthType
 import org.openedx.auth.data.model.ValidationFields
@@ -9,12 +10,14 @@ import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.system.EdxError
+import org.openedx.core.system.RecaptchaManager
 
 class AuthRepository(
     private val config: Config,
     private val api: AuthApi,
     private val preferencesManager: CorePreferences,
-) {
+    private val recaptchaManager: RecaptchaManager,
+    ) {
 
     suspend fun login(
         username: String,
@@ -69,4 +72,10 @@ class AuthRepository(
         val user = api.getProfile()
         preferencesManager.user = user
     }
+
+    suspend fun getRecaptchaToken(recaptchaAction: RecaptchaAction): String {
+        val isCaptchaEnabled = config.getRecaptchaConfig().isEnabled
+        return if (isCaptchaEnabled) recaptchaManager.getActionToken(recaptchaAction) else ""
+    }
+
 }

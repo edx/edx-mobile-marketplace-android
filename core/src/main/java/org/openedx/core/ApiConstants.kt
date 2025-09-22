@@ -32,9 +32,11 @@ object ApiConstants {
     const val BLOCKS_API_VERSION = "v4"
     const val HEADER_STALE_IF_ERROR = "stale-if-error=0"
 
-    object RegistrationFields {
+    object  RegistrationFields {
         const val HONOR_CODE = "honor_code"
         const val MARKETING_EMAILS = "marketing_emails_opt_in"
+        const val CAPTCHA_TOKEN = "captcha_token"
+
     }
 
     object IAPFields {

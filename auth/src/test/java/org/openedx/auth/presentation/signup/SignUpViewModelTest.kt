@@ -87,7 +87,8 @@ class SignUpViewModelTest {
             required = true,
             defaultValue = false,
             restrictions = RegistrationField.Restrictions(),
-            options = emptyList()
+            options = emptyList(),
+
         ),
 
         RegistrationField(
@@ -151,6 +152,8 @@ class SignUpViewModelTest {
             router = router,
             courseId = "",
             infoType = "",
+            captchaName = "",
+            reCaptchaToken = ""
         )
         coEvery { interactor.validateRegistrationFields(parametersMap) } returns ValidationFields(
             parametersMap
@@ -195,6 +198,8 @@ class SignUpViewModelTest {
             router = router,
             courseId = "",
             infoType = "",
+            captchaName = "",
+            reCaptchaToken = ""
         )
         val deferred = async { viewModel.uiMessage.first() }
 
@@ -245,6 +250,8 @@ class SignUpViewModelTest {
             router = router,
             courseId = "",
             infoType = "",
+            captchaName = "",
+            reCaptchaToken = ""
         )
         val deferred = async { viewModel.uiMessage.first() }
 
@@ -284,6 +291,8 @@ class SignUpViewModelTest {
             router = router,
             courseId = "",
             infoType = "",
+            captchaName = "",
+            reCaptchaToken = ""
         )
         coEvery { interactor.validateRegistrationFields(parametersMap) } returns ValidationFields(
             emptyMap()
@@ -334,6 +343,8 @@ class SignUpViewModelTest {
             router = router,
             courseId = "",
             infoType = "",
+            captchaName = "",
+            reCaptchaToken = ""
         )
         val deferred = async { viewModel.uiMessage.first() }
 
@@ -361,6 +372,8 @@ class SignUpViewModelTest {
             router = router,
             courseId = "",
             infoType = "",
+            captchaName = "",
+            reCaptchaToken = ""
         )
         val deferred = async { viewModel.uiMessage.first() }
 
@@ -388,6 +401,8 @@ class SignUpViewModelTest {
             router = router,
             courseId = "",
             infoType = "",
+            captchaName = "",
+            reCaptchaToken = ""
         )
         coEvery { interactor.getRegistrationFields() } returns listOfFields
         viewModel.getRegistrationFields()

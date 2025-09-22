@@ -162,8 +162,7 @@ class SignUpViewModel(
             }
         )
         val mapFields = uiState.value.allFields.associate { it.name to it.placeholder } +
-                mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())+
-                mapOf(ApiConstants.RegistrationFields.CAPTCHA_TOKEN to true.toString())
+                mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())
         val resultMap = mapFields.toMutableMap()
         if(captchaName.isNotNullOrEmpty()) {
             reCaptchaToken?.let { resultMap.put(captchaName.toString(), it) }

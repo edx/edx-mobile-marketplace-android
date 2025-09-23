@@ -135,8 +135,6 @@ val screenModule = module {
             get(),
             courseId,
             infoType,
-            get (),
-            get()
         )
     }
     viewModel { RestorePasswordViewModel(get(), get(), get(), get()) }

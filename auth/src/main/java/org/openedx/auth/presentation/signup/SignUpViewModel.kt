@@ -55,12 +55,11 @@ class SignUpViewModel(
     private val router: AuthRouter,
     val courseId: String?,
     val infoType: String?,
-    var captchaName : String?,
-    var reCaptchaToken: String?
 ) : BaseViewModel() {
 
     private val logger = Logger("SignUpViewModel")
-
+    var captchaName : String? =""
+    var reCaptchaToken: String =""
     private val _uiState = MutableStateFlow(
         SignUpUIState(
             isFacebookAuthEnabled = config.getFacebookConfig().isEnabled(),
@@ -166,7 +165,7 @@ class SignUpViewModel(
                 mapOf(ApiConstants.RegistrationFields.CAPTCHA_TOKEN to true.toString())
         val resultMap = mapFields.toMutableMap()
         if(captchaName.isNotNullOrEmpty()) {
-            reCaptchaToken?.let { resultMap.put(captchaName.toString(), it) }
+            reCaptchaToken.let { resultMap.put(captchaName.toString(), it) }
         }
         uiState.value.allFields.filter { !it.required }.forEach { (k, _) ->
             if (mapFields[k].isNullOrEmpty()) {

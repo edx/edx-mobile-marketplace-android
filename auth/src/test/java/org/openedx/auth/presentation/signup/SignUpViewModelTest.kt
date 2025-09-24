@@ -74,7 +74,7 @@ class SignUpViewModelTest {
         ApiConstants.EMAIL to "user@gmail.com",
         ApiConstants.PASSWORD to "password123",
         "honor_code" to "true",
-        "captcha_token" to "true"
+        ApiConstants.RegistrationFields.CAPTCHA_TOKEN to "true"
     )
 
     private val listOfFields = listOf(

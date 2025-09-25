@@ -72,10 +72,8 @@ class AuthRepository(
         val user = api.getProfile()
         preferencesManager.user = user
     }
-
     suspend fun getRecaptchaToken(recaptchaAction: RecaptchaAction): String {
         val isCaptchaEnabled = config.getRecaptchaConfig().isEnabled
         return if (isCaptchaEnabled) recaptchaManager.getActionToken(recaptchaAction) else ""
     }
-
 }

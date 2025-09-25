@@ -189,6 +189,7 @@ class EncodedVideoUnitViewModel(
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
+        exoPlayer?.playWhenReady = playWhenReady
         castManager.attachCastPlayer { state ->
             when (state) {
                 CastState.CONNECTED -> {
@@ -221,6 +222,22 @@ class EncodedVideoUnitViewModel(
 
         }
         startUpdatingVideoTime()
+    }
+
+    override fun onPause(owner: LifecycleOwner) {
+        super.onPause(owner)
+        castManager.detachCastPlayer()
+        if (state.value.activePlayerType != PlayerType.CHROME_CAST) {
+            exoPlayer?.removeListener(exoPlayerListener)
+        }
+//        exoPlayer?.pause()
+        stopUpdatingVideoTime()
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        super.onStop(owner)
+        playWhenReady = exoPlayer?.playWhenReady.isTrue()
+        exoPlayer?.pause()
     }
 
     private fun initPlayer() {
@@ -283,6 +300,12 @@ class EncodedVideoUnitViewModel(
             }
         }
     }
+
+    private fun stopUpdatingVideoTime() {
+        videoTimeJob?.cancel()
+        videoTimeJob = null
+    }
+
     private fun applyTrackSelector(isSubtitlesDisabled: Boolean): DefaultTrackSelector {
         val videoQuality = getVideoQuality()
         val params = DefaultTrackSelector.Parameters.Builder(context)

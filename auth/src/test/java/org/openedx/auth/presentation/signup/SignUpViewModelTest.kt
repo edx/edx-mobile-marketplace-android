@@ -89,7 +89,6 @@ class SignUpViewModelTest {
             defaultValue = false,
             restrictions = RegistrationField.Restrictions(),
             options = emptyList(),
-
         ),
 
         RegistrationField(

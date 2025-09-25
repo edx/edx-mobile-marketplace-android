@@ -38,6 +38,4 @@ class AuthInteractor(private val repository: AuthRepository) {
     suspend fun getRecaptchaToken(recaptchaAction: RecaptchaAction) =
         repository.getRecaptchaToken(recaptchaAction)
 
-
-
 }

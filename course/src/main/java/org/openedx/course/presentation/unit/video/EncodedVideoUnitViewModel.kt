@@ -15,7 +15,6 @@ import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.Clock
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -92,7 +91,6 @@ class EncodedVideoUnitViewModel(
     private var currentWindow = 0
     private var playbackPosition = 0L
 
-
     init {
         transcriptObject.asFlow().distinctUntilChanged().mapNotNull {
             if (!state.value.isSubtitlesReady) {
@@ -134,7 +132,6 @@ class EncodedVideoUnitViewModel(
             super.onPlaybackStateChanged(playbackState)
 
             if (playbackState == Player.STATE_READY && exoPlayer?.playWhenReady == true) {
-                Log.d("ExoPlayerFix", "STATE_READY and playWhenReady is true — calling play()")
                 exoPlayer?.play()
             }
 

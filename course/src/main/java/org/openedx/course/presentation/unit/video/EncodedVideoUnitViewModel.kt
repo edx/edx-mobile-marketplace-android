@@ -23,6 +23,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
@@ -78,12 +80,16 @@ class EncodedVideoUnitViewModel(
 
     var exoPlayer: ExoPlayer? = null
         private set
-
+    private var playWhenReadyState: Boolean = true
     private val _state = MutableStateFlow(PlayerState())
     internal val state: StateFlow<PlayerState>
         get() = _state
 
     private var videoTimeJob: Job? = null
+    private var isPlayerPrepared = false
+    private var playWhenReady = true
+    private var currentWindow = 0
+    private var playbackPosition = 0L
 
     init {
         transcriptObject.asFlow().distinctUntilChanged().mapNotNull {
@@ -124,6 +130,11 @@ class EncodedVideoUnitViewModel(
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
+
+            if (playbackState == Player.STATE_READY && exoPlayer?.playWhenReady == true) {
+                exoPlayer?.play()
+            }
+
             if (playbackState == Player.STATE_ENDED) {
                 _state.update { it.copy(isVideoEnded = true) }
                 markBlockCompleted(blockId)
@@ -178,15 +189,13 @@ class EncodedVideoUnitViewModel(
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
+        exoPlayer?.playWhenReady = playWhenReady
         castManager.attachCastPlayer { state ->
             when (state) {
                 CastState.CONNECTED -> {
                     logCastConnection(CourseAnalyticsEvent.CAST_CONNECTED)
                     exoPlayer?.pause()
-                    castManager.setMediaItem(
-                        getMediaItem(),
-                        getCurrentVideoTime()
-                    )
+                    castManager.setMediaItem(getMediaItem(), getCurrentVideoTime())
                     changeCastState(true)
                 }
 
@@ -200,10 +209,17 @@ class EncodedVideoUnitViewModel(
             }
         }
         exoPlayer?.addListener(exoPlayerListener)
-        if (_state.value.activePlayerType == PlayerType.EXO_REGULAR || _state.value.activePlayerType == PlayerType.EXO_FULL_SCREEN) {
+
+        if ((_state.value.activePlayerType == PlayerType.EXO_REGULAR || _state.value.activePlayerType == PlayerType.EXO_FULL_SCREEN)
+            && !isPlayerPrepared
+        ) {
             setPlayerMedia(getMediaItem())
             exoPlayer?.prepare()
-            exoPlayer?.playWhenReady = isPlaying
+            exoPlayer?.seekTo(currentWindow, playbackPosition)
+            exoPlayer?.playWhenReady = playWhenReady
+            isPlayerPrepared = true
+
+
         }
         startUpdatingVideoTime()
     }
@@ -214,8 +230,14 @@ class EncodedVideoUnitViewModel(
         if (state.value.activePlayerType != PlayerType.CHROME_CAST) {
             exoPlayer?.removeListener(exoPlayerListener)
         }
-        exoPlayer?.pause()
+//        exoPlayer?.pause()
         stopUpdatingVideoTime()
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        super.onStop(owner)
+        playWhenReady = exoPlayer?.playWhenReady.isTrue()
+        exoPlayer?.pause()
     }
 
     private fun initPlayer() {
@@ -232,9 +254,24 @@ class EncodedVideoUnitViewModel(
             DefaultAnalyticsCollector(Clock.DEFAULT),
         ).build().apply {
             setPlaybackSpeed(preferencesManager.videoSettings.videoPlaybackSpeed.speedValue)
+
+            // Build and set the media source once
+            val mediaSource = buildMediaSource(videoUrl)
+            setMediaSource(mediaSource)
+
+            // Restore playback position and playWhenReady from saved state
+            seekTo(playbackPosition)
+            playWhenReady = playWhenReadyState
+
+            prepare()
         }
         _state.update { it.copy(activePlayerType = PlayerType.EXO_REGULAR) }
         logVideoLoadedEvent(videoUrl)
+    }
+    private fun buildMediaSource(videoUrl: String): MediaSource {
+        val uri = videoUrl.toUri()
+        return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context))
+            .createMediaSource(MediaItem.fromUri(uri))
     }
 
     private fun getActivePlayer(): Player? {

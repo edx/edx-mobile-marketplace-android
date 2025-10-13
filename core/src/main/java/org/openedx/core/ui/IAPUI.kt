@@ -2,6 +2,7 @@ package org.openedx.core.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,9 +38,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -47,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -87,10 +94,10 @@ fun ValuePropUpgradeFeatures(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ValuePropContent(Modifier.weight(0.55f), courseName)
+            ValuePropContent(Modifier.weight(0.45f), courseName)
             if (previewCertificate) {
                 CertificatePreview(
-                    Modifier.weight(0.45f),
+                    Modifier.weight(0.55f),
                     appName,
                     learnerName,
                     courseName,
@@ -145,7 +152,39 @@ fun ValuePropContent(modifier: Modifier, courseName: String) {
         CheckmarkView(stringResource(id = R.string.iap_full_access_course))
     }
 }
+@Composable
+fun PreviewWatermark(
+    text: String = stringResource(R.string.PREVIEW),
+    color: Color = Color.LightGray.copy(alpha = 0.30f),
+    fontSize: Dp = 55.dp
+) {
+    val pxFontSize = with(LocalDensity.current) { fontSize.toPx() }
 
+    Canvas(
+        modifier = Modifier.fillMaxSize().padding(10.dp,20.dp,0.dp,0.dp)
+    ) {
+        rotate(-35f) { // Crossly/diagonally
+            drawContext.canvas.nativeCanvas.apply {
+                val paint = android.graphics.Paint().apply {
+                    this.color = color.toArgb()
+                    textSize = pxFontSize
+                    isAntiAlias = true
+                    textAlign = android.graphics.Paint.Align.CENTER
+                    strokeWidth = 2f
+                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                }
+                val x = size.width / 2
+                val y = size.height / 2
+                drawText(
+                    text,
+                    x,
+                    y,
+                    paint
+                )
+            }
+        }
+    }
+}
 @Composable
 fun CertificatePreview(
     modifier: Modifier,
@@ -155,132 +194,148 @@ fun CertificatePreview(
     orgName: String,
     orgLogo: String?
 ) {
-    Box(
-        modifier = modifier
-            .aspectRatio(1.45f)
-            .padding(horizontal = 4.dp)
-            .clip(shape = RoundedCornerShape(6.dp))
-            .background(Color.White)
-            .border(width = 1.dp, Color.LightGray, shape = RoundedCornerShape(6.dp))
-    ) {
-        Image(
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val previewWidthModifier = if (screenWidthDp > 600) {
+        if (isLandscape) {
+            Modifier.width((screenWidthDp * 0.4f).dp)
+        }else Modifier.width((screenWidthDp * 0.6f).dp)
+    } else {
+        Modifier.fillMaxWidth()
+    }
+
+    Column (modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally){
+        Box(
             modifier = Modifier
-                .fillMaxWidth(0.675f)
-                .fillMaxHeight(),
-            painter = painterResource(id = R.drawable.core_ic_certificate_preview_background),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds
-        )
-        Row(modifier = Modifier.padding(all = 16.dp)) {
-            Column(
+                .then(previewWidthModifier)
+                .aspectRatio(1.45f)
+                .padding(horizontal = 4.dp)
+                .clip(shape = RoundedCornerShape(6.dp))
+                .background(Color.White)
+                .border(width = 1.dp, Color.LightGray, shape = RoundedCornerShape(6.dp))
+        ) {
+            Image(
                 modifier = Modifier
-                    .weight(0.7F)
-                    .fillMaxHeight()
-                    .padding(end = 40.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text(
-                    text = stringResource(R.string.iap_certificate_verified_text),
-                    color = MaterialTheme.appColors.certificatePreviewHeading,
-                    textAlign = TextAlign.Start,
-                    style = MaterialTheme.appTypography.titleSmall.copy(fontStyle = FontStyle.Italic)
-                )
-                Text(
-                    modifier = Modifier.padding(horizontal = 2.dp),
-                    text = stringResource(R.string.iap_certificate_text),
-                    color = MaterialTheme.appColors.certificatePreviewHeading,
-                    textAlign = TextAlign.Start,
-                    style = MaterialTheme.appTypography.labelTiny.copy(fontWeight = FontWeight.Bold)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                CertificateBodyText(stringResource(R.string.iap_certificate_certify_message_1))
-
-                Text(
-                    modifier = Modifier.padding(horizontal = 2.dp),
-                    text = learnerName?.toTitleCase() ?: "",
-                    color = MaterialTheme.appColors.certificatePreviewHeading,
-                    textAlign = TextAlign.Start,
-                    style = MaterialTheme.appTypography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                CertificateBodyText(stringResource(R.string.iap_certificate_certify_message_2))
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    modifier = Modifier.padding(horizontal = 2.dp),
-                    text = courseName,
-                    color = MaterialTheme.appColors.certificatePreviewHeading,
-                    textAlign = TextAlign.Start,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.appTypography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 18.sp,
-                    )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                CertificateBodyText(
-                    stringResource(
-                        R.string.iap_certificate_organization_message,
-                        orgName,
-                        appName
-                    )
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Row(modifier = Modifier.fillMaxWidth(0.9f)) {
-                    Image(
-                        modifier = Modifier
-                            .width(38.dp)
-                            .height(24.dp),
-                        painter = painterResource(R.drawable.core_ic_logo),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(MaterialTheme.appColors.certificatePreviewHeading),
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    CertificateFooterItem(
-                        modifier = Modifier.align(Alignment.CenterVertically),
-                        itemTitle = stringResource(R.string.iap_certificate_verified_certificate_text),
-                        itemValue = stringResource(R.string.iap_certificate_issued_date_text),
-                    )
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    CertificateFooterItem(
-                        modifier = Modifier.align(Alignment.CenterVertically),
-                        itemTitle = stringResource(R.string.iap_certificate_valid_certificate_id_label),
-                        itemValue = stringResource(R.string.iap_certificate_valid_certificate_id_sample),
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .weight(0.30f)
-                    .fillMaxHeight()
-                    .padding(start = 8.dp),
-                horizontalAlignment = Alignment.End
-            ) {
-                AsyncImage(
+                    .fillMaxWidth(0.675f)
+                    .fillMaxHeight(),
+                painter = painterResource(id = R.drawable.core_ic_certificate_preview_background),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds
+            )
+            PreviewWatermark()
+            Row(modifier = Modifier.padding(all = 16.dp)) {
+                Column(
                     modifier = Modifier
-                        .height(28.dp)
-                        .wrapContentWidth(),
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(orgLogo)
-                        .build(),
-                    contentDescription = null,
-                )
+                        .weight(0.7F)
+                        .fillMaxHeight()
+                        .padding(end = 40.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = stringResource(R.string.iap_certificate_verified_text),
+                        color = MaterialTheme.appColors.certificatePreviewHeading,
+                        textAlign = TextAlign.Start,
+                        style = MaterialTheme.appTypography.titleSmall.copy(fontStyle = FontStyle.Italic)
+                    )
+                    Text(
+                        modifier = Modifier.padding(horizontal = 2.dp),
+                        text = stringResource(R.string.iap_certificate_text),
+                        color = MaterialTheme.appColors.certificatePreviewHeading,
+                        textAlign = TextAlign.Start,
+                        style = MaterialTheme.appTypography.labelTiny.copy(fontWeight = FontWeight.Bold)
+                    )
 
-                SignatureInfo(stringResource(R.string.iap_certificate_preview_author_1))
-                SignatureInfo(stringResource(R.string.iap_certificate_preview_author_2))
-                SignatureInfo(stringResource(R.string.iap_certificate_preview_author_3))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    CertificateBodyText(stringResource(R.string.iap_certificate_certify_message_1))
+
+                    Text(
+                        modifier = Modifier.padding(horizontal = 2.dp),
+                        text = learnerName?.toTitleCase() ?: "",
+                        color = MaterialTheme.appColors.certificatePreviewHeading,
+                        textAlign = TextAlign.Start,
+                        style = MaterialTheme.appTypography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    CertificateBodyText(stringResource(R.string.iap_certificate_certify_message_2))
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        modifier = Modifier.padding(horizontal = 2.dp),
+                        text = courseName,
+                        color = MaterialTheme.appColors.certificatePreviewHeading,
+                        textAlign = TextAlign.Start,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.appTypography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 18.sp,
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    CertificateBodyText(
+                        stringResource(
+                            R.string.iap_certificate_organization_message,
+                            orgName,
+                            appName
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Row(modifier = Modifier.fillMaxWidth(0.9f)) {
+                        Image(
+                            modifier = Modifier
+                                .width(38.dp)
+                                .height(24.dp),
+                            painter = painterResource(R.drawable.core_ic_logo),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(MaterialTheme.appColors.certificatePreviewHeading),
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        CertificateFooterItem(
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                            itemTitle = stringResource(R.string.iap_certificate_verified_certificate_text),
+                            itemValue = stringResource(R.string.iap_certificate_issued_date_text),
+                        )
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        CertificateFooterItem(
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                            itemTitle = stringResource(R.string.iap_certificate_valid_certificate_id_label),
+                            itemValue = stringResource(R.string.iap_certificate_valid_certificate_id_sample),
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(0.30f)
+                        .fillMaxHeight()
+                        .padding(start = 8.dp),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    AsyncImage(
+                        modifier = Modifier
+                            .height(28.dp)
+                            .wrapContentWidth(),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(orgLogo)
+                            .build(),
+                        contentDescription = null,
+                    )
+
+                    SignatureInfo(stringResource(R.string.iap_certificate_preview_author_1))
+                    SignatureInfo(stringResource(R.string.iap_certificate_preview_author_2))
+                    SignatureInfo(stringResource(R.string.iap_certificate_preview_author_3))
+                }
             }
         }
     }

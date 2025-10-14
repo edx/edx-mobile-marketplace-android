@@ -31,7 +31,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -431,8 +432,8 @@ fun CheckmarkView(text: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            modifier = Modifier.padding(end = 16.dp),
-            imageVector = Icons.Filled.Check,
+            modifier = Modifier.padding(end = 12.dp).size(28.dp),
+            imageVector = Icons.Filled.CheckCircleOutline,
             contentDescription = null,
             tint = MaterialTheme.appColors.successGreen
         )

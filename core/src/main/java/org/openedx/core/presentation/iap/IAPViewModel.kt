@@ -5,6 +5,8 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.Purchase
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
@@ -77,8 +80,15 @@ class IAPViewModel(
     val user = corePreferences.user
 
     private var checkingCourseMode: Boolean = false
+    private val remoteConfig: FirebaseRemoteConfig by lazy {
+        FirebaseRemoteConfig.getInstance()
+    }
+   /*
     var isCertificatePreviewEnabled: Boolean = false
         private set
+        */
+    private val _isCertificatePreviewEnabled = MutableStateFlow(false)
+    val isCertificatePreviewEnabled: StateFlow<Boolean> = _isCertificatePreviewEnabled
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
@@ -99,14 +109,33 @@ class IAPViewModel(
             )
         }
     }
+    private fun setupRemoteConfig() {
+        val settings = FirebaseRemoteConfigSettings.Builder()
+            .setMinimumFetchIntervalInSeconds(1) // 1 hour
+            .build()
+        remoteConfig.setConfigSettingsAsync(settings)
+        remoteConfig.setDefaultsAsync(mapOf("show_certificate_preview" to false))
+    }
 
+    private fun fetchRemoteConfig() {
+        viewModelScope.launch {
+            try {
+                remoteConfig.fetchAndActivate().await()
+                    val value = remoteConfig.getBoolean("show_certificate_preview")
+                _isCertificatePreviewEnabled.value = value
+            } catch (e: Exception) {
+            }
+        }
+    }
     init {
         viewModelScope.launch {
-            if (config.getOptimizelyConfig().enabled) {
-                isCertificatePreviewEnabled =
-                    featureManager.getDecision(FeatureRequests.ValuePropCertificatePreview)
-                        ?.getBoolean(FeatureRequests.CertificatePreviewEnabled.key, false) ?: false
-            }
+            setupRemoteConfig()
+            fetchRemoteConfig()
+//            if (config.getOptimizelyConfig().enabled) {
+//                isCertificatePreviewEnabled =
+//                    featureManager.getDecision(FeatureRequests.ValuePropCertificatePreview)
+//                        ?.getBoolean(FeatureRequests.CertificatePreviewEnabled.key, false) ?: false
+//            }
         }
 
         viewModelScope.launch(Dispatchers.IO) {

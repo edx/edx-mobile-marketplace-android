@@ -261,9 +261,10 @@ class IAPDialogFragment : DialogFragment() {
                                 },
                             )
                         } else {
+                            val isCertificatePreviewEnabled by iapViewModel.isCertificatePreviewEnabled.collectAsState()
                             ValuePropUpgradeFeatures(
                                 modifier = Modifier.padding(contentPadding),
-                                previewCertificate = iapViewModel.isCertificatePreviewEnabled,
+                                previewCertificate = isCertificatePreviewEnabled,
                                 appName = iapViewModel.appData.appName,
                                 courseName = iapViewModel.purchaseData.courseName!!,
                                 learnerName = iapViewModel.user?.name,

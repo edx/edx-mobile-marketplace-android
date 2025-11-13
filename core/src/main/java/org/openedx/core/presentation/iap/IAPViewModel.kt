@@ -83,10 +83,6 @@ class IAPViewModel(
     private val remoteConfig: FirebaseRemoteConfig by lazy {
         FirebaseRemoteConfig.getInstance()
     }
-   /*
-    var isCertificatePreviewEnabled: Boolean = false
-        private set
-        */
     private val _isCertificatePreviewEnabled = MutableStateFlow(false)
     val isCertificatePreviewEnabled: StateFlow<Boolean> = _isCertificatePreviewEnabled
 
@@ -131,11 +127,6 @@ class IAPViewModel(
         viewModelScope.launch {
             setupRemoteConfig()
             fetchRemoteConfig()
-//            if (config.getOptimizelyConfig().enabled) {
-//                isCertificatePreviewEnabled =
-//                    featureManager.getDecision(FeatureRequests.ValuePropCertificatePreview)
-//                        ?.getBoolean(FeatureRequests.CertificatePreviewEnabled.key, false) ?: false
-//            }
         }
 
         viewModelScope.launch(Dispatchers.IO) {

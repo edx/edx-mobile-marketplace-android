@@ -89,7 +89,6 @@ class IAPDialogFragment : DialogFragment() {
                                 modifier = Modifier.padding(16.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-
                                 Icon(
                                     modifier = Modifier.clickable { onDismiss() },
                                     painter = painterResource(id = R.drawable.core_ic_back),

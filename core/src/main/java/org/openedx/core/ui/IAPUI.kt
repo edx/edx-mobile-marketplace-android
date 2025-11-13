@@ -155,14 +155,16 @@ fun ValuePropContent(modifier: Modifier, courseName: String) {
 }
 @Composable
 fun PreviewWatermark(
-    text: String = stringResource(R.string.PREVIEW),
+    text: String = stringResource(R.string.preview_watermark),
     color: Color = Color.LightGray.copy(alpha = 0.30f),
     fontSize: Dp = 55.dp
 ) {
     val pxFontSize = with(LocalDensity.current) { fontSize.toPx() }
 
     Canvas(
-        modifier = Modifier.fillMaxSize().padding(10.dp,20.dp,0.dp,0.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp, 20.dp, 0.dp, 0.dp)
     ) {
         rotate(-35f) { // Crossly/diagonally
             drawContext.canvas.nativeCanvas.apply {
@@ -201,13 +203,15 @@ fun CertificatePreview(
     val previewWidthModifier = if (screenWidthDp > 600) {
         if (isLandscape) {
             Modifier.width((screenWidthDp * 0.4f).dp)
-        }else Modifier.width((screenWidthDp * 0.6f).dp)
+        } else Modifier.width((screenWidthDp * 0.6f).dp)
     } else {
         Modifier.fillMaxWidth()
     }
 
-    Column (modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally){
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Box(
             modifier = Modifier
                 .then(previewWidthModifier)
@@ -432,7 +436,9 @@ fun CheckmarkView(text: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            modifier = Modifier.padding(end = 12.dp).size(28.dp),
+            modifier = Modifier
+                .padding(end = 12.dp)
+                .size(28.dp),
             imageVector = Icons.Filled.CheckCircleOutline,
             contentDescription = null,
             tint = MaterialTheme.appColors.successGreen

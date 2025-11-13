@@ -263,6 +263,6 @@
     <string name="iap_certificate_preview_author_3">Helga Svobodová</string>
     <string name="iap_certificate_professor_text">Professor</string>
     <string name="iap_certificate_universityx_text">UniversityX</string>
-    <string name="PREVIEW">PREVIEW</string>
+    <string name="preview_watermark">PREVIEW</string>
 
 </resources>

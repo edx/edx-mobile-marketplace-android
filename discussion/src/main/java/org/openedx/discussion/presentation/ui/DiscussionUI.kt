@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
@@ -533,6 +532,7 @@ fun CommentMainItem(
 fun ThreadItem(
     thread: Thread,
     onClick: (Thread) -> Unit,
+    onBackClick: () -> Unit,
 ) {
     val icon = when (thread.type) {
         DiscussionType.DISCUSSION -> painterResource(id = R.drawable.discussion_ic_discussion)
@@ -726,6 +726,7 @@ private fun ThreadItemPreview() {
         ThreadItem(
             thread = mockThread,
             onClick = {},
+            onBackClick = {}
         )
     }
 }

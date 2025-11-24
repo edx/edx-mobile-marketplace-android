@@ -152,6 +152,13 @@ class DiscussionThreadsFragment : Fragment() {
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
 
+                LaunchedEffect(Unit) {
+                    CommentEvents.commentAdded.collect {
+                        viewModel.refreshThreads()
+                        CommentEvents.commentAdded.resetReplayCache()
+                    }
+                }
+
                 DiscussionThreadsScreen(
                     windowSize = windowSize,
                     title = requireArguments().getString(ARG_TITLE, ""),
@@ -594,7 +601,7 @@ private fun DiscussionThreadsScreen(
                                                     items(uiState.data) { threadItem ->
                                                         ThreadItem(thread = threadItem, onClick = {
                                                             onItemClick(it)
-                                                        })
+                                                        }, onBackClick = {} )
                                                         Divider()
                                                     }
                                                     item {

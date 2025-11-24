@@ -24,6 +24,7 @@ import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionAnalyticsType
+import org.openedx.discussion.presentation.threads.CommentEvents
 import org.openedx.discussion.system.notifier.DiscussionCommentAdded
 import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
@@ -316,6 +317,7 @@ class DiscussionCommentsViewModel(
                 commentCount++
                 _uiState.value =
                     DiscussionCommentsUIState.Success(thread, comments.toList(), commentCount)
+                CommentEvents.commentAdded.emit(Unit)
                 logResponseAddedEvent(
                     responseId = response.id,
                     author = response.author

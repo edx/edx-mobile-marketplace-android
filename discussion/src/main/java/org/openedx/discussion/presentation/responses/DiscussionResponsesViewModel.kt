@@ -20,6 +20,7 @@ import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionAnalyticsType
+import org.openedx.discussion.presentation.threads.CommentEvents
 import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionResponseAdded

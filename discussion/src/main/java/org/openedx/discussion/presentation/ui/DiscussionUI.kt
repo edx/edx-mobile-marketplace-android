@@ -533,6 +533,7 @@ fun CommentMainItem(
 fun ThreadItem(
     thread: Thread,
     onClick: (Thread) -> Unit,
+    onBackClick: () -> Unit,
 ) {
     val icon = when (thread.type) {
         DiscussionType.DISCUSSION -> painterResource(id = R.drawable.discussion_ic_discussion)
@@ -726,6 +727,7 @@ private fun ThreadItemPreview() {
         ThreadItem(
             thread = mockThread,
             onClick = {},
+            onBackClick = {}
         )
     }
 }

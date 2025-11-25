@@ -181,6 +181,68 @@ class IAPEventLogger(
         }
     }
 
+    fun onCertificatePreviewShown(
+        isCertificatePreviewEnabled: Boolean,
+        courseId: String?,
+        varient: String
+    ) {
+        logIAPEvent(IAPAnalyticsEvent.IAP_CERT_PREVIEW_SHOWN, buildMap {
+            put(
+                IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key,
+                isCertificatePreviewEnabled.toString()
+            )
+            put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
+            put(IAPAnalyticsKeys.CERT_PREVIEW_VARIENT.key, varient)
+        })
+    }
+
+    fun onUpgradeButtonTapped(
+        isCertificatePreviewEnabled: Boolean,
+        courseId: String?,
+        varient: String
+    ) {
+        logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED, buildMap {
+            put(
+                IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key,
+                isCertificatePreviewEnabled.toString()
+            )
+            put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
+            put(IAPAnalyticsKeys.CERT_PREVIEW_VARIENT.key, varient)
+        })
+    }
+
+    fun onCertificatePreviewPurchased(
+        isCertificatePreviewEnabled: Boolean,
+        courseId: String?,
+        varient: String,
+        price: Double
+    ) {
+        logIAPEvent(IAPAnalyticsEvent.IAP_CERT_PREVIEW_PURCHASED, buildMap {
+            put(
+                IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key,
+                isCertificatePreviewEnabled.toString()
+            )
+            put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
+            put(IAPAnalyticsKeys.CERT_PREVIEW_VARIENT.key, varient)
+            put(IAPAnalyticsKeys.PRICE.key, price.toString())
+        })
+    }
+
+    fun onCertificateCourseCompleted(
+        isCertificatePreviewEnabled: Boolean,
+        courseId: String?,
+        varient: String
+    ) {
+        logIAPEvent(IAPAnalyticsEvent.IAP_CERT_COURSE_COMPLETED, buildMap {
+            put(
+                IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key,
+                isCertificatePreviewEnabled.toString()
+            )
+            put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
+            put(IAPAnalyticsKeys.CERT_PREVIEW_VARIENT.key, varient)
+        })
+    }
+
     private fun logIAPEvent(
         event: IAPAnalyticsEvent,
         params: Map<String, Any?> = mutableMapOf(),

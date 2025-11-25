@@ -5,8 +5,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.Purchase
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,7 +17,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
@@ -31,10 +28,10 @@ import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.extension.isNotNull
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.toIAPException
 import org.openedx.core.feature.FeatureManager
-import org.openedx.core.feature.FeatureRequests
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseId
 import org.openedx.core.module.billing.getPriceAmount
@@ -80,11 +77,8 @@ class IAPViewModel(
     val user = corePreferences.user
 
     private var checkingCourseMode: Boolean = false
-    private val remoteConfig: FirebaseRemoteConfig by lazy {
-        FirebaseRemoteConfig.getInstance()
-    }
-    private val _isCertificatePreviewEnabled = MutableStateFlow(false)
-    val isCertificatePreviewEnabled: StateFlow<Boolean> = _isCertificatePreviewEnabled
+    var isCertificatePreviewEnabled: Boolean = false
+        private set
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {
@@ -105,28 +99,12 @@ class IAPViewModel(
             )
         }
     }
-    private fun setupRemoteConfig() {
-        val settings = FirebaseRemoteConfigSettings.Builder()
-            .setMinimumFetchIntervalInSeconds(1) // 1 hour
-            .build()
-        remoteConfig.setConfigSettingsAsync(settings)
-        remoteConfig.setDefaultsAsync(mapOf("show_certificate_preview" to false))
-    }
 
-    private fun fetchRemoteConfig() {
-        viewModelScope.launch {
-            try {
-                remoteConfig.fetchAndActivate().await()
-                    val value = remoteConfig.getBoolean("show_certificate_preview")
-                _isCertificatePreviewEnabled.value = value
-            } catch (e: Exception) {
-            }
-        }
-    }
     init {
-        viewModelScope.launch {
-            setupRemoteConfig()
-            fetchRemoteConfig()
+        user?.id?.let { userId ->
+            val userId: Long = user.id
+            isCertificatePreviewEnabled = isUserIdOdd(userId)
+            eventLogger.onCertificatePreviewShown(isCertificatePreviewEnabled,purchaseFlowData.courseId,getVarient(isCertificatePreviewEnabled))
         }
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -216,6 +194,7 @@ class IAPViewModel(
 
     fun startPurchaseFlow() {
         eventLogger.upgradeNowClickedEvent()
+        eventLogger.onUpgradeButtonTapped(isCertificatePreviewEnabled,purchaseFlowData.courseId,getVarient(isCertificatePreviewEnabled))
         _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
         purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
         val courseName = purchaseFlowData.courseName
@@ -284,6 +263,7 @@ class IAPViewModel(
                 }.onSuccess {
                     if (eventLogger.isSilentIAPFlow.isNull()) {
                         eventLogger.upgradeSuccessEvent()
+                        eventLogger.onCertificatePreviewPurchased(isCertificatePreviewEnabled,purchaseFlowData.courseId,getVarient(isCertificatePreviewEnabled),purchaseFlowData.price)
                     }
                     purchaseFlowData.isConsumed = true
                     // The IAP dialog will be dismissed by `CourseUnitContainerFragment` after
@@ -400,6 +380,14 @@ class IAPViewModel(
         } else {
             _uiState.value = IAPUIState.Clear
         }
+    }
+
+    fun isUserIdOdd(userId: Long): Boolean {
+        return userId % 2L != 0L
+    }
+
+    private fun getVarient(certificatePreviewEnabled: Boolean): String {
+        return if (certificatePreviewEnabled) "varient" else "baseline"
     }
 
     fun clearIAPFLow() {

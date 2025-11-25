@@ -104,7 +104,13 @@ class IAPViewModel(
         user?.id?.let { userId ->
             val userId: Long = user.id
             isCertificatePreviewEnabled = isUserIdOdd(userId)
-            eventLogger.onCertificatePreviewShown(isCertificatePreviewEnabled,purchaseFlowData.courseId,getVarient(isCertificatePreviewEnabled))
+            if (isCertificatePreviewEnabled) {
+                eventLogger.onCertificatePreviewShown(
+                    isCertificatePreviewEnabled,
+                    purchaseFlowData.courseId,
+                    getVarient(isCertificatePreviewEnabled)
+                )
+            }
         }
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -194,7 +200,11 @@ class IAPViewModel(
 
     fun startPurchaseFlow() {
         eventLogger.upgradeNowClickedEvent()
-        eventLogger.onUpgradeButtonTapped(isCertificatePreviewEnabled,purchaseFlowData.courseId,getVarient(isCertificatePreviewEnabled))
+        eventLogger.onUpgradeButtonTapped(
+            isCertificatePreviewEnabled,
+            purchaseFlowData.courseId,
+            getVarient(isCertificatePreviewEnabled)
+        )
         _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
         purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
         val courseName = purchaseFlowData.courseName
@@ -263,7 +273,12 @@ class IAPViewModel(
                 }.onSuccess {
                     if (eventLogger.isSilentIAPFlow.isNull()) {
                         eventLogger.upgradeSuccessEvent()
-                        eventLogger.onCertificatePreviewPurchased(isCertificatePreviewEnabled,purchaseFlowData.courseId,getVarient(isCertificatePreviewEnabled),purchaseFlowData.price)
+                        eventLogger.onCertificatePreviewPurchased(
+                            isCertificatePreviewEnabled,
+                            purchaseFlowData.courseId,
+                            getVarient(isCertificatePreviewEnabled),
+                            purchaseFlowData.price
+                        )
                     }
                     purchaseFlowData.isConsumed = true
                     // The IAP dialog will be dismissed by `CourseUnitContainerFragment` after

@@ -154,8 +154,14 @@ val appModule = module {
     single {
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE `course_enrolled_table` ADD COLUMN `orgLogo` TEXT")
-                database.execSQL("ALTER TABLE `course_enrollment_details_table` ADD COLUMN `orgLogo` TEXT")
+                try {
+                    database.execSQL("ALTER TABLE `course_enrolled_table` ADD COLUMN `orgLogo` TEXT")
+                } catch (e: Exception) {
+                }
+                try {
+                    database.execSQL("ALTER TABLE `course_enrollment_details_table` ADD COLUMN `orgLogo` TEXT")
+                } catch (e: Exception) {
+                }
             }
         }
         Room.databaseBuilder(

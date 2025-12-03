@@ -145,18 +145,22 @@ class WebViewDiscoveryFragment : Fragment() {
                             }
 
                             WebViewLink.Authority.EXTERNAL -> {
-                                ActionDialogFragment.newInstance(
-                                    title = getString(CoreR.string.core_leaving_the_app),
-                                    message = getString(
-                                        CoreR.string.core_leaving_the_app_message,
-                                        getString(CoreR.string.platform_name)
-                                    ),
-                                    url = param,
-                                    source = DiscoveryAnalyticsScreen.DISCOVERY.screenName
-                                ).show(
-                                    requireActivity().supportFragmentManager,
-                                    ActionDialogFragment::class.simpleName
-                                )
+                                context?.let { ctx ->
+                                    activity?.let { act ->
+                                        ActionDialogFragment.newInstance(
+                                            title = ctx.getString(CoreR.string.core_leaving_the_app),
+                                            message = ctx.getString(
+                                                CoreR.string.core_leaving_the_app_message,
+                                                ctx.getString(CoreR.string.platform_name)
+                                            ),
+                                            url = param,
+                                            source = DiscoveryAnalyticsScreen.DISCOVERY.screenName
+                                        ).show(
+                                            act.supportFragmentManager,
+                                            ActionDialogFragment::class.simpleName
+                                        )
+                                    }
+                                }
                             }
 
                             else -> {}

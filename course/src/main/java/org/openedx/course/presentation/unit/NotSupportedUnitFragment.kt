@@ -1,5 +1,6 @@
 package org.openedx.course.presentation.unit
 
+import android.content.ActivityNotFoundException
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -156,7 +157,9 @@ private fun NotSupportedUnitScreen(
                         .height(42.dp),
                     text = stringResource(id = courseR.string.course_open_in_browser),
                     onClick = {
-                        uriHandler.openUri(uri)
+                        try {
+                            uriHandler.openUri(uri)
+                        } catch (e: Exception) { }
                     })
                 Spacer(Modifier.height(20.dp))
             }

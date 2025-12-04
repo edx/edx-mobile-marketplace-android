@@ -1,11 +1,13 @@
 package org.openedx.core.ui
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -156,7 +158,20 @@ private fun WebViewContent(
                             (clickUrl.startsWith("http://") ||
                                     clickUrl.startsWith("https://"))
                         ) {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(clickUrl)))
+                            try {
+                                context.startActivity(
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse(clickUrl)
+                                    )
+                                )
+                            } catch (e: ActivityNotFoundException) {
+                                Toast.makeText(
+                                    context,
+                                    "No browser available to open the link",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } catch (e: Exception){}
                             true
                         } else if (clickUrl.startsWith("mailto:")) {
                             val email = clickUrl.replace("mailto:", "")

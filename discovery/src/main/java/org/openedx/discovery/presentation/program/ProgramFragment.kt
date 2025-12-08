@@ -189,18 +189,22 @@ class ProgramFragment : Fragment() {
                             }
 
                             Authority.EXTERNAL -> {
-                                ActionDialogFragment.newInstance(
-                                    title = getString(coreR.string.core_leaving_the_app),
-                                    message = getString(
-                                        coreR.string.core_leaving_the_app_message,
-                                        getString(coreR.string.platform_name)
-                                    ),
-                                    url = param,
-                                    source = DiscoveryAnalyticsScreen.PROGRAM.screenName
-                                ).show(
-                                    requireActivity().supportFragmentManager,
-                                    ActionDialogFragment::class.simpleName
-                                )
+                                context?.let { ctx ->
+                                    activity?.let { act ->
+                                        ActionDialogFragment.newInstance(
+                                            title = ctx.getString(coreR.string.core_leaving_the_app),
+                                            message = ctx.getString(
+                                                coreR.string.core_leaving_the_app_message,
+                                                ctx.getString(coreR.string.platform_name)
+                                            ),
+                                            url = param,
+                                            source = DiscoveryAnalyticsScreen.PROGRAM.screenName
+                                        ).show(
+                                            act.supportFragmentManager,
+                                            ActionDialogFragment::class.simpleName
+                                        )
+                                    }
+                                }
                             }
                         }
                     },

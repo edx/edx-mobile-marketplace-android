@@ -1,5 +1,7 @@
 package org.openedx.profile.presentation.settings
 
+import android.content.ActivityNotFoundException
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -363,6 +366,7 @@ private fun SupportInfoSection(
     appUpgradeEvent: AppUpgradeEvent?,
     onAction: (SettingsScreenAction) -> Unit,
 ) {
+    val context = LocalContext.current
     Column {
         Text(
             modifier = Modifier.testTag("txt_support_info"),
@@ -384,7 +388,13 @@ private fun SupportInfoSection(
                         text = stringResource(id = CoreR.string.core_help_us_improve),
                         external = true,
                     ) {
-                        uriHandler.openUri(uiState.configuration.feedbackFormUrl)
+                        try {
+                            uriHandler.openUri(uiState.configuration.feedbackFormUrl)
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(context, "No browser available to open the link", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Unable to open link", Toast.LENGTH_SHORT).show()
+                        }
                         onAction(SettingsScreenAction.FeedbackFormClick)
                     }
                     SettingsDivider()
@@ -425,7 +435,13 @@ private fun SupportInfoSection(
                         text = stringResource(id = CoreR.string.core_faq),
                         external = true,
                     ) {
-                        uriHandler.openUri(uiState.configuration.faqUrl)
+                        try {
+                            uriHandler.openUri(uiState.configuration.faqUrl)
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(context, "No browser available to open the link", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Unable to open link", Toast.LENGTH_SHORT).show()
+                        }
                         onAction(SettingsScreenAction.FaqClick)
                     }
                     SettingsDivider()

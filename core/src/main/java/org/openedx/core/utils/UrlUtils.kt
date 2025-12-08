@@ -3,6 +3,7 @@ package org.openedx.core.utils
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 
 object UrlUtils {
 
@@ -24,7 +25,11 @@ object UrlUtils {
     private fun openInBrowser(context: Context, url: String) {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.setData(Uri.parse(url))
-        context.startActivity(intent)
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            Toast.makeText(context, "No browser available to open the link", Toast.LENGTH_SHORT).show()
+        }
     }
 
     /**

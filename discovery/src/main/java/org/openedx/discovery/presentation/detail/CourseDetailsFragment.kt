@@ -1,6 +1,7 @@
 package org.openedx.discovery.presentation.detail
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.content.res.Configuration.ORIENTATION_PORTRAIT
@@ -13,6 +14,7 @@ import android.view.ViewGroup
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -439,7 +441,9 @@ private fun CourseDetailNativeContent(
                 IconButton(
                     modifier = Modifier.testTag("ib_play_video"),
                     onClick = {
-                        uriHandler.openUri(course.media.courseVideo?.uri!!)
+                        try {
+                            uriHandler.openUri(course.media.courseVideo?.uri!!)
+                        } catch (e: Exception) { }
                     }
                 ) {
                     Icon(
@@ -587,7 +591,10 @@ private fun CourseDetailNativeContentLandscape(
                 IconButton(
                     modifier = Modifier.testTag("ib_play_video"),
                     onClick = {
-                        uriHandler.openUri(course.media.courseVideo?.uri!!)
+                        try {
+                            uriHandler.openUri(course.media.courseVideo?.uri!!)
+                        } catch (e: Exception) { }
+
                     }
                 ) {
                     Icon(
@@ -645,7 +652,15 @@ private fun CourseDescription(
                         (clickUrl.startsWith("http://") ||
                                 clickUrl.startsWith("https://"))
                     ) {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(clickUrl)))
+                        try {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(clickUrl)))
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(
+                                context,
+                                "No browser available to open the link",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } catch (e: Exception){}
                         true
                     } else if (clickUrl.startsWith("mailto:")) {
                         val email = clickUrl.replace("mailto:", "")

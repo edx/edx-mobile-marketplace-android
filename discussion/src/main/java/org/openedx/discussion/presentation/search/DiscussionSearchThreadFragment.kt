@@ -344,7 +344,7 @@ private fun DiscussionSearchThreadScreen(
 
                                 is DiscussionSearchThreadUIState.Threads -> {
                                     items(uiState.data) { thread ->
-                                        ThreadItem(thread = thread, onClick = onItemClick)
+                                        ThreadItem(thread = thread, onClick = onItemClick, onBackClick = {})
                                         Divider()
                                     }
                                     item {

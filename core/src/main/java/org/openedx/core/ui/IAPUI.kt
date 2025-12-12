@@ -92,8 +92,7 @@ fun ValuePropUpgradeFeatures(
                 .background(color = MaterialTheme.appColors.background)
                 .verticalScroll(rememberScrollState())
                 .padding(all = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ValuePropContent(Modifier.weight(0.45f), courseName)
             if (previewCertificate) {
@@ -113,7 +112,7 @@ fun ValuePropUpgradeFeatures(
                 .background(color = MaterialTheme.appColors.background)
                 .verticalScroll(rememberScrollState())
                 .padding(all = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(space = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 20.dp),
         ) {
             val widthModifier = Modifier.fillMaxWidth()
             ValuePropContent(widthModifier, courseName)
@@ -135,10 +134,10 @@ fun ValuePropUpgradeFeatures(
 fun ValuePropContent(modifier: Modifier, courseName: String) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(space = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(space = 16.dp),
     ) {
         Text(
-            modifier = Modifier.padding(bottom = 28.dp),
+            modifier = Modifier.padding(bottom = 10.dp),
             text = stringResource(
                 id = R.string.iap_upgrade_course,
                 courseName
@@ -215,7 +214,7 @@ fun CertificatePreview(
         Box(
             modifier = Modifier
                 .then(previewWidthModifier)
-                .aspectRatio(1.45f)
+                .aspectRatio(1.4f)
                 .padding(horizontal = 4.dp)
                 .clip(shape = RoundedCornerShape(6.dp))
                 .background(Color.White)

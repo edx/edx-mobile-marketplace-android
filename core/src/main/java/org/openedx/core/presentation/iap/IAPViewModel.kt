@@ -28,7 +28,6 @@ import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.extension.isNotNull
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.toIAPException
 import org.openedx.core.feature.FeatureManager
@@ -54,6 +53,7 @@ class IAPViewModel(
     val appData: AppData,
     corePreferences: CorePreferences,
     analytics: IAPAnalytics,
+    private val appContext: Context
 ) : BaseViewModel() {
     private val logger = Logger(TAG)
 
@@ -108,7 +108,8 @@ class IAPViewModel(
                 eventLogger.onCertificatePreviewShown(
                     isCertificatePreviewEnabled,
                     purchaseFlowData.courseId,
-                    getVarient(isCertificatePreviewEnabled)
+                    getVarient(isCertificatePreviewEnabled),
+                    appContext
                 )
             }
         }
@@ -277,7 +278,8 @@ class IAPViewModel(
                             isCertificatePreviewEnabled,
                             purchaseFlowData.courseId,
                             getVarient(isCertificatePreviewEnabled),
-                            purchaseFlowData.price
+                            purchaseFlowData.price,
+                            appContext
                         )
                     }
                     purchaseFlowData.isConsumed = true

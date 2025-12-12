@@ -72,6 +72,7 @@ class UnlockContentViewModel(
 
     private val _uiEvent = MutableSharedFlow<UnlockContentUIAction>()
     val uiEvent = _uiEvent.asSharedFlow()
+    var orgName :String? = null
 
     private val _uiMessage = MutableSharedFlow<UIMessage>()
     val uiMessage: SharedFlow<UIMessage>
@@ -92,6 +93,7 @@ class UnlockContentViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
+            orgName = courseInteractor.getCourseStructure(courseId,false,).org
             fetchCourseData()
             if (iapInteractor.isUpgradeEnabled) {
                 loadPrice()

@@ -86,7 +86,7 @@ class IAPDialogFragment : DialogFragment() {
                     topBar = {
                         if (isFullScreenLoader.not()) {
                             Row(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Icon(
@@ -99,7 +99,7 @@ class IAPDialogFragment : DialogFragment() {
                     },
                     bottomBar = {
                         if (isFullScreenLoader.not()) {
-                            Box(modifier = Modifier.padding(all = 16.dp)) {
+                            Box(modifier = Modifier.padding(all = 8.dp)) {
                                 when {
                                     (iapState is IAPUIState.Loading ||
                                             iapState is IAPUIState.PurchaseProduct ||

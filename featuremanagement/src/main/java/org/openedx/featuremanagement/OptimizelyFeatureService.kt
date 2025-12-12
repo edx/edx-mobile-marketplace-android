@@ -24,7 +24,7 @@ internal class OptimizelyFeatureService(
 
     init {
         val manager = OptimizelyManager.builder()
-            .withSDKKey(config.getOptimizelyConfig().sdkKey)
+           // .withSDKKey(config.getOptimizelyConfig().sdkKey)
             .withDatafileDownloadInterval(15, TimeUnit.MINUTES)
             .withEventDispatchInterval(15, TimeUnit.MINUTES)
             .build(context)

@@ -15,7 +15,6 @@ import org.openedx.app.di.appModule
 import org.openedx.app.di.networkingModule
 import org.openedx.app.di.screenModule
 import org.openedx.core.config.Config
-import org.openedx.featuremanagement.di.FeatureModuleProvider
 import org.openedx.notifications.di.NotificationsModuleProvider
 
 class OpenEdXApp : Application() {
@@ -71,9 +70,6 @@ class OpenEdXApp : Application() {
         val koinModules = listOfNotNull(
             NotificationsModuleProvider()
                 .takeIf { config.isPushNotificationsEnabled() }
-                ?.getModules(),
-            FeatureModuleProvider()
-                .takeIf { config.getOptimizelyConfig().enabled }
                 ?.getModules()
         ).flatten()
         loadKoinModules(koinModules)

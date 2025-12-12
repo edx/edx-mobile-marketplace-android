@@ -21,7 +21,6 @@ import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
-import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.IAPFlow
@@ -49,7 +48,6 @@ class IAPViewModel(
     private val iapInteractor: IAPInteractor,
     private val resourceManager: ResourceManager,
     private val iapNotifier: IAPNotifier,
-    private val config: Config,
     private val featureManager: FeatureManager,
     val appData: AppData,
     corePreferences: CorePreferences,
@@ -101,13 +99,6 @@ class IAPViewModel(
     }
 
     init {
-        viewModelScope.launch {
-            if (config.getOptimizelyConfig().enabled) {
-                isCertificatePreviewEnabled =
-                    featureManager.getDecision(FeatureRequests.ValuePropCertificatePreview)
-                        ?.getBoolean(FeatureRequests.CertificatePreviewEnabled.key, false) ?: false
-            }
-        }
 
         viewModelScope.launch(Dispatchers.IO) {
             iapNotifier.notifier.onEach { event ->

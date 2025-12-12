@@ -118,10 +118,6 @@ class Config(context: Context) {
         return getObjectOrNewInstance(UI_COMPONENTS, UIConfig::class.java)
     }
 
-    fun getOptimizelyConfig(): OptimizelyConfig {
-        return getObjectOrNewInstance(OPTIMIZELY, OptimizelyConfig::class.java)
-    }
-
     fun getVideoPlayerConfig(): VideoPlayerConfig {
         return getObjectOrNewInstance(VIDEO_PLAYER, VideoPlayerConfig::class.java)
     }

@@ -37,17 +37,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.openedx.core.UIMessage
+import org.openedx.core.R
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.profile.R
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.windowSizeValue
+import org.openedx.profile.ProfileMocks
 import org.openedx.profile.presentation.profile.ProfileUIState
 import org.openedx.profile.presentation.ui.ProfileInfoSection
 import org.openedx.profile.presentation.ui.ProfileTopic
@@ -68,7 +72,8 @@ internal fun ProfileView(
 
     val pullRefreshState = rememberPullRefreshState(
         refreshing = refreshing,
-        onRefresh = { onAction(ProfileViewAction.SwipeRefresh) })
+        onRefresh = { onAction(ProfileViewAction.SwipeRefresh) }
+    )
 
     Scaffold(
         modifier = Modifier
@@ -174,7 +179,9 @@ private fun ProfileScreenPreview() {
     OpenEdXTheme {
         ProfileView(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = mockUiState,
+            uiState = ProfileUIState.Data(
+                account = ProfileMocks.account
+            ),
             uiMessage = null,
             refreshing = false,
             onAction = {},
@@ -182,7 +189,6 @@ private fun ProfileScreenPreview() {
         )
     }
 }
-
 
 @Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -191,7 +197,9 @@ private fun ProfileScreenTabletPreview() {
     OpenEdXTheme {
         ProfileView(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
-            uiState = mockUiState,
+            uiState = ProfileUIState.Data(
+                account = ProfileMocks.account
+            ),
             uiMessage = null,
             refreshing = false,
             onAction = {},
@@ -199,10 +207,6 @@ private fun ProfileScreenTabletPreview() {
         )
     }
 }
-
-private val mockUiState = ProfileUIState.Data(
-    account = mockAccount
-)
 
 internal interface ProfileViewAction {
     object EditAccountClick : ProfileViewAction

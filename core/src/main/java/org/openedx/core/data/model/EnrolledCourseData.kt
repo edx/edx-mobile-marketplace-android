@@ -66,13 +66,13 @@ data class EnrolledCourseData(
             subscriptionId = subscriptionId ?: "",
             coursewareAccess = coursewareAccess?.mapToDomain(),
             media = media?.mapToDomain(),
-            courseImage = courseImage ?: "",
-            courseAbout = courseAbout ?: "",
+            courseImage = courseImage.orEmpty(),
+            courseAbout = courseAbout.orEmpty(),
             courseSharingUtmParameters = courseSharingUtmParameters?.mapToDomain()!!,
-            courseUpdates = courseUpdates ?: "",
-            courseHandouts = courseHandouts ?: "",
-            discussionUrl = discussionUrl ?: "",
-            videoOutline = videoOutline ?: "",
+            courseUpdates = courseUpdates.orEmpty(),
+            courseHandouts = courseHandouts.orEmpty(),
+            discussionUrl = discussionUrl.orEmpty(),
+            videoOutline = videoOutline.orEmpty(),
             isSelfPaced = isSelfPaced ?: false
         )
     }
@@ -92,14 +92,16 @@ data class EnrolledCourseData(
             subscriptionId = subscriptionId ?: "",
             coursewareAccess = coursewareAccess?.mapToRoomEntity(),
             media = MediaDb.createFrom(media),
-            courseImage = courseImage ?: "",
-            courseAbout = courseAbout ?: "",
+            courseImage = courseImage.orEmpty(),
+            courseAbout = courseAbout.orEmpty(),
             courseSharingUtmParameters = courseSharingUtmParameters?.mapToRoomEntity()!!,
-            courseUpdates = courseUpdates ?: "",
-            courseHandouts = courseHandouts ?: "",
-            discussionUrl = discussionUrl ?: "",
-            videoOutline = videoOutline ?: "",
+            courseUpdates = courseUpdates.orEmpty(),
+            courseHandouts = courseHandouts.orEmpty(),
+            discussionUrl = discussionUrl.orEmpty(),
+            videoOutline = videoOutline.orEmpty(),
             isSelfPaced = isSelfPaced ?: false
         )
     }
+
+    private fun parseDate(date: String?) = TimeUtils.iso8601ToDate(date.orEmpty())
 }

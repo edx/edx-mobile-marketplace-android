@@ -60,24 +60,20 @@ import androidx.fragment.app.Fragment
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.UIMessage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.SearchBar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.DiscussionRouter
+import org.openedx.discussion.presentation.search.DiscussionSearchThreadFragment.Companion.LOAD_MORE_THRESHOLD
 import org.openedx.discussion.presentation.ui.ThreadItem
 import org.openedx.core.R as CoreR
 
@@ -109,7 +105,8 @@ class DiscussionSearchThreadFragment : Fragment() {
 
                 val uiState by viewModel.uiState.observeAsState(
                     DiscussionSearchThreadUIState.Threads(
-                        emptyList(), 0
+                        emptyList(),
+                        0
                     )
                 )
                 val uiMessage by viewModel.uiMessage.observeAsState()
@@ -157,7 +154,6 @@ class DiscussionSearchThreadFragment : Fragment() {
             return fragment
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -359,7 +355,11 @@ private fun DiscussionSearchThreadScreen(
                                             }
                                         }
                                     }
-                                    if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
+                                    if (scrollState.shouldLoadMore(
+                                            firstVisibleIndex,
+                                            LOAD_MORE_THRESHOLD
+                                        )
+                                    ) {
                                         paginationCallback()
                                     }
                                 }
@@ -377,7 +377,6 @@ private fun DiscussionSearchThreadScreen(
     }
 }
 
-
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -385,7 +384,10 @@ fun DiscussionSearchThreadScreenPreview() {
     OpenEdXTheme {
         DiscussionSearchThreadScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = DiscussionSearchThreadUIState.Threads(listOf(mockThread, mockThread), 2),
+            uiState = DiscussionSearchThreadUIState.Threads(
+                listOf(DiscussionMocks.thread, DiscussionMocks.thread),
+                2
+            ),
             uiMessage = null,
             refreshing = false,
             canLoadMore = true,
@@ -393,9 +395,8 @@ fun DiscussionSearchThreadScreenPreview() {
             onSearchTextChanged = {},
             onSwipeRefresh = {},
             paginationCallback = {},
-            onBackClick = {
-
-            })
+            onBackClick = {}
+        )
     }
 }
 
@@ -406,7 +407,10 @@ fun DiscussionSearchThreadScreenTabletPreview() {
     OpenEdXTheme {
         DiscussionSearchThreadScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
-            uiState = DiscussionSearchThreadUIState.Threads(listOf(mockThread, mockThread), 2),
+            uiState = DiscussionSearchThreadUIState.Threads(
+                listOf(DiscussionMocks.thread, DiscussionMocks.thread),
+                2
+            ),
             uiMessage = null,
             refreshing = false,
             canLoadMore = true,
@@ -414,9 +418,8 @@ fun DiscussionSearchThreadScreenTabletPreview() {
             onSearchTextChanged = {},
             onSwipeRefresh = {},
             paginationCallback = {},
-            onBackClick = {
-
-            })
+            onBackClick = {}
+        )
     }
 }
 

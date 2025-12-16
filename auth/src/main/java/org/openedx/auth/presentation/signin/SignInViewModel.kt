@@ -1,5 +1,6 @@
 package org.openedx.auth.presentation.signin
 
+import android.app.Activity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
@@ -21,23 +22,22 @@ import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.auth.presentation.AuthAnalyticsEvent
 import org.openedx.auth.presentation.AuthAnalyticsKey
 import org.openedx.auth.presentation.AuthRouter
+import org.openedx.auth.presentation.sso.BrowserAuthHelper
 import org.openedx.auth.presentation.sso.OAuthHelper
-import org.openedx.core.BaseViewModel
-import org.openedx.core.SingleEventLiveData
-import org.openedx.core.UIMessage
 import org.openedx.core.Validator
 import org.openedx.core.config.Config
+import org.openedx.core.data.storage.CalendarPreferences
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.interactor.CalendarInteractor
 import org.openedx.core.domain.model.createHonorCodeField
-import org.openedx.core.extension.isInternetError
 import org.openedx.core.presentation.global.WhatsNewGlobalManager
 import org.openedx.core.system.EdxError
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.Logger
+import org.openedx.core.R as CoreRes
 import retrofit2.HttpException
 import org.openedx.core.R as CoreR
 
@@ -51,10 +51,14 @@ class SignInViewModel(
     private val oAuthHelper: OAuthHelper,
     private val router: AuthRouter,
     private val whatsNewGlobalManager: WhatsNewGlobalManager,
+    private val calendarPreferences: CalendarPreferences,
+    private val calendarInteractor: CalendarInteractor,
     agreementProvider: AgreementProvider,
-    config: Config,
+    private val browserAuthHelper: BrowserAuthHelper,
+    val config: Config,
     val courseId: String?,
     val infoType: String?,
+    val authCode: String,
 ) : BaseViewModel() {
 
     private val logger = Logger("SignInViewModel")
@@ -65,9 +69,12 @@ class SignInViewModel(
             isGoogleAuthEnabled = config.getGoogleConfig().isEnabled() &&
                     oAuthHelper.isGoogleAuthEnabled(),
             isMicrosoftAuthEnabled = config.getMicrosoftConfig().isEnabled(),
+            isBrowserLoginEnabled = config.isBrowserLoginEnabled(),
+            isBrowserRegistrationEnabled = config.isBrowserRegistrationEnabled(),
             isSocialAuthEnabled = config.isSocialAuthEnabled(),
             isLogistrationEnabled = config.isPreLoginExperienceEnabled(),
             lastSignIn = AuthType.valueOf(preferencesManager.lastSignInType),
+            isRegistrationEnabled = config.isRegistrationEnabled(),
             agreement = agreementProvider.getAgreement(isSignIn = true)?.createHonorCodeField(),
         )
     )
@@ -106,6 +113,20 @@ class SignInViewModel(
                 _uiState.update { it.copy(loginSuccess = true) }
                 setMetadata(AuthType.PASSWORD)
                 logSignInSuccessEvent(AuthType.PASSWORD)
+                setUserId()
+                if (calendarPreferences.calendarUser != username) {
+                    calendarPreferences.clearCalendarPreferences()
+                    calendarInteractor.clearCalendarCachedData()
+                }
+                logEvent(
+                    AuthAnalyticsEvent.SIGN_IN_SUCCESS,
+                    buildMap {
+                        put(
+                            AuthAnalyticsKey.METHOD.key,
+                            AuthType.PASSWORD.methodName.lowercase()
+                        )
+                    }
+                )
                 appNotifier.send(SignInEvent())
             } catch (e: Exception) {
                 logger.e(throwable = e)
@@ -157,9 +178,39 @@ class SignInViewModel(
         }
     }
 
+    fun signInBrowser(activityContext: Activity) {
+        _uiState.update { it.copy(showProgress = true) }
+        viewModelScope.launch {
+            runCatching {
+                browserAuthHelper.signIn(activityContext)
+            }.onFailure {
+                logger.e { "Browser auth error: $it" }
+            }
+        }
+    }
+
     fun navigateToSignUp(parentFragmentManager: FragmentManager) {
         router.navigateToSignUp(parentFragmentManager, null, null)
         logEvent(AuthAnalyticsEvent.REGISTER_CLICKED)
+    }
+
+    fun signInAuthCode(authCode: String) {
+        _uiState.update { it.copy(showProgress = true) }
+        viewModelScope.launch {
+            runCatching {
+                interactor.loginAuthCode(authCode)
+            }
+                .onFailure {
+                    logger.e { "OAuth2 code error: $it" }
+                    onUnknownError()
+                    _uiState.update { it.copy(loginFailure = true) }
+                }.onSuccess {
+                    _uiState.update { it.copy(loginSuccess = true) }
+                    setUserId()
+                    appNotifier.send(SignInEvent())
+                    _uiState.update { it.copy(showProgress = false) }
+                }
+        }
     }
 
     fun navigateToForgotPassword(parentFragmentManager: FragmentManager) {

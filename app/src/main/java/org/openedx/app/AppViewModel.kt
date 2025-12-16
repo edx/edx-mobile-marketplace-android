@@ -8,6 +8,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.openedx.app.deeplink.DeepLink
@@ -22,6 +25,8 @@ import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.PushGlobalManager
+import org.openedx.core.system.notifier.DownloadFailed
+import org.openedx.core.system.notifier.DownloadNotifier
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.SignInEvent
@@ -29,19 +34,26 @@ import org.openedx.core.ui.theme.ThemeManager
 import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.Logger
+import org.openedx.core.utils.Directories
+import org.openedx.foundation.presentation.BaseViewModel
+import org.openedx.foundation.presentation.SingleEventLiveData
+import org.openedx.foundation.utils.FileUtil
 
 @SuppressLint("StaticFieldLeak")
 class AppViewModel(
     private val config: Config,
     private val notifier: AppNotifier,
     private val databaseManager: DatabaseManager,
+    private val appNotifier: AppNotifier,
+    private val room: RoomDatabase,
     private val preferencesManager: CorePreferences,
     private val dispatcher: CoroutineDispatcher,
     private val analytics: AppAnalytics,
     private val deepLinkRouter: DeepLinkRouter,
     private val fileUtil: FileUtil,
-    private val context: Context,
     private val pushManager: PushGlobalManager,
+    private val downloadNotifier: DownloadNotifier,
+    private val context: Context
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -49,6 +61,10 @@ class AppViewModel(
     private val _logoutUser = SingleEventLiveData<Unit>()
     val logoutUser: LiveData<Unit>
         get() = _logoutUser
+
+    private val _downloadFailedDialog = MutableSharedFlow<DownloadFailed>()
+    val downloadFailedDialog: SharedFlow<DownloadFailed>
+        get() = _downloadFailedDialog.asSharedFlow()
 
     val isLogistrationEnabled get() = config.isPreLoginExperienceEnabled()
 
@@ -76,11 +92,18 @@ class AppViewModel(
         }
 
         viewModelScope.launch {
-            notifier.notifier.collect { event ->
+            appNotifier.notifier.collect { event ->
                 if (event is SignInEvent && config.getFirebaseConfig().isCloudMessagingEnabled) {
                     SyncFirebaseTokenWorker.schedule(context)
                 } else if (event is LogoutEvent) {
                     handleLogoutEvent(event)
+                }
+            }
+        }
+        viewModelScope.launch {
+            downloadNotifier.notifier.collect { event ->
+                if (event is DownloadFailed) {
+                    _downloadFailedDialog.emit(event)
                 }
             }
         }
@@ -96,7 +119,7 @@ class AppViewModel(
     }
 
     private fun resetAppDirectory() {
-        fileUtil.deleteOldAppDirectory()
+        fileUtil.deleteOldAppDirectory(Directories.VIDEOS.name)
         preferencesManager.canResetAppDirectory = false
     }
 
@@ -116,10 +139,10 @@ class AppViewModel(
     }
 
     private suspend fun handleLogoutEvent(event: LogoutEvent) {
-        if (System.currentTimeMillis() - logoutHandledAt > 5000) {
+        if (System.currentTimeMillis() - logoutHandledAt > LOGOUT_EVENT_THRESHOLD) {
             if (event.isForced) {
                 logoutHandledAt = System.currentTimeMillis()
-                preferencesManager.clear()
+                preferencesManager.clearCorePreferences()
                 withContext(dispatcher) {
                     databaseManager.clearTables()
                 }
@@ -135,6 +158,10 @@ class AppViewModel(
                 notificationManager.cancelAll()
             }
         }
+    }
+
+    companion object {
+        private const val LOGOUT_EVENT_THRESHOLD = 5000L
     }
 
     fun handleDiscussionNotification(deepLink: DeepLink) {

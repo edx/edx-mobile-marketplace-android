@@ -50,6 +50,7 @@ class DiscussionAddThreadViewModelTest {
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong. Please try again later."
+    private val somethingWrong = "Something went wrong"
 
     //region mockThread
 
@@ -107,6 +108,12 @@ class DiscussionAddThreadViewModelTest {
     )
 
     //endregion
+
+    val topics = listOf(
+        DiscussionMocks.topic.copy(id = "0", name = "All Topics"),
+        DiscussionMocks.topic.copy(id = "1", name = "All Topics"),
+        DiscussionMocks.topic.copy(id = "2", name = "All Topics")
+    )
 
     @Before
     fun setUp() {
@@ -231,6 +238,6 @@ class DiscussionAddThreadViewModelTest {
 
         assert(viewModel.getHandledTopicById("10").second == "0")
     }
-
+}
 
 }

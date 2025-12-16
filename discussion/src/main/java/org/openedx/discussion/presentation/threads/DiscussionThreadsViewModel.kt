@@ -6,17 +6,11 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.R
-import org.openedx.core.SingleEventLiveData
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.PushGlobalManager
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.ThreadsData

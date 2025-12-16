@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="fragmentLearn" />
+    <item type="id" name="fragmentDiscover" />
+    <item type="id" name="fragmentDownloads" />
+    <item type="id" name="fragmentProfile" />
+</resources>

@@ -10,19 +10,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
-import org.openedx.core.system.ResourceManager
-import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileAnalyticsEvent
 import org.openedx.profile.presentation.ProfileAnalyticsKey
 import org.openedx.profile.presentation.ProfileRouter
-import org.openedx.profile.system.notifier.AccountUpdated
-import org.openedx.profile.system.notifier.ProfileNotifier
+import org.openedx.profile.system.notifier.account.AccountUpdated
+import org.openedx.profile.system.notifier.profile.ProfileNotifier
 
 class ManageAccountViewModel(
     private val interactor: ProfileInteractor,
@@ -78,9 +74,17 @@ class ManageAccountViewModel(
             } catch (e: Exception) {
                 logger.e(throwable = e)
                 if (e.isInternetError()) {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_error_no_connection)
+                        )
+                    )
                 } else {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_error_unknown_error)
+                        )
+                    )
                 }
             } finally {
                 _isUpdating.value = false

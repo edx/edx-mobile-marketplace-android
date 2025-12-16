@@ -11,6 +11,8 @@ android {
     namespace = 'org.openedx.discussion'
     compileSdk = 35
     ndkVersion = "28.2.13676358"
+    namespace 'org.openedx.discussion'
+    compileSdkVersion compile_sdk_version
 
     defaultConfig {
         minSdk = 24
@@ -66,4 +68,7 @@ dependencies {
     testImplementation "io.mockk:mockk-android:$mockk_version"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version"
     testImplementation "androidx.arch.core:core-testing:$android_arch_version"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinx_coroutines_test_version"
+    androidTestImplementation "androidx.test.ext:junit:$test_ext_version"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version"
 }

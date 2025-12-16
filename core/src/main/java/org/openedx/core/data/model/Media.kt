@@ -22,7 +22,6 @@ data class Media(
             image = image?.mapToDomain()
         )
     }
-
 }
 
 data class Image(

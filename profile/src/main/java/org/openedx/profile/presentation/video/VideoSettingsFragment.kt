@@ -25,7 +25,7 @@ import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,18 +51,18 @@ import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.domain.model.VideoSettings
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.noRippleClickable
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.settingsHeaderBackground
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.profile.R
 import org.openedx.core.R as CoreR
 
@@ -106,7 +106,6 @@ class VideoSettingsFragment : Fragment() {
             }
         }
     }
-
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -256,7 +255,7 @@ private fun VideoSettingsScreen(
                                 )
                             }
                             Icon(
-                                imageVector = Icons.Filled.ChevronRight,
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 tint = MaterialTheme.appColors.onSurface,
                                 contentDescription = stringResource(CoreR.string.core_accessibility_expandable_arrow)
                             )
@@ -287,7 +286,7 @@ private fun VideoSettingsScreen(
                                 )
                             }
                             Icon(
-                                imageVector = Icons.Filled.ChevronRight,
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 tint = MaterialTheme.appColors.onSurface,
                                 contentDescription = stringResource(CoreR.string.core_accessibility_expandable_arrow)
                             )

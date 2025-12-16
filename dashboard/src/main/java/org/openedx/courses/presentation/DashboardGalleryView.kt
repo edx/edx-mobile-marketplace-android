@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -34,8 +35,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -47,6 +47,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,39 +69,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.Certificate
 import org.openedx.core.domain.model.CourseAssignments
 import org.openedx.core.domain.model.CourseDateBlock
 import org.openedx.core.domain.model.CourseDatesCalendarSync
+import org.openedx.Lock
 import org.openedx.core.domain.model.CourseEnrollments
-import org.openedx.core.domain.model.CourseSharingUtmParameters
-import org.openedx.core.domain.model.CourseStatus
-import org.openedx.core.domain.model.CoursewareAccess
-import org.openedx.core.domain.model.DashboardCourseList
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.domain.model.Progress
-import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.presentation.iap.IAPAction
-import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OfflineModeDialog
-import org.openedx.core.ui.OpenEdXBrandButton
-import org.openedx.core.ui.PurchasesFulfillmentCompletedDialog
 import org.openedx.core.ui.TextIcon
-import org.openedx.core.ui.UpgradeToAccessView
-import org.openedx.core.ui.UpgradeToAccessViewType
-import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -120,6 +106,13 @@ fun DashboardGalleryView(
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val uiState by viewModel.uiState.collectAsState(DashboardGalleryUIState.Loading)
     val iapUiState by viewModel.iapUiState.collectAsState(IAPUIState.Clear)
+
+    val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
+    LaunchedEffect(lifecycleState) {
+        if (lifecycleState == Lifecycle.State.RESUMED) {
+            viewModel.updateCourses(isUpdating = false)
+        }
+    }
 
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
     LaunchedEffect(lifecycleState) {
@@ -201,6 +194,7 @@ private fun DashboardGalleryView(
     onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
     hasInternetConnection: Boolean
 ) {
+    val windowSize = rememberWindowSize()
     val scaffoldState = rememberScaffoldState()
     val pullRefreshState = rememberPullRefreshState(
         refreshing = updating,
@@ -208,6 +202,24 @@ private fun DashboardGalleryView(
     )
     var isInternetConnectionShown by rememberSaveable {
         mutableStateOf(false)
+    }
+
+    val contentWidth by remember(key1 = windowSize) {
+        mutableStateOf(
+            windowSize.windowSizeValue(
+                expanded = Modifier.widthIn(Dp.Unspecified, 560.dp),
+                compact = Modifier.fillMaxWidth(),
+            )
+        )
+    }
+
+    val contentPadding by remember(key1 = windowSize) {
+        mutableStateOf(
+            windowSize.windowSizeValue(
+                expanded = PaddingValues(0.dp),
+                compact = PaddingValues(horizontal = 16.dp)
+            )
+        )
     }
 
     Scaffold(
@@ -226,21 +238,18 @@ private fun DashboardGalleryView(
             color = MaterialTheme.appColors.background
         ) {
             Box(
-                Modifier.fillMaxSize()
+                Modifier
+                    .fillMaxSize()
+                    .pullRefresh(pullRefreshState)
+                    .verticalScroll(rememberScrollState()),
             ) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .pullRefresh(pullRefreshState)
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    when (uiState) {
-                        is DashboardGalleryUIState.Loading -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.align(Alignment.Center),
-                                color = MaterialTheme.appColors.primary
-                            )
-                        }
+                when (uiState) {
+                    is DashboardGalleryUIState.Loading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = MaterialTheme.appColors.primary
+                        )
+                    }
 
                         is DashboardGalleryUIState.Courses -> {
                             UserCourses(
@@ -285,27 +294,27 @@ private fun DashboardGalleryView(
                             }
                         }
 
-                        is DashboardGalleryUIState.Empty -> {
-                            NoCoursesInfo(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                            )
-                            FindACourseButton(
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter),
-                                findACourseClick = {
-                                    onAction(DashboardGalleryScreenAction.NavigateToDiscovery)
-                                }
-                            )
-                        }
+                    is DashboardGalleryUIState.Empty -> {
+                        NoCoursesInfo(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                        )
+                        FindACourseButton(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter),
+                            findACourseClick = {
+                                onAction(DashboardGalleryScreenAction.NavigateToDiscovery)
+                            }
+                        )
                     }
-
-                    PullRefreshIndicator(
-                        updating,
-                        pullRefreshState,
-                        Modifier.align(Alignment.TopCenter)
-                    )
                 }
+
+                PullRefreshIndicator(
+                    updating,
+                    pullRefreshState,
+                    Modifier.align(Alignment.TopCenter)
+                )
+
                 if (!isInternetConnectionShown && !hasInternetConnection) {
                     OfflineModeDialog(
                         Modifier
@@ -347,16 +356,15 @@ private fun DashboardGalleryView(
 private fun UserCourses(
     modifier: Modifier = Modifier,
     userCourses: CourseEnrollments,
+    contentPadding: PaddingValues,
     apiHostUrl: String,
     openCourse: (enrolledCourse: EnrolledCourse, source: ActionSource, isPrimaryCourse: Boolean) -> Unit,
     navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
     onViewAllClick: (isCardClicked: Boolean) -> Unit,
     resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
-    onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
     Column(
         modifier = modifier
-            .padding(vertical = 12.dp)
     ) {
         val primaryCourse = userCourses.primary
         if (primaryCourse != null) {
@@ -391,11 +399,16 @@ private fun SecondaryCourses(
     courseCount: Int,
     hasNextPage: Boolean,
     apiHostUrl: String,
+    contentPadding: PaddingValues,
     onCourseClick: (EnrolledCourse) -> Unit,
     onViewAllClick: (isCardClicked: Boolean) -> Unit
 ) {
     val windowSize = rememberWindowSize()
-    val itemsCount = if (windowSize.isTablet) 7 else 5
+    val itemsCount = if (windowSize.isTablet) {
+        TABLET_COURSE_LIST_ITEM_COUNT
+    } else {
+        MOBILE_COURSE_LIST_ITEM_COUNT
+    }
     val rows = if (windowSize.isTablet) 2 else 1
     val height = if (windowSize.isTablet) 322.dp else 152.dp
     val items = courses.take(itemsCount)
@@ -408,8 +421,10 @@ private fun SecondaryCourses(
         TextIcon(
             modifier = Modifier.padding(horizontal = 18.dp),
             text = stringResource(R.string.dashboard_view_all_with_count, courseCount + 1),
+            modifier = Modifier.padding(contentPadding),
+            text = stringResource(R.string.dashboard_view_all_with_count, courses.size + 1),
             textStyle = MaterialTheme.appTypography.titleSmall,
-            icon = Icons.Default.ChevronRight,
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             color = MaterialTheme.appColors.textDark,
             iconModifier = Modifier.size(22.dp),
             onClick = {
@@ -421,7 +436,7 @@ private fun SecondaryCourses(
                 .fillMaxSize()
                 .height(height),
             rows = GridCells.Fixed(rows),
-            contentPadding = PaddingValues(horizontal = 18.dp),
+            contentPadding = contentPadding,
             content = {
                 items(items) {
                     CourseListItem(
@@ -468,7 +483,7 @@ private fun ViewAllItem(
         ) {
             Icon(
                 modifier = Modifier.size(48.dp),
-                painter = painterResource(id = R.drawable.dashboard_ic_book),
+                painter = painterResource(id = CoreR.drawable.core_ic_book),
                 tint = MaterialTheme.appColors.textFieldBorder,
                 contentDescription = null
             )
@@ -504,7 +519,7 @@ private fun CourseListItem(
             Column {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(apiHostUrl + course.course.courseImage)
+                        .data(course.course.courseImage.toImageLink(apiHostUrl))
                         .error(CoreR.drawable.core_no_image_course)
                         .placeholder(CoreR.drawable.core_no_image_course)
                         .build(),
@@ -576,8 +591,8 @@ private fun AssignmentItem(
             }
         }
         Icon(
-            modifier = Modifier.size(16.dp),
-            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+            modifier = Modifier.size(22.dp),
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             tint = MaterialTheme.appColors.textDark,
             contentDescription = null
         )
@@ -587,18 +602,18 @@ private fun AssignmentItem(
 @Composable
 private fun PrimaryCourseCard(
     isIAPEnabled: Boolean,
+    modifier: Modifier = Modifier,
     primaryCourse: EnrolledCourse,
     apiHostUrl: String,
-    navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
-    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
-    openCourse: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
-    onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
+    useRelativeDates: Boolean,
+    navigateToDates: (EnrolledCourse) -> Unit,
+    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String) -> Unit,
+    openCourse: (EnrolledCourse) -> Unit,
 ) {
-    val orientation = LocalConfiguration.current.orientation
 
+    val orientation = LocalConfiguration.current.orientation
     Card(
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
+        modifier = modifier
             .fillMaxWidth()
             .padding(2.dp),
         backgroundColor = MaterialTheme.appColors.cardViewBackground,
@@ -900,8 +915,8 @@ private fun ResumeButton(
             }
         }
         Icon(
-            modifier = Modifier.size(16.dp),
-            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+            modifier = Modifier.size(22.dp),
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             tint = MaterialTheme.appColors.primaryButtonText,
             contentDescription = null
         )
@@ -980,7 +995,7 @@ private fun NoCoursesInfo(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.dashboard_ic_book),
+                painter = painterResource(id = CoreR.drawable.core_ic_book),
                 tint = MaterialTheme.appColors.textFieldBorder,
                 contentDescription = null
             )

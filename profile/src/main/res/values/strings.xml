@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="profile_prof_info">Profile info</string>
-    <string name="profile_bio">Bio: %1$s</string>
-    <string name="profile_year_of_birth">Year of Birth: %1$s</string>
     <string name="profile_full_profile">Full profile</string>
     <string name="profile_limited_profile">Limited profile</string>
+    <string name="profile_edit_profile">Edit Profile</string>
+    <string name="profile_delete_profile">Delete Account</string>
     <string name="profile_edit_profile">Edit profile</string>
     <string name="profile_edit">Edit</string>
     <string name="profile_save">Save</string>
@@ -29,7 +28,6 @@
     <string name="profile_change_image">Change profile image</string>
     <string name="profile_select_from_gallery">Select from gallery</string>
     <string name="profile_remove_photo">Remove photo</string>
-    <string name="profile_settings">Settings</string>
     <string name="profile_leave_profile">Leave without saving?</string>
     <string name="profile_leave">Leave</string>
     <string name="profile_keep_editing">Keep editing</string>
@@ -65,4 +63,24 @@
     <string name="profile_restore_purchaes">Restore purchases</string>
     <string name="profile_push_notifications">Push notifications</string>
     <string name="profile_appearance">Appearance</string>
+    <string name="profile_course_calendar_sync">Course Calendar Sync</string>
+    <string name="profile_currently_syncing_events">Currently syncing events to your calendar</string>
+    <string name="profile_change_sync_options">Change Sync Options</string>
+    <string name="profile_courses_to_sync">Courses to Sync</string>
+    <string name="profile_syncing_courses">Syncing %1$s Courses</string>
+    <string name="profile_options">Options</string>
+    <string name="profile_use_relative_dates">Use relative dates</string>
+    <string name="profile_show_relative_dates">Show relative dates like “Tomorrow” and “Yesterday”</string>
+    <string name="profile_courses_to_sync_title">Disabling sync for a course will remove all events connected to the course from your synced calendar.</string>
+    <string name="profile_automatically_remove_events">Automatically remove events from courses you haven’t viewed in the last month</string>
+    <string name="profile_inactive">Inactive</string>
+    <string name="profile_hide_inactive_courses">Hide Inactive Courses</string>
+    <string name="profile_disable_calendar_dialog_title">Disable Calendar Sync</string>
+    <string name="profile_disable_calendar_dialog_description">Disabling calendar sync will delete the calendar “%1$s.” You can turn calendar sync back on at any time.</string>
+    <string name="profile_disable_syncing">Disable Syncing</string>
+    <string name="profile_no_courses">No %1$s Courses</string>
+    <string name="profile_no_sync_courses">No courses are currently being synced to your calendar.</string>
+    <string name="profile_no_courses_with_current_filter">No courses match the current filter.</string>
+    <string name="profile_show_full_dates">Show full dates like “%1$s”</string>
+
 </resources>

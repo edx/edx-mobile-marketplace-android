@@ -1,3 +1,7 @@
 package org.openedx.discussion.system.notifier
 
-class DiscussionCommentAdded : DiscussionEvent
+import org.openedx.discussion.domain.model.DiscussionComment
+
+data class DiscussionCommentAdded(
+    val comment: DiscussionComment
+) : DiscussionEvent

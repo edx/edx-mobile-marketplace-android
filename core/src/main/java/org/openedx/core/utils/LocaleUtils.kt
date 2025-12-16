@@ -11,6 +11,8 @@ object LocaleUtils {
     // Due to legal reasons we need to disable some countries
     private val disabledCountries: List<String> = listOf("RU")
 
+    private const val MIN_USER_AGE = 13
+
     fun getBirthYearsRange(): List<RegistrationField.Option> {
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         return (currentYear - USER_MAX_YEAR..currentYear - 0).reversed().map {
@@ -21,7 +23,7 @@ object LocaleUtils {
     fun isProfileLimited(inputYear: String?): Boolean {
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         return if (!inputYear.isNullOrEmpty()) {
-            currentYear - inputYear.toInt() < 13
+            currentYear - inputYear.toInt() < MIN_USER_AGE
         } else {
             true
         }
@@ -62,7 +64,6 @@ object LocaleUtils {
         .sortedBy { it.name }
         .toList()
 
-
     private fun getAvailableLanguages() = Locale.getISOLanguages()
         .asSequence()
         .filter { it.length == 2 }
@@ -79,5 +80,4 @@ object LocaleUtils {
     fun getDisplayLanguage(languageCode: String): String {
         return Locale.Builder().setLanguage(languageCode).build().getDisplayLanguage(defaultLocale)
     }
-
 }

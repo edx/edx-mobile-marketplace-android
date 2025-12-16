@@ -24,9 +24,7 @@ import org.junit.rules.TestRule
 import org.openedx.auth.domain.interactor.AuthInteractor
 import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.system.EdxError
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.utils.Logger
 import java.net.UnknownHostException
@@ -179,7 +177,6 @@ class RestorePasswordViewModelTest {
         assertEquals(true, viewModel.uiState.value is RestorePasswordUIState.Initial)
         assertEquals(somethingWrong, message?.message)
     }
-
 
     @Test
     fun `success restore password`() = runTest {

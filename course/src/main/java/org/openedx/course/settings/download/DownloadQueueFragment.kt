@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -43,23 +42,19 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
+import org.openedx.core.CoreMocks
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
 import org.openedx.core.module.db.TranscriptsDownloadedState
 import org.openedx.core.ui.BackBtn
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
-import org.openedx.course.R
-import org.openedx.course.presentation.ui.OfflineQueueCard
+import org.openedx.core.R as coreR
 
 class DownloadQueueFragment : Fragment() {
 
@@ -90,7 +85,7 @@ class DownloadQueueFragment : Fragment() {
                         requireActivity().supportFragmentManager.popBackStack()
                     },
                     onDownloadClick = {
-                        viewModel.removeDownloadModels(it.id)
+                        viewModel.removeDownloadModels(it.id, "")
                     }
                 )
             }
@@ -157,7 +152,7 @@ private fun DownloadQueueScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 56.dp),
-                        text = stringResource(id = R.string.course_download_queue_title),
+                        text = stringResource(id = coreR.string.core_download_queue_title),
                         color = MaterialTheme.appColors.textPrimary,
                         style = MaterialTheme.appTypography.titleMedium,
                         maxLines = 1,
@@ -185,11 +180,17 @@ private fun DownloadQueueScreen(
                                 LazyColumn {
                                     items(uiState.downloadingModels) { model ->
                                         val progressValue =
-                                            if (model.id == uiState.currentProgressId)
-                                                uiState.currentProgressValue else 0
+                                            if (model.id == uiState.currentProgressId) {
+                                                uiState.currentProgressValue
+                                            } else {
+                                                0
+                                            }
                                         val progressSize =
-                                            if (model.id == uiState.currentProgressId)
-                                                uiState.currentProgressSize else 0
+                                            if (model.id == uiState.currentProgressId) {
+                                                uiState.currentProgressSize
+                                            } else {
+                                                0
+                                            }
 
                                         OfflineQueueCard(
                                             downloadModel = model,
@@ -213,8 +214,7 @@ private fun DownloadQueueScreen(
     }
 }
 
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, device = Devices.TABLET)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun DownloadQueueScreenPreview() {
@@ -250,9 +250,9 @@ private fun DownloadQueueScreenPreview() {
                         transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED,
                     )
                 ),
-                currentProgressId = "",
-                currentProgressValue = 0,
-                currentProgressSize = 1
+                currentProgressId = CoreMocks.mockDownloadModel.id,
+                currentProgressValue = 50,
+                currentProgressSize = 100
             ),
             onBackClick = {},
             onDownloadClick = {}

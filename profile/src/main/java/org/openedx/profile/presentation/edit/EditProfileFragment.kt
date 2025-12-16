@@ -1,15 +1,11 @@
-@file:OptIn(
-    ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class,
-    ExperimentalComposeUiApi::class
-)
+@file:OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class)
 
 package org.openedx.profile.presentation.edit
 
 import android.content.res.Configuration
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
-import android.graphics.Matrix
-import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -48,7 +44,6 @@ import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Divider
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetLayout
@@ -117,13 +112,12 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.AppDataConstants.DEFAULT_MIME_TYPE
-import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.LanguageProficiency
-import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.extension.getFileName
 import org.openedx.core.extension.parcelable
 import org.openedx.core.extension.tagId
+import org.openedx.core.ui.AutoSizeText
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
@@ -131,22 +125,20 @@ import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.SheetContent
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.isImeVisibleState
 import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.rememberSaveableMap
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.LocaleUtils
+import org.openedx.profile.ProfileMocks
 import org.openedx.profile.R
 import org.openedx.profile.domain.model.Account
+import org.openedx.profile.presentation.edit.EditProfileFragment.Companion.LEAVE_PROFILE_WIDTH_FACTOR
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -273,8 +265,6 @@ class EditProfileFragment : Fragment() {
 
     @Suppress("DEPRECATION")
     private fun cropImage(uri: Uri): Uri {
-        val matrix = Matrix()
-        matrix.postRotate(getImageOrientation(uri).toFloat())
         val originalBitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             ImageDecoder.decodeBitmap(
                 ImageDecoder.createSource(
@@ -285,53 +275,40 @@ class EditProfileFragment : Fragment() {
         } else {
             MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
         }
-        val rotatedBitmap = Bitmap.createBitmap(
-            originalBitmap, 0, 0, originalBitmap.width, originalBitmap.height, matrix, true
-        )
         val newFile = File.createTempFile(
-            "Image_${System.currentTimeMillis()}", ".jpg",
+            "Image_${System.currentTimeMillis()}",
+            ".jpg",
             requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         )
 
-        val ratio: Float = rotatedBitmap.width.toFloat() / 500
+        val ratio: Float = originalBitmap.width.toFloat() / TARGET_IMAGE_WIDTH
         val newBitmap = Bitmap.createScaledBitmap(
-            rotatedBitmap,
-            500,
-            (rotatedBitmap.height.toFloat() / ratio).toInt(),
+            originalBitmap,
+            TARGET_IMAGE_WIDTH,
+            (originalBitmap.height.toFloat() / ratio).toInt(),
             false
         )
         val bos = ByteArrayOutputStream()
-        newBitmap.compress(Bitmap.CompressFormat.JPEG, 90, bos)
+        newBitmap.compress(Bitmap.CompressFormat.JPEG, IMAGE_QUALITY, bos)
         val bitmapData = bos.toByteArray()
 
         val fos = FileOutputStream(newFile)
         fos.write(bitmapData)
         fos.flush()
         fos.close()
-        //TODO: get applicationId instead of packageName
         return FileProvider.getUriForFile(
-            requireContext(), requireContext().packageName + ".fileprovider",
+            requireContext(),
+            viewModel.config.getAppId() + ".fileprovider",
             newFile
         )!!
     }
 
-    private fun getImageOrientation(uri: Uri): Int {
-        var rotation = 0
-        val exif = ExifInterface(requireActivity().contentResolver.openInputStream(uri)!!)
-        when (exif.getAttributeInt(
-            ExifInterface.TAG_ORIENTATION,
-            ExifInterface.ORIENTATION_NORMAL
-        )) {
-            ExifInterface.ORIENTATION_ROTATE_270 -> rotation = 270
-            ExifInterface.ORIENTATION_ROTATE_180 -> rotation = 180
-            ExifInterface.ORIENTATION_ROTATE_90 -> rotation = 90
-        }
-        return rotation
-    }
-
-
     companion object {
         private const val ARG_ACCOUNT = "argAccount"
+        const val LEAVE_PROFILE_WIDTH_FACTOR = 0.7f
+        private const val IMAGE_QUALITY = 90
+        private const val TARGET_IMAGE_WIDTH = 500
+
         fun newInstance(account: Account): EditProfileFragment {
             val fragment = EditProfileFragment()
             fragment.arguments = bundleOf(ARG_ACCOUNT to account)
@@ -341,10 +318,7 @@ class EditProfileFragment : Fragment() {
 
 }
 
-@OptIn(
-    ExperimentalMaterialApi::class,
-    ExperimentalComposeUiApi::class
-)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun EditProfileScreen(
     windowSize: WindowSize,
@@ -525,8 +499,8 @@ private fun EditProfileScreen(
                         searchValue = TextFieldValue(it)
                     }
                 )
-            }) {
-
+            }
+        ) {
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
             if (isOpenChangeImageDialogState && uiState.account.isOlderThanMinAge()) {
@@ -613,7 +587,6 @@ private fun EditProfileScreen(
                                     onSaveClick(mapFields.toMap())
                                 }
                             )
-
                         }
                     }
                 }
@@ -636,7 +609,13 @@ private fun EditProfileScreen(
                         ) {
                             Text(
                                 modifier = Modifier.testTag("txt_edit_profile_type_label"),
-                                text = stringResource(if (uiState.isLimited) R.string.profile_limited_profile else R.string.profile_full_profile),
+                                text = stringResource(
+                                    if (uiState.isLimited) {
+                                        R.string.profile_limited_profile
+                                    } else {
+                                        R.string.profile_full_profile
+                                    }
+                                ),
                                 color = MaterialTheme.appColors.textSecondary,
                                 style = MaterialTheme.appTypography.titleSmall
                             )
@@ -664,7 +643,6 @@ private fun EditProfileScreen(
                                         .padding(2.dp)
                                         .size(100.dp)
                                         .clip(CircleShape)
-
                                         .noRippleClickable {
                                             if (!requiresParentalConsent) {
                                                 isOpenChangeImageDialogState = true
@@ -757,18 +735,16 @@ private fun EditProfileScreen(
                             Spacer(modifier = Modifier.height(20.dp))
                             ProfileFields(
                                 disabled = uiState.isLimited,
-                                onFieldClick = { it, title ->
-                                    when (it) {
+                                onFieldClick = { field, title ->
+                                    when (field) {
                                         YEAR_OF_BIRTH -> {
                                             serverFieldName.value = YEAR_OF_BIRTH
-                                            expandedList =
-                                                LocaleUtils.getBirthYearsRange()
+                                            expandedList = LocaleUtils.getBirthYearsRange()
                                         }
 
                                         COUNTRY -> {
                                             serverFieldName.value = COUNTRY
-                                            expandedList =
-                                                LocaleUtils.getCountries()
+                                            expandedList = LocaleUtils.getCountries()
                                         }
 
                                         LANGUAGE -> {
@@ -781,9 +757,9 @@ private fun EditProfileScreen(
                                     coroutine.launch {
                                         val index = expandedList.indexOfFirst { option ->
                                             if (serverFieldName.value == LANGUAGE) {
-                                                option.value == (mapFields[serverFieldName.value] as List<LanguageProficiency>).getOrNull(
-                                                    0
-                                                )?.code
+                                                option.value ==
+                                                        (mapFields[serverFieldName.value] as List<LanguageProficiency>)
+                                                            .getOrNull(0)?.code
                                             } else {
                                                 option.value == mapFields[serverFieldName.value]
                                             }
@@ -820,7 +796,6 @@ private fun EditProfileScreen(
                         }
                     }
                 }
-
             }
         }
     }
@@ -959,7 +934,6 @@ private fun ChangeImageDialog(
                 Spacer(Modifier.height(20.dp))
             }
         }
-
     }
 }
 
@@ -984,6 +958,12 @@ private fun ProfileFields(
 //                onFieldClick(YEAR_OF_BIRTH, context.getString(R.string.profile_year))
 //            }
 //        )
+    } else {
+        ""
+    }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
         SelectableField(
             name = stringResource(id = R.string.profile_location),
             initialValue = LocaleUtils.getCountryByCountryCode(mapFields[COUNTRY].toString()),
@@ -1221,7 +1201,8 @@ private fun LeaveProfile(
                     onClick = onDismissRequest
                 )
             }
-        })
+        }
+    )
 }
 
 @Composable
@@ -1241,7 +1222,7 @@ private fun LeaveProfileLandscape(
         content = {
             Card(
                 modifier = Modifier
-                    .width(screenWidth * 0.7f)
+                    .width(screenWidth * LEAVE_PROFILE_WIDTH_FACTOR)
                     .clip(MaterialTheme.appShapes.courseImageShape)
                     .semantics { testTagsAsResourceId = true },
                 backgroundColor = MaterialTheme.appColors.background,
@@ -1302,7 +1283,8 @@ private fun LeaveProfileLandscape(
                     }
                 }
             }
-        })
+        }
+    )
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
@@ -1361,7 +1343,7 @@ private fun EditProfileScreenPreview() {
     OpenEdXTheme {
         EditProfileScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = EditProfileUIState(account = mockAccount, isUpdating = false, false),
+            uiState = EditProfileUIState(account = ProfileMocks.account, isUpdating = false, false),
             selectedImageUri = null,
             uiMessage = null,
             isImageDeleted = true,
@@ -1384,7 +1366,7 @@ private fun EditProfileScreenTabletPreview() {
     OpenEdXTheme {
         EditProfileScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
-            uiState = EditProfileUIState(account = mockAccount, isUpdating = false, false),
+            uiState = EditProfileUIState(account = ProfileMocks.account, isUpdating = false, false),
             selectedImageUri = null,
             uiMessage = null,
             isImageDeleted = true,

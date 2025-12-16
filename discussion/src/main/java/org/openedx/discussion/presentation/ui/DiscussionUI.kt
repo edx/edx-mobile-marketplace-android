@@ -27,6 +27,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.PushPin
@@ -52,16 +53,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import org.openedx.core.domain.model.ProfileImage
-import org.openedx.core.extension.TextConverter
 import org.openedx.core.ui.AutoSizeText
-import org.openedx.core.ui.HyperlinkImageText
 import org.openedx.core.ui.IconText
+import org.openedx.core.ui.RenderHtmlContent
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.utils.TimeUtils
+import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
@@ -161,17 +161,24 @@ fun ThreadMainItem(
             IconText(
                 text = followText,
                 painter = painterResource(followIcon),
+                text = stringResource(id = R.string.discussion_follow),
+                painter = painterResource(
+                    if (thread.following) {
+                        R.drawable.discussion_star_filled
+                    } else {
+                        R.drawable.discussion_star
+                    }
+                ),
                 textStyle = MaterialTheme.appTypography.labelLarge,
                 color = MaterialTheme.appColors.textPrimary,
                 onClick = {
                     onClick(DiscussionCommentsFragment.ACTION_FOLLOW_THREAD, !thread.following)
-                })
+                }
+            )
         }
         Spacer(modifier = Modifier.height(24.dp))
-        HyperlinkImageText(
-            title = thread.title,
-            imageText = thread.parsedRenderedBody,
-            linkTextColor = MaterialTheme.appColors.primary
+        RenderHtmlContent(
+            html = thread.rawBody,
         )
         Spacer(modifier = Modifier.height(24.dp))
         Row(
@@ -209,7 +216,6 @@ fun ThreadMainItem(
         Spacer(modifier = Modifier.height(16.dp))
         Divider(color = MaterialTheme.appColors.cardViewBorder)
     }
-
 }
 
 @Composable
@@ -336,12 +342,12 @@ fun CommentItem(
                             comment.id,
                             !comment.abuseFlagged
                         )
-                    })
+                    }
+                )
             }
             Spacer(modifier = Modifier.height(14.dp))
-            HyperlinkImageText(
-                imageText = comment.parsedRenderedBody,
-                linkTextColor = MaterialTheme.appColors.primary
+            RenderHtmlContent(
+                html = comment.rawBody,
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(
@@ -385,11 +391,9 @@ fun CommentItem(
                     }
                 )
             }
-
         }
     }
 }
-
 
 @Composable
 fun CommentMainItem(
@@ -479,9 +483,8 @@ fun CommentMainItem(
                 }
             }
             Spacer(modifier = Modifier.height(14.dp))
-            HyperlinkImageText(
-                imageText = comment.parsedRenderedBody,
-                linkTextColor = MaterialTheme.appColors.primary
+            RenderHtmlContent(
+                html = comment.rawBody,
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(
@@ -521,7 +524,8 @@ fun CommentMainItem(
                             comment.id,
                             !comment.abuseFlagged
                         )
-                    })
+                    }
+                )
             }
 
         }
@@ -574,12 +578,14 @@ fun ThreadItem(
                     Box {
                         Icon(
                             modifier = Modifier.size(iconSize),
+                            modifier = Modifier.size((MaterialTheme.appTypography.labelLarge.fontSize.value).dp),
                             painter = painterResource(id = R.drawable.discussion_ic_unread_replies),
                             tint = MaterialTheme.appColors.textPrimaryVariant,
                             contentDescription = null
                         )
                         Image(
                             modifier = Modifier.size(iconSize),
+                            modifier = Modifier.size((MaterialTheme.appTypography.labelLarge.fontSize.value).dp),
                             painter = painterResource(id = R.drawable.discussion_ic_unread_replies_dot),
                             contentDescription = null
                         )
@@ -637,7 +643,6 @@ fun ThreadItem(
     }
 }
 
-
 @Composable
 fun ThreadItemCategory(
     name: String,
@@ -654,7 +659,8 @@ fun ThreadItemCategory(
                     MaterialTheme.appShapes.cardShape
                 )
                 .clip(MaterialTheme.appShapes.cardShape)
-                .clickable { onClick() }),
+                .clickable { onClick() }
+        ),
         shape = MaterialTheme.appShapes.cardShape,
         backgroundColor = MaterialTheme.appColors.cardViewBackground
     ) {
@@ -695,16 +701,16 @@ fun TopicItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = topic.name, style = MaterialTheme.appTypography.titleMedium,
+            text = topic.name,
+            style = MaterialTheme.appTypography.titleMedium,
             color = MaterialTheme.appColors.textPrimary
         )
         Icon(
-            imageVector = Icons.Filled.ChevronRight,
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             tint = MaterialTheme.appColors.primary,
             contentDescription = "Expandable Arrow"
         )
     }
-
 }
 
 @Preview
@@ -738,7 +744,7 @@ private fun CommentItemPreview() {
     OpenEdXTheme {
         CommentItem(
             modifier = Modifier.fillMaxWidth(),
-            comment = mockComment,
+            comment = DiscussionMocks.comment,
             onClick = { _, _, _ -> },
             onUserPhotoClick = {}
         )

@@ -81,31 +81,31 @@ import androidx.fragment.app.Fragment
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.UIMessage
-import org.openedx.core.domain.model.Media
-import org.openedx.core.extension.applyDarkModeIfEnabled
-import org.openedx.core.extension.isEmailValid
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.isPreview
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.EmailUtil
+import org.openedx.discovery.DiscoveryMocks
 import org.openedx.discovery.R
 import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.DiscoveryRouter
 import org.openedx.discovery.presentation.ui.ImageHeader
 import org.openedx.discovery.presentation.ui.WarningLabel
+import org.openedx.foundation.extension.applyDarkModeIfEnabled
+import org.openedx.foundation.extension.isEmailValid
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import java.nio.charset.StandardCharsets
 import java.util.Date
 import org.openedx.core.R as CoreR
@@ -144,6 +144,7 @@ class CourseDetailsFragment : Fragment() {
                     ),
                     hasInternetConnection = viewModel.hasInternetConnection,
                     isUserLoggedIn = viewModel.isUserLoggedIn,
+                    isRegistrationEnabled = viewModel.isRegistrationEnabled,
                     onReloadClick = {
                         viewModel.getCourseDetail()
                     },
@@ -155,9 +156,12 @@ class CourseDetailsFragment : Fragment() {
                         if (currentState is CourseDetailsUIState.CourseData) {
                             when {
                                 (!currentState.isUserLoggedIn) -> {
-                                    router.navigateToLogistration(
-                                        parentFragmentManager,
-                                        currentState.course.courseId
+                                    val dialog = AuthorizationDialogFragment.newInstance(
+                                        viewModel.courseId
+                                    )
+                                    dialog.show(
+                                        requireActivity().supportFragmentManager,
+                                        AuthorizationDialogFragment::class.simpleName
                                     )
                                 }
 
@@ -202,7 +206,6 @@ class CourseDetailsFragment : Fragment() {
     }
 }
 
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun CourseDetailsScreen(
@@ -213,6 +216,7 @@ internal fun CourseDetailsScreen(
     htmlBody: String,
     hasInternetConnection: Boolean,
     isUserLoggedIn: Boolean,
+    isRegistrationEnabled: Boolean,
     onReloadClick: () -> Unit,
     onBackClick: () -> Unit,
     onButtonClick: () -> Unit,
@@ -240,13 +244,13 @@ internal fun CourseDetailsScreen(
                 Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 32.dp)) {
                     AuthButtonsPanel(
                         onRegisterClick = onRegisterClick,
-                        onSignInClick = onSignInClick
+                        onSignInClick = onSignInClick,
+                        showRegisterButton = isRegistrationEnabled
                     )
                 }
             }
         }
     ) {
-
         val screenWidth by remember(key1 = windowSize) {
             mutableStateOf(
                 windowSize.windowSizeValue(
@@ -366,7 +370,8 @@ internal fun CourseDetailsScreen(
                                             body = htmlBody,
                                             onWebPageLoaded = {
                                                 webViewAlpha = 1f
-                                            })
+                                            }
+                                        )
                                     }
                                 }
                             }
@@ -391,7 +396,6 @@ internal fun CourseDetailsScreen(
         }
     }
 }
-
 
 @Composable
 private fun CourseDetailNativeContent(
@@ -431,7 +435,7 @@ private fun CourseDetailNativeContent(
         Box(contentAlignment = Alignment.Center) {
             ImageHeader(
                 modifier = Modifier
-                    .aspectRatio(1.86f)
+                    .aspectRatio(ratio = 1.86f)
                     .padding(6.dp),
                 apiHostUrl = apiHostUrl,
                 courseImage = course.media.image?.large,
@@ -502,7 +506,6 @@ private fun CourseDetailNativeContent(
     }
 }
 
-
 @Composable
 private fun CourseDetailNativeContentLandscape(
     windowSize: WindowSize,
@@ -535,7 +538,7 @@ private fun CourseDetailNativeContentLandscape(
         Column(
             Modifier
                 .fillMaxHeight()
-                .weight(3f),
+                .weight(weight = 3f),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
@@ -704,11 +707,12 @@ private fun CourseDetailNativeContentPreview() {
     OpenEdXTheme {
         CourseDetailsScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = CourseDetailsUIState.CourseData(mockCourse),
+            uiState = CourseDetailsUIState.CourseData(DiscoveryMocks.course),
             uiMessage = null,
             apiHostUrl = "http://localhost:8000",
             hasInternetConnection = false,
             isUserLoggedIn = true,
+            isRegistrationEnabled = true,
             htmlBody = "<b>Preview text</b>",
             onReloadClick = {},
             onBackClick = {},
@@ -726,11 +730,12 @@ private fun CourseDetailNativeContentTabletPreview() {
     OpenEdXTheme {
         CourseDetailsScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
-            uiState = CourseDetailsUIState.CourseData(mockCourse),
+            uiState = CourseDetailsUIState.CourseData(DiscoveryMocks.course),
             uiMessage = null,
             apiHostUrl = "http://localhost:8000",
             hasInternetConnection = false,
             isUserLoggedIn = true,
+            isRegistrationEnabled = true,
             htmlBody = "<b>Preview text</b>",
             onReloadClick = {},
             onBackClick = {},
@@ -740,27 +745,3 @@ private fun CourseDetailNativeContentTabletPreview() {
         )
     }
 }
-
-private val mockCourse = Course(
-    id = "id",
-    blocksUrl = "blocksUrl",
-    courseId = "courseId",
-    effort = "effort",
-    enrollmentStart = null,
-    enrollmentEnd = null,
-    hidden = false,
-    invitationOnly = false,
-    media = Media(),
-    mobileAvailable = true,
-    name = "Test course",
-    number = "number",
-    org = "EdX",
-    pacing = "pacing",
-    shortDescription = "shortDescription",
-    start = "start",
-    end = "end",
-    startDisplay = "startDisplay",
-    startType = "startType",
-    overview = "",
-    isEnrolled = false
-)

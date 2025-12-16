@@ -14,22 +14,21 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.openedx.core.BaseViewModel
+import kotlinx.coroutines.withContext
 import org.openedx.core.BlockType
 import org.openedx.core.config.Config
+import org.openedx.core.domain.helper.VideoPreviewHelper
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
-import org.openedx.core.extension.clearAndAddAll
-import org.openedx.core.extension.indexOfFirstFromIndex
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
-import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSectionChanged
 import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.Logger
+import org.openedx.core.utils.VideoPreview
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -38,6 +37,7 @@ import org.openedx.course.presentation.CourseAnalyticsKey
 class CourseUnitContainerViewModel(
     val courseId: String,
     val unitId: String,
+    val mode: CourseViewMode,
     private val config: Config,
     private val interactor: CourseInteractor,
     private val notifier: CourseNotifier,
@@ -61,14 +61,16 @@ class CourseUnitContainerViewModel(
 
     val isFirstIndexInContainer: Boolean
         get() {
-            return _descendantsBlocks.value.firstOrNull() ==
-                    _descendantsBlocks.value.getOrNull(currentIndex)
+            return _descendantsBlocks.value.firstOrNull() == _descendantsBlocks.value.getOrNull(
+                currentIndex
+            )
         }
 
     val isLastIndexInContainer: Boolean
         get() {
-            return _descendantsBlocks.value.lastOrNull() ==
-                    _descendantsBlocks.value.getOrNull(currentIndex)
+            return _descendantsBlocks.value.lastOrNull() == _descendantsBlocks.value.getOrNull(
+                currentIndex
+            )
         }
 
     private val _verticalBlockCounts = MutableLiveData<Int>()
@@ -85,6 +87,21 @@ class CourseUnitContainerViewModel(
 
     private val _subSectionUnitBlocks = MutableStateFlow<List<Block>>(listOf())
     val subSectionUnitBlocks = _subSectionUnitBlocks.asStateFlow()
+
+    private val _videoList = MutableStateFlow<List<Block>>(listOf())
+    val videoList = _videoList.asStateFlow()
+
+    private val _videoPreview = MutableStateFlow<Map<String, VideoPreview?>>(emptyMap())
+    val videoPreview = _videoPreview.asStateFlow()
+
+    private val _videoProgress = MutableStateFlow<Map<String, Float>>(emptyMap())
+    val videoProgress = _videoProgress.asStateFlow()
+
+    private val _currentBlock = MutableStateFlow<Block?>(null)
+    val currentBlock = _currentBlock.asStateFlow()
+
+    private val _hierarchyPath = MutableStateFlow("")
+    val hierarchyPath = _hierarchyPath.asStateFlow()
 
     private val _refreshComponent = MutableSharedFlow<Boolean>()
     val refreshComponent = _refreshComponent.asSharedFlow()
@@ -104,6 +121,10 @@ class CourseUnitContainerViewModel(
 
     fun loadBlocks(mode: CourseViewMode, componentId: String = "", isNeedRefresh: Boolean = false) {
         currentMode = mode
+    val hasNetworkConnection: Boolean
+        get() = networkConnection.isOnline()
+
+    fun loadBlocks(componentId: String = "") {
         viewModelScope.launch {
             try {
                 val courseStructure = when (mode) {
@@ -116,6 +137,10 @@ class CourseUnitContainerViewModel(
                 val blocks = courseStructure.blockData
                 courseName = courseStructure.name
                 this@CourseUnitContainerViewModel.blocks.clearAndAddAll(blocks)
+                if (mode == CourseViewMode.VIDEOS) {
+                    _videoList.value = getAllVideoBlocks()
+                    loadVideoData()
+                }
 
                 updateDescendantsBlocks(blocks)
                 setupCurrentIndex(componentId)
@@ -137,8 +162,7 @@ class CourseUnitContainerViewModel(
             notifier.notifier.collect { event ->
                 if (event is CourseStructureUpdated) {
                     if (event.courseId != courseId) return@collect
-
-                    currentMode?.let { loadBlocks(it, currentComponentId) }
+                    loadBlocks(currentComponentId)
                     val blockId = blocks[currentVerticalIndex].id
                     _subSectionUnitBlocks.value =
                         getSubSectionUnitBlocks(blocks, getSubSectionId(blockId))
@@ -181,8 +205,16 @@ class CourseUnitContainerViewModel(
                     it.descendants.contains(blocks[currentVerticalIndex].id)
                 }
                 if (block.descendants.isNotEmpty() || block.isGated()) {
+                    _descendantsBlocks.value =
+                        block.descendants.mapNotNull { descendant ->
+                            blocks.firstOrNull { descendant == it.id }
+                        }
                     _subSectionUnitBlocks.value =
                         getSubSectionUnitBlocks(blocks, getSubSectionId(unitId))
+
+                    if (_descendantsBlocks.value.isEmpty()) {
+                        _descendantsBlocks.value = listOf(block)
+                    }
                 } else {
                     setNextVerticalIndex()
                 }
@@ -193,6 +225,8 @@ class CourseUnitContainerViewModel(
                     currentIndex = _descendantsBlocks.value.indexOfFirst { it.id == componentId }
                     _indexInContainer.value = currentIndex
                 }
+                // Initialize current block
+                _currentBlock.value = getCurrentBlock()
                 return
             }
         }
@@ -215,7 +249,9 @@ class CourseUnitContainerViewModel(
                 if (blockDescendant.type == BlockType.VERTICAL) {
                     resultList.add(blockDescendant.copy(type = getUnitType(blockDescendant.descendants)))
                 }
-            } else continue
+            } else {
+                continue
+            }
         }
         return resultList
     }
@@ -260,7 +296,10 @@ class CourseUnitContainerViewModel(
     }
 
     fun getCurrentBlock(): Block {
-        return blocks[currentIndex]
+        val block = _descendantsBlocks.value.getOrNull(currentIndex) ?: blocks[currentVerticalIndex]
+        _currentBlock.value = block
+        _hierarchyPath.value = buildHierarchyPath(block)
+        return block
     }
 
     fun moveToNextBlock(): Block? {
@@ -277,6 +316,8 @@ class CourseUnitContainerViewModel(
             if (currentVerticalIndex != -1) {
                 _indexInContainer.value = currentIndex
             }
+            _currentBlock.value = block
+            _hierarchyPath.value = buildHierarchyPath(block)
             return block
         }
         return null
@@ -341,5 +382,111 @@ class CourseUnitContainerViewModel(
 
     companion object {
         private const val TAG = "CourseUnitContainerViewModel"
+    }
+
+    fun getAllVideoBlocks(): List<Block> = blocks.filter { it.type == BlockType.VIDEO }
+
+    fun setSelectedVideoBlock(videoBlock: Block) {
+        // Find the parent vertical block for this video
+        val verticalBlock = findParentBlock(videoBlock.id) ?: return
+        val verticalIndex = blocks.indexOfFirst { it.id == verticalBlock.id }
+        if (verticalIndex == -1) return
+
+        // Update vertical index
+        currentVerticalIndex = verticalIndex
+
+        // Find and update section index
+        val sectionIndex = blocks.indexOfFirst {
+            it.descendants.contains(blocks[currentVerticalIndex].id)
+        }
+        if (sectionIndex != currentSectionIndex) {
+            currentSectionIndex = sectionIndex
+            blocks.getOrNull(currentSectionIndex)?.id?.let {
+                sendCourseSectionChanged(it)
+            }
+        }
+
+        // Update descendants blocks for the new vertical
+        val verticalBlockData = blocks[currentVerticalIndex]
+        if (verticalBlockData.descendants.isNotEmpty() || verticalBlockData.isGated()) {
+            _descendantsBlocks.value =
+                verticalBlockData.descendants.mapNotNull { descendant ->
+                    blocks.firstOrNull { descendant == it.id }
+                }
+            _subSectionUnitBlocks.value =
+                getSubSectionUnitBlocks(blocks, getSubSectionId(verticalBlockData.id))
+
+            if (_descendantsBlocks.value.isEmpty()) {
+                _descendantsBlocks.value = listOf(verticalBlockData)
+            }
+        }
+
+        // Update vertical block counts
+        _verticalBlockCounts.value = verticalBlockData.descendants.size
+
+        // Find the video block index in the new descendants and set it as current
+        val blockIndex = _descendantsBlocks.value.indexOfFirst { it.id == videoBlock.id }
+        if (blockIndex != -1) {
+            currentIndex = blockIndex
+            _indexInContainer.value = currentIndex
+            _currentBlock.value = videoBlock
+            _hierarchyPath.value = buildHierarchyPath(videoBlock)
+        }
+        viewModelScope.launch {
+            loadVideoProgress()
+        }
+    }
+
+    private fun findParentBlock(childId: String): Block? {
+        return blocks.firstOrNull { it.descendants.contains(childId) }
+    }
+
+    private fun loadVideoData() {
+        viewModelScope.launch {
+            loadVideoPreview()
+            loadVideoProgress()
+        }
+    }
+
+    private suspend fun loadVideoProgress() {
+        val videoBlocks = getAllVideoBlocks()
+        val videoProgress = videoBlocks.associate { block ->
+            val videoProgressEntity = interactor.getVideoProgress(block.id)
+            val progress = videoProgressEntity.videoTime?.toFloat()
+                ?.safeDivBy(videoProgressEntity.duration?.toFloat() ?: 0f) ?: 0f
+            block.id to progress
+        }
+        _videoProgress.value = videoProgress
+    }
+
+    private suspend fun loadVideoPreview() {
+        val videoBlocks = getAllVideoBlocks()
+        val videoPreview = withContext(Dispatchers.IO) {
+            videoPreviewHelper.getVideoPreviews(videoBlocks)
+        }
+        _videoPreview.value = videoPreview
+    }
+
+    private fun buildHierarchyPath(block: Block): String {
+        val pathComponents = mutableListOf<String>()
+
+        val verticalBlock = findParentBlock(block.id)
+        verticalBlock?.let { vertical ->
+            // Vertical name
+            pathComponents.add(0, vertical.displayName)
+            // Find the parent Sequential block (Subsection)
+            val sequentialBlock = findParentBlock(vertical.id)
+            sequentialBlock?.let { sequential ->
+                pathComponents.add(0, sequential.displayName)
+
+                // Find the parent Chapter block (Section)
+                val chapterBlock = findParentBlock(sequential.id)
+                chapterBlock?.let { chapter ->
+                    pathComponents.add(0, chapter.displayName)
+                }
+            }
+        }
+
+        return pathComponents.joinToString(" > ")
     }
 }

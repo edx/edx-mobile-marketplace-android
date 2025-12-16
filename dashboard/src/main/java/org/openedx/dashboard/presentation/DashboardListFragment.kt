@@ -24,7 +24,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
@@ -73,13 +75,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.AppUpdateState
-import org.openedx.core.UIMessage
-import org.openedx.core.domain.model.Certificate
-import org.openedx.core.domain.model.CourseAssignments
-import org.openedx.core.domain.model.CourseSharingUtmParameters
-import org.openedx.core.domain.model.CourseStatus
-import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
 import org.openedx.core.domain.model.Progress
@@ -97,15 +92,21 @@ import org.openedx.core.ui.UpgradeToAccessView
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.TimeUtils
+import org.openedx.dashboard.DashboardMocks
 import org.openedx.dashboard.R
+import org.openedx.dashboard.presentation.DashboardListFragment.Companion.LOAD_MORE_THRESHOLD
+import org.openedx.foundation.extension.toImageLink
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import java.util.Date
 import org.openedx.core.R as CoreR
 
@@ -176,6 +177,10 @@ class DashboardListFragment : Fragment() {
                 )
             }
         }
+    }
+
+    companion object {
+        const val LOAD_MORE_THRESHOLD = 4
     }
 }
 
@@ -260,7 +265,6 @@ internal fun DashboardListView(
                 .displayCutoutForLandscape(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Surface(
                 color = MaterialTheme.appColors.background,
                 shape = MaterialTheme.appShapes.screenBackgroundShape
@@ -273,8 +277,9 @@ internal fun DashboardListView(
                     when (state) {
                         is DashboardUIState.Loading -> {
                             Box(
-                                Modifier
-                                    .fillMaxSize(), contentAlignment = Alignment.Center
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                             }
@@ -325,8 +330,13 @@ internal fun DashboardListView(
                                                 }
                                             }
                                         }
-                                    })
-                                if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
+                                    }
+                                )
+                                if (scrollState.shouldLoadMore(
+                                        firstVisibleIndex,
+                                        LOAD_MORE_THRESHOLD
+                                    )
+                                ) {
                                     paginationCallback()
                                 }
                             }
@@ -341,7 +351,7 @@ internal fun DashboardListView(
                         is DashboardUIState.Empty -> {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Column(
                                     Modifier
@@ -364,17 +374,6 @@ internal fun DashboardListView(
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter)
                     ) {
-                        when (appUpgradeParameters.appUpgradeEvent) {
-                            is AppUpgradeEvent.UpgradeRecommendedEvent -> {
-                                AppUpgradeRecommendedBox(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onClick = appUpgradeParameters.onAppUpgradeRecommendedBoxClick
-                                )
-                            }
-
-                            else -> {}
-                        }
-
                         if (!isInternetConnectionShown && !hasInternetConnection) {
                             OfflineModeDialog(
                                 Modifier
@@ -445,7 +444,6 @@ private fun CourseItem(
             )
         )
     }
-    val imageUrl = apiHostUrl + enrolledCourse.course.courseImage
     val context = LocalContext.current
     Surface(
         modifier = Modifier
@@ -464,7 +462,7 @@ private fun CourseItem(
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
+                    .data(enrolledCourse.course.courseImage.toImageLink(apiHostUrl))
                     .error(CoreR.drawable.core_no_image_course)
                     .placeholder(CoreR.drawable.core_no_image_course)
                     .build(),
@@ -542,13 +540,18 @@ private fun CourseItem(
 
 @Composable
 private fun EmptyState() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Column(
-            Modifier.width(185.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            Modifier
+                .fillMaxSize()
+                .weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.dashboard_ic_empty),
@@ -566,6 +569,13 @@ private fun EmptyState() {
                 textAlign = TextAlign.Center
             )
         }
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(id = R.string.dashboard_pull_to_refresh),
+            color = MaterialTheme.appColors.textSecondary,
+            style = MaterialTheme.appTypography.labelSmall,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -576,9 +586,10 @@ private fun CourseItemPreview() {
     OpenEdXTheme {
         CourseItem(
             "http://localhost:8000",
-            mockCourseEnrolled,
+            DashboardMocks.enrolledCourse,
             WindowSize(WindowType.Compact, WindowType.Compact),
-            onClick = {})
+            onClick = {}
+        )
     }
 }
 
@@ -599,6 +610,7 @@ private fun DashboardListViewPreview() {
                     mockCourseEnrolled,
                     mockCourseEnrolled
                 ), isIAPEnabled = false
+                DashboardMocks.enrolledCourses(1)
             ),
             uiMessage = null,
             iapUiState = null,
@@ -624,6 +636,7 @@ private fun DashboardListViewTabletPreview() {
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             apiHostUrl = "http://localhost:8000",
             state = DashboardUIState.Courses(
+                DashboardMocks.enrolledCourses(1)
                 courses = listOf(
                     mockCourseEnrolled,
                     mockCourseEnrolled,
@@ -644,6 +657,32 @@ private fun DashboardListViewTabletPreview() {
             onItemClick = {},
             onIAPAction = { _, _, _ -> },
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters()
+            onReloadClick = {},
+            hasInternetConnection = true,
+            refreshing = false,
+            canLoadMore = false,
+            paginationCallback = {},
+        )
+    }
+}
+
+@Preview(uiMode = UI_MODE_NIGHT_NO)
+@Preview(uiMode = UI_MODE_NIGHT_YES)
+@Composable
+private fun EmptyStatePreview() {
+    OpenEdXTheme {
+        DashboardListView(
+            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
+            apiHostUrl = "http://localhost:8000",
+            state = DashboardUIState.Empty,
+            uiMessage = null,
+            onSwipeRefresh = {},
+            onItemClick = {},
+            onReloadClick = {},
+            hasInternetConnection = true,
+            refreshing = false,
+            canLoadMore = false,
+            paginationCallback = {},
         )
     }
 }

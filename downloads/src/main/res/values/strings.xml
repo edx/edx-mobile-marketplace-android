@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads">Downloads</string>
+    <string name="downloads_download_course">Download course</string>
+    <string name="downloads_remove_course_downloads">Remove course downloads</string>
+    <string name="downloads_cancel_download">Cancel download</string>
+    <string name="downloads_empty_state_title">No Courses with Downloadable Content</string>
+    <string name="downloads_empty_state_description">You currently have no courses with downloadable content.</string>
+    <string name="downloaded_downloaded_size">%1$s downloaded</string>
+    <string name="downloaded_available_size">%1$s available</string>
+    <string name="downloads_accessibility_stop_downloading_course">Stop downloading course</string>
+    <string name="downloads_loading_course_structure">Loading course structure…</string>
+</resources>

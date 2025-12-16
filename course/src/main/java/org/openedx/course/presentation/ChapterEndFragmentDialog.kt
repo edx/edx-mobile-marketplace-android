@@ -24,12 +24,13 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -43,12 +44,16 @@ import androidx.fragment.app.DialogFragment
 import org.openedx.core.extension.setWidthPercent
 import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.OpenEdXPrimaryButton
+import org.openedx.core.ui.AutoSizeText
+import org.openedx.core.ui.OpenEdXButton
+import org.openedx.core.ui.OpenEdXOutlinedButton
 import org.openedx.core.ui.TextIcon
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.course.R
+import org.openedx.foundation.extension.setWidthPercent
 import org.openedx.core.R as CoreR
 
 class ChapterEndFragmentDialog : DialogFragment() {
@@ -58,7 +63,7 @@ class ChapterEndFragmentDialog : DialogFragment() {
     override fun onResume() {
         super.onResume()
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            setWidthPercent(66)
+            setWidthPercent(percentage = 66)
         }
     }
 
@@ -153,9 +158,14 @@ private fun ChapterEndDialogScreen(
     onProceedButtonClick: () -> Unit,
     onCancelButtonClick: () -> Unit,
 ) {
+    val nextSectionButtonIcon = if (isVerticalNavigation) {
+        Icons.Default.ArrowDownward
+    } else {
+        Icons.AutoMirrored.Filled.ArrowForward
+    }
     Card(
         modifier = Modifier
-            .fillMaxWidth(0.95f)
+            .fillMaxWidth(fraction = 0.95f)
             .clip(MaterialTheme.appShapes.courseImageShape),
         backgroundColor = MaterialTheme.appColors.background,
         shape = MaterialTheme.appShapes.courseImageShape
@@ -210,8 +220,9 @@ private fun ChapterEndDialogScreen(
                             text = stringResource(id = R.string.course_next_section),
                             painter = painterResource(CoreR.drawable.core_ic_forward),
                             color = MaterialTheme.appColors.secondaryButtonText,
+                            icon = nextSectionButtonIcon,
+                            color = MaterialTheme.appColors.primaryButtonText,
                             textStyle = MaterialTheme.appTypography.labelLarge,
-                            iconModifier = Modifier.rotate(if (isVerticalNavigation) 90f else 0f)
                         )
                     },
                     onClick = onProceedButtonClick
@@ -235,7 +246,6 @@ private fun ChapterEndDialogScreen(
         }
     }
 }
-
 
 @Composable
 private fun ChapterEndDialogScreenLandscape(
@@ -318,6 +328,8 @@ private fun ChapterEndDialogScreenLandscape(
                                     text = stringResource(id = R.string.course_next_section),
                                     painter = painterResource(CoreR.drawable.core_ic_forward),
                                     color = MaterialTheme.appColors.secondaryButtonText,
+                                    icon = Icons.AutoMirrored.Filled.ArrowForward,
+                                    color = MaterialTheme.appColors.primaryButtonText,
                                     textStyle = MaterialTheme.appTypography.labelLarge
                                 )
                             },

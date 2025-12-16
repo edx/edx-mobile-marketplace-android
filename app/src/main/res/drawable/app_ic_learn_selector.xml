@@ -2,4 +2,6 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@drawable/app_ic_learn_selected" android:state_selected="true" />
     <item android:drawable="@drawable/app_ic_learn_unselected" android:state_selected="false" />
+    <item android:drawable="@drawable/app_ic_book_fill" android:state_checked="true" />
+    <item android:drawable="@drawable/app_ic_book_outline" />
 </selector>

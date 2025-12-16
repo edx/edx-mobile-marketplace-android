@@ -28,6 +28,6 @@ data class EnrollmentDetails(
         created = created?.let { ISO8601Utils.format(it) },
         mode = mode,
         isActive = isActive,
-        upgradeDeadline = upgradeDeadline?.let { ISO8601Utils.format(it) },
+        upgradeDeadline = upgradeDeadline?.let { ISO8601Utils.format(it) }
     )
 }

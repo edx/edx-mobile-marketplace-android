@@ -1,4 +1,3 @@
-package org.openedx.core.extension
 
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.presentation.iap.IAPRequestType

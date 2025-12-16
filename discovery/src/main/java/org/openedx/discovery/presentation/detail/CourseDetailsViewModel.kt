@@ -4,23 +4,24 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
-import org.openedx.core.SingleEventLiveData
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.extension.isInternetError
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.DiscoveryNotifier
+import org.openedx.core.worker.CalendarSyncScheduler
 import org.openedx.core.utils.Logger
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.DiscoveryAnalytics
 import org.openedx.discovery.presentation.DiscoveryAnalyticsEvent
 import org.openedx.discovery.presentation.DiscoveryAnalyticsKey
+import org.openedx.foundation.extension.isInternetError
+import org.openedx.foundation.presentation.BaseViewModel
+import org.openedx.foundation.presentation.SingleEventLiveData
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 
 class CourseDetailsViewModel(
     val courseId: String,
@@ -31,11 +32,13 @@ class CourseDetailsViewModel(
     private val resourceManager: ResourceManager,
     private val notifier: DiscoveryNotifier,
     private val analytics: DiscoveryAnalytics,
+    private val calendarSyncScheduler: CalendarSyncScheduler,
 ) : BaseViewModel() {
     private val logger = Logger(TAG)
 
     val apiHostUrl get() = config.getApiHostURL()
     val isUserLoggedIn get() = corePreferences.user != null
+    val isRegistrationEnabled: Boolean get() = config.isRegistrationEnabled()
 
     private val _uiState = MutableLiveData<CourseDetailsUIState>(CourseDetailsUIState.Loading)
     val uiState: LiveData<CourseDetailsUIState>
@@ -96,6 +99,7 @@ class CourseDetailsViewModel(
                 if (courseData is CourseDetailsUIState.CourseData) {
                     _uiState.value = courseData.copy(course = course)
                     courseEnrollSuccessEvent(id, title)
+                    calendarSyncScheduler.requestImmediateSync(id)
                     notifier.send(CourseDashboardUpdate())
                 }
             } catch (e: Exception) {
@@ -131,7 +135,10 @@ class CourseDetailsViewModel(
 
     private fun getColorFromULong(color: ULong): String {
         if (color == ULong.MIN_VALUE) return "black"
-        return java.lang.Long.toHexString(color.toLong()).substring(2, 8)
+        return java.lang.Long.toHexString(color.toLong()).substring(
+            startIndex = 2,
+            endIndex = 8
+        )
     }
 
     private fun courseEnrollClickedEvent(courseId: String, courseTitle: String) {
@@ -144,7 +151,8 @@ class CourseDetailsViewModel(
 
     private fun logEvent(
         event: DiscoveryAnalyticsEvent,
-        courseId: String, courseTitle: String,
+        courseId: String,
+        courseTitle: String,
     ) {
         analytics.logEvent(
             event.eventName,

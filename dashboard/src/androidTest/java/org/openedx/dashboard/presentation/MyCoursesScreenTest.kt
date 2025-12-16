@@ -17,10 +17,6 @@ import org.openedx.core.domain.model.CourseSharingUtmParameters
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
-import org.openedx.core.domain.model.Progress
-import org.openedx.core.presentation.iap.IAPUIState
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import java.util.Date
 
 class MyCoursesScreenTest {

@@ -46,22 +46,5 @@ data class CourseEnrollmentDetails(
 }
 
 enum class CourseAccessError {
-    NONE, AUDIT_EXPIRED_NOT_UPGRADABLE, AUDIT_EXPIRED_UPGRADABLE, NOT_YET_STARTED, UNKNOWN
-}
-
-fun CourseEnrollmentDetails.toPurchaseFlowData(
-    iapFlow: IAPFlow,
-    screenName: String
-): PurchaseFlowData {
-    return PurchaseFlowData(
-        iapFlow = iapFlow,
-        screenName = screenName,
-        courseId = this.id,
-        courseName = courseInfoOverview.name,
-        orgName = courseInfoOverview.org,
-        orgLogo = courseInfoOverview.orgLogo,
-        courseExpiresDate = courseAccessDetails.auditAccessExpires,
-        isSelfPaced = courseInfoOverview.isSelfPaced,
-        productInfo = courseInfoOverview.productInfo
-    )
+    NONE, AUDIT_EXPIRED_NOT_UPGRADABLE, NOT_YET_STARTED, UNKNOWN
 }

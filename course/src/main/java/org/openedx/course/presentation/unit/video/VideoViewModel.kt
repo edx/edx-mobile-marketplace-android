@@ -25,6 +25,7 @@ class VideoViewModel(
     var videoUrl = ""
     var currentVideoTime = 0L
     var videoDuration = 0L
+    var duration = 0L
     var isPlaying: Boolean? = null
     val videoSettings
         get() = preferencesManager.videoSettings
@@ -40,6 +41,8 @@ class VideoViewModel(
                         currentVideoTime,
                         videoDuration,
                         isPlaying ?: false
+                        duration,
+                        isPlaying == true
                     )
                 )
             }
@@ -62,6 +65,7 @@ class VideoViewModel(
                         throwable = e,
                         metadata = mapOf("courseId" to courseId, "blockId" to blockId)
                     )
+                    e.printStackTrace()
                     isBlockAlreadyCompleted = false
                 }
             }

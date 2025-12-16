@@ -2,20 +2,28 @@ package org.openedx.course.presentation.unit.html
 
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -32,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,29 +56,52 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.extension.applyDarkModeIfEnabled
-import org.openedx.core.extension.isEmailValid
+import org.koin.core.parameter.parametersOf
 import org.openedx.core.extension.loadUrl
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.rememberWindowSize
+import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.roundBorderWithoutBottom
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.EmailUtil
+import org.openedx.foundation.extension.applyDarkModeIfEnabled
+import org.openedx.foundation.extension.isEmailValid
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 
 class HtmlUnitFragment : Fragment() {
 
-    private val viewModel by viewModel<HtmlUnitViewModel>()
-    private var blockId: String = ""
+    private val viewModel by viewModel<HtmlUnitViewModel> {
+        parametersOf(
+            requireArguments().getString(ARG_BLOCK_ID, ""),
+            requireArguments().getString(ARG_COURSE_ID, "")
+        )
+    }
     private var blockUrl: String = ""
+    private var offlineUrl: String = ""
+    private var lastModified: String = ""
+    private var fromDownloadedContent: Boolean = false
+    private var filePathCallback: ValueCallback<Array<Uri>>? = null
+
+    private val fileChooserLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val uris = WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
+                ?: extractUrisFromResult(result.resultCode, result.data)
+            filePathCallback?.onReceiveValue(uris)
+            filePathCallback = null
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        blockId = requireArguments().getString(ARG_BLOCK_ID, "")
         blockUrl = requireArguments().getString(ARG_BLOCK_URL, "")
+        offlineUrl = requireArguments().getString(ARG_OFFLINE_URL, "")
+        lastModified = requireArguments().getString(ARG_LAST_MODIFIED, "")
+        fromDownloadedContent = lastModified.isNotEmpty()
     }
 
     override fun onCreateView(
@@ -86,8 +118,144 @@ class HtmlUnitFragment : Fragment() {
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.isOnline)
                 }
+            HtmlUnitView(
+                viewModel = viewModel,
+                blockUrl = blockUrl,
+                offlineUrl = offlineUrl,
+                fromDownloadedContent = fromDownloadedContent,
+                isFragmentAdded = isAdded,
+                onShowFileChooser = ::openFileChooser
+            )
+        }
+    }
 
-                val injectJSList by viewModel.injectJSList.collectAsState()
+    override fun onDestroyView() {
+        filePathCallback?.onReceiveValue(null)
+        filePathCallback = null
+        super.onDestroyView()
+    }
+
+    private fun openFileChooser(
+        callback: ValueCallback<Array<Uri>>,
+        fileChooserParams: WebChromeClient.FileChooserParams?,
+    ): Boolean {
+        filePathCallback?.onReceiveValue(null)
+        filePathCallback = callback
+        val intent = try {
+            fileChooserParams?.createIntent()
+        } catch (_: Exception) {
+            null
+        } ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            val mimeTypes = fileChooserParams?.acceptTypes
+                ?.filter { it.isNotBlank() }
+                ?.toTypedArray()
+            if (!mimeTypes.isNullOrEmpty()) {
+                type = mimeTypes.first()
+                putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
+            } else {
+                type = "*/*"
+            }
+            putExtra(
+                Intent.EXTRA_ALLOW_MULTIPLE,
+                fileChooserParams?.mode == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE
+            )
+        }
+
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        if (intent.action == Intent.ACTION_CHOOSER) {
+            val extraIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_INTENT)
+            }
+            extraIntent?.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        return try {
+            fileChooserLauncher.launch(intent)
+            true
+        } catch (_: ActivityNotFoundException) {
+            filePathCallback?.onReceiveValue(null)
+            filePathCallback = null
+            false
+        }
+    }
+
+    private fun extractUrisFromResult(resultCode: Int, data: Intent?): Array<Uri>? {
+        if (resultCode != Activity.RESULT_OK || data == null) return null
+
+        val clipUris = data.clipData?.let { clipData ->
+            (0 until clipData.itemCount).mapNotNull { clipData.getItemAt(it)?.uri }
+        }.orEmpty()
+
+        val singleUri = data.data
+
+        val result = when {
+            clipUris.isNotEmpty() -> clipUris.toTypedArray()
+            singleUri != null -> arrayOf(singleUri)
+            else -> null
+        }
+
+        return result
+    }
+
+    companion object {
+        private const val ARG_BLOCK_ID = "blockId"
+        private const val ARG_COURSE_ID = "courseId"
+        private const val ARG_BLOCK_URL = "blockUrl"
+        private const val ARG_OFFLINE_URL = "offlineUrl"
+        private const val ARG_LAST_MODIFIED = "lastModified"
+        fun newInstance(
+            blockId: String,
+            blockUrl: String,
+            courseId: String,
+            offlineUrl: String = "",
+            lastModified: String = ""
+        ): HtmlUnitFragment {
+            val fragment = HtmlUnitFragment()
+            fragment.arguments = bundleOf(
+                ARG_BLOCK_ID to blockId,
+                ARG_BLOCK_URL to blockUrl,
+                ARG_OFFLINE_URL to offlineUrl,
+                ARG_LAST_MODIFIED to lastModified,
+                ARG_COURSE_ID to courseId
+            )
+            return fragment
+        }
+    }
+}
+
+@Composable
+fun HtmlUnitView(
+    viewModel: HtmlUnitViewModel,
+    blockUrl: String,
+    offlineUrl: String,
+    fromDownloadedContent: Boolean,
+    isFragmentAdded: Boolean,
+    onShowFileChooser: (ValueCallback<Array<Uri>>, WebChromeClient.FileChooserParams?) -> Boolean,
+) {
+    OpenEdXTheme {
+        val context = LocalContext.current
+        val windowSize = rememberWindowSize()
+
+        var hasInternetConnection by remember {
+            mutableStateOf(viewModel.isOnline)
+        }
+
+        val url by rememberSaveable {
+            mutableStateOf(
+                if (!hasInternetConnection && offlineUrl.isNotEmpty()) {
+                    offlineUrl
+                } else {
+                    blockUrl
+                }
+            )
+        }
+
+        val injectJSList by viewModel.injectJSList.collectAsState()
+        val uiState by viewModel.uiState.collectAsState()
 
                 val border = if (!isSystemInDarkTheme() && !viewModel.isCourseUnitProgressEnabled) {
                     Modifier.roundBorderWithoutBottom(
@@ -97,6 +265,23 @@ class HtmlUnitFragment : Fragment() {
                 } else {
                     Modifier
                 }
+        val configuration = LocalConfiguration.current
+
+        val bottomPadding =
+            if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                72.dp
+            } else {
+                0.dp
+            }
+
+        val border = if (!isSystemInDarkTheme() && !viewModel.isCourseUnitProgressEnabled) {
+            Modifier.roundBorderWithoutBottom(
+                borderWidth = 2.dp,
+                cornerRadius = 30.dp
+            )
+        } else {
+            Modifier
+        }
 
                 Surface(
                     modifier = Modifier
@@ -156,26 +341,70 @@ class HtmlUnitFragment : Fragment() {
                                 CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                             }
                         }
+        Surface(
+            modifier = Modifier
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
+            color = MaterialTheme.colors.background
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = bottomPadding)
+                    .then(border),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                if (uiState is HtmlUnitUIState.Initialization) return@Box
+                if ((uiState is HtmlUnitUIState.Error).not()) {
+                    if (hasInternetConnection || fromDownloadedContent) {
+                        HTMLContentView(
+                            uiState = uiState,
+                            windowSize = windowSize,
+                            url = url,
+                            cookieManager = viewModel.cookieManager,
+                            apiHostURL = viewModel.apiHostURL,
+                            isLoading = uiState is HtmlUnitUIState.Loading,
+                            injectJSList = injectJSList,
+                            onCompletionSet = {
+                                viewModel.notifyCompletionSet()
+                            },
+                            onWebPageLoading = {
+                                viewModel.onWebPageLoading()
+                            },
+                            onWebPageLoaded = {
+                                if ((uiState is HtmlUnitUIState.Error).not()) {
+                                    viewModel.onWebPageLoaded()
+                                }
+                                if (isFragmentAdded) viewModel.setWebPageLoaded(context.assets)
+                            },
+                            onWebPageLoadError = {
+                                if (!fromDownloadedContent) viewModel.onWebPageLoadError()
+                            },
+                            saveXBlockProgress = { jsonProgress ->
+                                viewModel.saveXBlockProgress(jsonProgress)
+                            },
+                            onShowFileChooser = onShowFileChooser
+                        )
+                    } else {
+                        viewModel.onWebPageLoadError()
+                    }
+                } else {
+                    val errorType = (uiState as HtmlUnitUIState.Error).errorType
+                    FullScreenErrorView(errorType = errorType) {
+                        hasInternetConnection = viewModel.isOnline
+                        viewModel.onWebPageLoading()
+                    }
+                }
+                if (uiState is HtmlUnitUIState.Loading && hasInternetConnection) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .zIndex(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                     }
                 }
             }
-        }
-    }
-
-
-    companion object {
-        private const val ARG_BLOCK_ID = "blockId"
-        private const val ARG_BLOCK_URL = "blockUrl"
-        fun newInstance(
-            blockId: String,
-            blockUrl: String,
-        ): HtmlUnitFragment {
-            val fragment = HtmlUnitFragment()
-            fragment.arguments = bundleOf(
-                ARG_BLOCK_ID to blockId,
-                ARG_BLOCK_URL to blockUrl
-            )
-            return fragment
         }
     }
 }
@@ -183,6 +412,7 @@ class HtmlUnitFragment : Fragment() {
 @Composable
 @SuppressLint("SetJavaScriptEnabled")
 private fun HTMLContentView(
+    uiState: HtmlUnitUIState,
     windowSize: WindowSize,
     url: String,
     cookieManager: AppCookieManager,
@@ -192,6 +422,9 @@ private fun HTMLContentView(
     onCompletionSet: () -> Unit,
     onWebPageLoading: () -> Unit,
     onWebPageLoaded: () -> Unit,
+    onWebPageLoadError: () -> Unit,
+    saveXBlockProgress: (String) -> Unit,
+    onShowFileChooser: (ValueCallback<Array<Uri>>, WebChromeClient.FileChooserParams?) -> Boolean,
     onWebPageLoadError: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -214,13 +447,36 @@ private fun HTMLContentView(
             .background(MaterialTheme.appColors.background),
         factory = {
             WebView(context).apply {
-                addJavascriptInterface(object {
-                    @Suppress("unused")
-                    @JavascriptInterface
-                    fun completionSet() {
-                        onCompletionSet()
+                addJavascriptInterface(
+                    object {
+                        @Suppress("unused")
+                        @JavascriptInterface
+                        fun completionSet() {
+                            onCompletionSet()
+                        }
+                    },
+                    "callback"
+                )
+                addJavascriptInterface(
+                    JSBridge(
+                        postMessageCallback = {
+                            coroutineScope.launch {
+                                saveXBlockProgress(it)
+                                setupOfflineProgress(it)
+                            }
+                        }
+                    ),
+                    "AndroidBridge"
+                )
+                webChromeClient = object : WebChromeClient() {
+                    override fun onShowFileChooser(
+                        view: WebView?,
+                        filePathCallback: ValueCallback<Array<Uri>>,
+                        fileChooserParams: FileChooserParams?
+                    ): Boolean {
+                        return onShowFileChooser(filePathCallback, fileChooserParams)
                     }
-                }, "callback")
+                }
                 webViewClient = object : WebViewClient() {
 
                     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
@@ -257,6 +513,8 @@ private fun HTMLContentView(
                                     Toast.LENGTH_SHORT
                                 ).show()
                             } catch (e: Exception){}
+                        return if (clickUrl.isNotEmpty() && clickUrl.startsWith("http")) {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(clickUrl)))
                             true
                         } else if (clickUrl.startsWith("mailto:")) {
                             val email = clickUrl.replace("mailto:", "")
@@ -308,6 +566,10 @@ private fun HTMLContentView(
                     loadsImagesAutomatically = true
                     domStorageEnabled = true
                     userAgentString = "$userAgentString $userAgent"
+                    allowFileAccess = true
+                    allowContentAccess = true
+                    useWideViewPort = true
+                    cacheMode = WebSettings.LOAD_NO_CACHE
                 }
                 isVerticalScrollBarEnabled = false
                 isHorizontalScrollBarEnabled = false
@@ -319,8 +581,23 @@ private fun HTMLContentView(
         update = { webView ->
             if (!isLoading && injectJSList.isNotEmpty()) {
                 injectJSList.forEach { webView.evaluateJavascript(it, null) }
+                val jsonProgress = (uiState as? HtmlUnitUIState.Loaded)?.jsonProgress
+                if (!jsonProgress.isNullOrEmpty()) {
+                    webView.setupOfflineProgress(jsonProgress)
+                }
             }
         }
     )
 }
 
+private fun WebView.setupOfflineProgress(jsonProgress: String) {
+    loadUrl("javascript:markProblemCompleted('$jsonProgress');")
+}
+
+class JSBridge(val postMessageCallback: (String) -> Unit) {
+    @Suppress("unused")
+    @JavascriptInterface
+    fun postMessage(str: String) {
+        postMessageCallback(str)
+    }
+}

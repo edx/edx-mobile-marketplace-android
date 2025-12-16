@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.VideoQuality
 import org.openedx.core.presentation.CoreAnalytics
@@ -12,6 +11,7 @@ import org.openedx.core.presentation.CoreAnalyticsEvent
 import org.openedx.core.presentation.CoreAnalyticsKey
 import org.openedx.core.system.notifier.VideoNotifier
 import org.openedx.core.system.notifier.VideoQualityChanged
+import org.openedx.foundation.presentation.BaseViewModel
 
 class VideoQualityViewModel(
     private val qualityType: String,
@@ -29,9 +29,11 @@ class VideoQualityViewModel(
     }
 
     fun getCurrentVideoQuality(): VideoQuality {
-        return if (getQualityType() == VideoQualityType.Streaming)
-            preferencesManager.videoSettings.videoStreamingQuality else
+        return if (getQualityType() == VideoQualityType.Streaming) {
+            preferencesManager.videoSettings.videoStreamingQuality
+        } else {
             preferencesManager.videoSettings.videoDownloadQuality
+        }
     }
 
     fun setVideoQuality(quality: VideoQuality) {
@@ -51,11 +53,11 @@ class VideoQualityViewModel(
     fun getQualityType() = VideoQualityType.valueOf(qualityType)
 
     private fun logVideoQualityChangedEvent(oldQuality: VideoQuality, newQuality: VideoQuality) {
-        val event =
-            if (getQualityType() == VideoQualityType.Streaming)
+        val event = if (getQualityType() == VideoQualityType.Streaming) {
                 CoreAnalyticsEvent.VIDEO_STREAMING_QUALITY_CHANGED
-            else
+        } else {
                 CoreAnalyticsEvent.VIDEO_DOWNLOAD_QUALITY_CHANGED
+        }
 
         analytics.logEvent(
             event.eventName,

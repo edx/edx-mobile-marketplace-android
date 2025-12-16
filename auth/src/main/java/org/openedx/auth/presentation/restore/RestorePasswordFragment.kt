@@ -58,20 +58,18 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.auth.R
 import org.openedx.auth.presentation.ui.LoginTextField
 import org.openedx.core.AppUpdateState
-import org.openedx.core.UIMessage
-import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRequiredScreen
 import org.openedx.core.ui.BackBtn
+import org.openedx.core.R
+import org.openedx.core.presentation.global.appupgrade.AppUpgradeRequiredScreen
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.OpenEdXBrandButton
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
+import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
-import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.theme.appTypographye
+import org.openedx.auth.R as authR
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.R as CoreR
 
@@ -186,6 +184,7 @@ private fun RestorePasswordScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp),
+            painter = painterResource(id = R.drawable.core_top_header),
             painter = painterResource(id = CoreR.drawable.core_top_header),
             contentScale = ContentScale.FillBounds,
             contentDescription = null
@@ -365,7 +364,6 @@ private fun RestorePasswordScreen(
         }
     }
 }
-
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)

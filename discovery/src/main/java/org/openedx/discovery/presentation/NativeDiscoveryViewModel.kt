@@ -3,17 +3,10 @@ package org.openedx.discovery.presentation
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
-import org.openedx.core.SingleEventLiveData
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.extension.isInternetError
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
@@ -27,7 +20,6 @@ class NativeDiscoveryViewModel(
     private val interactor: DiscoveryInteractor,
     private val resourceManager: ResourceManager,
     private val analytics: DiscoveryAnalytics,
-    private val appNotifier: AppNotifier,
     private val corePreferences: CorePreferences,
 ) : BaseViewModel() {
 
@@ -36,6 +28,7 @@ class NativeDiscoveryViewModel(
     val apiHostUrl get() = config.getApiHostURL()
     val isUserLoggedIn get() = corePreferences.user != null
     val canShowBackButton get() = config.isPreLoginExperienceEnabled() && !isUserLoggedIn
+    val isRegistrationEnabled: Boolean get() = config.isRegistrationEnabled()
 
     private val _uiState = MutableLiveData<DiscoveryUIState>(DiscoveryUIState.Loading)
     val uiState: LiveData<DiscoveryUIState>
@@ -53,10 +46,6 @@ class NativeDiscoveryViewModel(
     val isUpdating: LiveData<Boolean>
         get() = _isUpdating
 
-    private val _appUpgradeEvent = MutableLiveData<AppUpgradeEvent>()
-    val appUpgradeEvent: LiveData<AppUpgradeEvent>
-        get() = _appUpgradeEvent
-
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
 
@@ -66,7 +55,6 @@ class NativeDiscoveryViewModel(
 
     init {
         getCoursesList()
-        collectAppUpgradeEvent()
     }
 
     private fun loadCoursesInternal(
@@ -78,7 +66,9 @@ class NativeDiscoveryViewModel(
                 isLoading = true
                 val response = if (networkConnection.isOnline() || page > 1) {
                     interactor.getCoursesList(username, organization, page)
-                } else null
+                } else {
+                    null
+                }
                 if (response != null) {
                     if (response.pagination.next.isNotEmpty() && page != response.pagination.numPages) {
                         _canLoadMore.value = true
@@ -153,30 +143,11 @@ class NativeDiscoveryViewModel(
                 _isUpdating.value = false
             }
         }
-
     }
 
     fun fetchMore() {
         if (!isLoading && page != -1) {
             loadCoursesInternal()
-        }
-    }
-
-    @OptIn(FlowPreview::class)
-    private fun collectAppUpgradeEvent() {
-        viewModelScope.launch {
-            appNotifier.notifier
-                .debounce(100)
-                .collect { event ->
-                    when (event) {
-                        is AppUpgradeEvent.UpgradeRecommendedEvent -> {
-                            _appUpgradeEvent.value = event
-                        }
-                        is AppUpgradeEvent.UpgradeRequiredEvent -> {
-                            _appUpgradeEvent.value = AppUpgradeEvent.UpgradeRequiredEvent
-                        }
-                    }
-                }
         }
     }
 

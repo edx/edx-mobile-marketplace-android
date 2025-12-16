@@ -44,11 +44,16 @@ import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
+import org.openedx.core.ui.displayCutoutForLandscape
+import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.course.R
 import org.openedx.course.presentation.CourseAnalyticsEvent
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 
 class HandoutsWebViewFragment : Fragment() {
 

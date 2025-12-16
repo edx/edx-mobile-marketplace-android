@@ -2,6 +2,7 @@ package org.openedx.app.analytics
 
 import android.content.Context
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.segment.analytics.kotlin.core.Analytics
 import org.openedx.core.utils.Logger
 
 class FirebaseAnalytics(context: Context) : Analytics {

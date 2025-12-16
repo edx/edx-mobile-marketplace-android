@@ -3,8 +3,8 @@ package org.openedx.auth.presentation.ui
 import android.content.res.Configuration
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,7 +23,7 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -55,7 +55,6 @@ import org.openedx.auth.R
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.extension.TextConverter
-import org.openedx.core.extension.tagId
 import org.openedx.core.ui.HyperlinkText
 import org.openedx.core.ui.SheetContent
 import org.openedx.core.ui.noRippleClickable
@@ -63,6 +62,7 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.foundation.extension.tagId
 
 @Composable
 fun RequiredFields(
@@ -138,9 +138,7 @@ fun RequiredFields(
                 )
             }
 
-            RegistrationFieldType.UNKNOWN -> {
-
-            }
+            RegistrationFieldType.UNKNOWN -> {}
         }
     }
 }
@@ -157,7 +155,8 @@ fun OptionalFields(
     Column {
         fields.forEach { field ->
             when (field.type) {
-                RegistrationFieldType.TEXT, RegistrationFieldType.EMAIL, RegistrationFieldType.CONFIRM_EMAIL, RegistrationFieldType.PASSWORD -> {
+                RegistrationFieldType.TEXT, RegistrationFieldType.EMAIL,
+                RegistrationFieldType.CONFIRM_EMAIL, RegistrationFieldType.PASSWORD -> {
                     InputRegistrationField(
                         modifier = Modifier.fillMaxWidth(),
                         isErrorShown = showErrorMap[field.name]
@@ -206,7 +205,8 @@ fun OptionalFields(
                             ?: "",
                         onClick = { serverName, list ->
                             onSelectClick(serverName, field, list)
-                        })
+                        }
+                    )
                 }
 
                 RegistrationFieldType.TEXTAREA -> {
@@ -515,7 +515,7 @@ fun ExpandableText(
             targetState = !isExpanded
         }
     }
-    val transition = updateTransition(transitionState, label = "")
+    val transition = rememberTransition(transitionState, label = "")
     val arrowRotationDegree by transition.animateFloat({
         tween(durationMillis = 300)
     }, label = "") {
@@ -527,7 +527,7 @@ fun ExpandableText(
     } else {
         stringResource(id = R.string.auth_show_optional_fields)
     }
-    val icon = Icons.Filled.ChevronRight
+    val icon = Icons.AutoMirrored.Filled.KeyboardArrowRight
 
     Row(
         modifier = modifier
@@ -537,7 +537,6 @@ fun ExpandableText(
             },
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        //TODO: textStyle
         Text(
             modifier = Modifier,
             text = text,
@@ -583,9 +582,7 @@ fun SelectRegistrationFieldPreview() {
                 field,
                 false,
                 initialValue = "",
-                onClick = { _, _ ->
-
-                }
+                onClick = { _, _ -> }
             )
         }
     }
@@ -601,9 +598,7 @@ fun InputRegistrationFieldPreview() {
                 modifier = Modifier.fillMaxWidth(),
                 isErrorShown = false,
                 registrationField = field,
-                onValueChanged = { _, _, _ ->
-
-                }
+                onValueChanged = { _, _, _ -> }
             )
         }
     }
@@ -617,7 +612,7 @@ private fun OptionalFieldsPreview() {
         Column(Modifier.background(MaterialTheme.appColors.background)) {
             val optionalField = field.copy(required = false)
             OptionalFields(
-                fields = List(3) { optionalField },
+                fields = List(size = 3) { optionalField },
                 showErrorMap = SnapshotStateMap(),
                 selectableNamesMap = SnapshotStateMap(),
                 onSelectClick = { _, _, _ -> },

@@ -39,18 +39,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import org.openedx.core.extension.isLinkValid
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.domain.model.Course
-import org.openedx.core.R as CoreR
-
+import org.openedx.foundation.extension.toImageLink
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
+import org.openedx.core.R as сoreR
 
 @Composable
 fun ImageHeader(
@@ -67,20 +66,15 @@ fun ImageHeader(
         } else {
             ContentScale.Crop
         }
-    val imageUrl = if (courseImage?.isLinkValid() == true) {
-        courseImage
-    } else {
-        apiHostUrl + courseImage
-    }
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(imageUrl)
-                .error(CoreR.drawable.core_no_image_course)
-                .placeholder(CoreR.drawable.core_no_image_course)
+                .data(courseImage?.toImageLink(apiHostUrl))
+                .error(сoreR.drawable.core_no_image_course)
+                .placeholder(сoreR.drawable.core_no_image_course)
                 .build(),
             contentDescription = stringResource(
-                id = CoreR.string.core_accessibility_header_image_for,
+                id = сoreR.string.core_accessibility_header_image_for,
                 courseName
             ),
             contentScale = contentScale,
@@ -98,7 +92,6 @@ fun DiscoveryCourseItem(
     windowSize: WindowSize,
     onClick: (String) -> Unit,
 ) {
-
     val imageWidth by remember(key1 = windowSize) {
         mutableStateOf(
             windowSize.windowSizeValue(
@@ -108,7 +101,6 @@ fun DiscoveryCourseItem(
         )
     }
 
-    val imageUrl = apiHostUrl + course.media.courseImage?.uri
     Surface(
         modifier = Modifier
             .testTag("btn_course_card")
@@ -146,7 +138,8 @@ fun DiscoveryCourseItem(
                     modifier = Modifier
                         .testTag("txt_course_org")
                         .padding(top = 12.dp),
-                    text = course.org, color = MaterialTheme.appColors.textFieldHint,
+                    text = course.org,
+                    color = MaterialTheme.appColors.textFieldHint,
                     style = MaterialTheme.appTypography.labelMedium
                 )
                 Text(
@@ -223,7 +216,7 @@ fun WarningLabel(
 private fun WarningLabelPreview() {
     OpenEdXTheme {
         WarningLabel(
-            painter = painterResource(id = CoreR.drawable.core_ic_offline),
+            painter = painterResource(id = сoreR.drawable.core_ic_offline),
             text = stringResource(id = R.string.discovery_no_internet_label)
         )
     }

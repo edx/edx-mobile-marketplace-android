@@ -65,8 +65,6 @@ import org.openedx.core.ui.FakePurchasesFulfillmentCompleted
 import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.settingsHeaderBackground
 import org.openedx.core.ui.statusBarsInset
@@ -74,9 +72,6 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
-import org.openedx.profile.R
-import org.openedx.profile.domain.model.Configuration
 import org.openedx.profile.presentation.ui.SettingsDivider
 import org.openedx.profile.presentation.ui.SettingsItem
 import org.openedx.core.R as CoreR
@@ -217,7 +212,6 @@ internal fun SettingsScreen(
                                     SupportInfoSection(
                                         uiState = uiState,
                                         onAction = onAction,
-                                        appUpgradeEvent = appUpgradeEvent,
                                     )
 
                                     Spacer(modifier = Modifier.height(24.dp))
@@ -448,7 +442,7 @@ private fun SupportInfoSection(
                 }
                 AppVersionItem(
                     versionName = uiState.configuration.versionName,
-                    appUpgradeEvent = appUpgradeEvent,
+                    appUpgradeEvent = AppUpdateState.lastAppUpgradeEvent,
                 ) {
                     onAction(SettingsScreenAction.AppVersionClick)
                 }
@@ -636,7 +630,7 @@ private fun AppVersionItemAppToDate(versionName: String) {
         ) {
             Icon(
                 modifier = Modifier.size(
-                    (MaterialTheme.appTypography.labelLarge.fontSize.value + 4).dp
+                    size = (MaterialTheme.appTypography.labelLarge.fontSize.value + 4).dp
                 ),
                 painter = painterResource(id = CoreR.drawable.core_ic_check),
                 contentDescription = null,
@@ -772,7 +766,7 @@ private val mockUiState = SettingsUIState.Data(
 private fun AppVersionItemAppToDatePreview() {
     OpenEdXTheme {
         AppVersionItem(
-            versionName = mockAppData.versionName,
+            versionName = ProfileMocks.appData.versionName,
             appUpgradeEvent = null,
             onClick = {}
         )
@@ -784,7 +778,7 @@ private fun AppVersionItemAppToDatePreview() {
 private fun AppVersionItemUpgradeRecommendedPreview() {
     OpenEdXTheme {
         AppVersionItem(
-            versionName = mockAppData.versionName,
+            versionName = ProfileMocks.appData.versionName,
             appUpgradeEvent = AppUpgradeEvent.UpgradeRecommendedEvent("1.0.1"),
             onClick = {}
         )
@@ -796,7 +790,7 @@ private fun AppVersionItemUpgradeRecommendedPreview() {
 private fun AppVersionItemUpgradeRequiredPreview() {
     OpenEdXTheme {
         AppVersionItem(
-            versionName = mockAppData.versionName,
+            versionName = ProfileMocks.appData.versionName,
             appUpgradeEvent = AppUpgradeEvent.UpgradeRequiredEvent,
             onClick = {}
         )

@@ -1,7 +1,5 @@
 package org.openedx.course.presentation.dates
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,27 +9,27 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.openedx.core.CalendarRouter
+import org.openedx.core.R
 import org.openedx.core.BaseViewModel
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.interactor.CalendarInteractor
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.CourseBannerType
 import org.openedx.core.domain.model.CourseDateBlock
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.extension.getSequentialBlocks
 import org.openedx.core.extension.getVerticalBlocks
-import org.openedx.core.extension.isInternetError
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
-import org.openedx.core.presentation.settings.calendarsync.CalendarSyncUIState
-import org.openedx.core.system.CalendarManager
-import org.openedx.core.system.ResourceManager
-import org.openedx.core.system.notifier.CalendarSyncEvent.CheckCalendarSyncEvent
+import org.openedx.core.presentation.settings.calendarsync.CalendarSyncState
 import org.openedx.core.system.notifier.CalendarSyncEvent.CreateCalendarSyncEvent
 import org.openedx.core.system.notifier.CourseDatesShifted
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.RefreshDates
+import org.openedx.core.system.notifier.calendar.CalendarNotifier
 import org.openedx.core.system.notifier.RefreshPLSBanner
 import org.openedx.core.utils.Logger
 import org.openedx.course.data.storage.CoursePreferences
@@ -40,6 +38,10 @@ import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseAnalyticsKey
 import org.openedx.course.presentation.CourseRouter
+import org.openedx.foundation.extension.isInternetError
+import org.openedx.foundation.presentation.BaseViewModel
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import org.openedx.core.R as CoreR
 
 class CourseDatesViewModel(
@@ -48,22 +50,27 @@ class CourseDatesViewModel(
     private val enrollmentMode: String,
     private val courseNotifier: CourseNotifier,
     private val interactor: CourseInteractor,
-    private val calendarManager: CalendarManager,
     private val resourceManager: ResourceManager,
     private val corePreferences: CorePreferences,
     private val coursePreferences: CoursePreferences,
     private val courseAnalytics: CourseAnalytics,
     private val config: Config,
     val courseRouter: CourseRouter,
+    private val calendarInteractor: CalendarInteractor,
+    private val calendarNotifier: CalendarNotifier,
+    private val corePreferences: CorePreferences,
+    val courseRouter: CourseRouter,
+    val calendarRouter: CalendarRouter
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
 
     var isSelfPaced = true
+    var useRelativeDates = corePreferences.isRelativeDatesEnabled
 
-    private val _uiState = MutableLiveData<DatesUIState>(DatesUIState.Loading)
-    val uiState: LiveData<DatesUIState>
-        get() = _uiState
+    private val _uiState = MutableStateFlow<CourseDatesUIState>(CourseDatesUIState.Loading)
+    val uiState: StateFlow<CourseDatesUIState>
+        get() = _uiState.asStateFlow()
 
     private val _uiMessage = MutableSharedFlow<UIMessage>()
     val uiMessage: SharedFlow<UIMessage>
@@ -91,10 +98,6 @@ class CourseDatesViewModel(
         viewModelScope.launch {
             courseNotifier.notifier.collect { event ->
                 when (event) {
-                    is CheckCalendarSyncEvent -> {
-                        _calendarSyncUIState.update { it.copy(isSynced = event.isSynced) }
-                    }
-
                     is RefreshDates -> {
                         loadingCourseDatesInternal()
                     }
@@ -106,9 +109,18 @@ class CourseDatesViewModel(
                 }
             }
         }
+        viewModelScope.launch {
+            calendarNotifier.notifier.collect {
+                (_uiState.value as? DatesUIState.Dates)?.let { currentUiState ->
+                    val courseDates = currentUiState.courseDatesResult.datesSection.values.flatten()
+                    _uiState.update {
+                        (it as CourseDatesUIState.CourseDates).copy(calendarSyncState = getCalendarState(courseDates))
+                    }
+                }
+            }
+        }
 
         loadingCourseDatesInternal()
-        updateAndFetchCalendarSyncState()
     }
 
     private fun loadingCourseDatesInternal() {
@@ -118,9 +130,12 @@ class CourseDatesViewModel(
                 isSelfPaced = courseStructure?.isSelfPaced ?: false
                 val datesResponse = interactor.getCourseDates(courseId = courseId)
                 if (datesResponse.datesSection.isEmpty()) {
+                    _uiState.value = CourseDatesUIState.Error
                     _uiState.value = DatesUIState.Error
                 } else {
-                    _uiState.value = DatesUIState.Dates(datesResponse)
+                    val courseDates = datesResponse.datesSection.values.flatten()
+                    val calendarState = getCalendarState(courseDates)
+                    _uiState.value = CourseDatesUIState.CourseDates(datesResponse, calendarState)
                     courseBannerType = datesResponse.courseBanner.bannerType
                     _canShowPLSBanner.value =
                         coursePreferences.canShowPLSBanner(courseId, courseBannerType.name)
@@ -129,8 +144,12 @@ class CourseDatesViewModel(
             } catch (e: Exception) {
                 logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 _uiState.value = DatesUIState.Error
+                _uiState.value = CourseDatesUIState.Error
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection))
+                    )
                 }
             } finally {
                 courseNotifier.send(CourseLoading(false))
@@ -148,9 +167,16 @@ class CourseDatesViewModel(
             } catch (e: Exception) {
                 logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection))
+                    )
                 } else {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_dates_shift_dates_unsuccessful_msg)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_dates_shift_dates_unsuccessful_msg)
+                        )
+                    )
                 }
                 onResetDates(false)
             }
@@ -166,6 +192,7 @@ class CourseDatesViewModel(
                 throwable = e,
                 metadata = mapOf("blockId" to blockId, "courseId" to courseId)
             )
+            e.printStackTrace()
             null
         }
     }
@@ -175,6 +202,7 @@ class CourseDatesViewModel(
             courseStructure?.blockData?.getSequentialBlocks()
                 ?.find { it.descendants.contains(blockId) }
         } catch (e: Exception) {
+            e.printStackTrace()
             logger.e(
                 throwable = e,
                 metadata = mapOf("blockId" to blockId, "courseId" to courseId)
@@ -226,7 +254,7 @@ class CourseDatesViewModel(
 
     private fun checkIfCalendarOutOfDate() {
         val value = _uiState.value
-        if (value is DatesUIState.Dates) {
+        if (value is CourseDatesUIState.CourseDates) {
             viewModelScope.launch {
                 courseNotifier.send(
                     CreateCalendarSyncEvent(
@@ -239,10 +267,27 @@ class CourseDatesViewModel(
         }
     }
 
-    private fun isCalendarSyncEnabled(): Boolean {
-        val calendarSync = corePreferences.appConfig.courseDatesCalendarSync
-        return calendarSync.isEnabled && ((calendarSync.isSelfPacedEnabled && isSelfPaced) ||
-                (calendarSync.isInstructorPacedEnabled && !isSelfPaced))
+    private suspend fun getCalendarState(courseDates: List<CourseDateBlock>): CalendarSyncState {
+        val courseCalendarState = calendarInteractor.getCourseCalendarStateByIdFromCache(courseId)
+        return when {
+            courseCalendarState?.isCourseSyncEnabled != true -> CalendarSyncState.OFFLINE
+            !isCourseCalendarUpToDate(courseDates) -> CalendarSyncState.SYNC_FAILED
+            else -> CalendarSyncState.SYNCED
+        }
+    }
+
+    private suspend fun isCourseCalendarUpToDate(courseDateBlocks: List<CourseDateBlock>): Boolean {
+        val oldChecksum = getCourseCalendarStateChecksum()
+        val newChecksum = getCourseChecksum(courseDateBlocks)
+        return newChecksum == oldChecksum
+    }
+
+    private fun getCourseChecksum(courseDateBlocks: List<CourseDateBlock>): Int {
+        return courseDateBlocks.sumOf { it.hashCode() }
+    }
+
+    private suspend fun getCourseCalendarStateChecksum(): Int? {
+        return calendarInteractor.getCourseCalendarStateByIdFromCache(courseId)?.checksum
     }
 
     fun logPlsBannerViewed() {
@@ -272,18 +317,6 @@ class CourseDatesViewModel(
         logDatesEvent(CourseAnalyticsEvent.DATES_COURSE_COMPONENT_CLICKED, params)
     }
 
-    private fun logCalendarSyncToggle(isChecked: Boolean) {
-        logDatesEvent(
-            CourseAnalyticsEvent.DATES_CALENDAR_SYNC_TOGGLE,
-            buildMap {
-                put(
-                    CourseAnalyticsKey.ACTION.key,
-                    if (isChecked) CourseAnalyticsKey.ON.key else CourseAnalyticsKey.OFF.key
-                )
-            }
-        )
-    }
-
     private fun logDatesEvent(
         event: CourseAnalyticsEvent,
         param: Map<String, Any> = emptyMap(),
@@ -296,8 +329,11 @@ class CourseDatesViewModel(
                 put(CourseAnalyticsKey.ENROLLMENT_MODE.key, enrollmentMode)
                 put(
                     CourseAnalyticsKey.PACING.key,
-                    if (isSelfPaced) CourseAnalyticsKey.SELF_PACED.key
-                    else CourseAnalyticsKey.INSTRUCTOR_PACED.key
+                    if (isSelfPaced) {
+                        CourseAnalyticsKey.SELF_PACED.key
+                    } else {
+                        CourseAnalyticsKey.INSTRUCTOR_PACED.key
+                    }
                 )
                 putAll(param)
             }

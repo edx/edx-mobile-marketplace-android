@@ -554,36 +554,42 @@
           },
           {
             "fieldPath": "courseAccessDetails.coursewareAccess.hasAccess",
+            "fieldPath": "coursewareAccess.hasAccess",
             "columnName": "hasAccess",
             "affinity": "INTEGER",
             "notNull": false
           },
           {
             "fieldPath": "courseAccessDetails.coursewareAccess.errorCode",
+            "fieldPath": "coursewareAccess.errorCode",
             "columnName": "errorCode",
             "affinity": "TEXT",
             "notNull": false
           },
           {
             "fieldPath": "courseAccessDetails.coursewareAccess.developerMessage",
+            "fieldPath": "coursewareAccess.developerMessage",
             "columnName": "developerMessage",
             "affinity": "TEXT",
             "notNull": false
           },
           {
             "fieldPath": "courseAccessDetails.coursewareAccess.userMessage",
+            "fieldPath": "coursewareAccess.userMessage",
             "columnName": "userMessage",
             "affinity": "TEXT",
             "notNull": false
           },
           {
             "fieldPath": "courseAccessDetails.coursewareAccess.additionalContextUserMessage",
+            "fieldPath": "coursewareAccess.additionalContextUserMessage",
             "columnName": "additionalContextUserMessage",
             "affinity": "TEXT",
             "notNull": false
           },
           {
             "fieldPath": "courseAccessDetails.coursewareAccess.userFragment",
+            "fieldPath": "coursewareAccess.userFragment",
             "columnName": "userFragment",
             "affinity": "TEXT",
             "notNull": false
@@ -591,18 +597,24 @@
           {
             "fieldPath": "certificate.certificateURL",
             "columnName": "certificateURL",
+            "fieldPath": "media.bannerImage",
+            "columnName": "bannerImage",
             "affinity": "TEXT",
             "notNull": false
           },
           {
             "fieldPath": "enrollmentDetails.created",
             "columnName": "created",
+            "fieldPath": "media.courseImage",
+            "columnName": "courseImage",
             "affinity": "TEXT",
             "notNull": false
           },
           {
             "fieldPath": "enrollmentDetails.mode",
             "columnName": "mode",
+            "fieldPath": "media.courseVideo",
+            "columnName": "courseVideo",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -615,6 +627,14 @@
           {
             "fieldPath": "enrollmentDetails.upgradeDeadline",
             "columnName": "upgradeDeadline",
+            "fieldPath": "media.image",
+            "columnName": "image",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "certificate.certificateURL",
+            "columnName": "certificateURL",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -657,6 +677,12 @@
             "notNull": true
           },
           {
+            "fieldPath": "courseId",
+            "columnName": "courseId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
             "fieldPath": "size",
             "columnName": "size",
             "affinity": "INTEGER",
@@ -690,34 +716,130 @@
             "fieldPath": "progress",
             "columnName": "progress",
             "affinity": "REAL",
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "TEXT",
             "notNull": false
-          },
-          {
-            "fieldPath": "transcriptUrls",
-            "columnName": "transcriptUrls",
-            "affinity": "TEXT",
-            "notNull": true,
-            "defaultValue": "''"
-          },
-          {
-            "fieldPath": "transcriptPaths",
-            "columnName": "transcriptPaths",
-            "affinity": "TEXT",
-            "notNull": true,
-            "defaultValue": "''"
-          },
-          {
-            "fieldPath": "transcriptDownloadedStatus",
-            "columnName": "transcriptDownloadedStatus",
-            "affinity": "TEXT",
-            "notNull": true,
-            "defaultValue": "'NOT_DOWNLOADED'"
           }
         ],
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
             "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "offline_x_block_progress_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `courseId` TEXT NOT NULL, `url` TEXT NOT NULL, `type` TEXT NOT NULL, `data` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "blockId",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transcriptUrls",
+            "columnName": "transcriptUrls",
+            "fieldPath": "courseId",
+            "columnName": "courseId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jsonProgress.url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+            "notNull": true
+          },
+          {
+            "fieldPath": "transcriptPaths",
+            "columnName": "transcriptPaths",
+            "fieldPath": "jsonProgress.type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+            "notNull": true
+          },
+          {
+            "fieldPath": "transcriptDownloadedStatus",
+            "columnName": "transcriptDownloadedStatus",
+            "fieldPath": "jsonProgress.data",
+            "columnName": "data",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'NOT_DOWNLOADED'"
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "course_calendar_event_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`event_id` INTEGER NOT NULL, `course_id` TEXT NOT NULL, PRIMARY KEY(`event_id`))",
+        "fields": [
+          {
+            "fieldPath": "eventId",
+            "columnName": "event_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "courseId",
+            "columnName": "course_id",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "event_id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "course_calendar_state_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`course_id` TEXT NOT NULL, `checksum` INTEGER NOT NULL, `is_course_sync_enabled` INTEGER NOT NULL, PRIMARY KEY(`course_id`))",
+        "fields": [
+          {
+            "fieldPath": "courseId",
+            "columnName": "course_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "checksum",
+            "columnName": "checksum",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCourseSyncEnabled",
+            "columnName": "is_course_sync_enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "course_id"
           ]
         },
         "indices": [],

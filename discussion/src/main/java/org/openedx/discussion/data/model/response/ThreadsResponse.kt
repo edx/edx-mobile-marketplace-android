@@ -3,7 +3,6 @@ package org.openedx.discussion.data.model.response
 import com.google.gson.annotations.SerializedName
 import org.openedx.core.data.model.Pagination
 import org.openedx.core.data.model.ProfileImage
-import org.openedx.core.extension.TextConverter
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.ThreadsData
 
@@ -104,7 +103,6 @@ data class ThreadsResponse(
                 updatedAt,
                 rawBody,
                 renderedBody,
-                TextConverter.textToLinkedImageText(renderedBody),
                 abuseFlagged,
                 voted,
                 voteCount,
@@ -133,17 +131,19 @@ data class ThreadsResponse(
             )
         }
 
-        fun serverTypeToLocalType(): DiscussionType {
+        private fun serverTypeToLocalType(): DiscussionType {
             val actualType = if (type.contains("-")) {
                 type.replace("-", "_")
-            } else type
+            } else {
+                type
+            }
             return try {
                 DiscussionType.valueOf(actualType.uppercase())
             } catch (e: Exception) {
-                throw IllegalStateException("Unknown thread type")
+                e.printStackTrace()
+                error("Unknown thread type")
             }
         }
-
     }
 
     fun mapToDomain(): ThreadsData {
@@ -153,6 +153,4 @@ data class ThreadsResponse(
             pagination.mapToDomain()
         )
     }
-
 }
-

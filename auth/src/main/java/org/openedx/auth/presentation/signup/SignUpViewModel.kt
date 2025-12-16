@@ -24,20 +24,16 @@ import org.openedx.auth.presentation.AuthAnalyticsKey
 import org.openedx.auth.presentation.AuthRouter
 import org.openedx.auth.presentation.sso.OAuthHelper
 import org.openedx.core.ApiConstants
-import org.openedx.core.BaseViewModel
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.domain.model.createHonorCodeField
-import org.openedx.core.extension.isInternetError
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.CrashlyticsHelper
-import org.openedx.core.utils.Logger
+import org.openedx.core.utils.Logger]
 import retrofit2.HttpException
 import org.openedx.core.R as coreR
 
@@ -158,12 +154,16 @@ class SignUpViewModel(
                 resultMap.remove(k)
             }
         }
+        logEvent(AuthAnalyticsEvent.CREATE_ACCOUNT_CLICKED)
+        val mapFields = prepareMapFields()
         _uiState.update { it.copy(isButtonLoading = true, validationError = false) }
+
         viewModelScope.launch {
             setErrorInstructions(emptyMap())
             try {
                 val validationFields = interactor.validateRegistrationFields(mapFields)
                 setErrorInstructions(validationFields.validationResult)
+
                 if (validationFields.hasValidationError()) {
                     logLogistrationFailureEvent(
                         event = AuthAnalyticsEvent.VALIDATION_FAILURE,
@@ -247,7 +247,75 @@ class SignUpViewModel(
                     resourceManager.getString(coreR.string.core_error_unknown_error)
                 )
             )
+                    handleRegistration(mapFields)
+                }
+            } catch (e: Exception) {
+                handleRegistrationError(e)
+            }
         }
+    }
+
+    private fun prepareMapFields(): MutableMap<String, String> {
+        val mapFields = uiState.value.allFields.associate { it.name to it.placeholder } +
+                mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())
+
+        return mapFields.toMutableMap().apply {
+            uiState.value.allFields.filter { !it.required }.forEach { (key, _) ->
+                if (mapFields[key].isNullOrEmpty()) {
+                    remove(key)
+                }
+            }
+        }
+    }
+
+    private suspend fun handleRegistration(mapFields: MutableMap<String, String>) {
+        val resultMap = mapFields.toMutableMap()
+        uiState.value.socialAuth?.let { socialAuth ->
+            resultMap[ApiConstants.ACCESS_TOKEN] = socialAuth.accessToken
+            resultMap[ApiConstants.PROVIDER] = socialAuth.authType.postfix
+            resultMap[ApiConstants.CLIENT_ID] = config.getOAuthClientId()
+        }
+
+        interactor.register(resultMap)
+        logRegisterSuccess()
+
+        if (uiState.value.socialAuth == null) {
+            loginWithCredentials(resultMap)
+        } else {
+            exchangeToken(uiState.value.socialAuth!!)
+        }
+    }
+
+    private fun logRegisterSuccess() {
+        logEvent(
+            AuthAnalyticsEvent.REGISTER_SUCCESS,
+            buildMap {
+                put(
+                    AuthAnalyticsKey.METHOD.key,
+                    (uiState.value.socialAuth?.authType?.methodName ?: AuthType.PASSWORD.methodName).lowercase()
+                )
+            }
+        )
+    }
+
+    private suspend fun loginWithCredentials(resultMap: Map<String, String>) {
+        interactor.login(
+            resultMap.getValue(ApiConstants.EMAIL),
+            resultMap.getValue(ApiConstants.PASSWORD)
+        )
+        setUserId()
+        _uiState.update { it.copy(successLogin = true, isButtonLoading = false) }
+        appNotifier.send(SignInEvent())
+    }
+
+    private suspend fun handleRegistrationError(e: Exception) {
+        _uiState.update { it.copy(isButtonLoading = false) }
+        val errorMessage = if (e.isInternetError()) {
+            coreR.string.core_error_no_connection
+        } else {
+            coreR.string.core_error_unknown_error
+        }
+        _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(errorMessage)))
     }
 
     fun socialAuth(fragment: Fragment, authType: AuthType) {

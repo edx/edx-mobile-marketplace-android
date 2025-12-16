@@ -20,14 +20,12 @@ import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionConfig
 import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.domain.model.Topic
-import java.util.concurrent.TimeUnit
 
 class DiscussionRepository(
     private val api: DiscussionApi,
     private val config: Config,
     private val preferencesManager: CorePreferences,
     private val resourceManager: ResourceManager,
-    private val recaptchaManager: RecaptchaManager,
 ) {
     private val cacheDurationMs = TimeUnit.HOURS.toMillis(1)
 
@@ -173,7 +171,6 @@ class DiscussionRepository(
         captchaToken: String,
     ) = api.createComment(CommentBody(threadId, rawBody, parentId, captchaToken)).mapToDomain()
 
-
     suspend fun createThread(
         topicId: String,
         courseId: String,
@@ -193,5 +190,4 @@ class DiscussionRepository(
         )
         return api.markBlocksCompletion(blocksCompletionBody)
     }
-
 }

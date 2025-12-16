@@ -26,11 +26,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.openedx.core.UIMessage
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.extension.TextConverter
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
@@ -46,6 +44,7 @@ import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 import java.net.UnknownHostException
 import org.openedx.core.R as CoreR
 
+@Suppress("LargeClass")
 @OptIn(ExperimentalCoroutinesApi::class)
 class DiscussionCommentsViewModelTest {
 
@@ -136,7 +135,8 @@ class DiscussionCommentsViewModelTest {
 
 
     private val comments = listOf(
-        mockComment.copy(id = "0"), mockComment.copy(id = "1")
+        DiscussionMocks.comment.copy(id = "0"),
+        DiscussionMocks.comment.copy(id = "1")
     )
 
     @Before
@@ -160,7 +160,7 @@ class DiscussionCommentsViewModelTest {
     @Test
     fun `getThreadComments no internet connection exception`() = runTest {
         coEvery { interactor.getThreadComments(any(), any()) } throws UnknownHostException()
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
         val viewModel =
             DiscussionCommentsViewModel(
                 "",
@@ -173,6 +173,7 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread
             )
 
         advanceUntilIdle()
@@ -223,7 +224,7 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "2", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
         every { resourceManager.getString(eq(DiscussionType.QUESTION.resId)) } returns ""
 
         val viewModel =
@@ -238,6 +239,7 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread.copy(type = DiscussionType.QUESTION)
             )
 
         advanceUntilIdle()
@@ -258,8 +260,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel =
             DiscussionCommentsViewModel(
@@ -297,8 +299,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel =
             DiscussionCommentsViewModel(
@@ -325,7 +327,6 @@ class DiscussionCommentsViewModelTest {
         coVerify(exactly = 0) { interactor.getThreadQuestionComments(any(), any(), any()) }
         coVerify(exactly = 1) { interactor.setThreadRead(any()) }
 
-
         assert(viewModel.uiMessage.value == null)
         assert(viewModel.uiState.value is DiscussionCommentsUIState.Success)
         assert(viewModel.isUpdating.value == false)
@@ -338,8 +339,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -352,8 +353,8 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread
         )
-
 
         coEvery { interactor.getThreadQuestionComments(any(), any(), any()) } returns CommentsData(
             comments,
@@ -379,8 +380,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "2", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -418,8 +419,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -433,7 +434,6 @@ class DiscussionCommentsViewModelTest {
             preferencesManager,
             analytics,
         )
-
 
         coEvery { interactor.setThreadVoted(any(), any()) } throws UnknownHostException()
 
@@ -453,8 +453,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel =
             DiscussionCommentsViewModel(
@@ -506,7 +506,7 @@ class DiscussionCommentsViewModelTest {
                 analytics,
             )
 
-        coEvery { interactor.setThreadVoted(any(), any()) } returns mockThread
+        coEvery { interactor.setThreadVoted(any(), any()) } returns DiscussionMocks.thread
 
         viewModel.setThreadUpvoted(true)
         advanceUntilIdle()
@@ -523,8 +523,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel =
             DiscussionCommentsViewModel(
@@ -559,8 +559,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel =
             DiscussionCommentsViewModel(
@@ -575,7 +575,6 @@ class DiscussionCommentsViewModelTest {
                 preferencesManager,
                 analytics,
             )
-
 
         coEvery { interactor.setCommentFlagged(any(), any()) } throws Exception()
 
@@ -612,7 +611,9 @@ class DiscussionCommentsViewModelTest {
             analytics,
         )
 
-        coEvery { interactor.setCommentFlagged(any(), any()) } returns mockComment.copy(id = "0")
+        coEvery { interactor.setCommentFlagged(any(), any()) } returns DiscussionMocks.comment.copy(
+            id = "0"
+        )
 
         viewModel.setCommentReported("", true)
         advanceUntilIdle()
@@ -624,15 +625,14 @@ class DiscussionCommentsViewModelTest {
         assert(viewModel.uiState.value is DiscussionCommentsUIState.Success)
     }
 
-
     @Test
     fun `setCommentUpvoted no internet connection exception`() = runTest {
         coEvery { interactor.getThreadComments(any(), any()) } returns CommentsData(
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -645,6 +645,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread
         )
 
         coEvery { interactor.setCommentVoted(any(), any()) } throws UnknownHostException()
@@ -665,8 +666,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -679,6 +680,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread
         )
 
         coEvery { interactor.setCommentVoted(any(), any()) } throws Exception()
@@ -702,6 +704,8 @@ class DiscussionCommentsViewModelTest {
         coEvery { interactor.setThreadRead(any()) } returns mockThread
         every { analytics.logEvent(any(), any()) } returns Unit
         every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -716,7 +720,12 @@ class DiscussionCommentsViewModelTest {
             analytics,
         )
 
-        coEvery { interactor.setCommentVoted(any(), any()) } returns mockComment.copy(id = "0")
+        coEvery {
+            interactor.setCommentVoted(
+                any(),
+                any()
+            )
+        } returns DiscussionMocks.comment.copy(id = "0")
 
         viewModel.setCommentUpvoted("", true)
         advanceUntilIdle()
@@ -733,8 +742,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -747,6 +756,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread
         )
 
         coEvery { interactor.setThreadFlagged(any(), any()) } throws UnknownHostException()
@@ -767,8 +777,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -801,8 +811,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -836,9 +846,9 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
         coEvery { interactor.setThreadFollowed(any(), any()) } throws UnknownHostException()
 
         val viewModel = DiscussionCommentsViewModel(
@@ -870,8 +880,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -922,7 +932,7 @@ class DiscussionCommentsViewModelTest {
             analytics,
         )
 
-        coEvery { interactor.setThreadFollowed(any(), any()) } returns mockThread
+        coEvery { interactor.setThreadFollowed(any(), any()) } returns DiscussionMocks.thread
 
         viewModel.setThreadFollowed(true)
         advanceUntilIdle()
@@ -939,8 +949,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -957,9 +967,9 @@ class DiscussionCommentsViewModelTest {
 
         coEvery { notifier.notifier } returns flow {
             delay(100)
-            emit(DiscussionCommentAdded())
+            emit(DiscussionCommentAdded(DiscussionMocks.comment))
         }
-        coEvery { notifier.send(DiscussionThreadDataChanged(mockThread)) } returns Unit
+        coEvery { notifier.send(DiscussionThreadDataChanged(DiscussionMocks.thread)) } returns Unit
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
         val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
@@ -973,13 +983,47 @@ class DiscussionCommentsViewModelTest {
     }
 
     @Test
+    fun `DiscussionCommentAdded notifier test all comments not loaded`() = runTest {
+        coEvery { interactor.getThreadComments(any(), any()) } returns CommentsData(
+            comments,
+            Pagination(10, "2", 4, "1")
+        )
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
+
+        val viewModel = DiscussionCommentsViewModel(
+            interactor,
+            resourceManager,
+            notifier,
+            DiscussionMocks.thread
+        )
+
+        coEvery { notifier.notifier } returns flow {
+            delay(100)
+            emit(DiscussionCommentAdded(DiscussionMocks.comment))
+        }
+        coEvery { notifier.send(DiscussionThreadDataChanged(mockk())) } returns Unit
+
+        val mockLifeCycleOwner: LifecycleOwner = mockk()
+        val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
+        lifecycleRegistry.addObserver(viewModel)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+
+        advanceUntilIdle()
+
+        val message = viewModel.uiMessage.value as? UIMessage.ToastMessage
+        assert(commentAddedSuccessfully == message?.message)
+        assert(viewModel.uiState.value is DiscussionCommentsUIState.Success)
+    }
+
+    @Test
     fun `DiscussionCommentDataChanged notifier test `() = runTest {
         coEvery { interactor.getThreadComments(any(), any()) } returns CommentsData(
             comments,
             Pagination(10, "2", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -996,9 +1040,9 @@ class DiscussionCommentsViewModelTest {
 
         coEvery { notifier.notifier } returns flow {
             delay(100)
-            emit(DiscussionCommentDataChanged(mockComment.copy(id = "0")))
+            emit(DiscussionCommentDataChanged(DiscussionMocks.comment.copy(id = "0")))
         }
-        coEvery { notifier.send(DiscussionCommentDataChanged(mockComment)) } returns Unit
+        coEvery { notifier.send(DiscussionCommentDataChanged(DiscussionMocks.comment)) } returns Unit
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
         val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
@@ -1017,8 +1061,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "2", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -1057,8 +1101,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "2", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -1081,7 +1125,6 @@ class DiscussionCommentsViewModelTest {
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         Assert.assertEquals(somethingWrong, message?.message)
-
     }
 
     @Test
@@ -1090,8 +1133,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "2", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel =
             DiscussionCommentsViewModel(
@@ -1105,8 +1148,10 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread
             )
         coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
+        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
 
         viewModel.createComment("")
         advanceUntilIdle()
@@ -1123,8 +1168,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "2", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -1137,13 +1182,14 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread
         )
+        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
         coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")
         advanceUntilIdle()
-
     }
 
     @Test
@@ -1152,8 +1198,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "2", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -1168,6 +1214,7 @@ class DiscussionCommentsViewModelTest {
             analytics,
         )
         coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
+        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")
@@ -1182,8 +1229,8 @@ class DiscussionCommentsViewModelTest {
             comments,
             Pagination(10, "", 4, "1")
         )
-        coEvery { interactor.setThreadRead(any()) } returns mockThread
-        every { resourceManager.getString(eq(mockThread.type.resId)) } returns ""
+        coEvery { interactor.setThreadRead(any()) } returns DiscussionMocks.thread
+        every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
             "",
@@ -1198,6 +1245,7 @@ class DiscussionCommentsViewModelTest {
             analytics,
         )
         coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
+        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")

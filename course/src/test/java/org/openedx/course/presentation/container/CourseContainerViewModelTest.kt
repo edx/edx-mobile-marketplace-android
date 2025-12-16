@@ -24,7 +24,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.openedx.core.ImageProcessor
+import org.openedx.core.CoreMocks
 import org.openedx.core.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.api.CourseApi
@@ -45,15 +45,20 @@ import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.system.CalendarManager
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseStructureUpdated
+import org.openedx.core.worker.CalendarSyncScheduler
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.Logger
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
+import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseRouter
+import org.openedx.course.utils.ImageProcessor
+import org.openedx.foundation.system.ResourceManager
 import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -67,22 +72,22 @@ class CourseContainerViewModelTest {
     private val resourceManager = mockk<ResourceManager>()
     private val config = mockk<Config>()
     private val interactor = mockk<CourseInteractor>()
-    private val calendarManager = mockk<CalendarManager>()
     private val networkConnection = mockk<NetworkConnection>()
     private val courseNotifier = spyk<CourseNotifier>()
     private val iapNotifier = spyk<IAPNotifier>()
     private val iapInteractor = mockk<IAPInteractor>()
     private val courseAnalytics = mockk<CourseAnalytics>()
     private val iapAnalytics = mockk<IAPAnalytics>()
+    private val courseNotifier = spyk<CourseNotifier>()
+    private val analytics = mockk<CourseAnalytics>()
     private val corePreferences = mockk<CorePreferences>()
-    private val coursePreferences = mockk<CoursePreferences>()
     private val mockBitmap = mockk<Bitmap>()
     private val imageProcessor = mockk<ImageProcessor>()
     private val courseRouter = mockk<CourseRouter>()
     private val courseApi = mockk<CourseApi>()
+    private val calendarSyncScheduler = mockk<CalendarSyncScheduler>()
 
     private val openEdx = "OpenEdx"
-    private val calendarTitle = "OpenEdx - Abc"
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
 
@@ -172,11 +177,15 @@ class CourseContainerViewModelTest {
         every { resourceManager.getString(id = R.string.platform_name) } returns openEdx
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
         every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
+        every { corePreferences.user } returns CoreMocks.mockUser
+        every { corePreferences.appConfig } returns CoreMocks.mockAppConfig
+        every { courseNotifier.notifier } returns emptyFlow()
         every { corePreferences.user } returns user
         every { corePreferences.appConfig } returns appConfig
         every { courseNotifier.notifier } returns emptyFlow()
         every { calendarManager.getCourseCalendarTitle(any()) } returns calendarTitle
         every { config.getApiHostURL() } returns "baseUrl"
+        coEvery { interactor.getEnrollmentDetails(any()) } returns CoreMocks.mockCourseEnrollmentDetails
         every { imageProcessor.loadImage(any(), any(), any()) } returns Unit
         every { imageProcessor.applyBlur(any(), any()) } returns mockBitmap
         every { courseAnalytics.logScreenEvent(any(), any()) } returns Unit
@@ -190,6 +199,7 @@ class CourseContainerViewModelTest {
         Dispatchers.resetMain()
     }
 
+    @Suppress("TooGenericExceptionThrown")
     @Test
     fun `getCourseEnrollmentDetails unknown exception`() = runTest {
         val viewModel = CourseContainerViewModel(
@@ -255,9 +265,41 @@ class CourseContainerViewModelTest {
         )
 
         viewModel.fetchCourseDetails()
+        coEvery { interactor.getCourseStructureFlow(any(), any()) } returns flowOf(
+            CoreMocks.mockCourseStructure
+        )
+        coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(
+            CoreMocks.mockCourseEnrollmentDetails
+        )
+        every {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.DASHBOARD.eventName,
+                any()
+            )
+        } returns Unit
+        every {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
+                any()
+            )
+        } returns Unit
+        viewModel.fetchCourseDetails()
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getEnrollmentDetailsFlow(any()) }
+        coVerify(exactly = 1) { interactor.getEnrollmentDetailsFlow(any()) }
+        verify(exactly = 1) {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.DASHBOARD.eventName,
+                any()
+            )
+        }
+        verify(exactly = 1) {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
+                any()
+            )
+        }
         assert(viewModel.errorMessage.value == null)
         assert(!viewModel.refreshing.value)
         assert(viewModel.courseAccessStatus.value != null)
@@ -273,7 +315,6 @@ class CourseContainerViewModelTest {
             openTab = "",
             config = config,
             interactor = interactor,
-            calendarManager = calendarManager,
             resourceManager = resourceManager,
             courseNotifier = courseNotifier,
             iapNotifier = iapNotifier,
@@ -293,8 +334,40 @@ class CourseContainerViewModelTest {
         )
 
         viewModel.fetchCourseDetails()
+        coEvery { interactor.getCourseStructureFlow(any(), any()) } returns flowOf(
+            CoreMocks.mockCourseStructure
+        )
+        coEvery { interactor.getEnrollmentDetailsFlow(any()) } returns flowOf(
+            CoreMocks.mockCourseEnrollmentDetails
+        )
+        every {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.DASHBOARD.eventName,
+                any()
+            )
+        } returns Unit
+        every {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
+                any()
+            )
+        } returns Unit
+        viewModel.fetchCourseDetails()
         advanceUntilIdle()
         coVerify(exactly = 0) { courseApi.getEnrollmentDetails(any()) }
+        coVerify(exactly = 0) { courseApi.getEnrollmentDetails(any()) }
+        verify(exactly = 1) {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.DASHBOARD.eventName,
+                any()
+            )
+        }
+        verify(exactly = 1) {
+            analytics.logScreenEvent(
+                CourseAnalyticsEvent.HOME_TAB.eventName,
+                any()
+            )
+        }
 
         assert(viewModel.errorMessage.value == null)
         assert(!viewModel.refreshing.value)
@@ -311,7 +384,6 @@ class CourseContainerViewModelTest {
             openTab = "",
             config = config,
             interactor = interactor,
-            calendarManager = calendarManager,
             resourceManager = resourceManager,
             courseNotifier = courseNotifier,
             iapNotifier = iapNotifier,

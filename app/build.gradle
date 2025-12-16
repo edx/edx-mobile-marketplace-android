@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 def config = configHelper.fetchConfig()
 def appId = config.getOrDefault("APPLICATION_ID", "org.openedx.app")
 def platformName = config.getOrDefault("PLATFORM_NAME", "OpenEdX")
@@ -9,9 +7,9 @@ def firebaseEnabled = firebaseConfig?.getOrDefault('ENABLED', false)
 
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
-apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'com.google.devtools.ksp'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
 if (firebaseEnabled) {
     apply plugin: 'com.google.gms.google-services'
@@ -145,10 +143,11 @@ dependencies {
     implementation project(path: ':whatsnew')
     implementation project(path: ':notifications')
     implementation project(path: ':featuremanagement')
+    implementation project(path: ':downloads')
 
     ksp "androidx.room:room-compiler:$room_version"
 
-    implementation 'androidx.core:core-splashscreen:1.0.1'
+    implementation "androidx.core:core-splashscreen:$core_splashscreen_version"
 
     api platform("com.google.firebase:firebase-bom:$firebase_version")
     api "com.google.firebase:firebase-messaging"
@@ -158,13 +157,13 @@ dependencies {
     // Segment's Firebase integration
     implementation 'com.segment.analytics.kotlin.destinations:firebase:1.5.6'
     // Braze SDK Integration
-    implementation "com.braze:braze-segment-kotlin:1.4.2"
-    implementation "com.braze:android-sdk-ui:30.2.0"
+    implementation "com.braze:android-sdk-ui:$braze_sdk_version"
 
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
-    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
+    // Plugins
+    implementation("com.github.openedx:openedx-app-firebase-analytics-android:$openedx_firebase_analytics_version")
+
+    androidTestImplementation "androidx.test.ext:junit:$test_ext_version"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version"
     testImplementation "junit:junit:$junit_version"
     testImplementation "io.mockk:mockk:$mockk_version"
     testImplementation "io.mockk:mockk-android:$mockk_version"

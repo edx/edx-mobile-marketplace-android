@@ -16,10 +16,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
-import org.openedx.core.SingleEventLiveData
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
@@ -52,6 +49,7 @@ import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
 import org.openedx.core.utils.Logger
 import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
+
 
 @SuppressLint("StaticFieldLeak")
 class DashboardListViewModel(

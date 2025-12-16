@@ -15,7 +15,8 @@ interface CorePreferences {
     var appThemeMode: AppThemeMode
     var appConfig: AppConfig
     var canResetAppDirectory: Boolean
+    var isRelativeDatesEnabled: Boolean
     var lastSignInType: String
 
-    fun clear()
+    fun clearCorePreferences()
 }

@@ -11,6 +11,9 @@ pluginManagement {
                 url = uri("https://storage.googleapis.com/r8-releases/raw")
             }
         }
+        dependencies {
+            classpath("com.android.tools:r8:8.12.14")
+        }
     }
 }
 dependencyResolutionManagement {
@@ -22,9 +25,11 @@ dependencyResolutionManagement {
             url = "http://appboy.github.io/appboy-android-sdk/sdk"
             allowInsecureProtocol = true
         }
+        maven { url "https://pkgs.dev.azure.com/MicrosoftDeviceSDK/DuoSDK-Public/_packaging/Duo-SDK-Feed/maven/v1" }
         maven {
             url = "https://appboy.github.io/appboy-segment-android/sdk"
             allowInsecureProtocol = true
+            url = uri("https://jitpack.io")
         }
         maven {
             url = "https://pkgs.dev.azure.com/MicrosoftDeviceSDK/DuoSDK-Public/_packaging/Duo-SDK-Feed/maven/v1"
@@ -48,3 +53,4 @@ include ':discussion'
 include ':whatsnew'
 include ':notifications'
 include ':featuremanagement'
+include ':downloads'

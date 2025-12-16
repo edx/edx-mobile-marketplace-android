@@ -21,7 +21,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetLayout
@@ -68,18 +67,14 @@ import androidx.fragment.app.Fragment
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.UIMessage
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.OpenEdXOutlinedTextField
 import org.openedx.core.ui.SheetContent
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.isImeVisibleState
 import org.openedx.core.ui.noRippleClickable
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
@@ -88,6 +83,12 @@ import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
+import org.openedx.discussion.R as discussionR
 
 class DiscussionAddThreadFragment : Fragment() {
 
@@ -131,7 +132,6 @@ class DiscussionAddThreadFragment : Fragment() {
                 if (success != null) {
                     viewModel.sendThreadAdded()
                     requireActivity().supportFragmentManager.popBackStack()
-
                 }
             }
         }
@@ -155,8 +155,6 @@ class DiscussionAddThreadFragment : Fragment() {
     }
 }
 
-
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun DiscussionAddThreadScreen(
     windowSize: WindowSize,
@@ -211,7 +209,6 @@ private fun DiscussionAddThreadScreen(
             .navigationBarsPadding(),
         backgroundColor = MaterialTheme.appColors.background
     ) {
-
         val screenWidth by remember(key1 = windowSize) {
             mutableStateOf(
                 windowSize.windowSizeValue(
@@ -270,7 +267,6 @@ private fun DiscussionAddThreadScreen(
                 )
             }
         ) {
-
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
             Box(
@@ -339,9 +335,10 @@ private fun DiscussionAddThreadScreen(
                                 Spacer(Modifier.height(16.dp))
                                 Tabs(
                                     tabs = listOf(
-                                        stringResource(id = R.string.discussion_discussion),
-                                        stringResource(id = R.string.discussion_question)
-                                    ), currentPage = currentPage,
+                                        stringResource(id = discussionR.string.discussion_discussion),
+                                        stringResource(id = discussionR.string.discussion_question)
+                                    ),
+                                    currentPage = currentPage,
                                     onItemClick = { bool ->
                                         if (bool) {
                                             discussionType = DiscussionType.QUESTION.value
@@ -350,7 +347,8 @@ private fun DiscussionAddThreadScreen(
                                             discussionType = DiscussionType.DISCUSSION.value
                                             currentPage = 0
                                         }
-                                    })
+                                    }
+                                )
                                 Spacer(Modifier.height(24.dp))
                                 SelectableField(
                                     text = postToTopic.first,
@@ -362,7 +360,8 @@ private fun DiscussionAddThreadScreen(
                                                 bottomSheetScaffoldState.show()
                                             }
                                         }
-                                    })
+                                    }
+                                )
                                 Spacer(Modifier.height(24.dp))
                                 OpenEdXOutlinedTextField(
                                     modifier = Modifier
@@ -383,9 +382,13 @@ private fun DiscussionAddThreadScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(150.dp),
-                                    title = if (currentPage == 0) stringResource(id = R.string.discussion_discussion) else stringResource(
-                                        id = R.string.discussion_question
-                                    ),
+                                    title = if (currentPage == 0) {
+                                        stringResource(id = discussionR.string.discussion_discussion)
+                                    } else {
+                                        stringResource(
+                                            id = discussionR.string.discussion_question
+                                        )
+                                    },
                                     isSingleLine = false,
                                     withRequiredMark = true,
                                     imeAction = ImeAction.Default,
@@ -397,6 +400,36 @@ private fun DiscussionAddThreadScreen(
                                         discussionValue = value
                                     }
                                 )
+                                Spacer(Modifier.height(16.dp))
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        modifier = Modifier.size(24.dp),
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = MaterialTheme.appColors.primary,
+                                            uncheckedColor = MaterialTheme.appColors.textFieldText
+                                        ),
+                                        checked = followPost,
+                                        onCheckedChange = {
+                                            followPost = it
+                                        }
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        text = if (currentPage == 0) {
+                                            stringResource(id = discussionR.string.discussion_follow_discussion)
+                                        } else {
+                                            stringResource(id = discussionR.string.discussion_follow_question)
+                                        },
+                                        color = MaterialTheme.appColors.textFieldText,
+                                        style = MaterialTheme.appTypography.labelLarge,
+                                        modifier = Modifier.noRippleClickable {
+                                            followPost = !followPost
+                                        }
+                                    )
+                                }
                                 Spacer(Modifier.height(44.dp))
                                 if (isLoading) {
                                     CircularProgressIndicator(color = MaterialTheme.appColors.primary)
@@ -443,8 +476,12 @@ private fun Tabs(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(20))
-            .border(1.dp, MaterialTheme.appColors.cardViewBorder, RoundedCornerShape(20)),
+            .clip(RoundedCornerShape(percent = 20))
+            .border(
+                1.dp,
+                MaterialTheme.appColors.cardViewBorder,
+                RoundedCornerShape(percent = 20)
+            ),
         indicator = { _ ->
             Box {}
         }
@@ -457,16 +494,19 @@ private fun Tabs(
                 MaterialTheme.appColors.tabUnselectedBtnContent
             }
             Tab(
-                modifier = if (selected) Modifier
-                    .clip(RoundedCornerShape(20))
-                    .background(
-                        MaterialTheme.appColors.primary
-                    )
-                else Modifier
-                    .clip(RoundedCornerShape(20))
-                    .background(
-                        MaterialTheme.appColors.surface
-                    ),
+                modifier = if (selected) {
+                    Modifier
+                        .clip(RoundedCornerShape(percent = 20))
+                        .background(
+                            MaterialTheme.appColors.primary
+                        )
+                } else {
+                    Modifier
+                        .clip(RoundedCornerShape(percent = 20))
+                        .background(
+                            MaterialTheme.appColors.surface
+                        )
+                },
                 selected = selected,
                 onClick = {
                     if (!isLimited && !selected) {
@@ -521,7 +561,6 @@ private fun SelectableField(
         )
     }
 }
-
 
 @Preview(uiMode = UI_MODE_NIGHT_NO)
 @Preview(uiMode = UI_MODE_NIGHT_YES)

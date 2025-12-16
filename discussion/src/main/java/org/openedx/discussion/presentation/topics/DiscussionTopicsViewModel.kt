@@ -8,9 +8,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.R
-import org.openedx.core.UIMessage
-import org.openedx.core.extension.isInternetError
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.RefreshDiscussions
@@ -59,11 +56,22 @@ class DiscussionTopicsViewModel(
                 } else {
                     _uiState.value = DiscussionTopicsUIState.Error
                 }
+                if (response.isEmpty().not()) {
+                    _uiState.value = DiscussionTopicsUIState.Topics(response)
+                } else {
+                    _uiState.value = DiscussionTopicsUIState.Error
+                }
             } catch (e: Exception) {
+                _uiState.value = DiscussionTopicsUIState.Error
                 logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 _uiState.value = DiscussionTopicsUIState.Error
                 if (e.isInternetError()) {
                     _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_error_no_connection)
+                        )
+                    )
                 }
             } finally {
                 courseNotifier.send(CourseLoading(false))

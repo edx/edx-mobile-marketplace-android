@@ -9,7 +9,6 @@ import io.mockk.mockkConstructor
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -22,16 +21,16 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Pagination
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.utils.Logger
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.domain.model.CourseList
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -40,7 +39,6 @@ class NativeDiscoveryViewModelTest {
     @get:Rule
     val testInstantTaskExecutorRule: TestRule = InstantTaskExecutorRule()
 
-
     private val dispatcher = StandardTestDispatcher()
 
     private val config = mockk<Config>()
@@ -48,7 +46,6 @@ class NativeDiscoveryViewModelTest {
     private val interactor = mockk<DiscoveryInteractor>()
     private val networkConnection = mockk<NetworkConnection>()
     private val analytics = mockk<DiscoveryAnalytics>()
-    private val appNotifier = mockk<AppNotifier>()
     private val corePreferences = mockk<CorePreferences>()
 
     private val noInternet = "Slow or no internet connection"
@@ -59,7 +56,6 @@ class NativeDiscoveryViewModelTest {
         Dispatchers.setMain(dispatcher)
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
         every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
-        every { appNotifier.notifier } returns emptyFlow()
         every { corePreferences.user } returns null
         every { config.getApiHostURL() } returns "http://localhost:8000"
         every { config.isPreLoginExperienceEnabled() } returns false
@@ -80,7 +76,6 @@ class NativeDiscoveryViewModelTest {
             interactor,
             resourceManager,
             analytics,
-            appNotifier,
             corePreferences
         )
         every { networkConnection.isOnline() } returns true
@@ -89,7 +84,6 @@ class NativeDiscoveryViewModelTest {
 
         coVerify(exactly = 1) { interactor.getCoursesList(any(), any(), any()) }
         coVerify(exactly = 0) { interactor.getCoursesListFromCache() }
-        verify(exactly = 1) { appNotifier.notifier }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assertEquals(noInternet, message?.message)
@@ -105,7 +99,6 @@ class NativeDiscoveryViewModelTest {
             interactor,
             resourceManager,
             analytics,
-            appNotifier,
             corePreferences
         )
         every { networkConnection.isOnline() } returns true
@@ -129,7 +122,6 @@ class NativeDiscoveryViewModelTest {
             interactor,
             resourceManager,
             analytics,
-            appNotifier,
             corePreferences
         )
         every { networkConnection.isOnline() } returns false
@@ -152,7 +144,6 @@ class NativeDiscoveryViewModelTest {
             interactor,
             resourceManager,
             analytics,
-            appNotifier,
             corePreferences
         )
         every { networkConnection.isOnline() } returns true
@@ -162,7 +153,8 @@ class NativeDiscoveryViewModelTest {
                 "2",
                 7,
                 "1"
-            ), emptyList()
+            ),
+            emptyList()
         )
         advanceUntilIdle()
 
@@ -182,7 +174,6 @@ class NativeDiscoveryViewModelTest {
             interactor,
             resourceManager,
             analytics,
-            appNotifier,
             corePreferences
         )
         every { networkConnection.isOnline() } returns true
@@ -192,7 +183,8 @@ class NativeDiscoveryViewModelTest {
                 "",
                 7,
                 "1"
-            ), emptyList()
+            ),
+            emptyList()
         )
         advanceUntilIdle()
 
@@ -204,7 +196,6 @@ class NativeDiscoveryViewModelTest {
         assert(viewModel.canLoadMore.value == false)
     }
 
-
     @Test
     fun `updateData no internet connection`() = runTest {
         val viewModel = NativeDiscoveryViewModel(
@@ -213,7 +204,6 @@ class NativeDiscoveryViewModelTest {
             interactor,
             resourceManager,
             analytics,
-            appNotifier,
             corePreferences
         )
         every { networkConnection.isOnline() } returns true
@@ -238,7 +228,6 @@ class NativeDiscoveryViewModelTest {
             interactor,
             resourceManager,
             analytics,
-            appNotifier,
             corePreferences
         )
         every { networkConnection.isOnline() } returns true
@@ -263,7 +252,6 @@ class NativeDiscoveryViewModelTest {
             interactor,
             resourceManager,
             analytics,
-            appNotifier,
             corePreferences
         )
         every { networkConnection.isOnline() } returns true
@@ -273,7 +261,8 @@ class NativeDiscoveryViewModelTest {
                 "2",
                 7,
                 "1"
-            ), emptyList()
+            ),
+            emptyList()
         )
         viewModel.updateData()
         advanceUntilIdle()
@@ -294,7 +283,6 @@ class NativeDiscoveryViewModelTest {
             interactor,
             resourceManager,
             analytics,
-            appNotifier,
             corePreferences
         )
         every { networkConnection.isOnline() } returns true
@@ -304,7 +292,8 @@ class NativeDiscoveryViewModelTest {
                 "",
                 7,
                 "1"
-            ), emptyList()
+            ),
+            emptyList()
         )
         viewModel.updateData()
         advanceUntilIdle()
@@ -316,5 +305,4 @@ class NativeDiscoveryViewModelTest {
         assert(viewModel.canLoadMore.value == false)
         assert(viewModel.uiState.value is DiscoveryUIState.Courses)
     }
-
 }

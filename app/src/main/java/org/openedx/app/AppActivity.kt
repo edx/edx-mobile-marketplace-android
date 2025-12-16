@@ -3,6 +3,8 @@ package org.openedx.app
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
@@ -12,23 +14,25 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.window.layout.WindowMetricsCalculator
 import com.braze.support.toStringMap
 import io.branch.referral.Branch
 import io.branch.referral.Branch.BranchUniversalReferralInitListener
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.app.databinding.ActivityAppBinding
 import org.openedx.app.deeplink.DeepLink
 import org.openedx.auth.presentation.logistration.LogistrationFragment
 import org.openedx.auth.presentation.signin.SignInFragment
+import org.openedx.core.ApiConstants
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.extension.requestApplyInsetsWhenAttached
+import org.openedx.core.presentation.dialog.downloaddialog.DownloadDialogManager
 import org.openedx.core.presentation.global.InsetHolder
 import org.openedx.core.presentation.global.WindowSizeHolder
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.utils.Logger
+import org.openedx.core.worker.CalendarSyncScheduler
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.whatsnew.WhatsNewManager
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
@@ -50,6 +54,8 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
     private val whatsNewManager by inject<WhatsNewManager>()
     private val corePreferencesManager by inject<CorePreferences>()
     private val profileRouter by inject<ProfileRouter>()
+    private val downloadDialogManager by inject<DownloadDialogManager>()
+    private val calendarSyncScheduler by inject<CalendarSyncScheduler>()
 
     private val branchLogger = Logger(BRANCH_TAG)
 
@@ -58,6 +64,18 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
     private var _insetCutout = 0
 
     private var _windowSize = WindowSize(WindowType.Compact, WindowType.Compact)
+    private val authCode: String?
+        get() {
+            val data = intent?.data
+            if (
+                data is Uri &&
+                data.scheme == BuildConfig.APPLICATION_ID &&
+                data.host == ApiConstants.BrowserLogin.REDIRECT_HOST
+            ) {
+                return data.getQueryParameter(ApiConstants.BrowserLogin.CODE_QUERY_PARAM)
+            }
+            return null
+        }
 
     private val branchCallback =
         BranchUniversalReferralInitListener { branchUniversalObject, _, error ->
@@ -86,8 +104,18 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         binding = ActivityAppBinding.inflate(layoutInflater)
         lifecycle.addObserver(viewModel)
         setContentView(binding.root)
-        val container = binding.rootLayout
 
+        setupWindowInsets(savedInstanceState)
+        setupWindowSettings()
+        setupInitialFragment(savedInstanceState)
+        observeLogoutEvent()
+        observeDownloadFailedDialog()
+
+        calendarSyncScheduler.scheduleDailySync()
+    }
+
+    private fun setupWindowInsets(savedInstanceState: Bundle?) {
+        val container = binding.rootLayout
         container.addView(object : View(this) {
             override fun onConfigurationChanged(newConfig: Configuration?) {
                 super.onConfigurationChanged(newConfig)
@@ -96,20 +124,10 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         })
         computeWindowSizeClasses()
 
-        if (savedInstanceState != null) {
-            _insetTop = savedInstanceState.getInt(TOP_INSET, 0)
-            _insetBottom = savedInstanceState.getInt(BOTTOM_INSET, 0)
-            _insetCutout = savedInstanceState.getInt(CUTOUT_INSET, 0)
-        }
-
-        window.apply {
-            addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-
-            WindowCompat.setDecorFitsSystemWindows(this, false)
-
-            val insetsController = WindowInsetsControllerCompat(this, binding.root)
-            insetsController.isAppearanceLightStatusBars = !isUsingNightModeResources()
-            statusBarColor = Color.TRANSPARENT
+        savedInstanceState?.let {
+            _insetTop = it.getInt(TOP_INSET, 0)
+            _insetBottom = it.getInt(BOTTOM_INSET, 0)
+            _insetCutout = it.getInt(CUTOUT_INSET, 0)
         }
 
         binding.root.setOnApplyWindowInsetsListener { _, insets ->
@@ -130,24 +148,41 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
             insets
         }
         binding.root.requestApplyInsetsWhenAttached()
+    }
 
+    private fun setupWindowSettings() {
+        window.apply {
+            addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            WindowCompat.setDecorFitsSystemWindows(this, false)
+            val insetsController = WindowInsetsControllerCompat(this, binding.root)
+            insetsController.isAppearanceLightStatusBars = !isUsingNightModeResources()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                insetsController.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            } else {
+                window.statusBarColor = Color.TRANSPARENT
+            }
+        }
+    }
+
+    private fun setupInitialFragment(savedInstanceState: Bundle?) {
         if (savedInstanceState == null) {
             when {
                 corePreferencesManager.user == null -> {
-                    if (viewModel.isLogistrationEnabled) {
-                        addFragment(LogistrationFragment())
+                    val fragment = if (viewModel.isLogistrationEnabled && authCode == null) {
+                        LogistrationFragment()
                     } else {
-                        addFragment(SignInFragment())
+                        SignInFragment.newInstance(null, null, authCode = authCode)
                     }
+                    addFragment(fragment)
                 }
 
-                whatsNewManager.shouldShowWhatsNew() -> {
-                    addFragment(WhatsNewFragment.newInstance())
-                }
+                whatsNewManager.shouldShowWhatsNew() -> addFragment(WhatsNewFragment.newInstance())
+                else -> addFragment(MainFragment.newInstance())
+            }
 
-                corePreferencesManager.user != null -> {
-                    addFragment(MainFragment.newInstance())
-                }
+            intent.extras?.takeIf { it.containsKey(DeepLink.Keys.NOTIFICATION_TYPE.value) }?.let {
+                handlePushNotification(it)
             }
 
             val extras = intent.extras
@@ -156,8 +191,20 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
             }
         }
 
+    private fun observeLogoutEvent() {
         viewModel.logoutUser.observe(this) {
             profileRouter.restartApp(supportFragmentManager, viewModel.isLogistrationEnabled)
+        }
+    }
+
+    private fun observeDownloadFailedDialog() {
+        lifecycleScope.launch {
+            viewModel.downloadFailedDialog.collect {
+                downloadDialogManager.showDownloadFailedPopup(
+                    downloadModel = it.downloadModel,
+                    fragmentManager = supportFragmentManager,
+                )
+            }
         }
     }
 
@@ -172,70 +219,81 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         this.intent = intent
 
         val extras = intent?.extras
         if (extras?.containsKey(DeepLink.Keys.SCREEN_NAME.value) == true) {
-            handlePushNotification(extras)
-        }
+            if (authCode != null) {
+                addFragment(SignInFragment.newInstance(null, null, authCode = authCode))
+            }
 
-        if (viewModel.isBranchEnabled) {
-            if (intent?.getBooleanExtra(BRANCH_FORCE_NEW_SESSION, false) == true) {
-                Branch.sessionBuilder(this)
-                    .withCallback(branchCallback)
-                    .reInit()
+            val extras = intent.extras
+            if (extras?.containsKey(DeepLink.Keys.NOTIFICATION_TYPE.value) == true) {
+                handlePushNotification(extras)
+            }
+
+            if (viewModel.isBranchEnabled) {
+                if (intent.getBooleanExtra(BRANCH_FORCE_NEW_SESSION, false)) {
+                    Branch.sessionBuilder(this)
+                        .withCallback(branchCallback)
+                        .reInit()
+                }
             }
         }
-    }
 
-    private fun addFragment(fragment: Fragment) {
-        supportFragmentManager.beginTransaction()
-            .add(R.id.container, fragment)
-            .commit()
-    }
-
-    private fun computeWindowSizeClasses() {
-        val metrics = WindowMetricsCalculator.getOrCreate()
-            .computeCurrentWindowMetrics(this)
-
-        val widthDp = metrics.bounds.width() / resources.displayMetrics.density
-        val widthWindowSize = when {
-            widthDp < 600f -> WindowType.Compact
-            widthDp < 840f -> WindowType.Medium
-            else -> WindowType.Expanded
+        private fun addFragment(fragment: Fragment) {
+            supportFragmentManager.beginTransaction()
+                .add(R.id.container, fragment)
+                .commit()
         }
 
-        val heightDp = metrics.bounds.height() / resources.displayMetrics.density
-        val heightWindowSize = when {
-            heightDp < 480f -> WindowType.Compact
-            heightDp < 900f -> WindowType.Medium
-            else -> WindowType.Expanded
+        private fun computeWindowSizeClasses() {
+            val metrics = WindowMetricsCalculator.getOrCreate()
+                .computeCurrentWindowMetrics(this)
+
+            val widthDp = metrics.bounds.width() / resources.displayMetrics.density
+            val widthWindowSize = when {
+                widthDp < COMPACT_MAX_WIDTH -> WindowType.Compact
+                widthDp < MEDIUM_MAX_WIDTH -> WindowType.Medium
+                else -> WindowType.Expanded
+            }
+
+            val heightDp = metrics.bounds.height() / resources.displayMetrics.density
+            val heightWindowSize = when {
+                heightDp < COMPACT_MAX_HEIGHT -> WindowType.Compact
+                heightDp < MEDIUM_MAX_HEIGHT -> WindowType.Medium
+                else -> WindowType.Expanded
+            }
+            _windowSize = WindowSize(widthWindowSize, heightWindowSize)
         }
-        _windowSize = WindowSize(widthWindowSize, heightWindowSize)
-    }
 
-    private fun isUsingNightModeResources(): Boolean {
-        return when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-            Configuration.UI_MODE_NIGHT_YES -> true
-            Configuration.UI_MODE_NIGHT_NO -> false
-            Configuration.UI_MODE_NIGHT_UNDEFINED -> false
-            else -> false
+        private fun isUsingNightModeResources(): Boolean {
+            return when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+                Configuration.UI_MODE_NIGHT_YES -> true
+                Configuration.UI_MODE_NIGHT_NO -> false
+                Configuration.UI_MODE_NIGHT_UNDEFINED -> false
+                else -> false
+            }
+        }
+
+        private fun handlePushNotification(data: Bundle) {
+            val deepLink = DeepLink(data.toStringMap())
+            viewModel.handleDiscussionNotification(deepLink)
+            viewModel.makeExternalRoute(supportFragmentManager, deepLink)
+        }
+
+        companion object {
+            const val TOP_INSET = "topInset"
+            const val BOTTOM_INSET = "bottomInset"
+            const val CUTOUT_INSET = "cutoutInset"
+            const val BRANCH_TAG = "Branch"
+            const val BRANCH_FORCE_NEW_SESSION = "branch_force_new_session"
+
+            internal const val COMPACT_MAX_WIDTH = 600
+            internal const val MEDIUM_MAX_WIDTH = 840
+            internal const val COMPACT_MAX_HEIGHT = 480
+            internal const val MEDIUM_MAX_HEIGHT = 900
         }
     }
-
-    private fun handlePushNotification(data: Bundle) {
-        val deepLink = DeepLink(data.toStringMap())
-        viewModel.handleDiscussionNotification(deepLink)
-        viewModel.makeExternalRoute(supportFragmentManager, deepLink)
-    }
-
-    companion object {
-        const val TOP_INSET = "topInset"
-        const val BOTTOM_INSET = "bottomInset"
-        const val CUTOUT_INSET = "cutoutInset"
-        const val BRANCH_TAG = "Branch"
-        const val BRANCH_FORCE_NEW_SESSION = "branch_force_new_session"
-    }
-}

@@ -8,6 +8,7 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.download.BaseDownloadViewModel
+import org.openedx.core.module.download.DownloadHelper
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.system.notifier.DownloadNotifier
 import org.openedx.core.system.notifier.DownloadProgressChanged
@@ -19,7 +20,14 @@ class DownloadQueueViewModel(
     private val workerController: DownloadWorkerController,
     private val downloadNotifier: DownloadNotifier,
     coreAnalytics: CoreAnalytics,
-) : BaseDownloadViewModel("", downloadDao, preferencesManager, workerController, coreAnalytics) {
+    downloadHelper: DownloadHelper,
+) : BaseDownloadViewModel(
+    downloadDao,
+    preferencesManager,
+    workerController,
+    coreAnalytics,
+    downloadHelper
+) {
 
     private val _uiState = MutableStateFlow<DownloadQueueUIState>(DownloadQueueUIState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -31,7 +39,6 @@ class DownloadQueueViewModel(
                     if (descendants.isEmpty()) models else models.filter { descendants.contains(it.id) }
                 if (filteredModels.isEmpty()) {
                     _uiState.value = DownloadQueueUIState.Empty
-
                 } else {
                     if (_uiState.value is DownloadQueueUIState.Models) {
                         val state = _uiState.value as DownloadQueueUIState.Models
@@ -66,7 +73,7 @@ class DownloadQueueViewModel(
         }
     }
 
-    override fun removeDownloadModels(blockId: String) {
+    override fun removeDownloadModels(blockId: String, courseId: String) {
         viewModelScope.launch {
             workerController.removeModel(blockId)
         }

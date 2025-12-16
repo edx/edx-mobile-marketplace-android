@@ -5,7 +5,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkConstructor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -41,25 +40,6 @@ class AnothersProfileViewModelTest {
     private val resourceManager = mockk<ResourceManager>()
     private val interactor = mockk<ProfileInteractor>()
     private val username = "username"
-
-    private val account = Account(
-        username = "",
-        bio = "",
-        requiresParentalConsent = false,
-        name = "",
-        country = "",
-        isActive = true,
-        profileImage = ProfileImage("", "", "", "", false),
-        yearOfBirth = 2000,
-        levelOfEducation = "",
-        goals = "",
-        languageProficiencies = emptyList(),
-        gender = "",
-        mailingAddress = "",
-        email = "",
-        dateJoined = null,
-        accountPrivacy = Account.Privacy.PRIVATE
-    )
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
@@ -119,7 +99,9 @@ class AnothersProfileViewModelTest {
             resourceManager,
             username
         )
-        coEvery { interactor.getAccount(username) } returns account
+        coEvery { interactor.getAccount(username) } returns ProfileMocks.account.copy(
+            accountPrivacy = Account.Privacy.PRIVATE
+        )
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getAccount(username) }

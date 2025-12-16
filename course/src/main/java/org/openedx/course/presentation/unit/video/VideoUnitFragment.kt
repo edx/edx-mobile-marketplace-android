@@ -22,15 +22,10 @@ import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.extension.computeWindowSizeClasses
-import org.openedx.core.extension.dpToPixel
-import org.openedx.core.extension.objectToString
-import org.openedx.core.extension.stringToObject
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.dialog.selectorbottomsheet.SelectBottomDialogFragment
 import org.openedx.core.presentation.global.viewBinding
 import org.openedx.core.ui.ConnectionErrorView
-import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
@@ -38,6 +33,11 @@ import org.openedx.course.databinding.FragmentVideoUnitBinding
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
 import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
+import org.openedx.foundation.extension.computeWindowSizeClasses
+import org.openedx.foundation.extension.dpToPixel
+import org.openedx.foundation.extension.objectToString
+import org.openedx.foundation.extension.stringToObject
+import org.openedx.foundation.presentation.WindowSize
 import kotlin.math.roundToInt
 
 class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
@@ -46,6 +46,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private val viewModel by viewModel<EncodedVideoUnitViewModel> {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
+            requireArguments().getString(ARG_VIDEO_URL, ""),
             requireArguments().getString(ARG_BLOCK_ID, ""),
             requireArguments().getString(ARG_TITLE, ""),
         )
@@ -59,7 +60,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         windowSize = computeWindowSizeClasses()
         lifecycle.addObserver(viewModel)
         requireArguments().apply {
-            viewModel.videoUrl = getString(ARG_VIDEO_URL, "")
             viewModel.transcripts = stringToObject<Map<String, String>>(
                 getString(ARG_TRANSCRIPT_URL, "")
             ) ?: emptyMap()
@@ -120,26 +120,76 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.connectionError.isVisible =
             !viewModel.hasInternetConnection && !viewModel.isDownloaded
 
+        setupPlayerHeight()
+
+        viewModel.isUpdated.observe(viewLifecycleOwner) { isUpdated ->
+            if (isUpdated) {
+                initPlayer()
+            }
+        }
+
+        viewModel.isVideoEnded.observe(viewLifecycleOwner) { isVideoEnded ->
+            if (isVideoEnded && !appReviewManager.isDialogShowed) {
+                appReviewManager.tryToOpenRateDialog()
+            }
+        }
+    }
+
+    private fun setupPlayerHeight() {
         val orientation = resources.configuration.orientation
-        val windowMetrics =
-            WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(requireActivity())
+        val windowMetrics = WindowMetricsCalculator.getOrCreate()
+            .computeCurrentWindowMetrics(requireActivity())
         val currentBounds = windowMetrics.bounds
         val layoutParams = binding.playerView.layoutParams as FrameLayout.LayoutParams
+
         if (orientation == Configuration.ORIENTATION_PORTRAIT || windowSize?.isTablet == true) {
-            val width = currentBounds.width() - requireContext().dpToPixel(32)
-            val minHeight = requireContext().dpToPixel(194).roundToInt()
-            val height = (width / 16f * 9f).roundToInt()
-            layoutParams.height = if (windowSize?.isTablet == true) {
-                requireContext().dpToPixel(320).roundToInt()
-            } else if (height < minHeight) {
-                minHeight
-            } else {
-                height
+            val padding = requireContext().dpToPixel(PLAYER_VIEW_PADDING_DP)
+            val width = currentBounds.width() - padding
+            val minHeight = requireContext().dpToPixel(MIN_PLAYER_HEIGHT_DP).roundToInt()
+            val aspectRatio = VIDEO_ASPECT_RATIO_WIDTH / VIDEO_ASPECT_RATIO_HEIGHT
+            val calculatedHeight = (width / aspectRatio).roundToInt()
+
+            layoutParams.height = when {
+                windowSize?.isTablet == true -> {
+                    requireContext().dpToPixel(TABLET_PLAYER_HEIGHT_DP).roundToInt()
+                }
+
+                calculatedHeight < minHeight -> {
+                    minHeight
+                }
+
+                else -> {
+                    calculatedHeight
+                }
             }
         }
 
         binding.playerView.layoutParams = layoutParams
+    }
 
+    @androidx.annotation.OptIn(UnstableApi::class)
+    private fun initPlayer() {
+        with(binding) {
+            playerView.player = viewModel.getActivePlayer()
+            playerView.setShowNextButton(false)
+            playerView.setShowPreviousButton(false)
+            showVideoControllerIndefinitely(false)
+
+            val movieMetadata = MediaMetadata.Builder()
+                .setMediaType(MediaMetadata.MEDIA_TYPE_MOVIE)
+                .build()
+            val mediaItem = MediaItem.Builder().setMediaMetadata(movieMetadata)
+                .setUri(viewModel.videoUrl)
+                .setMimeType("video/*")
+                .build()
+
+            if (!viewModel.isPlayerSetUp) {
+                setPlayerMedia(mediaItem)
+                viewModel.getActivePlayer()?.prepare()
+                viewModel.getActivePlayer()?.playWhenReady = viewModel.isPlaying && isResumed
+                viewModel.isPlayerSetUp = true
+            }
+            viewModel.getActivePlayer()?.seekTo(viewModel.getCurrentVideoTime())
         viewModel.state.onEach {
             when {
                 it.activePlayerType == PlayerType.EXO_REGULAR -> {
@@ -151,6 +201,20 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     updatePlayerType(viewModel.getCastPlayer())
                     showVideoControllerIndefinitely(true)
                 }
+            viewModel.castPlayer?.setSessionAvailabilityListener(
+                object : SessionAvailabilityListener {
+                    override fun onCastSessionAvailable() {
+                        viewModel.logCastConnection(CourseAnalyticsEvent.CAST_CONNECTED)
+                        viewModel.isCastActive = true
+                        viewModel.exoPlayer?.pause()
+                        playerView.player = viewModel.castPlayer
+                        viewModel.castPlayer?.setMediaItem(
+                            mediaItem,
+                            viewModel.exoPlayer?.currentPosition ?: 0L
+                        )
+                        viewModel.castPlayer?.playWhenReady = true
+                        showVideoControllerIndefinitely(true)
+                    }
 
                 it.isVideoEnded && !appReviewManager.isDialogShowed -> {
                     appReviewManager.tryToOpenRateDialog()
@@ -160,6 +224,10 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
         enableLongPressDoubleSpeed()
     }
+            playerView.setFullscreenButtonClickListener {
+                if (viewModel.isCastActive) {
+                    return@setFullscreenButtonClickListener
+                }
 
     @OptIn(UnstableApi::class)
     private fun updatePlayerType(player: Player?) {
@@ -202,11 +270,24 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.playerView.controllerShowTimeoutMs = 0
         } else {
             binding.playerView.controllerAutoShow = true
-            binding.playerView.controllerShowTimeoutMs = 2000
+            binding.playerView.controllerShowTimeoutMs = CONTROLLER_SHOW_TIMEOUT
         }
         binding.playerView.showController()
     }
 
+    @androidx.annotation.OptIn(UnstableApi::class)
+    private fun setPlayerMedia(mediaItem: MediaItem) {
+        if (viewModel.videoUrl.endsWith(".m3u8")) {
+            val factory = DefaultDataSource.Factory(requireContext())
+            val mediaSource: HlsMediaSource =
+                HlsMediaSource.Factory(factory).createMediaSource(mediaItem)
+            viewModel.exoPlayer?.setMediaSource(mediaSource, viewModel.getCurrentVideoTime())
+        } else {
+            viewModel.getActivePlayer()?.setMediaItem(
+                mediaItem,
+                viewModel.getCurrentVideoTime()
+            )
+        }
     private fun enableLongPressDoubleSpeed() {
         binding.playerView.enableLongPressDoubleSpeed(
             player = viewModel.exoPlayer!!,
@@ -222,6 +303,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_TITLE = "title"
         private const val ARG_DOWNLOADED = "isDownloaded"
+
+        private const val PLAYER_VIEW_PADDING_DP = 32
+        private const val MIN_PLAYER_HEIGHT_DP = 194
+        private const val TABLET_PLAYER_HEIGHT_DP = 320
+        private const val VIDEO_ASPECT_RATIO_WIDTH = 16f
+        private const val VIDEO_ASPECT_RATIO_HEIGHT = 9f
+        private const val CONTROLLER_SHOW_TIMEOUT = 2000
 
         fun newInstance(
             blockId: String,

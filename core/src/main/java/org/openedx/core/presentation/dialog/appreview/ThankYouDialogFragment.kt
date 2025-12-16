@@ -63,7 +63,7 @@ class ThankYouDialogFragment : BaseAppReviewDialogFragment() {
     private fun closeDialogDelay(isFeedbackPositive: Boolean) {
         if (!isFeedbackPositive) {
             lifecycleScope.launch {
-                delay(3000)
+                delay(timeMillis = 3000)
                 dismiss()
             }
         }

@@ -2,10 +2,16 @@ package org.openedx.course.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import okhttp3.MultipartBody
 import org.openedx.core.ApiConstants
 import org.openedx.core.data.api.CourseApi
 import org.openedx.core.data.model.BlocksCompletionBody
+import org.openedx.core.data.model.room.CourseProgressEntity
+import org.openedx.core.data.model.room.OfflineXBlockProgress
+import org.openedx.core.data.model.room.VideoProgressEntity
+import org.openedx.core.data.model.room.XBlockProgressData
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.data.storage.CourseDao
 import org.openedx.core.domain.model.CourseComponentStatus
 import org.openedx.core.domain.model.CourseDatesBannerInfo
 import org.openedx.core.domain.model.CourseDatesResult
@@ -16,8 +22,10 @@ import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.extension.channelFlowWithAwait
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.system.connection.NetworkConnection
-import org.openedx.course.data.storage.CourseDao
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
+@Suppress("TooManyFunctions")
 class CourseRepository(
     private val api: CourseApi,
     private val courseDao: CourseDao,
@@ -34,7 +42,7 @@ class CourseRepository(
         downloadDao.removeDownloadModel(id)
     }
 
-    fun getDownloadModels() = downloadDao.readAllData().map { list ->
+    fun getDownloadModels() = downloadDao.getAllDataFlow().map { list ->
         list.map { it.mapToDomain() }
     }
 
@@ -191,4 +199,80 @@ class CourseRepository(
 
     suspend fun getAnnouncements(courseId: String) =
         api.getAnnouncements(courseId).map { it.mapToDomain() }
+
+    suspend fun saveOfflineXBlockProgress(blockId: String, courseId: String, jsonProgress: String) {
+        val offlineXBlockProgress = OfflineXBlockProgress(
+            blockId = blockId,
+            courseId = courseId,
+            jsonProgress = XBlockProgressData.parseJson(jsonProgress)
+        )
+        downloadDao.insertOfflineXBlockProgress(offlineXBlockProgress)
+    }
+
+    suspend fun getXBlockProgress(blockId: String) = downloadDao.getOfflineXBlockProgress(blockId)
+
+    suspend fun submitAllOfflineXBlockProgress() {
+        val allOfflineXBlockProgress = downloadDao.getAllOfflineXBlockProgress()
+        allOfflineXBlockProgress.forEach {
+            submitOfflineXBlockProgress(it.blockId, it.courseId, it.jsonProgress.data)
+        }
+    }
+
+    suspend fun submitOfflineXBlockProgress(blockId: String, courseId: String) {
+        val jsonProgressData = getXBlockProgress(blockId)?.jsonProgress?.data
+        submitOfflineXBlockProgress(blockId, courseId, jsonProgressData)
+    }
+
+    private suspend fun submitOfflineXBlockProgress(
+        blockId: String,
+        courseId: String,
+        jsonProgressData: String?
+    ) {
+        if (!jsonProgressData.isNullOrEmpty()) {
+            val parts = mutableListOf<MultipartBody.Part>()
+            val decodedQuery = URLDecoder.decode(jsonProgressData, StandardCharsets.UTF_8.name())
+            val keyValuePairs = decodedQuery.split("&")
+            for (pair in keyValuePairs) {
+                val (key, value) = pair.split("=")
+                parts.add(MultipartBody.Part.createFormData(key, value))
+            }
+            api.submitOfflineXBlockProgress(courseId, blockId, parts)
+            downloadDao.removeOfflineXBlockProgress(listOf(blockId))
+        }
+    }
+
+    suspend fun saveVideoProgress(
+        blockId: String,
+        videoUrl: String,
+        videoTime: Long,
+        duration: Long
+    ) {
+        val videoProgressEntity = VideoProgressEntity(blockId, videoUrl, videoTime, duration)
+        courseDao.insertVideoProgressEntity(videoProgressEntity)
+    }
+
+    suspend fun getVideoProgress(blockId: String): VideoProgressEntity {
+        return courseDao.getVideoProgressByBlockId(blockId)
+            ?: VideoProgressEntity(blockId, "", null, null)
+    }
+
+    fun getCourseProgress(
+        courseId: String,
+        isRefresh: Boolean,
+        getOnlyCacheIfExist: Boolean // If true, only returns cached data if available, otherwise fetches from network
+    ): Flow<CourseProgress> =
+        channelFlowWithAwait {
+            var courseProgress: CourseProgressEntity? = null
+            if (!isRefresh) {
+                courseProgress = courseDao.getCourseProgressById(courseId)
+                if (courseProgress != null) {
+                    trySend(courseProgress.mapToDomain())
+                }
+            }
+            if (networkConnection.isOnline() && (!getOnlyCacheIfExist || courseProgress == null)) {
+                val response = api.getCourseProgress(courseId)
+                courseDao.insertCourseProgressEntity(response.mapToRoomEntity(courseId))
+                trySend(response.mapToDomain())
+            }
+        }
 }

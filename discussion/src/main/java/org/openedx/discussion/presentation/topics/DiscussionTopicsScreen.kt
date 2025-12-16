@@ -40,21 +40,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentManager
 import org.openedx.core.FragmentViewType
-import org.openedx.core.NoContentScreenType
-import org.openedx.core.UIMessage
-import org.openedx.core.ui.CircularProgress
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.NoContentScreen
 import org.openedx.core.ui.StaticSearchBar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.Topic
 import org.openedx.discussion.presentation.ui.ThreadItemCategory
@@ -156,6 +150,7 @@ private fun DiscussionTopicsUI(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
+                .statusBarsInset()
                 .displayCutoutForLandscape(),
             contentAlignment = Alignment.TopCenter
         ) {
@@ -184,6 +179,17 @@ private fun DiscussionTopicsUI(
                             .fillMaxWidth(),
                         text = stringResource(id = R.string.discussion_search_all_posts),
                         onClick = { onSearchClick(uiState.isPostingEnabled) }
+                    )
+                }
+                if ((uiState is DiscussionTopicsUIState.Error).not()) {
+                    StaticSearchBar(
+                        modifier = Modifier
+                            .height(48.dp)
+                            .then(searchTabWidth)
+                            .padding(horizontal = contentPaddings)
+                            .fillMaxWidth(),
+                        text = stringResource(id = R.string.discussion_search_all_posts),
+                        onClick = onSearchClick
                     )
                 }
                 Surface(
@@ -220,6 +226,10 @@ private fun DiscussionTopicsUI(
                                             ) {
                                                 ThreadItemCategory(
                                                     name = stringResource(id = R.string.discussion_all_posts),
+                                                    painterResource = painterResource(
+                                                        id = R.drawable.discussion_all_posts
+                                                    ),
+                                                    name = stringResource(id = R.string.discussion_all_posts),
                                                     painterResource = painterResource(id = R.drawable.discussion_all_posts),
                                                     modifier = Modifier
                                                         .weight(1f)
@@ -230,7 +240,8 @@ private fun DiscussionTopicsUI(
                                                             "",
                                                             context.getString(R.string.discussion_all_posts)
                                                         )
-                                                    })
+                                                    }
+                                                )
                                                 ThreadItemCategory(
                                                     name = stringResource(id = R.string.discussion_posts_following),
                                                     painterResource = painterResource(id = R.drawable.discussion_star),
@@ -243,7 +254,8 @@ private fun DiscussionTopicsUI(
                                                             "",
                                                             context.getString(R.string.discussion_posts_following)
                                                         )
-                                                    })
+                                                    }
+                                                )
                                             }
                                         }
                                         itemsIndexed(uiState.data) { index, topic ->
@@ -272,6 +284,10 @@ private fun DiscussionTopicsUI(
                                     }
                                 }
 
+                                DiscussionTopicsUIState.Loading -> {}
+                                else -> {
+                                    NoContentScreen(noContentScreenType = NoContentScreenType.COURSE_DISCUSSIONS)
+                                }
                                 DiscussionTopicsUIState.Loading -> {
                                     CircularProgress()
                                 }
@@ -315,6 +331,29 @@ private fun ErrorDiscussionTopicsScreenPreview() {
         DiscussionTopicsUI(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             uiState = DiscussionTopicsUIState.Error,
+            uiState = DiscussionTopicsUIState.Topics(
+                listOf(
+                    DiscussionMocks.topic,
+                    DiscussionMocks.topic
+                )
+            ),
+            uiMessage = null,
+            onItemClick = { _, _, _ -> },
+            onSearchClick = {}
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "NEXUS_5_Light", device = Devices.NEXUS_5, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "NEXUS_5_Dark", device = Devices.NEXUS_5, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ErrorDiscussionTopicsScreenPreview() {
+    OpenEdXTheme {
+        DiscussionTopicsUI(
+            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
+            uiState = DiscussionTopicsUIState.Error,
             uiMessage = null,
             onItemClick = { _, _, _ -> },
             onSearchClick = {}
@@ -329,6 +368,12 @@ private fun DiscussionTopicsScreenTabletPreview() {
     OpenEdXTheme {
         DiscussionTopicsUI(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
+            uiState = DiscussionTopicsUIState.Topics(
+                listOf(
+                    DiscussionMocks.topic,
+                    DiscussionMocks.topic
+                )
+            ),
             uiState = DiscussionTopicsUIState.Topics(false, listOf(mockTopic, mockTopic)),
             uiMessage = null,
             onItemClick = { _, _, _ -> },

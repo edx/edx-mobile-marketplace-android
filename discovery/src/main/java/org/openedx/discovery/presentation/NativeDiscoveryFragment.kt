@@ -57,32 +57,28 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.AppUpdateState
-import org.openedx.core.AppUpdateState.wasUpdateDialogClosed
-import org.openedx.core.UIMessage
-import org.openedx.core.domain.model.Media
-import org.openedx.core.presentation.dialog.appupgrade.AppUpgradeDialogFragment
-import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRecommendedBox
-import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.StaticSearchBar
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
+import org.openedx.discovery.DiscoveryMocks
 import org.openedx.discovery.R
 import org.openedx.discovery.domain.model.Course
+import org.openedx.discovery.presentation.NativeDiscoveryFragment.Companion.LOAD_MORE_THRESHOLD
 import org.openedx.discovery.presentation.ui.DiscoveryCourseItem
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 
 class NativeDiscoveryFragment : Fragment() {
 
@@ -103,8 +99,6 @@ class NativeDiscoveryFragment : Fragment() {
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
-                val appUpgradeEvent by viewModel.appUpgradeEvent.observeAsState()
-                val wasUpdateDialogClosed by remember { wasUpdateDialogClosed }
                 val querySearch = arguments?.getString(ARG_SEARCH_QUERY, "") ?: ""
 
                 DiscoveryScreen(
@@ -117,29 +111,12 @@ class NativeDiscoveryFragment : Fragment() {
                     hasInternetConnection = viewModel.hasInternetConnection,
                     canShowBackButton = viewModel.canShowBackButton,
                     isUserLoggedIn = viewModel.isUserLoggedIn,
-                    appUpgradeParameters = AppUpdateState.AppUpgradeParameters(
-                        appUpgradeEvent = appUpgradeEvent,
-                        wasUpdateDialogClosed = wasUpdateDialogClosed,
-                        appUpgradeRecommendedDialog = {
-                            val dialog = AppUpgradeDialogFragment.newInstance()
-                            dialog.show(
-                                requireActivity().supportFragmentManager,
-                                AppUpgradeDialogFragment::class.simpleName
-                            )
-                        },
-                        onAppUpgradeRecommendedBoxClick = {
-                            AppUpdateState.openPlayMarket(requireContext())
-                        },
-                        onAppUpgradeRequired = {
-                            router.navigateToUpgradeRequired(
-                                requireActivity().supportFragmentManager
-                            )
-                        }
-                    ),
+                    isRegistrationEnabled = viewModel.isRegistrationEnabled,
                     onSearchClick = {
                         viewModel.discoverySearchBarClickedEvent()
                         router.navigateToCourseSearch(
-                            requireActivity().supportFragmentManager, ""
+                            requireActivity().supportFragmentManager,
+                            ""
                         )
                     },
                     paginationCallback = {
@@ -172,7 +149,8 @@ class NativeDiscoveryFragment : Fragment() {
                 LaunchedEffect(uiState) {
                     if (querySearch.isNotEmpty()) {
                         router.navigateToCourseSearch(
-                            requireActivity().supportFragmentManager, querySearch
+                            requireActivity().supportFragmentManager,
+                            querySearch
                         )
                         arguments?.putString(ARG_SEARCH_QUERY, "")
                     }
@@ -183,6 +161,7 @@ class NativeDiscoveryFragment : Fragment() {
 
     companion object {
         private const val ARG_SEARCH_QUERY = "query_search"
+        const val LOAD_MORE_THRESHOLD = 4
         fun newInstance(querySearch: String = ""): NativeDiscoveryFragment {
             val fragment = NativeDiscoveryFragment()
             fragment.arguments = bundleOf(
@@ -192,7 +171,6 @@ class NativeDiscoveryFragment : Fragment() {
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -206,7 +184,7 @@ internal fun DiscoveryScreen(
     hasInternetConnection: Boolean,
     canShowBackButton: Boolean,
     isUserLoggedIn: Boolean,
-    appUpgradeParameters: AppUpdateState.AppUpgradeParameters,
+    isRegistrationEnabled: Boolean,
     onSearchClick: () -> Unit,
     onSwipeRefresh: () -> Unit,
     onReloadClick: () -> Unit,
@@ -248,13 +226,13 @@ internal fun DiscoveryScreen(
                 ) {
                     AuthButtonsPanel(
                         onRegisterClick = onRegisterClick,
-                        onSignInClick = onSignInClick
+                        onSignInClick = onSignInClick,
+                        showRegisterButton = isRegistrationEnabled
                     )
                 }
             }
         }
     ) {
-
         val searchTabWidth by remember(key1 = windowSize) {
             mutableStateOf(
                 windowSize.windowSizeValue(
@@ -345,8 +323,9 @@ internal fun DiscoveryScreen(
                     when (state) {
                         is DiscoveryUIState.Loading -> {
                             Box(
-                                Modifier
-                                    .fillMaxSize(), contentAlignment = Alignment.Center
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                             }
@@ -390,7 +369,8 @@ internal fun DiscoveryScreen(
                                             windowSize = windowSize,
                                             onClick = {
                                                 onItemClick(course)
-                                            })
+                                            }
+                                        )
                                         Divider()
                                     }
                                     item {
@@ -406,7 +386,11 @@ internal fun DiscoveryScreen(
                                         }
                                     }
                                 }
-                                if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
+                                if (scrollState.shouldLoadMore(
+                                        firstVisibleIndex,
+                                        LOAD_MORE_THRESHOLD
+                                    )
+                                ) {
                                     paginationCallback()
                                 }
                             }
@@ -423,30 +407,6 @@ internal fun DiscoveryScreen(
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter)
                     ) {
-                        when (appUpgradeParameters.appUpgradeEvent) {
-                            is AppUpgradeEvent.UpgradeRecommendedEvent -> {
-                                if (appUpgradeParameters.wasUpdateDialogClosed) {
-                                    AppUpgradeRecommendedBox(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onClick = appUpgradeParameters.onAppUpgradeRecommendedBoxClick
-                                    )
-                                } else {
-                                    if (!AppUpdateState.wasUpdateDialogDisplayed) {
-                                        AppUpdateState.wasUpdateDialogDisplayed = true
-                                        appUpgradeParameters.appUpgradeRecommendedDialog()
-                                    }
-                                }
-                            }
-
-                            is AppUpgradeEvent.UpgradeRequiredEvent -> {
-                                if (!AppUpdateState.wasUpdateDialogDisplayed) {
-                                    AppUpdateState.wasUpdateDialogDisplayed = true
-                                    appUpgradeParameters.onAppUpgradeRequired()
-                                }
-                            }
-
-                            else -> {}
-                        }
                         if (!isInternetConnectionShown && !hasInternetConnection) {
                             OfflineModeDialog(
                                 Modifier
@@ -474,9 +434,10 @@ private fun CourseItemPreview() {
     OpenEdXTheme {
         DiscoveryCourseItem(
             apiHostUrl = "",
-            course = mockCourse,
+            course = DiscoveryMocks.course,
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            onClick = {})
+            onClick = {}
+        )
     }
 }
 
@@ -488,17 +449,7 @@ private fun DiscoveryScreenPreview() {
         DiscoveryScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             state = DiscoveryUIState.Courses(
-                listOf(
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                )
+                DiscoveryMocks.courses(1)
             ),
             uiMessage = null,
             apiHostUrl = "",
@@ -511,7 +462,7 @@ private fun DiscoveryScreenPreview() {
             refreshing = false,
             hasInternetConnection = true,
             isUserLoggedIn = false,
-            appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
+            isRegistrationEnabled = true,
             onSignInClick = {},
             onRegisterClick = {},
             onBackClick = {},
@@ -528,17 +479,7 @@ private fun DiscoveryScreenTabletPreview() {
         DiscoveryScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             state = DiscoveryUIState.Courses(
-                listOf(
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                    mockCourse,
-                )
+                DiscoveryMocks.courses(1)
             ),
             uiMessage = null,
             apiHostUrl = "",
@@ -551,7 +492,7 @@ private fun DiscoveryScreenTabletPreview() {
             refreshing = false,
             hasInternetConnection = true,
             isUserLoggedIn = true,
-            appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
+            isRegistrationEnabled = true,
             onSignInClick = {},
             onRegisterClick = {},
             onBackClick = {},
@@ -559,27 +500,3 @@ private fun DiscoveryScreenTabletPreview() {
         )
     }
 }
-
-private val mockCourse = Course(
-    id = "id",
-    blocksUrl = "blocksUrl",
-    courseId = "courseId",
-    effort = "effort",
-    enrollmentStart = null,
-    enrollmentEnd = null,
-    hidden = false,
-    invitationOnly = false,
-    media = Media(),
-    mobileAvailable = true,
-    name = "Test course",
-    number = "number",
-    org = "EdX",
-    pacing = "pacing",
-    shortDescription = "shortDescription",
-    start = "start",
-    end = "end",
-    startDisplay = "startDisplay",
-    startType = "startType",
-    overview = "",
-    isEnrolled = false
-)

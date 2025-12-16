@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
@@ -69,15 +68,12 @@ import org.openedx.auth.presentation.ui.ExpandableText
 import org.openedx.auth.presentation.ui.OptionalFields
 import org.openedx.auth.presentation.ui.RequiredFields
 import org.openedx.auth.presentation.ui.SocialAuthView
-import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.SheetContent
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.isImeVisibleState
 import org.openedx.core.ui.noRippleClickable
@@ -87,10 +83,13 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.core.R as coreR
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun SignUpView(
     windowSize: WindowSize,
@@ -143,7 +142,7 @@ internal fun SignUpView(
     LaunchedEffect(uiState.validationError) {
         if (uiState.validationError) {
             coroutine.launch {
-                scrollState.animateScrollTo(0, tween(300))
+                scrollState.animateScrollTo(0, tween(durationMillis = 300))
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             }
         }
@@ -153,7 +152,7 @@ internal fun SignUpView(
         if (uiState.socialAuth != null) {
             coroutine.launch {
                 showErrorMap.clear()
-                scrollState.animateScrollTo(0, tween(300))
+                scrollState.animateScrollTo(0, tween(durationMillis = 300))
             }
         }
     }
@@ -175,7 +174,6 @@ internal fun SignUpView(
             .navigationBarsPadding(),
         backgroundColor = MaterialTheme.appColors.background
     ) {
-
         val topBarPadding by remember {
             mutableStateOf(
                 windowSize.windowSizeValue(
@@ -248,7 +246,7 @@ internal fun SignUpView(
             Image(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.3f),
+                    .fillMaxHeight(fraction = 0.3f),
                 painter = painterResource(id = coreR.drawable.core_top_header),
                 contentScale = ContentScale.FillBounds,
                 contentDescription = null
@@ -298,8 +296,8 @@ internal fun SignUpView(
                     ) {
                         if (uiState.isLoading) {
                             Box(
-                                Modifier
-                                    .fillMaxSize(), contentAlignment = Alignment.Center
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                             }

@@ -43,6 +43,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -51,6 +53,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -74,31 +77,31 @@ import kotlinx.coroutines.delay
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.extension.parcelable
 import org.openedx.core.extension.smoothScrollToIndex
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.discussion.DiscussionMocks
+import org.openedx.discussion.R
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.DiscussionRouter
+import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment.Companion.LOAD_MORE_THRESHOLD
 import org.openedx.discussion.presentation.ui.CommentItem
 import org.openedx.discussion.presentation.ui.ThreadMainItem
+
 
 
 class DiscussionCommentsFragment : Fragment() {
@@ -181,7 +184,8 @@ class DiscussionCommentsFragment : Fragment() {
                     },
                     onUserPhotoClick = { username ->
                         router.navigateToAnothersProfile(
-                            requireActivity().supportFragmentManager, username
+                            requireActivity().supportFragmentManager,
+                            username
                         )
                     },
                     onAddResponseClick = {
@@ -223,6 +227,7 @@ class DiscussionCommentsFragment : Fragment() {
         const val ACTION_UPVOTE_THREAD = "action_upvote_thread"
         const val ACTION_REPORT_THREAD = "action_report_thread"
         const val ACTION_FOLLOW_THREAD = "action_follow_thread"
+        const val LOAD_MORE_THRESHOLD = 4
 
         private const val ARG_COURSE_ID = "argCourseId"
         private const val ARG_THREAD = "argThread"
@@ -248,7 +253,6 @@ class DiscussionCommentsFragment : Fragment() {
             return fragment
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -286,6 +290,11 @@ private fun DiscussionCommentsScreen(
     val sendButtonAlpha = if (responseValue.isEmpty()) 0.3f else 1f
     var itemHeightPx by remember { mutableFloatStateOf(0f) }
 
+    val iconButtonColor = if (responseValue.isEmpty()) {
+        MaterialTheme.appColors.textFieldBackgroundVariant
+    } else {
+        Color.White
+    }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -439,7 +448,8 @@ private fun DiscussionCommentsScreen(
                                             },
                                             onUserPhotoClick = {
                                                 onUserPhotoClick(comment.author)
-                                            })
+                                            }
+                                        )
                                     }
                                     item {
                                         if (canLoadMore) {
@@ -452,7 +462,11 @@ private fun DiscussionCommentsScreen(
                                         }
                                     }
                                 }
-                                if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
+                                if (scrollState.shouldLoadMore(
+                                        firstVisibleIndex,
+                                        LOAD_MORE_THRESHOLD
+                                    )
+                                ) {
                                     paginationCallBack()
                                 }
                                 if (!isSystemInDarkTheme()) {
@@ -552,8 +566,9 @@ private fun DiscussionCommentsScreen(
 
                         is DiscussionCommentsUIState.Loading -> {
                             Box(
-                                Modifier
-                                    .fillMaxSize(), contentAlignment = Alignment.Center
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                             }
@@ -581,8 +596,8 @@ private fun DiscussionCommentsScreenPreview() {
         DiscussionCommentsScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             uiState = DiscussionCommentsUIState.Success(
-                mockThread,
-                listOf(mockComment, mockComment),
+                DiscussionMocks.thread,
+                listOf(DiscussionMocks.comment, DiscussionMocks.comment),
                 2
             ),
             uiMessage = null,
@@ -591,9 +606,7 @@ private fun DiscussionCommentsScreenPreview() {
             showProgress = false,
             isPostingEnabled = false,
             paginationCallBack = {},
-            onItemClick = { _, _, _ ->
-
-            },
+            onItemClick = { _, _, _ -> },
             onCommentClick = {},
             onAddResponseClick = {},
             onBackClick = {},
@@ -604,7 +617,6 @@ private fun DiscussionCommentsScreenPreview() {
     }
 }
 
-
 @Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -613,8 +625,8 @@ private fun DiscussionCommentsScreenTabletPreview() {
         DiscussionCommentsScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             uiState = DiscussionCommentsUIState.Success(
-                mockThread,
-                listOf(mockComment, mockComment),
+                DiscussionMocks.thread,
+                listOf(DiscussionMocks.comment, DiscussionMocks.comment),
                 2
             ),
             uiMessage = null,
@@ -623,9 +635,7 @@ private fun DiscussionCommentsScreenTabletPreview() {
             showProgress = false,
             isPostingEnabled = false,
             paginationCallBack = {},
-            onItemClick = { _, _, _ ->
-
-            },
+            onItemClick = { _, _, _ -> },
             onCommentClick = {},
             onAddResponseClick = {},
             onBackClick = {},

@@ -13,6 +13,8 @@ data class DownloadModelEntity(
     val id: String,
     @ColumnInfo("title")
     val title: String,
+    @ColumnInfo("courseId")
+    val courseId: String,
     @ColumnInfo("size")
     val size: Long,
     @ColumnInfo("path")
@@ -31,11 +33,14 @@ data class DownloadModelEntity(
     val transcriptPaths: String,
     @ColumnInfo("transcriptDownloadedStatus")
     val transcriptDownloadedStatus: String,
+    @ColumnInfo("lastModified")
+    val lastModified: String?
 ) {
 
     fun mapToDomain() = DownloadModel(
         id,
         title,
+        courseId,
         size,
         path,
         url,
@@ -54,6 +59,7 @@ data class DownloadModelEntity(
                 return DownloadModelEntity(
                     id,
                     title,
+                    courseId,
                     size,
                     path,
                     url,
@@ -63,10 +69,11 @@ data class DownloadModelEntity(
                     objectToString(transcriptUrls),
                     objectToString(transcriptPaths),
                     transcriptDownloadedStatus.name
+                    lastModified
                 )
             }
         }
-
     }
+}
 
 }

@@ -6,6 +6,9 @@ import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import androidx.media3.cast.CastPlayer
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -29,28 +32,13 @@ import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.extractor.DefaultExtractorsFactory
-import com.google.android.gms.cast.framework.CastState
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import com.google.android.gms.cast.framework.CastContext
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.model.VideoPlaybackSpeed
 import org.openedx.core.domain.model.VideoQuality
-import org.openedx.core.extension.isTrue
 import org.openedx.core.module.TranscriptManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
-import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.data.repository.CourseRepository
-import org.openedx.course.extension.matches
-import org.openedx.course.module.CastManager
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 
@@ -60,6 +48,8 @@ class EncodedVideoUnitViewModel(
     courseId: String,
     blockId: String,
     val title: String,
+    videoUrl: String,
+    blockId: String,
     private val context: Context,
     private val preferencesManager: CorePreferences,
     private val castManager: CastManager,
@@ -70,6 +60,8 @@ class EncodedVideoUnitViewModel(
     courseAnalytics: CourseAnalytics,
 ) : VideoUnitViewModel(
     courseId,
+    blockId,
+    videoUrl,
     blockId,
     courseRepository,
     notifier,
@@ -127,6 +119,20 @@ class EncodedVideoUnitViewModel(
         .build()
 
     private val exoPlayerListener = object : Player.Listener {
+        override fun onRenderedFirstFrame() {
+            super.onRenderedFirstFrame()
+            viewModelScope.launch {
+                while (exoPlayer?.duration == null || exoPlayer?.duration!! < 0f) {
+                    delay(500)
+                }
+                duration = exoPlayer?.duration ?: 0L
+            }
+        }
+
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            super.onPlayWhenReadyChanged(playWhenReady, reason)
+            isPlaying = playWhenReady
+        }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
@@ -185,6 +191,14 @@ class EncodedVideoUnitViewModel(
             return
         }
         initPlayer()
+
+        val executor = Executors.newSingleThreadExecutor()
+        CastContext.getSharedInstance(context, executor).addOnCompleteListener {
+            it.result?.let { castContext ->
+                castPlayer = CastPlayer(castContext)
+                isUpdatedMutable.value = true
+            }
+        }
     }
 
     override fun onResume(owner: LifecycleOwner) {

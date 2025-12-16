@@ -9,7 +9,8 @@ data class AnnouncementModel(
     @SerializedName("content")
     val content: String,
 ) {
-    fun mapToDomain() = DomainAnnouncementModel(
-        date, content
+    fun mapToDomain() = org.openedx.core.domain.model.AnnouncementModel(
+        date,
+        content
     )
 }

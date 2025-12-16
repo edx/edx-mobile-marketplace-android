@@ -48,7 +48,7 @@ enum class VideoQuality(
         width = 1280,
         height = 720,
         tagId = "high",
-    );
+    )
 }
 
 enum class VideoPlaybackSpeed(val speedValue: Float) {

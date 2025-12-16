@@ -7,6 +7,8 @@ plugins {
 }
 
 android {
+    namespace 'org.openedx.dashboard'
+    compileSdkVersion compile_sdk_version
     compileSdk = 35
     ndkVersion = "28.2.13676358"
 
@@ -26,7 +28,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -69,4 +70,7 @@ dependencies {
     testImplementation "io.mockk:mockk-android:$mockk_version"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version"
     testImplementation "androidx.arch.core:core-testing:$android_arch_version"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinx_coroutines_test_version"
+    androidTestImplementation "androidx.test.ext:junit:$test_ext_version"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version"
 }

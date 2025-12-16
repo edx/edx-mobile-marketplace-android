@@ -37,14 +37,10 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.openedx.core.UIMessage
+import org.openedx.core.R
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IconText
-import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
-import org.openedx.core.ui.OpenEdXTertiaryButton
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.settingsHeaderBackground
 import org.openedx.core.ui.statusBarsInset
@@ -52,12 +48,11 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.profile.R
 import org.openedx.profile.presentation.manageaccount.ManageAccountUIState
 import org.openedx.profile.presentation.ui.ProfileTopic
-import org.openedx.profile.presentation.ui.mockAccount
 import org.openedx.core.R as CoreR
+import org.openedx.profile.R as ProfileR
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -72,7 +67,8 @@ internal fun ManageAccountView(
 
     val pullRefreshState = rememberPullRefreshState(
         refreshing = refreshing,
-        onRefresh = { onAction(ManageAccountViewAction.SwipeRefresh) })
+        onRefresh = { onAction(ManageAccountViewAction.SwipeRefresh) }
+    )
 
     Scaffold(
         modifier = Modifier
@@ -187,6 +183,16 @@ internal fun ManageAccountView(
                                         }
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
+                                    IconText(
+                                        text = stringResource(id = ProfileR.string.profile_delete_profile),
+                                        painter = painterResource(id = ProfileR.drawable.profile_ic_trash),
+                                        textStyle = MaterialTheme.appTypography.labelLarge,
+                                        color = MaterialTheme.appColors.error,
+                                        onClick = {
+                                            onAction(ManageAccountViewAction.DeleteAccount)
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
                                 }
                             }
                         }
@@ -211,14 +217,15 @@ private fun ManageAccountViewPreview() {
     OpenEdXTheme {
         ManageAccountView(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = mockUiState,
+            uiState = ManageAccountUIState.Data(
+                account = ProfileMocks.account
+            ),
             uiMessage = null,
             refreshing = false,
             onAction = {}
         )
     }
 }
-
 
 @Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -227,17 +234,15 @@ private fun ManageAccountViewTabletPreview() {
     OpenEdXTheme {
         ManageAccountView(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
-            uiState = mockUiState,
+            uiState = ManageAccountUIState.Data(
+                account = ProfileMocks.account
+            ),
             uiMessage = null,
             refreshing = false,
             onAction = {}
         )
     }
 }
-
-private val mockUiState = ManageAccountUIState.Data(
-    account = mockAccount
-)
 
 internal interface ManageAccountViewAction {
     object EditAccountClick : ManageAccountViewAction

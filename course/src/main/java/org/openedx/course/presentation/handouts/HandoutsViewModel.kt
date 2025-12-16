@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.domain.model.AnnouncementModel
 import org.openedx.core.domain.model.HandoutsModel
@@ -101,11 +100,11 @@ class HandoutsViewModel(
 
     fun injectDarkMode(content: String, bgColor: ULong, textColor: ULong): String {
         val darkThemeStyle = "<style>\n" +
-                "      body {\n" +
-                "        background-color: #${getColorFromULong(bgColor)};\n" +
-                "        color: #${getColorFromULong(textColor)};\n" +
-                "      }\n" +
-                "    </style>"
+                " body {\n" +
+                "   background-color: #${getColorFromULong(bgColor)};\n" +
+                "   color: #${getColorFromULong(textColor)};\n" +
+                " }\n" +
+                "</style>"
         val buff = StringBuffer().apply {
             if (bgColor != ULong.MIN_VALUE) append(darkThemeStyle)
             append(content)
@@ -113,6 +112,7 @@ class HandoutsViewModel(
         return buff.toString()
     }
 
+    @Suppress("MagicNumber")
     private fun getColorFromULong(color: ULong): String {
         if (color == ULong.MIN_VALUE) return "black"
         return java.lang.Long.toHexString(color.toLong()).substring(2, 8)

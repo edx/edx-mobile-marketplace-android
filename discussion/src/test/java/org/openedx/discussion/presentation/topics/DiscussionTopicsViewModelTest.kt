@@ -25,8 +25,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.R
-import org.openedx.core.UIMessage
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.utils.Logger
@@ -35,7 +33,10 @@ import org.openedx.discussion.domain.model.DiscussionConfig
 import org.openedx.discussion.domain.model.Topic
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionRouter
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import java.net.UnknownHostException
+import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DiscussionTopicsViewModelTest {
@@ -71,6 +72,7 @@ class DiscussionTopicsViewModelTest {
         Dispatchers.setMain(dispatcher)
         coEvery { interactor.getCourseDiscussionConfig(any()) } returns mockDiscussionConfig
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
+        every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
         every { courseNotifier.notifier } returns flowOf(CourseLoading(false))
         coEvery { courseNotifier.send(any<CourseLoading>()) } returns Unit
         mockkConstructor(Logger::class)
@@ -145,7 +147,10 @@ class DiscussionTopicsViewModelTest {
             router
         )
 
-        coEvery { interactor.getCourseTopics(any()) } returns listOf(mockTopic, mockTopic)
+        coEvery { interactor.getCourseTopics(any()) } returns listOf(
+            DiscussionMocks.topic,
+            DiscussionMocks.topic
+        )
         advanceUntilIdle()
         val message = async {
             withTimeoutOrNull(5000) {
@@ -221,7 +226,10 @@ class DiscussionTopicsViewModelTest {
             router
         )
 
-        coEvery { interactor.getCourseTopics(any()) } returns listOf(mockTopic, mockTopic)
+        coEvery { interactor.getCourseTopics(any()) } returns listOf(
+            DiscussionMocks.topic,
+            DiscussionMocks.topic
+        )
         val message = async {
             withTimeoutOrNull(5000) {
                 viewModel.uiMessage.first() as? UIMessage.SnackBarMessage

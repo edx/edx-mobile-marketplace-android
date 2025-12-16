@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.openedx.app.BuildConfig
+import org.openedx.core.AppUpdateState
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.utils.TimeUtils
@@ -17,21 +18,30 @@ class AppUpgradeInterceptor(
         val responseCode = response.code
         val latestAppVersion = response.header(HEADER_APP_LATEST_VERSION) ?: ""
         val lastSupportedDateString = response.header(HEADER_APP_VERSION_LAST_SUPPORTED_DATE) ?: ""
-        val lastSupportedDateTime = TimeUtils.iso8601WithTimeZoneToDate(lastSupportedDateString)?.time ?: 0L
+        val lastSupportedDateTime =
+            TimeUtils.iso8601WithTimeZoneToDate(lastSupportedDateString)?.time ?: 0L
         runBlocking {
-            when {
+            val appUpgradeEvent = when {
                 responseCode == 426 -> {
-                    appNotifier.send(AppUpgradeEvent.UpgradeRequiredEvent)
+                    AppUpgradeEvent.UpgradeRequiredEvent
                 }
 
                 BuildConfig.VERSION_NAME != latestAppVersion && lastSupportedDateTime > Date().time -> {
-                    appNotifier.send(AppUpgradeEvent.UpgradeRecommendedEvent(latestAppVersion))
+                    AppUpgradeEvent.UpgradeRecommendedEvent(latestAppVersion)
                 }
 
-                latestAppVersion.isNotEmpty() && BuildConfig.VERSION_NAME != latestAppVersion && lastSupportedDateTime < Date().time -> {
-                    appNotifier.send(AppUpgradeEvent.UpgradeRequiredEvent)
+                latestAppVersion.isNotEmpty() &&
+                        BuildConfig.VERSION_NAME != latestAppVersion &&
+                        lastSupportedDateTime < Date().time -> {
+                    AppUpgradeEvent.UpgradeRequiredEvent
+                }
+
+                else -> {
+                    return@runBlocking
                 }
             }
+            AppUpdateState.lastAppUpgradeEvent = appUpgradeEvent
+            appNotifier.send(appUpgradeEvent)
         }
         return response
     }
@@ -41,4 +51,3 @@ class AppUpgradeInterceptor(
         const val HEADER_APP_VERSION_LAST_SUPPORTED_DATE = "EDX-APP-VERSION-LAST-SUPPORTED-DATE"
     }
 }
-

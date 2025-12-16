@@ -42,6 +42,7 @@ import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.auth.R
+import org.openedx.core.ApiConstants
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.SearchBar
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -50,6 +51,7 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.theme.compose.LogistrationLogoView
+import org.openedx.foundation.utils.UrlUtils
 
 class LogistrationFragment : Fragment() {
 
@@ -67,14 +69,27 @@ class LogistrationFragment : Fragment() {
             OpenEdXTheme {
                 LogistrationScreen(
                     onSignInClick = {
-                        viewModel.navigateToSignIn(parentFragmentManager)
+                        if (viewModel.isBrowserLoginEnabled) {
+                            viewModel.signInBrowser(requireActivity())
+                        } else {
+                            viewModel.navigateToSignIn(parentFragmentManager)
+                        }
                     },
                     onRegisterClick = {
-                        viewModel.navigateToSignUp(parentFragmentManager)
+                        if (viewModel.isBrowserRegistrationEnabled) {
+                            UrlUtils.openInBrowser(
+                                activity = context,
+                                apiHostUrl = viewModel.apiHostUrl,
+                                url = ApiConstants.URL_REGISTER_BROWSER,
+                            )
+                        } else {
+                            viewModel.navigateToSignUp(parentFragmentManager)
+                        }
                     },
                     onSearchClick = { querySearch ->
                         viewModel.navigateToDiscovery(parentFragmentManager, querySearch)
-                    }
+                    },
+                    isRegistrationEnabled = viewModel.isRegistrationEnabled
                 )
             }
         }
@@ -98,8 +113,8 @@ private fun LogistrationScreen(
     onSearchClick: (String) -> Unit,
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
+    isRegistrationEnabled: Boolean,
 ) {
-
     var textFieldValue by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(""))
     }
@@ -185,7 +200,11 @@ private fun LogistrationScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                AuthButtonsPanel(onRegisterClick = onRegisterClick, onSignInClick = onSignInClick)
+                AuthButtonsPanel(
+                    onRegisterClick = onRegisterClick,
+                    onSignInClick = onSignInClick,
+                    showRegisterButton = isRegistrationEnabled
+                )
             }
         }
     }
@@ -201,7 +220,24 @@ private fun LogistrationPreview() {
         LogistrationScreen(
             onSearchClick = {},
             onSignInClick = {},
-            onRegisterClick = {}
+            onRegisterClick = {},
+            isRegistrationEnabled = true,
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "NEXUS_9_Night", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun LogistrationRegistrationDisabledPreview() {
+    OpenEdXTheme {
+        LogistrationScreen(
+            onSearchClick = {},
+            onSignInClick = {},
+            onRegisterClick = {},
+            isRegistrationEnabled = false,
         )
     }
 }

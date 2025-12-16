@@ -1,18 +1,24 @@
 package org.openedx.core.data.api
 
+import okhttp3.MultipartBody
 import org.openedx.core.data.model.AnnouncementModel
 import org.openedx.core.data.model.BlocksCompletionBody
 import org.openedx.core.data.model.CourseComponentStatus
 import org.openedx.core.data.model.CourseDates
 import org.openedx.core.data.model.CourseEnrollmentDetails
 import org.openedx.core.data.model.CourseEnrollments
+import org.openedx.core.data.model.CourseProgressResponse
 import org.openedx.core.data.model.CourseStructureModel
+import org.openedx.core.data.model.DownloadCoursePreview
+import org.openedx.core.data.model.EnrollmentStatus
 import org.openedx.core.data.model.HandoutsModel
 import org.openedx.core.data.model.ResetCourseDates
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -29,7 +35,8 @@ interface CourseApi {
     @GET(
         "/api/mobile/{api_version}/course_info/blocks/?" +
                 "depth=all&" +
-                "requested_fields=contains_gated_content,show_gated_sections,special_exam_info,graded,format,student_view_multi_device,due,completion&" +
+                "requested_fields=contains_gated_content,show_gated_sections,special_exam_info,graded,format," +
+                "student_view_multi_device,due,completion&" +
                 "student_view_data=video,discussion&" +
                 "block_counts=video&" +
                 "nav_depth=3"
@@ -54,7 +61,10 @@ interface CourseApi {
     )
 
     @GET("/api/course_home/v1/dates/{course_id}")
-    suspend fun getCourseDates(@Path("course_id") courseId: String): CourseDates
+    suspend fun getCourseDates(
+        @Path("course_id") courseId: String,
+        @Query("allow_not_started_courses") allowNotStartedCourses: Boolean = true
+    ): CourseDates
 
     @POST("/api/course_experience/v1/reset_course_deadlines")
     suspend fun resetCourseDates(@Body courseBody: Map<String, String>): ResetCourseDates
@@ -78,4 +88,27 @@ interface CourseApi {
     suspend fun getEnrollmentDetails(
         @Path("course_id") courseId: String,
     ): CourseEnrollmentDetails
+
+    @Multipart
+    @POST("/courses/{course_id}/xblock/{block_id}/handler/xmodule_handler/problem_check")
+    suspend fun submitOfflineXBlockProgress(
+        @Path("course_id") courseId: String,
+        @Path("block_id") blockId: String,
+        @Part progress: List<MultipartBody.Part>
+    )
+
+    @GET("/api/mobile/v1/users/{username}/enrollments_status/")
+    suspend fun getEnrollmentsStatus(
+        @Path("username") username: String
+    ): List<EnrollmentStatus>
+
+    @GET("/api/mobile/v1/download_courses/{username}")
+    suspend fun getDownloadCoursesPreview(
+        @Path("username") username: String
+    ): List<DownloadCoursePreview>
+
+    @GET("/api/course_home/progress/{course_id}")
+    suspend fun getCourseProgress(
+        @Path("course_id") courseId: String,
+    ): CourseProgressResponse
 }

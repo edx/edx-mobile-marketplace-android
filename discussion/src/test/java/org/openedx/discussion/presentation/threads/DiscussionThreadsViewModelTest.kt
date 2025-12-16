@@ -33,9 +33,11 @@ import org.openedx.core.extension.TextConverter
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
+import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionConfig
 import org.openedx.discussion.domain.model.DiscussionType
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.presentation.DiscussionAnalytics
@@ -43,6 +45,8 @@ import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -226,6 +230,8 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 any(),
                 any(),
+                any(),
+                any(),
                 any()
             )
         } throws UnknownHostException()
@@ -269,6 +275,8 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 any(),
                 any(),
+                any(),
+                any(),
                 any()
             )
         } throws Exception()
@@ -288,6 +296,8 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 "",
                 any(),
+                any(),
+                null,
                 range(1, 2)
             )
         } returns ThreadsData(
@@ -299,6 +309,8 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 "",
                 any(),
+                any(),
+                null,
                 eq(3)
             )
         } returns ThreadsData(
@@ -557,7 +569,6 @@ class DiscussionThreadsViewModelTest {
             analytics = analytics,
         )
 
-
         val mockLifeCycleOwner: LifecycleOwner = mockk()
         val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
         lifecycleRegistry.addObserver(viewModel)
@@ -586,7 +597,13 @@ class DiscussionThreadsViewModelTest {
             notifier.notifier
         } returns flow {
             delay(100)
-            emit(DiscussionThreadDataChanged(mockThread.copy(id = "1")))
+            emit(
+                DiscussionThreadDataChanged(
+                    DiscussionMocks.thread.copy(
+                        id = "1",
+                    )
+                )
+            )
         }
         val viewModel = DiscussionThreadsViewModel(
             courseId = "",
@@ -611,6 +628,6 @@ class DiscussionThreadsViewModelTest {
 
         coVerify(exactly = 2) { interactor.getThreads(any(), any(), any(), any(), any()) }
     }
-
+}
 
 }

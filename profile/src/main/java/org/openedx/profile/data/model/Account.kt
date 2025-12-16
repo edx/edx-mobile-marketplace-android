@@ -68,7 +68,11 @@ data class Account(
             mailingAddress = mailingAddress ?: "",
             email = email,
             dateJoined = dateJoined,
-            accountPrivacy = if (accountPrivacy == Privacy.PRIVATE) DomainAccount.Privacy.PRIVATE else DomainAccount.Privacy.ALL_USERS
+            accountPrivacy = if (accountPrivacy == Privacy.PRIVATE) {
+                DomainAccount.Privacy.PRIVATE
+            } else {
+                DomainAccount.Privacy.ALL_USERS
+            }
         )
     }
 }

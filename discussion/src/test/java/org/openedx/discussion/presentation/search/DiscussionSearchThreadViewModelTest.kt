@@ -23,10 +23,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.extension.TextConverter
-import org.openedx.core.system.ResourceManager
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
@@ -205,7 +203,7 @@ class DiscussionSearchThreadViewModelTest {
             notifier,
         )
         coEvery { interactor.searchThread(any(), any(), eq(1)) } returns ThreadsData(
-            listOf(mockThread, mockThread),
+            listOf(DiscussionMocks.thread, DiscussionMocks.thread),
             "",
             Pagination(
                 10,
@@ -220,7 +218,7 @@ class DiscussionSearchThreadViewModelTest {
                 any(),
                 not(1)
             )
-        } returns ThreadsData(listOf(mockThread), "", Pagination(10, "", 5, ""))
+        } returns ThreadsData(listOf(DiscussionMocks.thread), "", Pagination(10, "", 5, ""))
 
         viewModel.searchThreads("course")
         delay(1000)
@@ -246,7 +244,7 @@ class DiscussionSearchThreadViewModelTest {
             notifier,
         )
         coEvery { interactor.searchThread(any(), any(), eq(1)) } returns ThreadsData(
-            listOf(mockThread, mockThread),
+            listOf(DiscussionMocks.thread, DiscussionMocks.thread),
             "",
             Pagination(
                 10,
@@ -261,7 +259,7 @@ class DiscussionSearchThreadViewModelTest {
                 any(),
                 not(1)
             )
-        } returns ThreadsData(listOf(mockThread), "", Pagination(10, "0", 5, ""))
+        } returns ThreadsData(listOf(DiscussionMocks.thread), "", Pagination(10, "0", 5, ""))
 
         viewModel.searchThreads("course")
         delay(1000)
@@ -288,7 +286,7 @@ class DiscussionSearchThreadViewModelTest {
             notifier,
         )
         coEvery { interactor.searchThread(any(), any(), eq(1)) } returns ThreadsData(
-            listOf(mockThread, mockThread),
+            listOf(DiscussionMocks.thread, DiscussionMocks.thread),
             "",
             Pagination(
                 10,
@@ -323,7 +321,7 @@ class DiscussionSearchThreadViewModelTest {
             notifier.notifier
         } returns flow {
             delay(100)
-            emit(DiscussionThreadDataChanged(mockThread.copy(id = "1")))
+            emit(DiscussionThreadDataChanged(DiscussionMocks.thread.copy(id = "1")))
         }
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -337,7 +335,6 @@ class DiscussionSearchThreadViewModelTest {
         assert((viewModel.uiState.value as DiscussionSearchThreadUIState.Threads).data.isEmpty())
     }
 
-
     @Test
     fun `notifier DiscussionThreadDataChanged with list`() = runTest {
         val viewModel = DiscussionSearchThreadViewModel(
@@ -348,7 +345,7 @@ class DiscussionSearchThreadViewModelTest {
             notifier,
         )
         coEvery { interactor.searchThread(any(), any(), any()) } returns ThreadsData(
-            listOf(mockThread.copy(id = "id")),
+            listOf(DiscussionMocks.thread.copy(id = "id")),
             "",
             Pagination(
                 10,
@@ -362,7 +359,7 @@ class DiscussionSearchThreadViewModelTest {
             notifier.notifier
         } returns flow {
             delay(1000)
-            emit(DiscussionThreadDataChanged(mockThread.copy(id = "id")))
+            emit(DiscussionThreadDataChanged(DiscussionMocks.thread.copy(id = "id")))
         }
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -377,5 +374,4 @@ class DiscussionSearchThreadViewModelTest {
         assert(viewModel.uiState.value is DiscussionSearchThreadUIState.Threads)
         assert((viewModel.uiState.value as DiscussionSearchThreadUIState.Threads).data.size == 1)
     }
-
 }

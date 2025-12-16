@@ -173,7 +173,8 @@ data class CourseSharingUtmParametersDb(
     val twitter: String,
 ) {
     fun mapToDomain() = CourseSharingUtmParameters(
-        facebook, twitter
+        facebook,
+        twitter
     )
 }
 
@@ -201,7 +202,10 @@ data class CourseStatusDb(
     val lastVisitedUnitDisplayName: String,
 ) {
     fun mapToDomain() = CourseStatus(
-        lastVisitedModuleId, lastVisitedModulePath, lastVisitedBlockId, lastVisitedUnitDisplayName
+        lastVisitedModuleId,
+        lastVisitedModulePath,
+        lastVisitedBlockId,
+        lastVisitedUnitDisplayName
     )
 }
 

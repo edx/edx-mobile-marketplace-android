@@ -20,16 +20,15 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.model.Media
 import org.openedx.core.domain.model.Pagination
-import org.openedx.core.system.ResourceManager
+import org.openedx.discovery.DiscoveryMocks
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
-import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.domain.model.CourseList
 import org.openedx.discovery.presentation.DiscoveryAnalytics
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -37,7 +36,6 @@ class CourseSearchViewModelTest {
 
     @get:Rule
     val testInstantTaskExecutorRule: TestRule = InstantTaskExecutorRule()
-
 
     private val dispatcher = UnconfinedTestDispatcher()
 
@@ -49,34 +47,6 @@ class CourseSearchViewModelTest {
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
-
-    //region course
-
-    private val mockCourse = Course(
-        id = "id",
-        blocksUrl = "blocksUrl",
-        courseId = "courseId",
-        effort = "effort",
-        enrollmentStart = null,
-        enrollmentEnd = null,
-        hidden = false,
-        invitationOnly = false,
-        media = Media(),
-        mobileAvailable = true,
-        name = "Test course",
-        number = "number",
-        org = "EdX",
-        pacing = "pacing",
-        shortDescription = "shortDescription",
-        start = "start",
-        end = "end",
-        startDisplay = "startDisplay",
-        startType = "startType",
-        overview = "",
-        false
-    )
-
-    //endregion
 
     @Before
     fun setUp() {
@@ -148,7 +118,8 @@ class CourseSearchViewModelTest {
                 "",
                 5,
                 ""
-            ), emptyList()
+            ),
+            emptyList()
         )
         every { analytics.discoveryCourseSearchEvent(any(), any()) } returns Unit
 
@@ -174,14 +145,15 @@ class CourseSearchViewModelTest {
                 "2",
                 5,
                 ""
-            ), listOf(mockCourse, mockCourse)
+            ),
+            DiscoveryMocks.courses(2)
         )
         coEvery {
             interactor.getCoursesListByQuery(
                 any(),
                 not(1)
             )
-        } returns CourseList(Pagination(10, "", 5, ""), listOf(mockCourse))
+        } returns CourseList(Pagination(10, "", 5, ""), listOf(DiscoveryMocks.course))
         every { analytics.discoveryCourseSearchEvent(any(), any()) } returns Unit
 
         viewModel.search("course")
@@ -209,14 +181,15 @@ class CourseSearchViewModelTest {
                 "2",
                 5,
                 ""
-            ), listOf(mockCourse, mockCourse)
+            ),
+            DiscoveryMocks.courses(2)
         )
         coEvery {
             interactor.getCoursesListByQuery(
                 any(),
                 not(1)
             )
-        } returns CourseList(Pagination(10, "0", 5, ""), listOf(mockCourse))
+        } returns CourseList(Pagination(10, "0", 5, ""), listOf(DiscoveryMocks.course))
         every { analytics.discoveryCourseSearchEvent(any(), any()) } returns Unit
 
         viewModel.search("course")
@@ -245,7 +218,8 @@ class CourseSearchViewModelTest {
                 "2",
                 5,
                 ""
-            ), listOf(mockCourse, mockCourse)
+            ),
+            DiscoveryMocks.courses(2)
         )
 
         viewModel.updateSearchQuery()

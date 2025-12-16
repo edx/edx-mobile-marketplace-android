@@ -39,5 +39,4 @@ data class Account(
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         return !requiresParentalConsent && yearOfBirth != null && currentYear - yearOfBirth > USER_MIN_YEAR
     }
-
 }

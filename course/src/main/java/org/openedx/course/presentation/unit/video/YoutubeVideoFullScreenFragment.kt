@@ -7,21 +7,23 @@ import androidx.core.os.bundleOf
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.DefaultPlayerUiController
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.YouTubePlayerTracker
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.ui.DefaultPlayerUiController
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.extension.requestApplyInsetsWhenAttached
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.global.viewBinding
 import org.openedx.course.R
 import org.openedx.course.databinding.FragmentYoutubeVideoFullScreenBinding
 import org.openedx.course.presentation.CourseAnalyticsKey
+import org.openedx.course.presentation.unit.video.YoutubeVideoUnitFragment.Companion.RATE_DIALOG_THRESHOLD
+import org.openedx.course.presentation.unit.video.YoutubeVideoUnitFragment.Companion.VIDEO_COMPLETION_THRESHOLD
+import org.openedx.foundation.extension.requestApplyInsetsWhenAttached
 
 class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_full_screen) {
 
@@ -70,14 +72,14 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
         binding.root.requestApplyInsetsWhenAttached()
 
         lifecycle.addObserver(binding.youtubePlayerView)
-        val options = IFramePlayerOptions.Builder()
+        val options = IFramePlayerOptions.Builder(requireContext())
             .controls(0)
             .rel(0)
             .build()
 
-
-        binding.youtubePlayerView.initialize(object : AbstractYouTubePlayerListener() {
-            var isMarkBlockCompletedCalled = false
+        binding.youtubePlayerView.initialize(
+            object : AbstractYouTubePlayerListener() {
+                var isMarkBlockCompletedCalled = false
 
             override fun onStateChange(
                 youTubePlayer: YouTubePlayer,
@@ -109,28 +111,33 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
                 }
             }
 
-            override fun onReady(youTubePlayer: YouTubePlayer) {
-                super.onReady(youTubePlayer)
-                binding.youtubePlayerView.isVisible = true
-                val defPlayerUiController =
-                    DefaultPlayerUiController(binding.youtubePlayerView, youTubePlayer)
-                defPlayerUiController.setFullScreenButtonClickListener {
-                    parentFragmentManager.popBackStack()
+                override fun onReady(youTubePlayer: YouTubePlayer) {
+                    super.onReady(youTubePlayer)
+                    binding.youtubePlayerView.isVisible = true
+                    val defPlayerUiController =
+                        DefaultPlayerUiController(binding.youtubePlayerView, youTubePlayer)
+                    defPlayerUiController.setFullscreenButtonClickListener {
+                        parentFragmentManager.popBackStack()
+                    }
+
+                    binding.youtubePlayerView.setCustomPlayerUi(defPlayerUiController.rootView)
+
+                    val videoId = viewModel.videoUrl.split("watch?v=")[1]
+                    if (viewModel.isPlaying == true) {
+                        youTubePlayer.loadVideo(videoId, viewModel.currentVideoTime.toFloat() / 1000)
+                    } else {
+                        youTubePlayer.cueVideo(videoId, viewModel.currentVideoTime.toFloat() / 1000)
+                    }
+                    youTubePlayer.addListener(youtubeTrackerListener)
                 }
 
-                binding.youtubePlayerView.setCustomPlayerUi(defPlayerUiController.rootView)
-
-                val videoId = viewModel.videoUrl.split("watch?v=")[1]
-                if (viewModel.isPlaying == true) {
-                    youTubePlayer.loadVideo(videoId, viewModel.currentVideoTime.toFloat() / 1000)
-                } else {
-                    youTubePlayer.cueVideo(videoId, viewModel.currentVideoTime.toFloat() / 1000)
+                override fun onVideoDuration(youTubePlayer: YouTubePlayer, duration: Float) {
+                    viewModel.duration = (duration * 1000).toLong()
+                    super.onVideoDuration(youTubePlayer, duration)
                 }
-                youTubePlayer.addListener(youtubeTrackerListener)
-
-            }
-
-        }, options)
+            },
+            options
+        )
     }
 
     override fun onDestroyView() {
@@ -166,5 +173,4 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
             return fragment
         }
     }
-
 }

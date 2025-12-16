@@ -41,11 +41,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
-import org.openedx.core.extension.applyDarkModeIfEnabled
-import org.openedx.core.extension.isEmailValid
-import org.openedx.core.extension.replaceLinkTags
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.utils.EmailUtil
+import org.openedx.foundation.extension.applyDarkModeIfEnabled
+import org.openedx.foundation.extension.isEmailValid
+import org.openedx.foundation.extension.replaceLinkTags
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -69,7 +71,6 @@ fun WebContentScreen(
         scaffoldState = scaffoldState,
         backgroundColor = MaterialTheme.appColors.background
     ) {
-
         val screenWidth by remember(key1 = windowSize) {
             mutableStateOf(
                 windowSize.windowSizeValue(
@@ -118,7 +119,8 @@ fun WebContentScreen(
                                 contentUrl = contentUrl,
                                 onWebPageLoaded = {
                                     webViewAlpha = 1f
-                                })
+                                }
+                            )
                         }
                     }
                 }
@@ -172,6 +174,8 @@ private fun WebViewContent(
                                     Toast.LENGTH_SHORT
                                 ).show()
                             } catch (e: Exception){}
+                        return if (clickUrl.isNotEmpty() && clickUrl.startsWith("http")) {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(clickUrl)))
                             true
                         } else if (clickUrl.startsWith("mailto:")) {
                             val email = clickUrl.replace("mailto:", "")

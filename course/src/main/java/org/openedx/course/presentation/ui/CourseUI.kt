@@ -15,12 +15,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -28,7 +32,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Card
@@ -43,9 +50,12 @@ import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,14 +70,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -77,6 +89,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import org.jsoup.Jsoup
 import org.openedx.core.BlockType
 import org.openedx.core.domain.model.AssignmentProgress
@@ -102,13 +116,18 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.utils.TimeUtils
+import org.openedx.core.utils.VideoPreview
+import org.openedx.course.CourseMocks
 import org.openedx.course.R
-import org.openedx.course.presentation.dates.mockedCourseBannerInfo
 import org.openedx.course.presentation.outline.getUnitBlockIcon
+import org.openedx.foundation.extension.nonZero
+import org.openedx.foundation.extension.toFileSize
 import subtitleFile.Caption
 import subtitleFile.TimedTextObject
 import java.util.Date
 import org.openedx.core.R as coreR
+
+const val AUTO_SCROLL_DELAY = 3000L
 
 @Composable
 fun CourseSectionCard(
@@ -123,6 +142,9 @@ fun CourseSectionCard(
         Modifier
             .clickable { onItemClick(block) }
             .background(MaterialTheme.appColors.cardViewBackground)) {
+    Column(
+        modifier = Modifier.clickable { onItemClick(block) }
+    ) {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -134,12 +156,16 @@ fun CourseSectionCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val completedIconPainter =
-                if (block.isCompleted()) painterResource(R.drawable.course_ic_task_alt) else painterResource(
-                    coreR.drawable.ic_core_chapter_icon
-                )
-            val completedIconColor =
-                if (block.isCompleted()) MaterialTheme.appColors.primary else MaterialTheme.appColors.onSurface
+            val completedIconPainter = if (block.isCompleted()) {
+                painterResource(R.drawable.course_ic_task_alt)
+            } else {
+                painterResource(coreR.drawable.core_ic_chapter_icon)
+            }
+            val completedIconColor = if (block.isCompleted()) {
+                MaterialTheme.appColors.primary
+            } else {
+                MaterialTheme.appColors.onSurface
+            }
             val completedIconDescription = if (block.isCompleted()) {
                 stringResource(id = R.string.course_accessibility_section_completed)
             } else {
@@ -151,25 +177,18 @@ fun CourseSectionCard(
                 tint = completedIconColor
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                modifier = Modifier.weight(1f),
-                text = block.displayName,
-                style = MaterialTheme.appTypography.titleSmall,
-                color = MaterialTheme.appColors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.width(16.dp))
             Row(
                 modifier = Modifier.fillMaxHeight(),
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (downloadedState == DownloadedState.DOWNLOADED || downloadedState == DownloadedState.NOT_DOWNLOADED) {
-                    val downloadIconPainter = if (downloadedState == DownloadedState.DOWNLOADED) {
-                        painterResource(id = R.drawable.course_ic_remove_download)
+                if (downloadedState == DownloadedState.DOWNLOADED ||
+                    downloadedState == DownloadedState.NOT_DOWNLOADED
+                ) {
+                    val downloadIcon = if (downloadedState == DownloadedState.DOWNLOADED) {
+                        Icons.Default.CloudDone
                     } else {
-                        painterResource(id = R.drawable.course_ic_start_download)
+                        Icons.Outlined.CloudDownload
                     }
                     val downloadIconDescription =
                         if (downloadedState == DownloadedState.DOWNLOADED) {
@@ -181,14 +200,16 @@ fun CourseSectionCard(
                         modifier = iconModifier,
                         onClick = { onDownloadClick(block) }) {
                         Icon(
-                            painter = downloadIconPainter,
+                            imageVector = downloadIcon,
                             contentDescription = downloadIconDescription,
                             tint = MaterialTheme.appColors.textPrimary
                         )
                     }
                 } else if (downloadedState != null) {
                     Box(contentAlignment = Alignment.Center) {
-                        if (downloadedState == DownloadedState.DOWNLOADING || downloadedState == DownloadedState.WAITING) {
+                        if (downloadedState == DownloadedState.DOWNLOADING ||
+                            downloadedState == DownloadedState.WAITING
+                        ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(34.dp),
                                 backgroundColor = Color.LightGray,
@@ -198,10 +219,12 @@ fun CourseSectionCard(
                         }
                         IconButton(
                             modifier = iconModifier.padding(top = 2.dp),
-                            onClick = { onDownloadClick(block) }) {
+                            onClick = { onDownloadClick(block) }
+                        ) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = stringResource(id = R.string.course_accessibility_stop_downloading_course_section),
+                                contentDescription =
+                                    stringResource(id = R.string.course_accessibility_stop_downloading_course_section),
                                 tint = MaterialTheme.appColors.error
                             )
                         }
@@ -237,21 +260,21 @@ fun OfflineQueueCard(
                 .weight(1f)
         ) {
             Text(
-                text = downloadModel.title.ifEmpty { stringResource(id = R.string.course_download_untitled) },
+                text = downloadModel.title.ifEmpty { stringResource(id = coreR.string.core_download_untitled) },
                 style = MaterialTheme.appTypography.titleSmall,
                 color = MaterialTheme.appColors.textPrimary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
             )
             Text(
-                text = downloadModel.size.toLong().toFileSize(),
+                text = downloadModel.size.toFileSize(),
                 style = MaterialTheme.appTypography.titleSmall,
                 color = MaterialTheme.appColors.textSecondary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
             )
 
-            val progress = if (progressSize == 0L) 0f else progressValue.toFloat() / progressSize
+            val progress = progressValue.toFloat().safeDivBy(progressSize.toFloat())
             LinearProgressIndicator(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -272,12 +295,14 @@ fun OfflineQueueCard(
                 color = MaterialTheme.appColors.primary
             )
             IconButton(
-                modifier = iconModifier
-                    .padding(2.dp),
-                onClick = { onDownloadClick(downloadModel) }) {
+                modifier = iconModifier.padding(2.dp),
+                onClick = { onDownloadClick(downloadModel) }
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(id = R.string.course_accessibility_stop_downloading_course_section),
+                    contentDescription = stringResource(
+                        id = R.string.course_accessibility_stop_downloading_course_section
+                    ),
                     tint = MaterialTheme.appColors.error
                 )
             }
@@ -288,11 +313,12 @@ fun OfflineQueueCard(
 @Composable
 fun CardArrow(
     degrees: Float,
+    tint: Color = MaterialTheme.appColors.textDark,
 ) {
     Icon(
-        imageVector = Icons.Filled.ChevronRight,
-        tint = MaterialTheme.appColors.textDark,
-        contentDescription = "Expandable Arrow",
+        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+        tint = tint,
+        contentDescription = null,
         modifier = Modifier.rotate(degrees),
     )
 }
@@ -317,6 +343,7 @@ fun NavigationUnitsButtons(
     nextButtonText: String,
     hasPrevBlock: Boolean,
     hasNextBlock: Boolean,
+    showFinishButton: Boolean = true,
     isVerticalNavigation: Boolean,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
@@ -350,50 +377,78 @@ fun NavigationUnitsButtons(
                 modifier = Modifier
                     .height(42.dp),
                 text = stringResource(R.string.course_navigation_prev),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    backgroundColor = MaterialTheme.appColors.background
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.appColors.textAccent),
+                elevation = null,
+                shape = MaterialTheme.appShapes.navigationButtonShape,
                 onClick = onPrevClick,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
+                    if (!isVerticalNavigation) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                            tint = MaterialTheme.appColors.textAccent
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    }
                     Text(
                         text = stringResource(R.string.course_navigation_prev),
-                        color = MaterialTheme.appColors.primary,
+                        color = MaterialTheme.appColors.textAccent,
                         style = MaterialTheme.appTypography.labelLarge
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Icon(
-                        modifier = Modifier.rotate(if (isVerticalNavigation) 0f else -90f),
-                        painter = painterResource(id = coreR.drawable.core_ic_up),
-                        contentDescription = null,
-                        tint = MaterialTheme.appColors.primary
-                    )
+                    if (isVerticalNavigation) {
+                        Spacer(Modifier.width(8.dp))
+                        Icon(
+                            painter = painterResource(id = coreR.drawable.core_ic_up),
+                            contentDescription = null,
+                            tint = MaterialTheme.appColors.textAccent
+                        )
+                    }
                 }
             }
             Spacer(Modifier.width(16.dp))
         }
-        OpenEdXPrimaryButton(
-            modifier = Modifier
-                .height(42.dp),
-            text = nextButtonText,
-            onClick = onNextClick
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+        if (hasNextBlock || showFinishButton) {
+            Button(
+                modifier = Modifier
+                    .height(42.dp),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = MaterialTheme.appColors.primaryButtonBackground
+                ),
+                elevation = null,
+                shape = MaterialTheme.appShapes.navigationButtonShape,
+                onClick = onNextClick
             ) {
-                Text(
-                    text = nextButtonText,
-                    color = MaterialTheme.appColors.secondaryButtonText,
-                    style = MaterialTheme.appTypography.labelLarge
-                )
-                Spacer(Modifier.width(8.dp))
-                Icon(
-                    modifier = Modifier.rotate(if (isVerticalNavigation || !hasNextBlock) 0f else -90f),
-                    painter = nextButtonIcon,
-                    contentDescription = null,
-                    tint = MaterialTheme.appColors.secondaryButtonText
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = nextButtonText,
+                        color = MaterialTheme.appColors.primaryButtonText,
+                        style = MaterialTheme.appTypography.labelLarge
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    if (isVerticalNavigation || !hasNextBlock) {
+                        Icon(
+                            painter = nextButtonIcon,
+                            contentDescription = null,
+                            tint = MaterialTheme.appColors.primaryButtonText
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = MaterialTheme.appColors.primaryButtonText
+                        )
+                    }
+                }
             }
         }
     }
@@ -476,12 +531,12 @@ fun Indicator(
 ) {
     val size by animateDpAsState(
         targetValue = if (isSelected) selectedSize else defaultRadius,
-        animationSpec = tween(300),
+        animationSpec = tween(durationMillis = 300),
         label = ""
     )
     val color by animateColorAsState(
         targetValue = if (isSelected) selectedColor else defaultColor,
-        animationSpec = tween(300),
+        animationSpec = tween(durationMillis = 300),
         label = ""
     )
 
@@ -504,7 +559,6 @@ fun VideoSubtitles(
     onSettingsClick: () -> Unit,
 ) {
     timedTextObject?.let {
-        val autoScrollDelay = 3000L
         var lastScrollTime by remember {
             mutableLongStateOf(0L)
         }
@@ -513,7 +567,7 @@ fun VideoSubtitles(
         }
 
         LaunchedEffect(key1 = currentIndex) {
-            if (currentIndex > 1 && lastScrollTime + autoScrollDelay < Date().time) {
+            if (currentIndex > 1 && lastScrollTime + AUTO_SCROLL_DELAY < Date().time) {
                 listState.animateScrollToItem(currentIndex - 1)
             }
         }
@@ -586,20 +640,17 @@ fun VideoSubtitles(
 }
 
 @Composable
-fun CourseSection(
-    modifier: Modifier = Modifier,
+fun CourseVideoSection(
     block: Block,
-    onItemClick: (Block) -> Unit,
-    courseSectionsState: Boolean?,
-    courseSubSections: List<Block>?,
+    videoBlocks: List<Block>,
+    preview: Map<String, VideoPreview?>,
+    progress: Map<String, Float?>,
     downloadedStateMap: Map<String, DownloadedState>,
-    onSubSectionClick: (Block) -> Unit,
+    onVideoClick: (Block) -> Unit,
     onDownloadClick: (blocksIds: List<String>) -> Unit,
 ) {
-    val arrowRotation by animateFloatAsState(
-        targetValue = if (courseSectionsState == true) -90f else 90f, label = ""
-    )
-    val subSectionIds = courseSubSections?.map { it.id }.orEmpty()
+    val state = rememberLazyListState()
+    val subSectionIds = videoBlocks.map { it.id }
     val filteredStatuses = downloadedStateMap.filterKeys { it in subSectionIds }.values
     val downloadedState = when {
         filteredStatuses.isEmpty() -> null
@@ -634,10 +685,10 @@ fun CourseSection(
                 MaterialTheme.appShapes.cardShape
             )
     ) {
-        CourseExpandableChapterCard(
+        CourseVideoSectionHeader(
             block = block,
-            arrowDegrees = arrowRotation,
             downloadedState = downloadedState,
+            videoBlocks = videoBlocks,
             onDownloadClick = {
                 if (downloadedState == DownloadedState.DOWNLOADED) {
                     showDeleteVideoDialog = true
@@ -647,34 +698,174 @@ fun CourseSection(
                 }
             }
         )
-        courseSubSections?.forEach { subSectionBlock ->
-            AnimatedVisibility(
-                visible = courseSectionsState == true
-            ) {
-                CourseSubSectionItem(
-                    block = subSectionBlock,
-                    onClick = onSubSectionClick
+        LazyRow(
+            state = state,
+            horizontalArrangement = Arrangement.spacedBy(rowHorizontalArrangement),
+            contentPadding = PaddingValues(
+                top = 8.dp,
+                bottom = 16.dp,
+                start = 16.dp,
+                end = videoCardWidth + rowHorizontalArrangement,
+            )
+        ) {
+            items(videoBlocks) { block ->
+                val localProgress = progress[block.id]
+                val progress = localProgress ?: if (block.isCompleted()) {
+                    1f
+                } else {
+                    0f
+                }
+                CourseVideoItem(
+                    modifier = Modifier
+                        .width(videoCardWidth)
+                        .height(108.dp)
+                        .clip(MaterialTheme.appShapes.videoPreviewShape),
+                    videoBlock = block,
+                    preview = preview[block.id],
+                    progress = progress,
+                    onClick = {
+                        onVideoClick(block)
+                    }
                 )
+            }
+        }
+        Divider(modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+fun CourseVideoItem(
+    modifier: Modifier = Modifier,
+    videoBlock: Block,
+    preview: VideoPreview?,
+    progress: Float,
+    onClick: () -> Unit,
+    titleStyle: TextStyle = MaterialTheme.appTypography.bodySmall,
+    contentModifier: Modifier = Modifier.padding(8.dp),
+    progressModifier: Modifier = Modifier.height(4.dp),
+    playButtonSize: Dp = 32.dp,
+    borderColor: Color? = null,
+    borderWidth: Dp = 3.dp,
+) {
+    val borderColor = borderColor ?: if (videoBlock.isCompleted()) {
+        MaterialTheme.appColors.successGreen
+    } else {
+        Color.Transparent
+    }
+    Box(
+        modifier = modifier
+            .clip(MaterialTheme.appShapes.videoPreviewShape)
+            .border(
+                width = borderWidth,
+                color = borderColor,
+                shape = MaterialTheme.appShapes.videoPreviewShape
+            )
+            .clickable { onClick() }
+    ) {
+        AsyncImage(
+            modifier = Modifier
+                .fillMaxSize(),
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(preview?.link ?: preview?.bitmap)
+                .error(coreR.drawable.core_no_image_course)
+                .placeholder(coreR.drawable.core_no_image_course)
+                .build(),
+            contentDescription = stringResource(R.string.course_accessibility_video_player),
+            contentScale = ContentScale.Crop
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.6f),
+                            Color.Transparent,
+                        ),
+                        startY = 0f,
+                        endY = Float.POSITIVE_INFINITY
+                    )
+                )
+        )
+
+        Box(
+            modifier = contentModifier.fillMaxSize()
+        ) {
+            Image(
+                modifier = Modifier
+                    .size(playButtonSize)
+                    .align(Alignment.Center),
+                painter = painterResource(id = R.drawable.course_video_play_button),
+                contentDescription = null,
+            )
+
+            // Title (top-left)
+            Text(
+                text = videoBlock.displayName,
+                color = Color.White,
+                style = titleStyle,
+                modifier = Modifier
+                    .align(Alignment.TopStart),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            // Progress bar (bottom)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter),
+                contentAlignment = Alignment.Center
+            ) {
+                if (progress > 0.0f) {
+                    LinearProgressIndicator(
+                        modifier = progressModifier
+                            .fillMaxWidth()
+                            .clip(CircleShape),
+                        progress = progress,
+                        color = if (videoBlock.isCompleted() && progress > 0.95f) {
+                            MaterialTheme.appColors.progressBarColor
+                        } else {
+                            MaterialTheme.appColors.info
+                        },
+                        backgroundColor = MaterialTheme.appColors.progressBarBackgroundColor
+                    )
+                }
+                if (videoBlock.isCompleted()) {
+                    Image(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(16.dp)
+                            .offset(x = 1.dp),
+                        painter = painterResource(id = coreR.drawable.ic_core_check),
+                        contentDescription = stringResource(R.string.course_accessibility_video_watched),
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(16.dp)
+                            .offset(x = 1.dp),
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun CourseExpandableChapterCard(
+fun CourseVideoSectionHeader(
     modifier: Modifier = Modifier,
     block: Block,
-    arrowDegrees: Float = 0f,
+    videoBlocks: List<Block>?,
     downloadedState: DownloadedState?,
     onDownloadClick: () -> Unit,
 ) {
-    val iconModifier = Modifier.size(24.dp)
     Row(
         modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .padding(vertical = 8.dp)
-            .padding(start = 16.dp, end = 16.dp),
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -693,6 +884,27 @@ fun CourseExpandableChapterCard(
         }
         Text(
             modifier = Modifier.weight(1f),
+        ) {
+            Text(
+                text = block.displayName,
+                style = MaterialTheme.appTypography.titleSmall,
+                color = MaterialTheme.appColors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = stringResource(
+                    R.string.course_video_watched,
+                    videoBlocks?.filter { it.isCompleted() }?.size ?: 0,
+                    videoBlocks?.size ?: 0
+                ),
+                style = MaterialTheme.appTypography.bodySmall,
+                color = MaterialTheme.appColors.textPrimary,
+            )
+        }
+        DownloadIcon(
+            downloadedState = downloadedState,
+            onDownloadClick = onDownloadClick
             text = block.displayName,
             style = MaterialTheme.appTypography.titleMedium,
             color = MaterialTheme.appColors.textPrimary,
@@ -766,6 +978,8 @@ fun CourseExpandableChapterCard(
 fun CourseSubSectionItem(
     modifier: Modifier = Modifier,
     block: Block,
+    useRelativeDates: Boolean,
+    showDueDate: Boolean,
     onClick: (Block) -> Unit,
 ) {
     val context = LocalContext.current
@@ -776,7 +990,9 @@ fun CourseSubSectionItem(
     val iconColor =
         if (block.isCompleted()) MaterialTheme.appColors.successGreen else MaterialTheme.appColors.onSurface
     val due by rememberSaveable {
-        mutableStateOf(block.due?.let { TimeUtils.getAssignmentFormattedDate(context, it) })
+        mutableStateOf(
+            block.due?.let { TimeUtils.formatToString(context, it, useRelativeDates) }
+        )
     }
     val isAssignmentEnable =
         !block.isCompleted() && block.assignmentProgress != null && !due.isNullOrEmpty()
@@ -805,22 +1021,36 @@ fun CourseSubSectionItem(
                 maxLines = 1
             )
             Spacer(modifier = Modifier.width(16.dp))
-            if (isAssignmentEnable) {
+            if (due != null || showDueDate) {
                 Icon(
-                    imageVector = Icons.Filled.ChevronRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     tint = MaterialTheme.appColors.onSurface,
                     contentDescription = null
                 )
             }
         }
-
-        if (isAssignmentEnable) {
-            val assignmentString =
+        val strings = listOf(
+            block.assignmentProgress?.assignmentType,
+            due?.let {
                 stringResource(
                     R.string.course_subsection_assignment_info,
                     block.assignmentProgress?.assignmentType ?: "",
                     due ?: "",
                 )
+            },
+            block.assignmentProgress?.numPointsPossible?.let {
+                if (it > 0) {
+                    block.assignmentProgress?.toPointString(" ")
+                } else {
+                    null
+                }
+            }
+        )
+        val assignmentString = strings
+            .filter { !it.isNullOrEmpty() }
+            .joinToString(" - ")
+
+        if (assignmentString.isNotEmpty() && showDueDate) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = assignmentString,
@@ -898,7 +1128,7 @@ fun SubSectionUnitsTitle(
         if (hasMultipleUnits) {
             Icon(
                 modifier = Modifier.rotate(if (unitsListShowed) 180f else 0f),
-                painter = painterResource(id = R.drawable.ic_course_arrow_down),
+                painter = painterResource(id = R.drawable.course_ic_arrow_down),
                 contentDescription = null,
                 tint = MaterialTheme.appColors.textPrimary
             )
@@ -924,8 +1154,11 @@ fun SubSectionUnitsList(
                 Column(
                     modifier = Modifier
                         .background(
-                            if (index == selectedUnitIndex) MaterialTheme.appColors.surface else
+                            if (index == selectedUnitIndex) {
+                                MaterialTheme.appColors.surface
+                            } else {
                                 MaterialTheme.appColors.background
+                            }
                         )
                         .clickable { onUnitClick(index, unit) }
                 ) {
@@ -938,7 +1171,7 @@ fun SubSectionUnitsList(
                             modifier = Modifier
                                 .size(16.dp)
                                 .alpha(if (unit.isCompleted()) 1f else 0f),
-                            painter = painterResource(id = coreR.drawable.ic_core_check),
+                            painter = painterResource(id = coreR.drawable.core_ic_check),
                             contentDescription = "done"
                         )
                         Text(
@@ -972,14 +1205,16 @@ fun SubSectionUnitsList(
                             Image(
                                 modifier = Modifier
                                     .size(16.dp),
-                                painter = painterResource(id = R.drawable.ic_course_gated),
+                                painter = painterResource(id = R.drawable.course_ic_gated),
                                 contentDescription = "gated"
                             )
                             Text(
                                 modifier = Modifier
                                     .padding(start = 8.dp, end = 8.dp)
                                     .weight(1f),
-                                text = stringResource(id = R.string.course_gated_content_label),
+                                text = stringResource(
+                                    id = R.string.course_gated_content_label
+                                ),
                                 color = MaterialTheme.appColors.textPrimaryVariant,
                                 style = MaterialTheme.appTypography.labelSmall,
                                 maxLines = 2,
@@ -1177,6 +1412,13 @@ fun DatesShiftedSnackBar(
                     text = stringResource(id = coreR.string.core_dates_view_all_dates),
                     onClick = { onViewDates() }
                 )
+                    backgroundColor = MaterialTheme.appColors.background,
+                    textColor = MaterialTheme.appColors.primary,
+                    borderColor = MaterialTheme.appColors.primary,
+                    onClick = {
+                        onViewDates()
+                    }
+                )
             }
         }
     }
@@ -1222,7 +1464,112 @@ fun CourseMessage(
             color = MaterialTheme.appColors.divider
         )
     }
+}
 
+@Composable
+fun CourseProgress(
+    modifier: Modifier = Modifier,
+    progress: Progress,
+    description: String,
+    isCompletedShown: Boolean = false,
+    onVisibilityChanged: (() -> Unit)? = null
+) {
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isCompletedShown) {
+            -90f
+        } else {
+            90f
+        },
+        label = ""
+    )
+    val buttonText = if (isCompletedShown) {
+        stringResource(R.string.course_hide_completed)
+    } else {
+        stringResource(R.string.course_view_completed)
+    }
+    Column(
+        modifier = modifier,
+    ) {
+        LinearProgressIndicator(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(CircleShape),
+            progress = progress.value,
+            color = MaterialTheme.appColors.progressBarColor,
+            backgroundColor = MaterialTheme.appColors.progressBarBackgroundColor
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = description,
+                color = MaterialTheme.appColors.textDark,
+                style = MaterialTheme.appTypography.labelSmall
+            )
+            if (onVisibilityChanged != null) {
+                Row(
+                    modifier = Modifier.clickable {
+                        onVisibilityChanged()
+                    },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = buttonText,
+                        color = MaterialTheme.appColors.textAccent,
+                        style = MaterialTheme.appTypography.labelMedium
+                    )
+                    CardArrow(
+                        degrees = arrowRotation,
+                        tint = MaterialTheme.appColors.textAccent,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ResumeCourseButton(
+    modifier: Modifier = Modifier,
+    block: Block,
+    displayName: String,
+    onResumeClick: (String) -> Unit,
+) {
+    OpenEdXButton(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 54.dp),
+        onClick = {
+            onResumeClick(block.id)
+        },
+        content = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = displayName,
+                    color = MaterialTheme.appColors.primaryButtonText,
+                    style = MaterialTheme.appTypography.titleMedium,
+                    fontWeight = FontWeight.W600
+                )
+                TextIcon(
+                    text = stringResource(id = R.string.course_continue),
+                    icon = Icons.AutoMirrored.Filled.ArrowForward,
+                    color = MaterialTheme.appColors.primaryButtonText,
+                    textStyle = MaterialTheme.appTypography.labelLarge
+                )
+            }
+        }
+    )
 }
 
 @Composable
@@ -1271,7 +1618,8 @@ private fun NavigationUnitsButtonsOnlyNextButtonPreview() {
             hasNextBlock = true,
             isVerticalNavigation = true,
             nextButtonText = "Next",
-            onPrevClick = {}) {}
+            onPrevClick = {}
+        ) {}
     }
 }
 
@@ -1285,7 +1633,8 @@ private fun NavigationUnitsButtonsOnlyFinishButtonPreview() {
             hasNextBlock = false,
             isVerticalNavigation = true,
             nextButtonText = "Finish",
-            onPrevClick = {}) {}
+            onPrevClick = {}
+        ) {}
     }
 }
 
@@ -1299,7 +1648,8 @@ private fun NavigationUnitsButtonsWithFinishPreview() {
             hasNextBlock = false,
             isVerticalNavigation = true,
             nextButtonText = "Finish",
-            onPrevClick = {}) {}
+            onPrevClick = {}
+        ) {}
     }
 }
 
@@ -1313,7 +1663,8 @@ private fun NavigationUnitsButtonsWithNextPreview() {
             hasNextBlock = true,
             isVerticalNavigation = true,
             nextButtonText = "Next",
-            onPrevClick = {}) {}
+            onPrevClick = {}
+        ) {}
     }
 }
 
@@ -1324,7 +1675,7 @@ private fun CourseSectionCardPreview() {
     OpenEdXTheme {
         Surface(color = MaterialTheme.appColors.background) {
             CourseSectionCard(
-                mockChapterBlock,
+                CoreMocks.mockChapterBlock,
                 DownloadedState.DOWNLOADED,
                 onItemClick = {},
                 onDownloadClick = {}
@@ -1368,6 +1719,7 @@ private fun OfflineQueueCardPreview() {
         Surface(color = MaterialTheme.appColors.background) {
             OfflineQueueCard(
                 downloadModel = DownloadModel(
+                    courseId = "",
                     id = "",
                     title = "Problems of society",
                     size = 4000,
@@ -1398,7 +1750,7 @@ private fun CourseMessagePreview() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 12.dp),
-                icon = painterResource(R.drawable.ic_course_certificate),
+                icon = painterResource(R.drawable.course_ic_certificate),
                 message = stringResource(
                     R.string.course_you_earned_certificate,
                     "Demo Course"

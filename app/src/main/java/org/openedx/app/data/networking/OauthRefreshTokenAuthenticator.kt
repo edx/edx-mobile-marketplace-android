@@ -3,9 +3,16 @@ package org.openedx.app.data.networking
 import android.util.Log
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
-import okhttp3.*
+import okhttp3.Authenticator
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
+import okhttp3.Route
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONException
 import org.json.JSONObject
@@ -17,6 +24,7 @@ import org.openedx.core.BuildConfig
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.notifier.app.AppNotifier
+import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
@@ -48,8 +56,8 @@ class OauthRefreshTokenAuthenticator(
 
     init {
         val okHttpClient = OkHttpClient.Builder().apply {
-            writeTimeout(60, TimeUnit.SECONDS)
-            readTimeout(60, TimeUnit.SECONDS)
+            writeTimeout(timeout = 60, TimeUnit.SECONDS)
+            readTimeout(timeout = 60, TimeUnit.SECONDS)
             if (BuildConfig.DEBUG) {
                 addNetworkInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
             }
@@ -62,14 +70,37 @@ class OauthRefreshTokenAuthenticator(
             .create(AuthApi::class.java)
     }
 
+    @Suppress("ReturnCount")
     @Synchronized
     override fun authenticate(route: Route?, response: Response): Request? {
         val accessToken = preferencesManager.accessToken
         val refreshToken = preferencesManager.refreshToken
 
-        if (refreshToken.isEmpty()) {
-            return null
+        if (refreshToken.isEmpty()) return null
+
+        val errorCode = getErrorCode(response.peekBody(Long.MAX_VALUE).string()) ?: return null
+
+        return when (errorCode) {
+            TOKEN_EXPIRED_ERROR_MESSAGE, JWT_TOKEN_EXPIRED -> {
+                handleTokenExpired(response, refreshToken, accessToken)
+            }
+
+            TOKEN_NONEXISTENT_ERROR_MESSAGE, TOKEN_INVALID_GRANT_ERROR_MESSAGE, JWT_INVALID_TOKEN -> {
+                handleInvalidToken(response, accessToken)
+            }
+
+            DISABLED_USER_ERROR_MESSAGE, JWT_DISABLED_USER_ERROR_MESSAGE, JWT_USER_EMAIL_MISMATCH -> {
+                handleDisabledUser()
+            }
+
+            else -> null
         }
+    }
+
+    private fun handleDisabledUser(): Request? {
+        runBlocking { appNotifier.send(LogoutEvent(true)) }
+        return null
+    }
 
         val errorCode = getErrorCode(response.peekBody(Long.MAX_VALUE).string())
         if (errorCode != null) {
@@ -103,6 +134,35 @@ class OauthRefreshTokenAuthenticator(
                         return null
                     }
                 }
+    // Helper function for handling token expiration logic
+    private fun handleTokenExpired(response: Response, refreshToken: String, accessToken: String): Request? {
+        return try {
+            val newAuth = refreshAccessToken(refreshToken)
+            if (newAuth != null) {
+                response.request.newBuilder()
+                    .header(
+                        HEADER_AUTHORIZATION,
+                        "${config.getAccessTokenType()} ${newAuth.accessToken}"
+                    )
+                    .build()
+            } else {
+                val actualToken = preferencesManager.accessToken
+                if (actualToken != accessToken) {
+                    response.request.newBuilder()
+                        .header(
+                            HEADER_AUTHORIZATION,
+                            "${config.getAccessTokenType()} $actualToken"
+                        )
+                        .build()
+                } else {
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 
                 TOKEN_NONEXISTENT_ERROR_MESSAGE,
                 TOKEN_INVALID_GRANT_ERROR_MESSAGE,
@@ -136,8 +196,8 @@ class OauthRefreshTokenAuthenticator(
                     }
                 }
             }
+            null
         }
-        return null
     }
 
     private fun isTokenExpired(): Boolean {
@@ -173,8 +233,8 @@ class OauthRefreshTokenAuthenticator(
                     lastTokenRefreshRequestTime = TimeUtils.getCurrentTime()
                 }
             } else if (response.code() == 400) {
-                //another refresh already in progress
-                Thread.sleep(1500)
+                // another refresh already in progress
+                Thread.sleep(REFRESH_TOKEN_THREAD_SLEEP)
             }
         }
 
@@ -182,25 +242,18 @@ class OauthRefreshTokenAuthenticator(
     }
 
     private fun getErrorCode(responseBody: String): String? {
-        try {
+        return try {
             val jsonObj = JSONObject(responseBody)
+
             if (jsonObj.has(FIELD_ERROR_CODE)) {
-                return jsonObj.getString(FIELD_ERROR_CODE)
+                jsonObj.getString(FIELD_ERROR_CODE)
+            } else if (TOKEN_TYPE_JWT.equals(config.getAccessTokenType(), ignoreCase = true)) {
+                val errorType = if (jsonObj.has(FIELD_DETAIL)) FIELD_DETAIL else FIELD_DEVELOPER_MESSAGE
+                jsonObj.getString(errorType)
             } else {
-                return if (TOKEN_TYPE_JWT.equals(config.getAccessTokenType(), ignoreCase = true)) {
-                    val errorType =
-                        if (jsonObj.has(FIELD_DETAIL)) FIELD_DETAIL else FIELD_DEVELOPER_MESSAGE
-                    jsonObj.getString(errorType)
-                } else {
-                    val errorCode = jsonObj
-                        .optJSONObject(FIELD_DEVELOPER_MESSAGE)
-                        ?.optString(FIELD_ERROR_CODE, "") ?: ""
-                    if (errorCode != "") {
-                        errorCode
-                    } else {
-                        null
-                    }
-                }
+                jsonObj.optJSONObject(FIELD_DEVELOPER_MESSAGE)
+                    ?.optString(FIELD_ERROR_CODE, "")
+                    ?.takeIf { it.isNotEmpty() }
             }
         } catch (ex: JSONException) {
             logger.e(throwable = ex, metadata = mapOf("responseBody" to responseBody))
@@ -274,5 +327,7 @@ class OauthRefreshTokenAuthenticator(
          * unauthorized access token during async requests.
          */
         private const val REFRESH_TOKEN_INTERVAL_MINIMUM = 60 * 1000
+
+        private const val REFRESH_TOKEN_THREAD_SLEEP = 1500L
     }
 }

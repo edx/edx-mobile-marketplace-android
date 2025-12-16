@@ -49,18 +49,18 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.R
 import org.openedx.core.domain.model.VideoQuality
-import org.openedx.core.extension.nonZero
-import org.openedx.core.extension.tagId
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
+import org.openedx.foundation.extension.nonZero
+import org.openedx.foundation.extension.tagId
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 
 class VideoQualityFragment : Fragment() {
 
@@ -81,10 +81,11 @@ class VideoQualityFragment : Fragment() {
                 val windowSize = rememberWindowSize()
 
                 val title = stringResource(
-                    id = if (viewModel.getQualityType() == VideoQualityType.Streaming)
+                    id = if (viewModel.getQualityType() == VideoQualityType.Streaming) {
                         R.string.core_video_streaming_quality
-                    else
+                    } else {
                         R.string.core_video_download_quality
+                    }
                 )
                 val videoQuality by viewModel.videoQuality.observeAsState(viewModel.getCurrentVideoQuality())
 
@@ -97,7 +98,8 @@ class VideoQualityFragment : Fragment() {
                     },
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
-                    })
+                    }
+                )
             }
         }
     }
@@ -185,7 +187,7 @@ private fun VideoQualityScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    VideoQuality.values().forEach { videoQuality ->
+                    VideoQuality.entries.forEach { videoQuality ->
                         QualityOption(
                             title = stringResource(id = videoQuality.titleResId),
                             description = videoQuality.desResId.nonZero()
@@ -262,7 +264,7 @@ private fun VideoQualityScreenPreview() {
             title = "",
             selectedVideoQuality = VideoQuality.OPTION_720P,
             onQualityChanged = {},
-            onBackClick = {})
+            onBackClick = {}
+        )
     }
 }
-

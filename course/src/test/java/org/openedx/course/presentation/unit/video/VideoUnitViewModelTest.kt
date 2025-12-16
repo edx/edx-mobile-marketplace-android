@@ -44,7 +44,6 @@ class VideoUnitViewModelTest {
     private val transcriptManager = mockk<TranscriptManager>()
     private val courseAnalytics = mockk<CourseAnalytics>()
 
-
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
@@ -58,7 +57,6 @@ class VideoUnitViewModelTest {
     @Test
     fun `markBlockCompleted exception`() = runTest {
         val viewModel = VideoUnitViewModel(
-            "",
             "",
             courseRepository,
             notifier,
@@ -98,6 +96,7 @@ class VideoUnitViewModelTest {
     @Test
     fun `markBlockCompleted success`() = runTest {
         val viewModel = VideoUnitViewModel(
+            "",
             "",
             "",
             courseRepository,
@@ -140,6 +139,8 @@ class VideoUnitViewModelTest {
         val viewModel = VideoUnitViewModel(
             "",
             "",
+            "",
+            "",
             courseRepository,
             notifier,
             networkConnection,
@@ -153,9 +154,12 @@ class VideoUnitViewModelTest {
                     10,
                     1000,
                     false
+                    10000L,
+                    false,
                 )
             )
         }
+        coEvery { courseRepository.saveVideoProgress(any(), any(), any(), any()) } returns Unit
         val mockLifeCycleOwner: LifecycleOwner = mockk()
         val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
         lifecycleRegistry.addObserver(viewModel)

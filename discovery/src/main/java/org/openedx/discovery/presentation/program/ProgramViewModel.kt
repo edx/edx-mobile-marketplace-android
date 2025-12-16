@@ -6,15 +6,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.extension.isInternetError
-import org.openedx.core.presentation.global.AppData
-import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.system.AppCookieManager
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.DiscoveryNotifier
@@ -118,5 +113,19 @@ class ProgramViewModel(
 
     companion object {
         private const val TAG = "ProgramViewModel"
+    }
+
+    fun onPageLoadError() {
+        viewModelScope.launch {
+            _uiState.emit(
+                ProgramUIState.Error(
+                    if (networkConnection.isOnline()) {
+                        ErrorType.UNKNOWN_ERROR
+                    } else {
+                        ErrorType.CONNECTION_ERROR
+                    }
+                )
+            )
+        }
     }
 }

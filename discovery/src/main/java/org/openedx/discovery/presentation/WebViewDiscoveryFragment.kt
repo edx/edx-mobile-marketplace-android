@@ -41,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -56,6 +55,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
@@ -65,14 +65,10 @@ import org.openedx.core.presentation.global.webview.WebViewUIState
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
 import org.openedx.discovery.presentation.catalog.WebViewLink
@@ -233,7 +229,8 @@ private fun WebViewDiscoveryScreen(
                 ) {
                     AuthButtonsPanel(
                         onRegisterClick = onRegisterClick,
-                        onSignInClick = onSignInClick
+                        onSignInClick = onSignInClick,
+                        showRegisterButton = isRegistrationEnabled
                     )
                 }
             }
@@ -416,12 +413,16 @@ private fun WebViewDiscoveryScreenPreview() {
             contentUrl = "https://www.example.com/",
             uriScheme = "",
             userAgent = "",
+            isRegistrationEnabled = true,
+            userAgent = "",
             hasInternetConnection = false,
             onWebViewUIAction = {},
             onWebPageUpdated = {},
             onUriClick = { _, _ -> },
             onRegisterClick = {},
             onSignInClick = {},
+            onBackClick = {},
+            onSettingsClick = {},
             onBackClick = {},
         )
     }

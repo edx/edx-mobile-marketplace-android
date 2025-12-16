@@ -19,8 +19,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.openedx.core.BlockType
+import org.openedx.core.CoreMocks
 import org.openedx.core.config.Config
+import org.openedx.core.domain.helper.VideoPreviewHelper
+import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.AssignmentProgress
 import org.openedx.core.domain.model.AuthorizationDenialReason
@@ -38,7 +40,6 @@ import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import java.net.UnknownHostException
-import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CourseUnitContainerViewModelTest {
@@ -180,10 +181,13 @@ class CourseUnitContainerViewModelTest {
     )
 
     private val iapConfig = IAPConfig(false, "prefix", listOf())
+    private val networkConnection = mockk<NetworkConnection>()
+    private val videoPreviewHelper = mockk<VideoPreviewHelper>()
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        every { videoPreviewHelper.getVideoPreviews(any(), any()) } returns emptyMap()
 
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
@@ -197,6 +201,17 @@ class CourseUnitContainerViewModelTest {
     @Test
     fun `getBlocks no internet connection exception`() = runTest {
         every { notifier.notifier } returns MutableSharedFlow()
+        val viewModel = CourseUnitContainerViewModel(
+            "",
+            "",
+            CourseViewMode.FULL,
+            config,
+            interactor,
+            notifier,
+            analytics,
+            networkConnection,
+            videoPreviewHelper
+        )
         every { iapNotifier.notifier } returns MutableSharedFlow()
         every { corePreferences.appConfig.iapConfig } returns iapConfig
 
@@ -215,7 +230,7 @@ class CourseUnitContainerViewModelTest {
         coEvery { interactor.getCourseStructure(any()) } throws UnknownHostException()
         coEvery { interactor.getCourseStructureForVideos(any()) } throws UnknownHostException()
 
-        viewModel.loadBlocks(CourseViewMode.FULL)
+        viewModel.loadBlocks()
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getCourseStructure(any()) }
@@ -242,7 +257,7 @@ class CourseUnitContainerViewModelTest {
         coEvery { interactor.getCourseStructure(any()) } throws UnknownHostException()
         coEvery { interactor.getCourseStructureForVideos(any()) } throws UnknownHostException()
 
-        viewModel.loadBlocks(CourseViewMode.FULL)
+        viewModel.loadBlocks()
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.getCourseStructure(any()) }
@@ -266,10 +281,10 @@ class CourseUnitContainerViewModelTest {
                 iapNotifier,
             )
 
-        coEvery { interactor.getCourseStructure(any()) } returns courseStructure
-        coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
+        coEvery { interactor.getCourseStructure(any()) } returns CoreMocks.mockCourseStructure
+        coEvery { interactor.getCourseStructureForVideos(any()) } returns CoreMocks.mockCourseStructure
 
-        viewModel.loadBlocks(CourseViewMode.VIDEOS)
+        viewModel.loadBlocks()
 
         advanceUntilIdle()
 
@@ -297,7 +312,7 @@ class CourseUnitContainerViewModelTest {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
 
-        viewModel.loadBlocks(CourseViewMode.VIDEOS, "id")
+        viewModel.loadBlocks("id")
         advanceUntilIdle()
 
         coVerify(exactly = 0) { interactor.getCourseStructure(any()) }
@@ -324,7 +339,7 @@ class CourseUnitContainerViewModelTest {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
 
-        viewModel.loadBlocks(CourseViewMode.VIDEOS, "id")
+        viewModel.loadBlocks("id")
 
         advanceUntilIdle()
 
@@ -353,7 +368,7 @@ class CourseUnitContainerViewModelTest {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
 
-        viewModel.loadBlocks(CourseViewMode.VIDEOS, "id")
+        viewModel.loadBlocks("id3")
 
         advanceUntilIdle()
 
@@ -382,7 +397,7 @@ class CourseUnitContainerViewModelTest {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
 
-        viewModel.loadBlocks(CourseViewMode.VIDEOS, "id1")
+        viewModel.loadBlocks("id1")
 
         advanceUntilIdle()
 
@@ -411,7 +426,7 @@ class CourseUnitContainerViewModelTest {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
 
-        viewModel.loadBlocks(CourseViewMode.VIDEOS, "id3")
+        viewModel.loadBlocks("id3")
 
         advanceUntilIdle()
 
@@ -440,7 +455,7 @@ class CourseUnitContainerViewModelTest {
         coEvery { interactor.getCourseStructure("") } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos("") } returns courseStructure
 
-        viewModel.loadBlocks(CourseViewMode.VIDEOS, "id")
+        viewModel.loadBlocks("id")
 
         advanceUntilIdle()
 
@@ -469,7 +484,7 @@ class CourseUnitContainerViewModelTest {
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
 
-        viewModel.loadBlocks(CourseViewMode.VIDEOS, "id3")
+        viewModel.loadBlocks("id3")
 
         advanceUntilIdle()
 

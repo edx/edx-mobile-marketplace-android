@@ -23,19 +23,19 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.model.Media
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.DiscoveryNotifier
+import org.openedx.core.worker.CalendarSyncScheduler
+import org.openedx.discovery.DiscoveryMocks
 import org.openedx.core.utils.Logger
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
-import org.openedx.discovery.domain.model.Course
 import org.openedx.discovery.presentation.DiscoveryAnalytics
 import org.openedx.discovery.presentation.DiscoveryAnalyticsEvent
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -53,33 +53,10 @@ class CourseDetailsViewModelTest {
     private val networkConnection = mockk<NetworkConnection>()
     private val notifier = spyk<DiscoveryNotifier>()
     private val analytics = mockk<DiscoveryAnalytics>()
+    private val calendarSyncScheduler = mockk<CalendarSyncScheduler>()
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
-
-    private val mockCourse = Course(
-        id = "id",
-        blocksUrl = "blocksUrl",
-        courseId = "courseId",
-        effort = "effort",
-        enrollmentStart = null,
-        enrollmentEnd = null,
-        hidden = false,
-        invitationOnly = false,
-        media = Media(),
-        mobileAvailable = true,
-        name = "Test course",
-        number = "number",
-        org = "EdX",
-        pacing = "pacing",
-        shortDescription = "shortDescription",
-        start = "start",
-        end = "end",
-        startDisplay = "startDisplay",
-        startType = "startType",
-        overview = "",
-        isEnrolled = false
-    )
 
     @Before
     fun setUp() {
@@ -87,6 +64,7 @@ class CourseDetailsViewModelTest {
         every { resourceManager.getString(R.string.core_error_no_connection) } returns noInternet
         every { resourceManager.getString(R.string.core_error_unknown_error) } returns somethingWrong
         every { config.getApiHostURL() } returns "http://localhost:8000"
+        every { calendarSyncScheduler.requestImmediateSync(any()) } returns Unit
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
@@ -106,7 +84,8 @@ class CourseDetailsViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics
+            analytics,
+            calendarSyncScheduler,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCourseDetails(any()) } throws UnknownHostException()
@@ -130,7 +109,8 @@ class CourseDetailsViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics
+            analytics,
+            calendarSyncScheduler,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCourseDetails(any()) } throws Exception()
@@ -154,7 +134,8 @@ class CourseDetailsViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics
+            analytics,
+            calendarSyncScheduler,
         )
         every { config.isPreLoginExperienceEnabled() } returns false
         every { preferencesManager.user } returns null
@@ -179,7 +160,8 @@ class CourseDetailsViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics
+            analytics,
+            calendarSyncScheduler,
         )
         every { config.isPreLoginExperienceEnabled() } returns false
         every { preferencesManager.user } returns null
@@ -205,14 +187,15 @@ class CourseDetailsViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics
+            analytics,
+            calendarSyncScheduler,
         )
         every { config.isPreLoginExperienceEnabled() } returns false
         every { preferencesManager.user } returns null
         coEvery { interactor.enrollInACourse(any()) } throws UnknownHostException()
         coEvery { notifier.send(CourseDashboardUpdate()) } returns Unit
         every { networkConnection.isOnline() } returns true
-        coEvery { interactor.getCourseDetails(any()) } returns mockCourse
+        coEvery { interactor.getCourseDetails(any()) } returns DiscoveryMocks.course
         every { analytics.logEvent(any(), any()) } returns Unit
 
         viewModel.enrollInACourse("", "")
@@ -236,21 +219,21 @@ class CourseDetailsViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics
+            analytics,
+            calendarSyncScheduler,
         )
         every { config.isPreLoginExperienceEnabled() } returns false
         every { preferencesManager.user } returns null
         coEvery { interactor.enrollInACourse(any()) } throws Exception()
         coEvery { notifier.send(CourseDashboardUpdate()) } returns Unit
         every { networkConnection.isOnline() } returns true
-        coEvery { interactor.getCourseDetails(any()) } returns mockCourse
+        coEvery { interactor.getCourseDetails(any()) } returns DiscoveryMocks.course
         every {
             analytics.logEvent(
                 DiscoveryAnalyticsEvent.COURSE_ENROLL_CLICKED.eventName,
                 any()
             )
         } returns Unit
-
 
         viewModel.enrollInACourse("", "")
         advanceUntilIdle()
@@ -278,7 +261,8 @@ class CourseDetailsViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics
+            analytics,
+            calendarSyncScheduler,
         )
         every { config.isPreLoginExperienceEnabled() } returns false
         every { preferencesManager.user } returns null
@@ -297,8 +281,7 @@ class CourseDetailsViewModelTest {
         coEvery { interactor.enrollInACourse(any()) } returns Unit
         coEvery { notifier.send(CourseDashboardUpdate()) } returns Unit
         every { networkConnection.isOnline() } returns true
-        coEvery { interactor.getCourseDetails(any()) } returns mockCourse
-
+        coEvery { interactor.getCourseDetails(any()) } returns DiscoveryMocks.course
 
         delay(200)
         viewModel.enrollInACourse("", "")
@@ -332,7 +315,8 @@ class CourseDetailsViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics
+            analytics,
+            calendarSyncScheduler,
         )
         val overview = viewModel.getCourseAboutBody(ULong.MAX_VALUE, ULong.MIN_VALUE)
         val count = overview.contains("black")
@@ -349,7 +333,8 @@ class CourseDetailsViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            analytics
+            analytics,
+            calendarSyncScheduler,
         )
         val overview = viewModel.getCourseAboutBody(ULong.MAX_VALUE, ULong.MAX_VALUE)
         val count = overview.contains("black")

@@ -5,7 +5,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkConstructor
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,15 +20,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.ProfileImage
-import org.openedx.core.system.ResourceManager
-import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.ProfileAnalytics
-import org.openedx.profile.system.notifier.AccountUpdated
-import org.openedx.profile.system.notifier.ProfileNotifier
 import java.io.File
 import java.net.UnknownHostException
 
@@ -45,25 +39,8 @@ class EditProfileViewModelTest {
     private val interactor = mockk<ProfileInteractor>()
     private val notifier = mockk<ProfileNotifier>()
     private val analytics = mockk<ProfileAnalytics>()
+    private val config = mockk<Config>()
 
-    private val account = Account(
-        username = "thom84",
-        bio = "He as compliment unreserved projecting. Between had observe pretend delight for believe. Do newspaper questions consulted sweetness do. Our sportsman his unwilling fulfilled departure law.",
-        requiresParentalConsent = true,
-        name = "Thomas",
-        country = "Ukraine",
-        isActive = true,
-        profileImage = ProfileImage("", "", "", "", false),
-        yearOfBirth = 2000,
-        levelOfEducation = "Bachelor",
-        goals = "130",
-        languageProficiencies = emptyList(),
-        gender = "male",
-        mailingAddress = "",
-        "",
-        null,
-        accountPrivacy = Account.Privacy.ALL_USERS
-    )
     private val file = mockk<File>()
 
     private val noInternet = "Slow or no internet connection"
@@ -87,7 +64,14 @@ class EditProfileViewModelTest {
     @Test
     fun `updateAccount no internet connection`() = runTest {
         val viewModel =
-            EditProfileViewModel(interactor, resourceManager, notifier, analytics, account)
+            EditProfileViewModel(
+                interactor,
+                resourceManager,
+                notifier,
+                analytics,
+                config,
+                ProfileMocks.account
+            )
         coEvery { interactor.updateAccount(any()) } throws UnknownHostException()
         viewModel.updateAccount(emptyMap())
         advanceUntilIdle()
@@ -102,7 +86,14 @@ class EditProfileViewModelTest {
     @Test
     fun `updateAccount unknown exception`() = runTest {
         val viewModel =
-            EditProfileViewModel(interactor, resourceManager, notifier, analytics, account)
+            EditProfileViewModel(
+                interactor,
+                resourceManager,
+                notifier,
+                analytics,
+                config,
+                ProfileMocks.account
+            )
         coEvery { interactor.updateAccount(any()) } throws Exception()
 
         viewModel.updateAccount(emptyMap())
@@ -118,8 +109,15 @@ class EditProfileViewModelTest {
     @Test
     fun `updateAccount success`() = runTest {
         val viewModel =
-            EditProfileViewModel(interactor, resourceManager, notifier, analytics, account)
-        coEvery { interactor.updateAccount(any()) } returns account
+            EditProfileViewModel(
+                interactor,
+                resourceManager,
+                notifier,
+                analytics,
+                config,
+                ProfileMocks.account
+            )
+        coEvery { interactor.updateAccount(any()) } returns ProfileMocks.account
         coEvery { notifier.send(any<AccountUpdated>()) } returns Unit
         every { analytics.logEvent(any(), any()) } returns Unit
         viewModel.updateAccount(emptyMap())
@@ -135,9 +133,16 @@ class EditProfileViewModelTest {
     @Test
     fun `updateAccountAndImage no internet connection`() = runTest {
         val viewModel =
-            EditProfileViewModel(interactor, resourceManager, notifier, analytics, account)
+            EditProfileViewModel(
+                interactor,
+                resourceManager,
+                notifier,
+                analytics,
+                config,
+                ProfileMocks.account
+            )
         coEvery { interactor.setProfileImage(any(), any()) } throws UnknownHostException()
-        coEvery { interactor.updateAccount(any()) } returns account
+        coEvery { interactor.updateAccount(any()) } returns ProfileMocks.account
         coEvery { notifier.send(AccountUpdated()) } returns Unit
 
         viewModel.updateAccountAndImage(emptyMap(), file, "")
@@ -155,9 +160,16 @@ class EditProfileViewModelTest {
     @Test
     fun `updateAccountAndImage unknown exception`() = runTest {
         val viewModel =
-            EditProfileViewModel(interactor, resourceManager, notifier, analytics, account)
+            EditProfileViewModel(
+                interactor,
+                resourceManager,
+                notifier,
+                analytics,
+                config,
+                ProfileMocks.account
+            )
         coEvery { interactor.setProfileImage(any(), any()) } throws Exception()
-        coEvery { interactor.updateAccount(any()) } returns account
+        coEvery { interactor.updateAccount(any()) } returns ProfileMocks.account
         coEvery { notifier.send(AccountUpdated()) } returns Unit
 
         viewModel.updateAccountAndImage(emptyMap(), file, "")
@@ -175,9 +187,16 @@ class EditProfileViewModelTest {
     @Test
     fun `updateAccountAndImage success`() = runTest {
         val viewModel =
-            EditProfileViewModel(interactor, resourceManager, notifier, analytics, account)
+            EditProfileViewModel(
+                interactor,
+                resourceManager,
+                notifier,
+                analytics,
+                config,
+                ProfileMocks.account
+            )
         coEvery { interactor.setProfileImage(any(), any()) } returns Unit
-        coEvery { interactor.updateAccount(any()) } returns account
+        coEvery { interactor.updateAccount(any()) } returns ProfileMocks.account
         coEvery { notifier.send(any<AccountUpdated>()) } returns Unit
         every { analytics.logEvent(any(), any()) } returns Unit
 
@@ -197,10 +216,16 @@ class EditProfileViewModelTest {
     @Test
     fun `setImageUri set new value`() {
         val viewModel =
-            EditProfileViewModel(interactor, resourceManager, notifier, analytics, account)
+            EditProfileViewModel(
+                interactor,
+                resourceManager,
+                notifier,
+                analytics,
+                config,
+                ProfileMocks.account
+            )
         viewModel.setImageUri(mockk())
 
         assert(viewModel.selectedImageUri.value != null)
     }
-
 }

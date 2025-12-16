@@ -16,12 +16,11 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.domain.interactor.IAPInteractor
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
@@ -48,7 +47,6 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.EnrolledCourseEvent
 import org.openedx.core.system.notifier.app.RequestEnrolledCourseErrorEvent
 import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
-import org.openedx.core.ui.WindowSize
 import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.Logger
 import org.openedx.dashboard.domain.CourseStatusFilter
@@ -69,6 +67,7 @@ class DashboardGalleryViewModel(
     private val networkConnection: NetworkConnection,
     private val fileUtil: FileUtil,
     private val dashboardRouter: DashboardRouter,
+    private val corePreferences: CorePreferences,
     private val iapNotifier: IAPNotifier,
     private val pushNotifier: PushNotifier,
     private val appNotifier: AppNotifier,
@@ -153,6 +152,20 @@ class DashboardGalleryViewModel(
                     }
                 } else {
                     _uiState.value =
+                        DashboardGalleryUIState.Courses(
+                            cachedCourseEnrollments.mapToDomain(),
+                            corePreferences.isRelativeDatesEnabled
+                        )
+                }
+                val cachedCourseEnrollments = fileUtil.getObjectFromFile<CourseEnrollments>()
+                if (cachedCourseEnrollments == null) {
+                    if (networkConnection.isOnline()) {
+                        _uiState.value = DashboardGalleryUIState.Loading
+                    } else {
+                        _uiState.value = DashboardGalleryUIState.Empty
+                    }
+                } else {
+                    _uiState.value =
                         DashboardGalleryUIState.Courses(cachedCourseEnrollments.mapToDomain(), true)
                 }
                 if (networkConnection.isOnline()) {
@@ -199,9 +212,17 @@ class DashboardGalleryViewModel(
             } catch (e: Exception) {
                 logger.e(throwable = e, metadata = mapOf("isIAPFlow" to isIAPFlow))
                 if (e.isInternetError()) {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_error_no_connection)
+                        )
+                    )
                 } else {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_error_unknown_error)
+                        )
+                    )
                 }
             } finally {
                 _updating.value = false
@@ -215,6 +236,7 @@ class DashboardGalleryViewModel(
         isUpdating: Boolean = true,
         isIAPFlow: Boolean = false
     ) {
+    fun updateCourses(isUpdating: Boolean = true) {
         if (isLoading) {
             return
         }
@@ -224,6 +246,8 @@ class DashboardGalleryViewModel(
 
     fun refreshPushBadgeCount() {
         viewModelScope.launch { pushNotifier.send(PushEvent.RefreshBadgeCount) }
+        _updating.value = isUpdating
+        getCourses()
     }
 
     fun navigateToDiscovery() {

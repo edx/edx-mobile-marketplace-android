@@ -17,10 +17,12 @@ import org.openedx.app.di.screenModule
 import org.openedx.core.config.Config
 import org.openedx.featuremanagement.di.FeatureModuleProvider
 import org.openedx.notifications.di.NotificationsModuleProvider
+import org.openedx.firebase.OEXFirebaseAnalytics
 
 class OpenEdXApp : Application() {
 
     private val config by inject<Config>()
+    private val pluginManager by inject<PluginManager>()
 
     override fun onCreate() {
         super.onCreate()
@@ -55,6 +57,14 @@ class OpenEdXApp : Application() {
             if (config.getBranchConfig().enabled) {
                 BrazeDeeplinkHandler.setBrazeDeeplinkHandler(BranchBrazeDeeplinkHandler())
             }
+        }
+
+        initPlugins()
+    }
+
+    private fun initPlugins() {
+        if (config.getFirebaseConfig().enabled) {
+            pluginManager.addPlugin(OEXFirebaseAnalytics(context = this))
         }
     }
 

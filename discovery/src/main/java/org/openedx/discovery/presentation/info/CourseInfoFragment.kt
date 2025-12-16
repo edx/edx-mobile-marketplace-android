@@ -57,14 +57,10 @@ import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.DiscoveryAnalyticsScreen
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
@@ -253,6 +249,7 @@ private fun CourseInfoScreen(
     webViewUIState: WebViewUIState,
     uiMessage: UIMessage?,
     uriScheme: String,
+    isRegistrationEnabled: Boolean,
     userAgent: String,
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
@@ -260,6 +257,7 @@ private fun CourseInfoScreen(
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
     onUriClick: (String, Authority) -> Unit,
+    onUriClick: (String, linkAuthority) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -282,7 +280,8 @@ private fun CourseInfoScreen(
                 ) {
                     AuthButtonsPanel(
                         onRegisterClick = onRegisterClick,
-                        onSignInClick = onSignInClick
+                        onSignInClick = onSignInClick,
+                        showRegisterButton = isRegistrationEnabled
                     )
                 }
             }
@@ -372,7 +371,6 @@ private fun CourseInfoWebView(
     onUriClick: (String, Authority) -> Unit,
     onWebPageLoadError: () -> Unit,
 ) {
-
     val webView = CatalogWebViewScreen(
         url = contentUrl,
         uriScheme = uriScheme,
@@ -416,6 +414,8 @@ fun CourseInfoScreenPreview() {
             ),
             uiMessage = null,
             uriScheme = "",
+            userAgent = "",
+            isRegistrationEnabled = true,
             userAgent = "",
             hasInternetConnection = false,
             onWebViewUIAction = {},

@@ -5,19 +5,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
-import org.openedx.core.UIMessage
-import org.openedx.core.extension.isInternetError
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileAnalyticsEvent
 import org.openedx.profile.presentation.ProfileAnalyticsKey
-import org.openedx.profile.system.notifier.AccountUpdated
-import org.openedx.profile.system.notifier.ProfileNotifier
+import org.openedx.profile.system.notifier.account.AccountUpdated
+import org.openedx.profile.system.notifier.profile.ProfileNotifier
 import java.io.File
 
 class EditProfileViewModel(
@@ -25,6 +21,7 @@ class EditProfileViewModel(
     private val resourceManager: ResourceManager,
     private val notifier: ProfileNotifier,
     private val analytics: ProfileAnalytics,
+    val config: Config,
     account: Account,
 ) : BaseViewModel() {
 
@@ -59,8 +56,11 @@ class EditProfileViewModel(
                 buildMap {
                     put(
                         ProfileAnalyticsKey.ACTION.key,
-                        if (isLimitedProfile) ProfileAnalyticsKey.LIMITED_PROFILE.key
-                        else ProfileAnalyticsKey.FULL_PROFILE.key
+                        if (isLimitedProfile) {
+                            ProfileAnalyticsKey.LIMITED_PROFILE.key
+                        } else {
+                            ProfileAnalyticsKey.FULL_PROFILE.key
+                        }
                     )
                 }
             )

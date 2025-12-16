@@ -23,6 +23,9 @@ import subtitleFile.TimedTextObject
 open class VideoUnitViewModel(
     courseId: String,
     blockId: String,
+    val courseId: String,
+    val videoUrl: String,
+    val blockId: String,
     private val courseRepository: CourseRepository,
     private val notifier: CourseNotifier,
     private val networkConnection: NetworkConnection,
@@ -45,6 +48,12 @@ open class VideoUnitViewModel(
     val currentVideoTime: LiveData<Long>
         get() = _currentVideoTime
 
+    var duration = 0L
+
+    protected val isUpdatedMutable = MutableLiveData(true)
+    val isUpdated: LiveData<Boolean>
+        get() = isUpdatedMutable
+
     private val _currentIndex = MutableStateFlow(0)
     val currentIndex = _currentIndex.asStateFlow()
 
@@ -59,13 +68,20 @@ open class VideoUnitViewModel(
 
     private var isBlockAlreadyCompleted = false
 
+    init {
+        initVideoProgress()
+    }
+
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
         viewModelScope.launch {
             notifier.notifier.collect {
                 if (it is CourseVideoPositionChanged && videoUrl == it.videoUrl) {
+                    isUpdatedMutable.value = false
                     _currentVideoTime.value = it.videoTime
                     videoDuration = it.videoDuration
+                    saveVideoProgress()
+                    isUpdatedMutable.value = true
                     isPlaying = it.isPlaying
                 } else if (it is CourseSubtitleLanguageChanged) {
                     transcriptLanguage = it.value
@@ -73,6 +89,22 @@ open class VideoUnitViewModel(
                     downloadSubtitles()
                 }
             }
+        }
+    }
+
+    override fun onPause(owner: LifecycleOwner) {
+        saveVideoProgress()
+        super.onPause(owner)
+    }
+
+    private fun saveVideoProgress() {
+        viewModelScope.launch {
+            courseRepository.saveVideoProgress(
+                blockId,
+                videoUrl,
+                _currentVideoTime.value ?: 0L,
+                duration
+            )
         }
     }
 
@@ -95,16 +127,16 @@ open class VideoUnitViewModel(
 
     private fun getTranscriptUrl(): String {
         val defaultTranscripts = transcripts[transcriptLanguage]
-        if (!defaultTranscripts.isNullOrEmpty()) {
-            return defaultTranscripts
-        }
-        if (transcripts.values.isNotEmpty()) {
-            transcriptLanguage = transcripts.keys.toList().first()
-            return transcripts[transcriptLanguage] ?: ""
-        }
-        return ""
-    }
+        return when {
+            !defaultTranscripts.isNullOrEmpty() -> defaultTranscripts
+            transcripts.values.isNotEmpty() -> {
+                transcriptLanguage = transcripts.keys.first()
+                transcripts[transcriptLanguage] ?: ""
+            }
 
+            else -> ""
+        }
+    }
 
     open fun markBlockCompleted(blockId: String) {
         if (!isBlockAlreadyCompleted) {
@@ -119,6 +151,7 @@ open class VideoUnitViewModel(
                     notifier.send(CourseCompletionSet())
                 } catch (e: Exception) {
                     logger.e(throwable = e)
+                    e.printStackTrace()
                     isBlockAlreadyCompleted = false
                 }
             }
@@ -138,6 +171,17 @@ open class VideoUnitViewModel(
     }
 
     fun getCurrentVideoTime() = currentVideoTime.value ?: 0
+
+    private fun initVideoProgress() {
+        viewModelScope.launch {
+            try {
+                val videoProgress = courseRepository.getVideoProgress(blockId)
+                _currentVideoTime.value = videoProgress.videoTime
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     companion object {
         private const val TAG = "VideoUnitViewModel"

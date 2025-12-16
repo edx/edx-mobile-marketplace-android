@@ -61,11 +61,11 @@ object EmailUtil {
             //There is no activity which can perform the intended share Intent
             context?.let {
                 Toast.makeText(
-                    it, it.getString(R.string.core_email_client_not_present),
+                    it,
+                    it.getString(R.string.core_email_client_not_present),
                     Toast.LENGTH_SHORT
                 ).show()
             }
         }
     }
-
 }

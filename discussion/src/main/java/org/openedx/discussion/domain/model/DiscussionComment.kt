@@ -4,7 +4,6 @@ import android.os.Parcelable
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import org.openedx.core.domain.model.ProfileImage
-import org.openedx.core.extension.LinkedImageText
 
 @Parcelize
 data class DiscussionComment(
@@ -15,7 +14,6 @@ data class DiscussionComment(
     val updatedAt: String,
     val rawBody: String,
     val renderedBody: String,
-    val parsedRenderedBody: LinkedImageText,
     val abuseFlagged: Boolean,
     val voted: Boolean,
     val voteCount: Int,

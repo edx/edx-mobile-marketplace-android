@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,23 +52,18 @@ import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.settingsHeaderBackground
 import org.openedx.core.ui.statusBarsInset
+import org.koin.androidx.compose.koinViewModel
 import org.openedx.core.ui.theme.OpenEdXTheme
-import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appShapes
-import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
-import org.openedx.profile.R
-import org.openedx.core.R as CoreR
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.rememberWindowSize
 
 class CalendarFragment : Fragment() {
-
-    private val viewModel by viewModel<CalendarViewModel>()
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { isGranted ->
         if (!isGranted.containsValue(false)) {
-            val dialog = NewCalendarDialogFragment.newInstance()
+            val dialog = NewCalendarDialogFragment.newInstance(NewCalendarDialogType.CREATE_NEW)
             dialog.show(
                 requireActivity().supportFragmentManager,
                 NewCalendarDialogFragment.DIALOG_TAG
@@ -90,14 +86,33 @@ class CalendarFragment : Fragment() {
         setContent {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
+                val viewModel: CalendarViewModel = koinViewModel()
+                val uiState by viewModel.uiState.collectAsState()
 
-                CalendarScreen(
+                CalendarView(
                     windowSize = windowSize,
+                    uiState = uiState,
                     setUpCalendarSync = {
                         viewModel.setUpCalendarSync(permissionLauncher)
                     },
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStack()
+                    },
+                    onCalendarSyncSwitchClick = {
+                        viewModel.setCalendarSyncEnabled(it, requireActivity().supportFragmentManager)
+                    },
+                    onRelativeDateSwitchClick = {
+                        viewModel.setRelativeDateEnabled(it)
+                    },
+                    onChangeSyncOptionClick = {
+                        val dialog = NewCalendarDialogFragment.newInstance(NewCalendarDialogType.UPDATE)
+                        dialog.show(
+                            requireActivity().supportFragmentManager,
+                            NewCalendarDialogFragment.DIALOG_TAG
+                        )
+                    },
+                    onCourseToSyncClick = {
+                        viewModel.navigateToCoursesToSync(requireActivity().supportFragmentManager)
                     }
                 )
             }
@@ -105,12 +120,16 @@ class CalendarFragment : Fragment() {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun CalendarScreen(
+private fun CalendarView(
     windowSize: WindowSize,
+    uiState: CalendarUIState,
     setUpCalendarSync: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onChangeSyncOptionClick: () -> Unit,
+    onCourseToSyncClick: () -> Unit,
+    onCalendarSyncSwitchClick: (Boolean) -> Unit,
+    onRelativeDateSwitchClick: (Boolean) -> Unit
 ) {
     val scaffoldState = rememberScaffoldState()
 

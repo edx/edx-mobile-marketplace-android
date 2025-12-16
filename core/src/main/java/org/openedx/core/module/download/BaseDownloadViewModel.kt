@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.BlockType
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
@@ -21,6 +20,7 @@ import org.openedx.core.presentation.CoreAnalyticsKey
 import org.openedx.core.utils.Directories
 import org.openedx.core.utils.Sha1Util
 import java.io.File
+import org.openedx.foundation.presentation.BaseViewModel
 
 abstract class BaseDownloadViewModel(
     private val courseId: String,
@@ -28,9 +28,10 @@ abstract class BaseDownloadViewModel(
     private val preferencesManager: CorePreferences,
     private val workerController: DownloadWorkerController,
     private val analytics: CoreAnalytics,
+    private val downloadHelper: DownloadHelper,
 ) : BaseViewModel() {
 
-    private val allBlocks = hashMapOf<String, Block>()
+    val allBlocks = hashMapOf<String, Block>()
 
     private val downloadableChildrenMap = hashMapOf<String, List<String>>()
     private val downloadModelsStatus = hashMapOf<String, DownloadedState>()
@@ -38,13 +39,12 @@ abstract class BaseDownloadViewModel(
     private val _downloadModelsStatusFlow = MutableSharedFlow<HashMap<String, DownloadedState>>()
     protected val downloadModelsStatusFlow = _downloadModelsStatusFlow.asSharedFlow()
 
-    private var downloadingModelsList = listOf<DownloadModel>()
     private val _downloadingModelsFlow = MutableSharedFlow<List<DownloadModel>>()
     protected val downloadingModelsFlow = _downloadingModelsFlow.asSharedFlow()
 
     init {
         viewModelScope.launch {
-            downloadDao.readAllData().map { list -> list.map { it.mapToDomain() } }
+            downloadDao.getAllDataFlow().map { list -> list.map { it.mapToDomain() } }
                 .collect { downloadModels ->
                     updateDownloadModelsStatus(downloadModels)
                     _downloadModelsStatusFlow.emit(downloadModelsStatus)
@@ -57,44 +57,68 @@ abstract class BaseDownloadViewModel(
         _downloadModelsStatusFlow.emit(downloadModelsStatus)
     }
 
-    private suspend fun getDownloadModelList(): List<DownloadModel> {
-        return downloadDao.readAllData().first().map { it.mapToDomain() }
+    suspend fun getDownloadModelList(): List<DownloadModel> {
+        return downloadDao.getAllDataFlow().first().map { it.mapToDomain() }
     }
 
     private suspend fun updateDownloadModelsStatus(models: List<DownloadModel>) {
         val downloadModelMap = models.associateBy { it.id }
-        for (item in downloadableChildrenMap) {
-            var downloadingCount = 0
-            var downloadedCount = 0
-            item.value.forEach { blockId ->
-                val downloadModel = downloadModelMap[blockId]
-                if (downloadModel != null) {
-                    if (downloadModel.downloadedState.isWaitingOrDownloading) {
-                        downloadModelsStatus[blockId] = DownloadedState.DOWNLOADING
-                        downloadingCount++
-                    } else if (downloadModel.downloadedState.isDownloaded) {
-                        downloadModelsStatus[blockId] = DownloadedState.DOWNLOADED
-                        downloadedCount++
-                    }
-                } else {
-                    downloadModelsStatus[blockId] = DownloadedState.NOT_DOWNLOADED
-                }
-            }
 
-            downloadModelsStatus[item.key] = when {
-                downloadingCount > 0 -> DownloadedState.DOWNLOADING
-                downloadedCount == item.value.size -> DownloadedState.DOWNLOADED
+        downloadableChildrenMap.forEach { (parentId, children) ->
+            val (downloadingCount, downloadedCount) = updateChildrenStatus(children, downloadModelMap)
+            updateParentStatus(parentId, children.size, downloadingCount, downloadedCount)
+        }
+
+        _downloadingModelsFlow.emit(models)
+    }
+
+    private fun updateChildrenStatus(
+        children: List<String>,
+        downloadModelMap: Map<String, DownloadModel>
+    ): Pair<Int, Int> {
+        var downloadingCount = 0
+        var downloadedCount = 0
+
+        children.forEach { blockId ->
+            val downloadModel = downloadModelMap[blockId]
+            downloadModelsStatus[blockId] = when {
+                downloadModel?.downloadedState?.isWaitingOrDownloading == true -> {
+                    downloadingCount++
+                    DownloadedState.DOWNLOADING
+                }
+
+                downloadModel?.downloadedState?.isDownloaded == true -> {
+                    downloadedCount++
+                    DownloadedState.DOWNLOADED
+                }
+
                 else -> DownloadedState.NOT_DOWNLOADED
             }
         }
 
-        downloadingModelsList = models.filter { it.downloadedState.isWaitingOrDownloading }
-        _downloadingModelsFlow.emit(downloadingModelsList)
+        return downloadingCount to downloadedCount
+    }
+
+    private fun updateParentStatus(
+        parentId: String,
+        childrenSize: Int,
+        downloadingCount: Int,
+        downloadedCount: Int
+    ) {
+        downloadModelsStatus[parentId] = when {
+            downloadingCount > 0 -> DownloadedState.DOWNLOADING
+            downloadedCount == childrenSize -> DownloadedState.DOWNLOADED
+            else -> DownloadedState.NOT_DOWNLOADED
+        }
     }
 
     protected fun setBlocks(list: List<Block>) {
         downloadableChildrenMap.clear()
         allBlocks.clear()
+        allBlocks.putAll(list.map { it.id to it })
+    }
+
+    protected fun addBlocks(list: List<Block>) {
         allBlocks.putAll(list.map { it.id to it })
     }
 
@@ -108,22 +132,22 @@ abstract class BaseDownloadViewModel(
         return blockDownloadingState == DownloadedState.DOWNLOADED
     }
 
-    open fun saveDownloadModels(folder: String, id: String) {
+    open fun saveDownloadModels(folder: String, courseId: String, id: String) {
         viewModelScope.launch {
             val saveBlocksIds = downloadableChildrenMap[id] ?: listOf()
-            logSubsectionDownloadEvent(id, saveBlocksIds.size)
-            saveDownloadModels(folder, saveBlocksIds)
+            logSubsectionDownloadEvent(id, saveBlocksIds.size, courseId)
+            saveDownloadModels(folder, courseId, saveBlocksIds)
         }
     }
 
-    open fun saveAllDownloadModels(folder: String) {
+    open fun saveAllDownloadModels(folder: String, courseId: String) {
         viewModelScope.launch {
             val saveBlocksIds = downloadableChildrenMap.values.flatten()
-            saveDownloadModels(folder, saveBlocksIds)
+            saveDownloadModels(folder, courseId, saveBlocksIds)
         }
     }
 
-    private suspend fun saveDownloadModels(folder: String, saveBlocksIds: List<String>) {
+    suspend fun saveDownloadModels(folder: String, courseId: String, saveBlocksIds: List<String>) {
         val downloadModels = mutableListOf<DownloadModel>()
         val downloadModelList = getDownloadModelList()
         for (blockId in saveBlocksIds) {
@@ -155,6 +179,11 @@ abstract class BaseDownloadViewModel(
                             TranscriptsDownloadedState.NOT_DOWNLOADED,
                         )
                     )
+                val downloadModel = downloadHelper.generateDownloadModelFromBlock(folder, block, courseId)
+                val isNotDownloaded =
+                    downloadModelList.find { it.id == blockId && it.downloadedState.isDownloaded } == null
+                if (isNotDownloaded && downloadModel != null) {
+                    downloadModels.add(downloadModel)
                 }
             }
         }
@@ -200,60 +229,41 @@ abstract class BaseDownloadViewModel(
         )
     }
 
-    fun hasDownloadModelsInQueue() = downloadingModelsList.isNotEmpty()
-
     fun getDownloadableChildren(id: String) = downloadableChildrenMap[id]
 
-    open fun removeDownloadModels(blockId: String) {
+    open fun removeDownloadModels(blockId: String, courseId: String) {
         viewModelScope.launch {
             val downloadableChildren = downloadableChildrenMap[blockId] ?: listOf()
-            logSubsectionDeleteEvent(blockId, downloadableChildren.size)
+            logSubsectionDeleteEvent(blockId, downloadableChildren.size, courseId)
             workerController.removeModels(downloadableChildren)
         }
     }
 
-    fun removeAllDownloadModels() {
+    fun removeBlockDownloadModel(blockId: String) {
         viewModelScope.launch {
-            val downloadableChildren = downloadableChildrenMap.values.flatten()
-            workerController.removeModels(downloadableChildren)
+            workerController.removeModel(blockId)
         }
     }
 
+    @Suppress("NestedBlockDepth")
     protected fun addDownloadableChildrenForSequentialBlock(sequentialBlock: Block) {
-        for (item in sequentialBlock.descendants) {
-            allBlocks[item]?.let { blockDescendant ->
-                if (blockDescendant.type == BlockType.VERTICAL) {
-                    for (unitBlockId in blockDescendant.descendants) {
-                        val block = allBlocks[unitBlockId]
-                        if (block?.isDownloadable == true) {
-                            val id = sequentialBlock.id
-                            val children = downloadableChildrenMap[id] ?: listOf()
-                            downloadableChildrenMap[id] = children + block.id
-                        }
+        sequentialBlock.descendants.forEach { descendantId ->
+            val blockDescendant = allBlocks[descendantId] ?: return@forEach
+
+            if (blockDescendant.type == BlockType.VERTICAL) {
+                blockDescendant.descendants.forEach { unitBlockId ->
+                    val block = allBlocks[unitBlockId]
+                    if (block?.isDownloadable == true) {
+                        addDownloadableChild(sequentialBlock.id, block.id)
                     }
                 }
             }
         }
     }
 
-    protected fun addDownloadableChildrenForVerticalBlock(verticalBlock: Block) {
-        for (unitBlockId in verticalBlock.descendants) {
-            val block = allBlocks[unitBlockId]
-            if (block?.isDownloadable == true) {
-                val id = verticalBlock.id
-                val children = downloadableChildrenMap[id] ?: listOf()
-                downloadableChildrenMap[id] = children + block.id
-            }
-        }
-    }
-
-    fun logBulkDownloadToggleEvent(toggle: Boolean) {
-        logEvent(
-            CoreAnalyticsEvent.VIDEO_BULK_DOWNLOAD_TOGGLE,
-            buildMap {
-                put(CoreAnalyticsKey.ACTION.key, toggle)
-            }
-        )
+    private fun addDownloadableChild(parentId: String, childId: String) {
+        val children = downloadableChildrenMap[parentId] ?: listOf()
+        downloadableChildrenMap[parentId] = children + childId
     }
 
     private fun getTranscriptPaths(
@@ -271,24 +281,41 @@ abstract class BaseDownloadViewModel(
     }
 
     private fun logSubsectionDownloadEvent(subsectionId: String, numberOfVideos: Int) {
+    private fun logSubsectionDownloadEvent(
+        subsectionId: String,
+        numberOfVideos: Int,
+        courseId: String
+    ) {
         logEvent(
             CoreAnalyticsEvent.VIDEO_DOWNLOAD_SUBSECTION,
             buildMap {
                 put(CoreAnalyticsKey.BLOCK_ID.key, subsectionId)
                 put(CoreAnalyticsKey.NUMBER_OF_VIDEOS.key, numberOfVideos)
-            })
+            },
+            courseId
+        )
     }
 
-    private fun logSubsectionDeleteEvent(subsectionId: String, numberOfVideos: Int) {
+    private fun logSubsectionDeleteEvent(
+        subsectionId: String,
+        numberOfVideos: Int,
+        courseId: String
+    ) {
         logEvent(
             CoreAnalyticsEvent.VIDEO_DELETE_SUBSECTION,
             buildMap {
                 put(CoreAnalyticsKey.BLOCK_ID.key, subsectionId)
                 put(CoreAnalyticsKey.NUMBER_OF_VIDEOS.key, numberOfVideos)
-            })
+            },
+            courseId
+        )
     }
 
-    private fun logEvent(event: CoreAnalyticsEvent, param: Map<String, Any?> = emptyMap()) {
+    private fun logEvent(
+        event: CoreAnalyticsEvent,
+        param: Map<String, Any?> = emptyMap(),
+        courseId: String
+    ) {
         analytics.logEvent(
             event.eventName,
             buildMap {

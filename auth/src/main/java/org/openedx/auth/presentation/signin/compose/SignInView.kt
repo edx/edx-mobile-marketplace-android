@@ -62,7 +62,6 @@ import org.openedx.auth.presentation.signin.SignInUIState
 import org.openedx.auth.presentation.ui.LoginTextField
 import org.openedx.auth.presentation.ui.PasswordVisibilityIcon
 import org.openedx.auth.presentation.ui.SocialAuthView
-import org.openedx.core.UIMessage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
@@ -70,6 +69,7 @@ import org.openedx.core.ui.HyperlinkText
 import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
+import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -77,7 +77,10 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.theme.compose.SignInLogoView
-import org.openedx.core.ui.windowSizeValue
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.core.R as coreR
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -128,7 +131,7 @@ internal fun LoginScreen(
         Image(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.3f),
+                .fillMaxHeight(fraction = 0.3f),
             painter = painterResource(id = coreR.drawable.core_top_header),
             contentScale = ContentScale.FillBounds,
             contentDescription = null
@@ -226,6 +229,19 @@ private fun AuthForm(
     var isPasswordError by rememberSaveable { mutableStateOf(false) }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        if (!state.isBrowserLoginEnabled) {
+            LoginTextField(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                title = stringResource(id = R.string.auth_email_username),
+                description = stringResource(id = R.string.auth_enter_email_username),
+                onValueChanged = {
+                    login = it
+                    isEmailError = false
+                },
+                isError = isEmailError,
+                errorMessages = stringResource(id = R.string.auth_error_empty_username_email)
+            )
         if (state.isSocialAuthEnabled) {
             SocialAuthView(
                 modifier = buttonWidth.fillMaxWidth(),
@@ -263,31 +279,59 @@ private fun AuthForm(
             errorMessages = stringResource(id = R.string.auth_error_empty_username_email)
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
-        PasswordTextField(
-            modifier = Modifier
-                .fillMaxWidth(),
-            onValueChanged = {
-                password = it
-                isPasswordError = false
-            },
-            onPressDone = {
-                keyboardController?.hide()
-                if (password.isNotEmpty()) {
-                    onEvent(AuthEvent.SignIn(login = login, password = password))
-                } else {
-                    isEmailError = login.isEmpty()
-                    isPasswordError = password.isEmpty()
-                }
-            },
-            isError = isPasswordError,
-        )
+            Spacer(modifier = Modifier.height(18.dp))
+            PasswordTextField(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                onValueChanged = {
+                    password = it
+                    isPasswordError = false
+                },
+                onPressDone = {
+                    keyboardController?.hide()
+                    if (password.isNotEmpty()) {
+                        onEvent(AuthEvent.SignIn(login = login, password = password))
+                    } else {
+                        isEmailError = login.isEmpty()
+                        isPasswordError = password.isEmpty()
+                    }
+                },
+                isError = isPasswordError,
+            )
+        } else {
+            Spacer(modifier = Modifier.height(40.dp))
+        }
 
         Row(
             Modifier
                 .fillMaxWidth()
                 .padding(top = 20.dp, bottom = 36.dp)
         ) {
+            if (!state.isBrowserLoginEnabled) {
+                if (state.isLogistrationEnabled.not() && state.isRegistrationEnabled) {
+                    Text(
+                        modifier = Modifier
+                            .testTag("txt_register")
+                            .noRippleClickable {
+                                onEvent(AuthEvent.RegisterClick)
+                            },
+                        text = stringResource(id = coreR.string.core_register),
+                        color = MaterialTheme.appColors.primary,
+                        style = MaterialTheme.appTypography.labelLarge
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    modifier = Modifier
+                        .testTag("txt_forgot_password")
+                        .noRippleClickable {
+                            onEvent(AuthEvent.ForgotPasswordClick)
+                        },
+                    text = stringResource(id = R.string.auth_forgot_password),
+                    color = MaterialTheme.appColors.infoVariant,
+                    style = MaterialTheme.appTypography.labelLarge
+                )
+            }
             if (state.isLogistrationEnabled.not()) {
                 Text(
                     modifier = Modifier
@@ -320,12 +364,16 @@ private fun AuthForm(
                 modifier = buttonWidth,
                 text = stringResource(id = coreR.string.core_sign_in),
                 onClick = {
-                    keyboardController?.hide()
-                    if (login.isNotEmpty() && password.isNotEmpty()) {
-                        onEvent(AuthEvent.SignIn(login = login, password = password))
+                    if (state.isBrowserLoginEnabled) {
+                        onEvent(AuthEvent.SignInBrowser)
                     } else {
-                        isEmailError = login.isEmpty()
-                        isPasswordError = password.isEmpty()
+                        keyboardController?.hide()
+                        if (login.isNotEmpty() && password.isNotEmpty()) {
+                            onEvent(AuthEvent.SignIn(login = login, password = password))
+                        } else {
+                            isEmailError = login.isEmpty()
+                            isPasswordError = password.isEmpty()
+                        }
                     }
                 }
             )
@@ -389,8 +437,11 @@ private fun PasswordTextField(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done
         ),
-        visualTransformation = if (isPasswordVisible) VisualTransformation.None
-        else PasswordVisualTransformation(),
+        visualTransformation = if (isPasswordVisible) {
+            VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
+        },
         keyboardActions = KeyboardActions {
             focusManager.clearFocus()
             onPressDone()
@@ -426,6 +477,24 @@ private fun SignInScreenPreview() {
                 isFacebookAuthEnabled = true,
                 isGoogleAuthEnabled = true,
                 isMicrosoftAuthEnabled = true,
+            ),
+            uiMessage = null,
+            onEvent = {},
+        )
+    }
+}
+
+@Preview(uiMode = UI_MODE_NIGHT_NO)
+@Preview(uiMode = UI_MODE_NIGHT_YES)
+@Preview(name = "NEXUS_5_Light", device = Devices.NEXUS_5, uiMode = UI_MODE_NIGHT_NO)
+@Preview(name = "NEXUS_5_Dark", device = Devices.NEXUS_5, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+private fun SignInUsingBrowserScreenPreview() {
+    OpenEdXTheme {
+        LoginScreen(
+            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
+            state = SignInUIState().copy(
+                isBrowserLoginEnabled = true,
             ),
             uiMessage = null,
             onEvent = {},

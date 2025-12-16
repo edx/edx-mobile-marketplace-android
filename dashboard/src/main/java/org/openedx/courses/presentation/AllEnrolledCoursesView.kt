@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -29,11 +30,14 @@ import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -90,8 +94,16 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.TimeUtils
+import org.openedx.courses.presentation.AllEnrolledCoursesFragment.Companion.LOAD_MORE_THRESHOLD
+import org.openedx.courses.presentation.AllEnrolledCoursesFragment.Companion.MOBILE_GRID_COLUMNS
+import org.openedx.courses.presentation.AllEnrolledCoursesFragment.Companion.TABLET_GRID_COLUMNS
+import org.openedx.dashboard.DashboardMocks
 import org.openedx.dashboard.R
 import org.openedx.dashboard.domain.CourseStatusFilter
+import org.openedx.foundation.extension.toImageLink
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import java.util.Date
 import org.openedx.core.R as CoreR
 
@@ -161,7 +173,7 @@ private fun AllEnrolledCoursesView(
     val layoutDirection = LocalLayoutDirection.current
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyGridState()
-    val columns = if (windowSize.isTablet) 3 else 2
+    val columns = if (windowSize.isTablet) TABLET_GRID_COLUMNS else MOBILE_GRID_COLUMNS
     val pullRefreshState = rememberPullRefreshState(
         refreshing = state.refreshing,
         onRefresh = { onAction(AllEnrolledCoursesAction.SwipeRefresh) }
@@ -207,7 +219,6 @@ private fun AllEnrolledCoursesView(
             )
         }
 
-
         val emptyStatePaddings by remember(key1 = windowSize) {
             mutableStateOf(
                 windowSize.windowSizeValue(
@@ -223,7 +234,7 @@ private fun AllEnrolledCoursesView(
         val contentWidth by remember(key1 = windowSize) {
             mutableStateOf(
                 windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(Dp.Unspecified, 650.dp),
+                    expanded = Modifier.widthIn(Dp.Unspecified, 560.dp),
                     compact = Modifier.fillMaxWidth(),
                 )
             )
@@ -257,6 +268,7 @@ private fun AllEnrolledCoursesView(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .navigationBarsPadding()
                             .pullRefresh(pullRefreshState),
                     ) {
                         Column(
@@ -297,10 +309,8 @@ private fun AllEnrolledCoursesView(
 
                                 !state.courses.isNullOrEmpty() -> {
                                     Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(contentPaddings),
-                                        contentAlignment = Alignment.Center
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.TopCenter
                                     ) {
                                         Column(
                                             modifier = Modifier.fillMaxWidth(),
@@ -342,9 +352,49 @@ private fun AllEnrolledCoursesView(
                                                         }
                                                     }
                                                 }
+                                        LazyVerticalGrid(
+                                            modifier = Modifier
+                                                .fillMaxHeight(),
+                                            state = scrollState,
+                                            columns = GridCells.Fixed(columns),
+                                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            contentPadding = contentPaddings,
+                                            content = {
+                                                items(state.courses) { course ->
+                                                    CourseItem(
+                                                        course = course,
+                                                        apiHostUrl = apiHostUrl,
+                                                        onClick = {
+                                                            onAction(
+                                                                AllEnrolledCoursesAction.OpenCourse(
+                                                                    it
+                                                                )
+                                                            )
+                                                        }
+                                                    )
+                                                }
+                                                item(span = { GridItemSpan(columns) }) {
+                                                    if (state.canLoadMore) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .height(180.dp),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            CircularProgressIndicator(
+                                                                color = MaterialTheme.appColors.primary
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        )
+                                        if (scrollState.shouldLoadMore(
+                                                firstVisibleIndex,
+                                                LOAD_MORE_THRESHOLD
                                             )
-                                        }
-                                        if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
+                                        ) {
                                             onAction(AllEnrolledCoursesAction.EndOfPage)
                                         }
                                     }
@@ -432,8 +482,8 @@ fun CourseItem(
                         .fillMaxWidth()
                         .height(8.dp),
                     progress = course.progress.value,
-                    color = MaterialTheme.appColors.progressBarColor,
-                    backgroundColor = MaterialTheme.appColors.progressBarBackgroundColor
+                    color = MaterialTheme.appColors.primary,
+                    backgroundColor = MaterialTheme.appColors.divider
                 )
 
                 Text(
@@ -530,7 +580,7 @@ fun EmptyState(
 private fun CourseItemPreview() {
     OpenEdXTheme {
         CourseItem(
-            course = mockCourseEnrolled,
+            course = DashboardMocks.enrolledCourse,
             apiHostUrl = "",
             onClick = {}
         )
@@ -557,14 +607,7 @@ private fun AllEnrolledCoursesPreview() {
         AllEnrolledCoursesView(
             apiHostUrl = "http://localhost:8000",
             state = AllEnrolledCoursesUIState(
-                courses = listOf(
-                    mockCourseEnrolled,
-                    mockCourseEnrolled,
-                    mockCourseEnrolled,
-                    mockCourseEnrolled,
-                    mockCourseEnrolled,
-                    mockCourseEnrolled
-                )
+                courses = DashboardMocks.enrolledCourses(1)
             ),
             uiMessage = null,
             hasInternetConnection = true,

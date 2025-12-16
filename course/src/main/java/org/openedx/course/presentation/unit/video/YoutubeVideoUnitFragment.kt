@@ -11,22 +11,18 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.DefaultPlayerUiController
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.YouTubePlayerTracker
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.ui.DefaultPlayerUiController
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.extension.computeWindowSizeClasses
-import org.openedx.core.extension.objectToString
-import org.openedx.core.extension.stringToObject
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.dialog.selectorbottomsheet.SelectBottomDialogFragment
 import org.openedx.core.ui.ConnectionErrorView
-import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
@@ -34,13 +30,18 @@ import org.openedx.course.databinding.FragmentYoutubeVideoUnitBinding
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
+import org.openedx.foundation.extension.computeWindowSizeClasses
+import org.openedx.foundation.extension.objectToString
+import org.openedx.foundation.extension.stringToObject
+import org.openedx.foundation.presentation.WindowSize
 
 class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) {
 
     private val viewModel by viewModel<VideoUnitViewModel> {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
-            requireArguments().getString(ARG_BLOCK_ID, "")
+            requireArguments().getString(ARG_VIDEO_URL, ""),
+            requireArguments().getString(ARG_BLOCK_ID, ""),
         )
     }
     private val router by inject<CourseRouter>()
@@ -63,7 +64,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         windowSize = computeWindowSizeClasses()
         lifecycle.addObserver(viewModel)
         requireArguments().apply {
-            viewModel.videoUrl = getString(ARG_VIDEO_URL, "")
             viewModel.transcripts = stringToObject<Map<String, String>>(
                 getString(ARG_TRANSCRIPT_URL, "")
             ) ?: emptyMap()
@@ -141,7 +141,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         lifecycle.addObserver(binding.youtubePlayerView)
 
-        val options = IFramePlayerOptions.Builder()
+        val options = IFramePlayerOptions.Builder(requireContext())
             .controls(0)
             .rel(0)
             .build()
@@ -160,9 +160,11 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 val completePercentage = second / youtubeTrackerListener.videoDuration
                 if (completePercentage >= 0.8f && !isMarkBlockCompletedCalled) {
                     viewModel.markBlockCompleted(blockId)
+                if (completePercentage >= VIDEO_COMPLETION_THRESHOLD && !isMarkBlockCompletedCalled) {
+                    viewModel.markBlockCompleted(blockId, CourseAnalyticsKey.YOUTUBE.key)
                     isMarkBlockCompletedCalled = true
                 }
-                if (completePercentage >= 0.99f && !appReviewManager.isDialogShowed) {
+                if (completePercentage >= RATE_DIALOG_THRESHOLD && !appReviewManager.isDialogShowed) {
                     appReviewManager.tryToOpenRateDialog()
                 }
             }
@@ -193,7 +195,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                         binding.youtubePlayerView,
                         youTubePlayer
                     )
-                    defPlayerUiController.setFullScreenButtonClickListener {
+                    defPlayerUiController.setFullscreenButtonClickListener {
                         router.navigateToFullScreenYoutubeVideo(
                             requireActivity().supportFragmentManager,
                             viewModel.videoUrl,
@@ -210,16 +212,23 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 viewModel.videoUrl.split("watch?v=").getOrNull(1)?.let { videoId ->
                     if (viewModel.isPlaying && isResumed) {
                         youTubePlayer.loadVideo(
-                            videoId, viewModel.getCurrentVideoTime().toFloat() / 1000
+                            videoId,
+                            viewModel.getCurrentVideoTime().toFloat() / 1000
                         )
                     } else {
                         youTubePlayer.cueVideo(
-                            videoId, viewModel.getCurrentVideoTime().toFloat() / 1000
+                            videoId,
+                            viewModel.getCurrentVideoTime().toFloat() / 1000
                         )
                     }
                 }
                 youTubePlayer.addListener(youtubeTrackerListener)
                 viewModel.logVideoLoadedEvent(viewModel.videoUrl)
+            }
+
+            override fun onVideoDuration(youTubePlayer: YouTubePlayer, duration: Float) {
+                viewModel.duration = (duration * 1000).toLong()
+                super.onVideoDuration(youTubePlayer, duration)
             }
         }
 
@@ -248,6 +257,9 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         private const val ARG_BLOCK_ID = "blockId"
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_TITLE = "blockTitle"
+
+        const val VIDEO_COMPLETION_THRESHOLD = 0.8f
+        const val RATE_DIALOG_THRESHOLD = 0.99f
 
         fun newInstance(
             blockId: String,

@@ -45,8 +45,6 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.extension.loadUrl
-import org.openedx.core.extension.takeIfNotEmpty
-import org.openedx.core.extension.toastMessage
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
 import org.openedx.core.presentation.dialog.alert.InfoDialogFragment
 import org.openedx.core.presentation.global.webview.WebViewUIAction
@@ -54,14 +52,10 @@ import org.openedx.core.system.AppCookieManager
 import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.DiscoveryAnalyticsScreen
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
@@ -98,7 +92,6 @@ class ProgramFragment : Fragment() {
                 if (isNestedFragment.not()) {
                     DisposableEffect(uiState is ProgramUIState.CourseEnrolled) {
                         if (uiState is ProgramUIState.CourseEnrolled) {
-
                             val courseId = (uiState as ProgramUIState.CourseEnrolled).courseId
                             val isEnrolled = (uiState as ProgramUIState.CourseEnrolled).isEnrolled
 
@@ -208,6 +201,9 @@ class ProgramFragment : Fragment() {
                             }
                         }
                     },
+                    onSettingsClick = {
+                        viewModel.navigateToSettings(requireActivity().supportFragmentManager)
+                    }
                 )
             }
         }
@@ -251,8 +247,11 @@ private fun ProgramInfoScreen(
     isNestedFragment: Boolean,
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
+    onWebViewUIAction: (WebViewUIAction) -> Unit,
+    onSettingsClick: () -> Unit,
     onBackClick: () -> Unit,
     onUriClick: (String, Authority) -> Unit,
+    onUriClick: (String, linkAuthority) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -387,6 +386,7 @@ fun MyProgramsPreview() {
             hasInternetConnection = false,
             onWebViewUIAction = {},
             onBackClick = {},
+            onSettingsClick = {},
             onUriClick = { _, _ -> },
         )
     }

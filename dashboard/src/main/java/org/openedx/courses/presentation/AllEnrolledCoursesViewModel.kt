@@ -11,13 +11,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.openedx.core.BaseViewModel
 import org.openedx.core.R
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.domain.model.EnrolledCourse
-import org.openedx.core.extension.isInternetError
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.DiscoveryNotifier
@@ -28,6 +24,10 @@ import org.openedx.dashboard.presentation.DashboardAnalytics
 import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
 import org.openedx.dashboard.presentation.DashboardAnalyticsKey
 import org.openedx.dashboard.presentation.DashboardRouter
+import org.openedx.foundation.extension.isInternetError
+import org.openedx.foundation.presentation.BaseViewModel
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 
 @Suppress("SameParameterValue")
 class AllEnrolledCoursesViewModel(
@@ -68,10 +68,24 @@ class AllEnrolledCoursesViewModel(
         getCourses(currentFilter.value)
         logScreenEvent(DashboardAnalyticsEvent.MY_COURSES_ALL_COURSES_VIEWED)
         logMyCoursesFilterClickedEvent(currentFilter.value.key)
+        loadInitialCourses()
     }
 
-    fun getCourses(courseStatusFilter: CourseStatusFilter? = null) {
-        _uiState.update { it.copy(showProgress = true) }
+    private fun loadInitialCourses() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(showProgress = true) }
+            val cachedList = interactor.getEnrolledCoursesFromCache()
+            if (cachedList.isNotEmpty()) {
+                _uiState.update { it.copy(courses = cachedList.toList(), showProgress = false) }
+            }
+            getCourses(showLoadingProgress = false)
+        }
+    }
+
+    fun getCourses(courseStatusFilter: CourseStatusFilter? = null, showLoadingProgress: Boolean = true) {
+        if (showLoadingProgress) {
+            _uiState.update { it.copy(showProgress = true) }
+        }
         coursesList.clear()
         internalLoadingCourses(courseStatusFilter ?: currentFilter.value)
     }
@@ -103,9 +117,17 @@ class AllEnrolledCoursesViewModel(
             } catch (e: Exception) {
                 logger.e(throwable = e, metadata = mapOf("filter" to currentFilter.value.key))
                 if (e.isInternetError()) {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_error_no_connection)
+                        )
+                    )
                 } else {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_error_unknown_error)
+                        )
+                    )
                 }
             }
             _uiState.update { it.copy(refreshing = false, showProgress = false) }
@@ -146,9 +168,17 @@ class AllEnrolledCoursesViewModel(
             } catch (e: Exception) {
                 logger.e(throwable = e, metadata = mapOf("filter" to currentFilter.value.key))
                 if (e.isInternetError()) {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_error_no_connection)
+                        )
+                    )
                 } else {
-                    _uiMessage.emit(UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error)))
+                    _uiMessage.emit(
+                        UIMessage.SnackBarMessage(
+                            resourceManager.getString(R.string.core_error_unknown_error)
+                        )
+                    )
                 }
             }
             _uiState.update { it.copy(refreshing = false, showProgress = false) }
@@ -172,6 +202,13 @@ class AllEnrolledCoursesViewModel(
         }
     }
 
+    fun navigateToCourseSearch(fragmentManager: FragmentManager) {
+        dashboardRouter.navigateToCourseSearch(
+            fragmentManager,
+            ""
+        )
+    }
+
     fun navigateToCourseOutline(
         fragmentManager: FragmentManager,
         courseId: String,
@@ -191,6 +228,9 @@ class AllEnrolledCoursesViewModel(
             params = buildMap {
                 put(DashboardAnalyticsKey.FILTER.key, filter)
             }
+            fm = fragmentManager,
+            courseId = courseId,
+            courseTitle = courseName
         )
     }
 

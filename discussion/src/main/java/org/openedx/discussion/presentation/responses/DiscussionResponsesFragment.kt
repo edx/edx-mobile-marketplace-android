@@ -53,11 +53,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -97,7 +100,10 @@ import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment
+import org.openedx.discussion.presentation.responses.DiscussionResponsesFragment.Companion.LOAD_MORE_THRESHOLD
 import org.openedx.discussion.presentation.ui.CommentMainItem
+import org.openedx.discussion.presentation.DiscussionRouter
+import org.openedx.discussion.R as discussionR
 
 class DiscussionResponsesFragment : Fragment() {
 
@@ -176,7 +182,8 @@ class DiscussionResponsesFragment : Fragment() {
                     },
                     onUserPhotoClick = { username ->
                         router.navigateToAnothersProfile(
-                            requireActivity().supportFragmentManager, username
+                            requireActivity().supportFragmentManager,
+                            username
                         )
                     }
                 )
@@ -190,6 +197,7 @@ class DiscussionResponsesFragment : Fragment() {
         private const val ARG_COMMENT = "comment"
         private const val ARG_IS_CLOSED = "isClosed"
         private const val ARG_IS_POSTING_ENABLED = "isPostingEnabled"
+        const val LOAD_MORE_THRESHOLD = 4
 
         fun newInstance(
             courseId: String,
@@ -237,6 +245,7 @@ private fun DiscussionResponsesScreen(
     val firstVisibleIndex = remember {
         mutableIntStateOf(scrollState.firstVisibleItemIndex)
     }
+    val isShouldLoadMore = scrollState.shouldLoadMore(firstVisibleIndex, LOAD_MORE_THRESHOLD)
     val pullRefreshState =
         rememberPullRefreshState(refreshing = refreshing, onRefresh = { onSwipeRefresh() })
 
@@ -258,7 +267,6 @@ private fun DiscussionResponsesScreen(
             .navigationBarsPadding(),
         backgroundColor = MaterialTheme.appColors.background
     ) {
-
         val screenWidth by remember(key1 = windowSize) {
             mutableStateOf(
                 windowSize.windowSizeValue(
@@ -399,23 +407,31 @@ private fun DiscussionResponsesScreen(
                                         }
 
                                         items(uiState.childComments) { comment ->
+                                            var itemHeight by remember { mutableIntStateOf(0) }
+                                            val boxHeight = if (itemHeight > 0) {
+                                                Modifier.height(with(LocalDensity.current) { itemHeight.toDp() })
+                                            } else {
+                                                Modifier
+                                            }
                                             Row(
                                                 Modifier
                                                     .fillMaxWidth()
-                                                    .height(IntrinsicSize.Min)
                                                     .padding(start = paddingContent),
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .fillMaxHeight()
                                                         .width(1.dp)
+                                                        .then(boxHeight)
                                                         .background(MaterialTheme.appColors.cardViewBorder)
                                                 )
                                                 CommentMainItem(
                                                     modifier = Modifier
                                                         .padding(4.dp)
-                                                        .fillMaxWidth(),
+                                                        .fillMaxWidth()
+                                                        .onGloballyPositioned { coordinates ->
+                                                            itemHeight = coordinates.size.height
+                                                        },
                                                     comment = comment,
                                                     onClick = { action, commentId, bool ->
                                                         onItemClick(action, commentId, bool)
@@ -437,7 +453,7 @@ private fun DiscussionResponsesScreen(
                                             }
                                         }
                                     }
-                                    if (scrollState.shouldLoadMore(firstVisibleIndex, 4)) {
+                                    if (isShouldLoadMore) {
                                         paginationCallBack()
                                     }
                                 }
@@ -526,8 +542,9 @@ private fun DiscussionResponsesScreen(
 
                         is DiscussionResponsesUIState.Loading -> {
                             Box(
-                                Modifier
-                                    .fillMaxSize(), contentAlignment = Alignment.Center
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                             }
@@ -554,9 +571,10 @@ private fun DiscussionResponsesScreenPreview() {
         DiscussionResponsesScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             uiState = DiscussionResponsesUIState.Success(
-                mockComment, listOf(
-                    mockComment,
-                    mockComment
+                DiscussionMocks.comment,
+                listOf(
+                    DiscussionMocks.comment,
+                    DiscussionMocks.comment
                 )
             ),
             uiMessage = null,
@@ -565,12 +583,8 @@ private fun DiscussionResponsesScreenPreview() {
             refreshing = false,
             onSwipeRefresh = {},
             paginationCallBack = { },
-            onItemClick = { _, _, _ ->
-
-            },
-            addCommentClick = {
-
-            },
+            onItemClick = { _, _, _ -> },
+            addCommentClick = {},
             onBackClick = {},
             isClosed = false,
             onUserPhotoClick = {},
@@ -587,9 +601,10 @@ private fun DiscussionResponsesScreenTabletPreview() {
         DiscussionResponsesScreen(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             uiState = DiscussionResponsesUIState.Success(
-                mockComment, listOf(
-                    mockComment,
-                    mockComment
+                DiscussionMocks.comment,
+                listOf(
+                    DiscussionMocks.comment,
+                    DiscussionMocks.comment
                 )
             ),
             uiMessage = null,
@@ -598,12 +613,8 @@ private fun DiscussionResponsesScreenTabletPreview() {
             refreshing = false,
             onSwipeRefresh = {},
             paginationCallBack = { },
-            onItemClick = { _, _, _ ->
-
-            },
-            addCommentClick = {
-
-            },
+            onItemClick = { _, _, _ -> },
+            addCommentClick = {},
             onBackClick = {},
             isClosed = false,
             onUserPhotoClick = {},

@@ -236,9 +236,9 @@ private fun GradedAssignmentLockedCard(
                     CertificatePreview(
                         Modifier.weight(0.55f),
                         iapViewModel.appData.appName,
+                        iapViewModel.user?.name,
                         iapViewModel.purchaseData.courseName
-                            ?: iapViewModel.purchaseData.courseName,
-                        iapViewModel.user?.name.toString(),
+                            ?: iapViewModel.purchaseData.courseName.toString(),
                         viewModel.orgName
                             ?: viewModel.orgName.toString(),
                         iapViewModel.purchaseData.orgLogo ?: iapViewModel.purchaseData.orgLogo
@@ -290,9 +290,9 @@ private fun GradedAssignmentLockedCard(
                     CertificatePreview(
                         widthModifier,
                         iapViewModel.appData.appName,
+                        iapViewModel.user?.name,
                         iapViewModel.purchaseData.courseName
-                            ?: iapViewModel.purchaseData.courseName,
-                        iapViewModel.user?.name.toString(),
+                            ?: iapViewModel.purchaseData.courseName.toString(),
                         viewModel.orgName
                             ?: viewModel.orgName.toString(),
                         iapViewModel.purchaseData.orgLogo ?: iapViewModel.purchaseData.orgLogo

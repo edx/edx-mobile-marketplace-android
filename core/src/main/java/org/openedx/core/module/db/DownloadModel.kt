@@ -1,14 +1,8 @@
 package org.openedx.core.module.db
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
-
-@Parcelize
 data class DownloadModel(
     val id: String,
     val title: String,
-    val size: Long,
-    val courseId: String,
     val size: Long,
     val path: String,
     val url: String,
@@ -17,16 +11,15 @@ data class DownloadModel(
     val progress: Float?,
     val transcriptUrls: Map<String, String>,
     val transcriptPaths: Map<String, String>,
+    val transcriptDownloadedStatus: TranscriptsDownloadedState,
 )
-    val lastModified: String? = null,
-) : Parcelable
 
 enum class DownloadedState {
-    WAITING, DOWNLOADING, DOWNLOADED, NOT_DOWNLOADED, LOADING_COURSE_STRUCTURE;
+    WAITING, DOWNLOADING, DOWNLOADED, NOT_DOWNLOADED;
 
     val isWaitingOrDownloading: Boolean
         get() {
-            return this == WAITING || this == DOWNLOADING || this == LOADING_COURSE_STRUCTURE
+            return this == WAITING || this == DOWNLOADING
         }
 
     val isDownloaded: Boolean
@@ -40,5 +33,5 @@ enum class TranscriptsDownloadedState {
 }
 
 enum class FileType {
-    VIDEO, X_BLOCK
+    VIDEO, UNKNOWN
 }

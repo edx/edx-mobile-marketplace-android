@@ -45,7 +45,7 @@ data class Block(
     val isxBlock: Boolean
         get() = !offlineDownload?.fileUrl.isNullOrEmpty()
 
-    val downloadableType: FileType?
+    val downloadableType: FileType
         get() = if (type == BlockType.VIDEO) {
             FileType.VIDEO
         } else if (isxBlock) {

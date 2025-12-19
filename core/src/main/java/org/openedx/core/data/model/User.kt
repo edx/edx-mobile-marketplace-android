@@ -16,10 +16,10 @@ data class User(
     fun mapToDomain(): User {
         return User(
             id, username, email, name ?: ""
-            id,
-            username,
-            email,
-            name ?: ""
         )
     }
 }
+
+
+
+

@@ -4,10 +4,10 @@ import android.content.Context
 import okhttp3.OkHttpClient
 import org.openedx.core.module.download.AbstractDownloader
 import org.openedx.core.utils.Directories
+import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.IOUtils
 import org.openedx.core.utils.Logger
 import org.openedx.core.utils.Sha1Util
-import org.openedx.foundation.utils.FileUtil
 import subtitleFile.FormatSRT
 import subtitleFile.TimedTextObject
 import java.io.File
@@ -19,10 +19,7 @@ import java.util.concurrent.TimeUnit
 
 class TranscriptManager(
     val context: Context,
-    val fileUtil: FileUtil
 ) {
-
-    private val logger = Logger(TAG)
 
     private val logger = Logger(TAG)
 
@@ -31,14 +28,14 @@ class TranscriptManager(
             get() = OkHttpClient.Builder().build()
     }
 
-    private var transcriptObject: TimedTextObject? = null
+    var transcriptObject: TimedTextObject? = null
 
-    private fun has(url: String): Boolean {
+    fun has(url: String): Boolean {
         val transcriptDir = getTranscriptDir() ?: return false
         val hash = Sha1Util.SHA1(url)
         val file = File(transcriptDir, hash)
         return file.exists() && System.currentTimeMillis() - file.lastModified() < TimeUnit.HOURS.toMillis(
-            FILE_VALIDITY_DURATION_HOURS
+            5
         )
     }
 
@@ -61,9 +58,7 @@ class TranscriptManager(
         return if (!file.exists()) {
             // not in cache
             null
-        } else {
-            FileInputStream(file)
-        }
+        } else FileInputStream(file)
     }
 
     suspend fun download(url: String, path: String): Boolean {
@@ -84,18 +79,6 @@ class TranscriptManager(
                     } catch (e: NullPointerException) {
                         logger.e(throwable = e)
                     }
-        if (has(downloadLink)) return
-        val file = File(getTranscriptDir(), Sha1Util.SHA1(downloadLink))
-        val result = transcriptDownloader.download(
-            downloadLink,
-            file.path
-        )
-        if (result == AbstractDownloader.DownloadResult.SUCCESS) {
-            getInputStream(downloadLink)?.let {
-                try {
-                    transcriptObject = convertIntoTimedTextObject(it)
-                } catch (e: NullPointerException) {
-                    logger.e(throwable = e, submitCrashReport = true)
                 }
             }
         }
@@ -109,7 +92,7 @@ class TranscriptManager(
             try {
                 transcriptObject = convertIntoTimedTextObject(transcriptInputStream)
             } catch (e: Exception) {
-                logger.e(throwable = e, submitCrashReport = true)
+                logger.e(throwable = e)
             }
         } else {
             startTranscriptDownload(transcriptUrl)
@@ -136,20 +119,24 @@ class TranscriptManager(
         return timedTextObject
     }
 
-    private fun fetchTranscriptResponse(url: String?): InputStream? {
-        if (url == null) return null
-
-        return try {
-            if (has(url)) getInputStream(url) else null
+    fun fetchTranscriptResponse(url: String?): InputStream? {
+        if (url == null) {
+            return null
+        }
+        val response: InputStream?
+        try {
+            if (has(url)) {
+                response = getInputStream(url)
+                return response
+            }
         } catch (e: IOException) {
-            e.printStackTrace()
-            null
             logger.e(throwable = e, metadata = mapOf("url" to url))
         }
+        return null
     }
 
     private fun getTranscriptDir(): File? {
-        val externalAppDir: File = fileUtil.getExternalAppDir()
+        val externalAppDir: File = FileUtil(context).getExternalAppDir()
         if (externalAppDir.exists()) {
             val videosDir = File(externalAppDir, Directories.VIDEOS.name)
             val transcriptDir = File(videosDir, Directories.SUBTITLES.name)
@@ -161,10 +148,5 @@ class TranscriptManager(
 
     private companion object {
         const val TAG = "TranscriptManager"
-    }
-
-    companion object {
-        private const val TAG = "TranscriptManager"
-        private const val FILE_VALIDITY_DURATION_HOURS = 5L
     }
 }

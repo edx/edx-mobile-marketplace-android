@@ -24,17 +24,13 @@ import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadModelEntity
 import org.openedx.core.module.db.DownloadedState
-import org.openedx.core.module.download.AbstractDownloader.DownloadResult
+import org.openedx.core.module.db.TranscriptsDownloadedState
 import org.openedx.core.module.download.CurrentProgress
-import org.openedx.core.module.download.DownloadHelper
 import org.openedx.core.module.download.FileDownloader
-import org.openedx.core.presentation.DownloadsAnalytics
-import org.openedx.core.presentation.DownloadsAnalyticsEvent
-import org.openedx.core.presentation.DownloadsAnalyticsKey
-import org.openedx.core.system.notifier.DownloadFailed
 import org.openedx.core.system.notifier.DownloadNotifier
 import org.openedx.core.system.notifier.DownloadProgressChanged
-import org.openedx.foundation.utils.FileUtil
+import org.openedx.core.utils.FileUtil
+import java.io.File
 
 class DownloadWorker(
     val context: Context,
@@ -42,19 +38,17 @@ class DownloadWorker(
 ) : CoroutineWorker(context, parameters), CoroutineScope {
 
     private val notificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as
+                NotificationManager
+
     private val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
 
     private val notifier by inject<DownloadNotifier>(DownloadNotifier::class.java)
     private val downloadDao: DownloadDao by inject(DownloadDao::class.java)
-    private val downloadHelper: DownloadHelper by inject(DownloadHelper::class.java)
-    private val analytics: DownloadsAnalytics by inject(DownloadsAnalytics::class.java)
 
     private var downloadEnqueue = listOf<DownloadModel>()
-    private var downloadError = mutableListOf<DownloadModel>()
 
-    private val fileUtil: FileUtil by inject(FileUtil::class.java)
-    private val folder = fileUtil.getExternalAppDir()
+    private val folder = FileUtil(context).getExternalAppDir()
 
     private var currentDownload: DownloadModel? = null
     private var lastUpdateTime = 0L
@@ -71,15 +65,14 @@ class DownloadWorker(
         return Result.success()
     }
 
+
     private fun createForegroundInfo(): ForegroundInfo {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createChannel()
         }
-        val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-        } else {
-            0
-        }
+        val serviceType =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0
 
         return ForegroundInfo(
             NOTIFICATION_ID,
@@ -100,7 +93,7 @@ class DownloadWorker(
                 val progress = 100 * value / size
                 // Update no more than 5 times per sec
                 if (!fileDownloader.isCanceled &&
-                    (System.currentTimeMillis() - lastUpdateTime > PROGRESS_UPDATE_INTERVAL)
+                    (System.currentTimeMillis() - lastUpdateTime > 200)
                 ) {
                     lastUpdateTime = System.currentTimeMillis()
 
@@ -130,7 +123,7 @@ class DownloadWorker(
             folder.mkdir()
         }
 
-        downloadEnqueue = downloadDao.getAllDataFlow().first()
+        downloadEnqueue = downloadDao.readAllData().first()
             .map { it.mapToDomain() }
             .filter { it.downloadedState == DownloadedState.WAITING }
 
@@ -160,39 +153,15 @@ class DownloadWorker(
                             } else {
                                 TranscriptsDownloadedState.NOT_DOWNLOADED
                             }
-            logEvent(DownloadsAnalyticsEvent.DOWNLOAD_STARTED)
-            val downloadResult = fileDownloader.download(downloadTask.url, downloadTask.path)
-            when (downloadResult) {
-                DownloadResult.SUCCESS -> {
-                    logEvent(DownloadsAnalyticsEvent.DOWNLOAD_COMPLETED)
-                    val updatedModel = downloadHelper.updateDownloadStatus(downloadTask)
-                    if (updatedModel == null) {
-                        downloadDao.removeDownloadModel(downloadTask.id)
-                        downloadError.add(downloadTask)
-                    } else {
-                        downloadDao.updateDownloadModel(
-                            DownloadModelEntity.createFrom(updatedModel)
                         )
-                    }
-                }
-
-                DownloadResult.CANCELED -> {
-                    logEvent(DownloadsAnalyticsEvent.DOWNLOAD_CANCELLED)
-                    downloadDao.removeDownloadModel(downloadTask.id)
-                }
-
-                DownloadResult.ERROR -> {
-                    logEvent(DownloadsAnalyticsEvent.DOWNLOAD_ERROR)
-                    downloadDao.removeDownloadModel(downloadTask.id)
-                    downloadError.add(downloadTask)
-                }
+                    )
+                )
+            } else {
+                downloadDao.removeDownloadModel(downloadTask.id)
             }
 
             newDownload()
         } else {
-            if (downloadError.isNotEmpty()) {
-                notifier.send(DownloadFailed(downloadError))
-            }
             return
         }
     }
@@ -228,21 +197,12 @@ class DownloadWorker(
         notificationManager.createNotificationChannel(notificationChannel)
     }
 
-    fun logEvent(event: DownloadsAnalyticsEvent) {
-        analytics.logEvent(
-            event = event.eventName,
-            params = buildMap {
-                put(DownloadsAnalyticsKey.NAME.key, event.biValue)
-            }
-        )
-    }
-
     companion object {
         const val WORKER_TAG = "downloadWorker"
 
         private const val CHANNEL_ID = "download_channel_ID"
         private const val CHANNEL_NAME = "download_channel_name"
         private const val NOTIFICATION_ID = 10
-        private const val PROGRESS_UPDATE_INTERVAL = 200L
     }
+
 }

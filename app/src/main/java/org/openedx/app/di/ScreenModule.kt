@@ -551,6 +551,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
     }
     viewModel { (courseId: String, threadId: String, isPostingEnabled: Boolean, comment: DiscussionComment) ->

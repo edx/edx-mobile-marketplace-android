@@ -4,6 +4,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import com.google.ar.sceneform.rendering.ResourceManager
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -25,12 +26,14 @@ import org.junit.rules.TestRule
 import org.openedx.core.R
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.extension.TextConverter
+import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.domain.model.ThreadsData
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
+import org.openedx.foundation.presentation.UIMessage
 import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)

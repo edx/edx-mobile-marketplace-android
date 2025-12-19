@@ -29,7 +29,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.ThumbUp
@@ -53,6 +52,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import org.openedx.core.domain.model.ProfileImage
+import org.openedx.core.extension.TextConverter
 import org.openedx.core.ui.AutoSizeText
 import org.openedx.core.ui.IconText
 import org.openedx.core.ui.RenderHtmlContent

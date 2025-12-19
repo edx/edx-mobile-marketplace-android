@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
@@ -9,19 +11,13 @@ android {
     compileSdk = 35
     ndkVersion = "28.2.13676358"
     namespace 'org.openedx.course'
-    compileSdkVersion compile_sdk_version
 
     defaultConfig {
-        minSdk min_sdk_version
-        targetSdk target_sdk_version
         minSdk = 24
         targetSdk = 35
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
-
-    namespace = 'org.openedx.course'
 
     buildTypes {
         release {
@@ -29,14 +25,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
         compilerOptions {
-            jvmTarget = jvm_target_version
-            freeCompilerArgs = ['-XXLanguage:+PropertyParamAnnotationDefaultTargetMode']
+            jvmTarget = JvmTarget.fromTarget("17")
+            freeCompilerArgs.addAll(List.of("-Xstring-concat=inline"))
         }
     }
 
@@ -47,15 +44,9 @@ android {
 
     flavorDimensions += "env"
     productFlavors {
-        prod {
-            dimension = 'env'
-        }
-        develop {
-            dimension = 'env'
-        }
-        stage {
-            dimension = 'env'
-        }
+        prod { dimension = 'env' }
+        develop { dimension = 'env' }
+        stage { dimension = 'env' }
     }
 
     testOptions {
@@ -64,10 +55,12 @@ android {
 }
 
 dependencies {
-    implementation project(path: ':core')
-    implementation project(path: ':discussion')
-    implementation "com.pierfrancescosoffritti.androidyoutubeplayer:core:$youtubeplayer_version"
-    implementation "com.pierfrancescosoffritti.androidyoutubeplayer:custom-ui:$youtubeplayer_version"
+    implementation project(':core')
+    implementation project(':discussion')
+
+    // ✅ FIXED: Use version 12.1.1 (11.1.0 doesn't exist)
+    implementation 'com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.1'
+    implementation 'com.pierfrancescosoffritti.androidyoutubeplayer:custom-ui:12.1.1'
 
     // Media3
     implementation "androidx.media3:media3-exoplayer:$media3_version"
@@ -76,6 +69,7 @@ dependencies {
     implementation "androidx.media3:media3-cast:$media3_version"
     implementation "me.saket.extendedspans:extendedspans:$extented_spans_version"
 
+    // Test dependencies...
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"

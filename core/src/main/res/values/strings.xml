@@ -80,8 +80,6 @@
     <string name="core_something_went_wrong_description">Something went wrong</string>
     <string name="core_server_error">Server error</string>
     <string name="core_server_error_description">Something went wrong on our end. Please try again later.</string>
-    <string name="core_try_again">Try Again</string>
-    <string name="core_something_went_wrong_description">Something went wrong</string>
     <string name="core_ok" tools:ignore="MissingTranslation">OK</string>
     <string name="core_continue" tools:ignore="MissingTranslation">Continue</string>
     <string name="core_leaving_the_app" tools:ignore="MissingTranslation">Leaving the app</string>
@@ -248,14 +246,8 @@
     <string name="iap_certificate_professor_text">Professor</string>
     <string name="iap_certificate_universityx_text">UniversityX</string>
 
-    <string name="core_no_course_content">No course content is currently available.</string>
-    <string name="core_no_videos">No videos available for this course.</string>
-    <string name="core_no_dates">Course dates are currently not available.</string>
     <string name="core_no_progress">This course does not contain exams or graded assignments.</string>
     <string name="core_no_assignments">No assignments available for this course.</string>
-    <string name="core_no_discussion">Unable to load discussions.\n Please try again later.</string>
-    <string name="core_no_handouts">There are currently no handouts for this course.</string>
-    <string name="core_no_announcements">There are currently no announcements for this course.</string>
     <string name="course_confirm_download">Confirm Download</string>
     <string name="core_edit">Edit</string>
     <string name="core_offline_progress_sync">Offline Progress Sync</string>

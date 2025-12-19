@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -90,6 +91,7 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.DiscussionRouter

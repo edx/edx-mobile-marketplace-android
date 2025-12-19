@@ -43,7 +43,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -57,6 +56,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
@@ -92,8 +92,6 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.R
-import org.openedx.core.ui.windowSizeValue
-import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
@@ -101,7 +99,11 @@ import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment.Companion.LOAD_MORE_THRESHOLD
 import org.openedx.discussion.presentation.ui.CommentItem
 import org.openedx.discussion.presentation.ui.ThreadMainItem
-
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 
 
 class DiscussionCommentsFragment : Fragment() {
@@ -253,6 +255,7 @@ class DiscussionCommentsFragment : Fragment() {
             return fragment
         }
     }
+
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -606,7 +609,9 @@ private fun DiscussionCommentsScreenPreview() {
             showProgress = false,
             isPostingEnabled = false,
             paginationCallBack = {},
-            onItemClick = { _, _, _ -> },
+            onItemClick = { _, _, _ ->
+
+            },
             onCommentClick = {},
             onAddResponseClick = {},
             onBackClick = {},
@@ -616,6 +621,7 @@ private fun DiscussionCommentsScreenPreview() {
         )
     }
 }
+
 
 @Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -635,7 +641,9 @@ private fun DiscussionCommentsScreenTabletPreview() {
             showProgress = false,
             isPostingEnabled = false,
             paginationCallBack = {},
-            onItemClick = { _, _, _ -> },
+            onItemClick = { _, _, _ ->
+
+            },
             onCommentClick = {},
             onAddResponseClick = {},
             onBackClick = {},

@@ -1,7 +1,7 @@
 package org.openedx.discussion.presentation
 
-import org.openedx.core.BaseViewModel
 import org.openedx.core.extension.takeIfNotEmpty
+import org.openedx.foundation.presentation.BaseViewModel
 
 open class BaseDiscussionViewModel(
     private val courseId: String,

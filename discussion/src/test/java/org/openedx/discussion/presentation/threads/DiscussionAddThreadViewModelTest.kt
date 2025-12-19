@@ -1,6 +1,7 @@
 package org.openedx.discussion.presentation.threads
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.google.ar.sceneform.rendering.ResourceManager
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -20,10 +21,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.openedx.core.UIMessage
 import org.openedx.core.extension.TextConverter
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
+import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionType
@@ -32,6 +32,7 @@ import org.openedx.discussion.domain.model.Topic
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
+import org.openedx.foundation.presentation.UIMessage
 import java.net.UnknownHostException
 import org.openedx.core.R as CoreR
 

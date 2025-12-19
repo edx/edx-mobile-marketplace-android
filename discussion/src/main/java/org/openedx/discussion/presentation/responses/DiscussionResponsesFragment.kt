@@ -10,11 +10,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,7 +51,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -79,31 +76,30 @@ import kotlinx.coroutines.delay
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.extension.parcelable
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
+import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment
 import org.openedx.discussion.presentation.responses.DiscussionResponsesFragment.Companion.LOAD_MORE_THRESHOLD
 import org.openedx.discussion.presentation.ui.CommentMainItem
-import org.openedx.discussion.presentation.DiscussionRouter
-import org.openedx.discussion.R as discussionR
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 
 class DiscussionResponsesFragment : Fragment() {
 

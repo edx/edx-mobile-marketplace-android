@@ -29,13 +29,13 @@ if (firebaseEnabled) {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = appId
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 6002031
         versionName = "6.2.31.0"
 
@@ -105,11 +105,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlin {
-        compilerOptions {
-            jvmTarget = JvmTarget.fromTarget("17")
-            freeCompilerArgs.addAll(List.of("-Xstring-concat=inline"))
-        }
+//    kotlin{
+//        compilerOptions {
+//            jvmTarget = JvmTarget.fromTarget("17")
+//            freeCompilerArgs.addAll(List.of("-Xstring-concat=inline"))
+//        }
+//    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs += ["-Xstring-concat=inline"]
     }
     buildFeatures {
         viewBinding = true
@@ -171,7 +176,7 @@ dependencies {
     testImplementation "androidx.arch.core:core-testing:$android_arch_version"
 }
 
-private def setupBranchConfigFields(buildType) {
+private  def setupBranchConfigFields(buildType) {
     def branchConfig = configHelper.fetchConfig().get("BRANCH")
     def branchKey = ""
     def branchUriScheme = ""

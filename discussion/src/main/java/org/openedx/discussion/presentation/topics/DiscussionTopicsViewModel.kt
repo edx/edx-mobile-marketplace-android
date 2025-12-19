@@ -3,6 +3,8 @@ package org.openedx.discussion.presentation.topics
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.ar.sceneform.rendering.ResourceManager
+import isInternetError
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -16,6 +18,7 @@ import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionRouter
+import org.openedx.foundation.presentation.UIMessage
 
 class DiscussionTopicsViewModel(
     val courseId: String,

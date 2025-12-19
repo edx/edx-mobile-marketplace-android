@@ -4,6 +4,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import com.google.ar.sceneform.rendering.ResourceManager
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,6 +31,7 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.utils.Logger
+import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.CommentsData
@@ -41,6 +43,7 @@ import org.openedx.discussion.system.notifier.DiscussionCommentAdded
 import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
+import org.openedx.foundation.presentation.UIMessage
 import java.net.UnknownHostException
 import org.openedx.core.R as CoreR
 
@@ -203,6 +206,7 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
             )
 
         coEvery { interactor.getThreadQuestionComments(any(), any(), any()) } throws Exception()
@@ -275,6 +279,7 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
             )
 
         coEvery { interactor.getThreadQuestionComments(any(), any(), any()) } returns CommentsData(
@@ -314,6 +319,7 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
             )
 
         coEvery { interactor.getThreadQuestionComments(any(), any(), any()) } returns CommentsData(
@@ -394,6 +400,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         coEvery { interactor.getThreadComments(any(), eq(2)) } returns CommentsData(
@@ -433,6 +440,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         coEvery { interactor.setThreadVoted(any(), any()) } throws UnknownHostException()
@@ -468,6 +476,7 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
             )
 
         coEvery { interactor.setThreadVoted(any(), any()) } throws Exception()
@@ -504,6 +513,7 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
             )
 
         coEvery { interactor.setThreadVoted(any(), any()) } returns DiscussionMocks.thread
@@ -538,6 +548,7 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
             )
 
 
@@ -574,6 +585,7 @@ class DiscussionCommentsViewModelTest {
                 notifier,
                 preferencesManager,
                 analytics,
+                DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
             )
 
         coEvery { interactor.setCommentFlagged(any(), any()) } throws Exception()
@@ -609,6 +621,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         coEvery { interactor.setCommentFlagged(any(), any()) } returns DiscussionMocks.comment.copy(
@@ -718,6 +731,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         coEvery {
@@ -791,6 +805,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         coEvery { interactor.setThreadFlagged(any(), any()) } throws Exception()
@@ -825,6 +840,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         coEvery { interactor.setThreadFlagged(any(), any()) } returns mockThread
@@ -862,6 +878,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         viewModel.setThreadFollowed(true)
@@ -894,6 +911,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
 
@@ -930,6 +948,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         coEvery { interactor.setThreadFollowed(any(), any()) } returns DiscussionMocks.thread
@@ -963,6 +982,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         coEvery { notifier.notifier } returns flow {
@@ -1036,6 +1056,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
 
         coEvery { notifier.notifier } returns flow {
@@ -1075,6 +1096,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
         coEvery {
             interactor.createComment(
@@ -1115,6 +1137,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
         coEvery { interactor.createComment(any(), any(), any(), any()) } throws Exception()
 
@@ -1212,6 +1235,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
         coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
         coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
@@ -1243,6 +1267,7 @@ class DiscussionCommentsViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
         coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
         coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment

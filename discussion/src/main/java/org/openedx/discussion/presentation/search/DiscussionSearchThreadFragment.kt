@@ -69,12 +69,18 @@ import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.R
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.DiscussionRouter
-import org.openedx.discussion.presentation.search.DiscussionSearchThreadFragment.Companion.LOAD_MORE_THRESHOLD
+import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment.Companion.LOAD_MORE_THRESHOLD
 import org.openedx.discussion.presentation.ui.ThreadItem
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.core.R as CoreR
 
 class DiscussionSearchThreadFragment : Fragment() {

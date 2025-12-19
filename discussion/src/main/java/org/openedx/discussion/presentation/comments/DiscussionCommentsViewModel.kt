@@ -5,16 +5,15 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.ar.sceneform.rendering.ResourceManager
+import isInternetError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.extension.isInternetError
 import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.utils.Logger
-import org.openedx.discussion.R
-import kotlinx.coroutines.launch
 import org.openedx.core.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionComment
@@ -28,6 +27,8 @@ import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 import org.openedx.discussion.system.notifier.DiscussionThreadFollowed
+import org.openedx.foundation.presentation.SingleEventLiveData
+import org.openedx.foundation.presentation.UIMessage
 import org.openedx.core.R as CoreR
 
 class DiscussionCommentsViewModel(
@@ -41,6 +42,7 @@ class DiscussionCommentsViewModel(
     private val notifier: DiscussionNotifier,
     private val corePreferences: CorePreferences,
     analytics: DiscussionAnalytics,
+    copy: Thread,
 ) : BaseDiscussionViewModel(courseId, thread.id, analytics) {
 
     private val logger = Logger(TAG)

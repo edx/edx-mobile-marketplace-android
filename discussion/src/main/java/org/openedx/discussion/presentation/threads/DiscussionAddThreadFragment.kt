@@ -74,6 +74,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.OpenEdXOutlinedTextField
 import org.openedx.core.ui.SheetContent
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -190,6 +191,9 @@ private fun DiscussionAddThreadScreen(
     }
     var postToTopic by rememberSaveable {
         mutableStateOf(topicData)
+    }
+    var followPost by rememberSaveable {
+        mutableStateOf(false)
     }
     val expandedList by rememberSaveable {
         mutableStateOf(topics)
@@ -437,7 +441,7 @@ private fun DiscussionAddThreadScreen(
                                 if (isLoading) {
                                     CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                                 } else {
-                                    OpenEdXBrandButton(
+                                    OpenEdXButton(
                                         modifier = buttonWidth,
                                         text = if (currentPage == 0) {
                                             stringResource(id = R.string.discussion_create_post)

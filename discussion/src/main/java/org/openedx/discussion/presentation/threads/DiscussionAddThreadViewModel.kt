@@ -3,12 +3,11 @@ package org.openedx.discussion.presentation.threads
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.ar.sceneform.rendering.ResourceManager
 import isInternetError
 import kotlinx.coroutines.launch
 import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.utils.Logger
-import org.openedx.core.R
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
@@ -16,6 +15,7 @@ import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
 import org.openedx.foundation.presentation.SingleEventLiveData
 import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import org.openedx.core.R as CoreR
 
 class DiscussionAddThreadViewModel(

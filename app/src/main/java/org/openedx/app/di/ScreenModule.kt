@@ -565,6 +565,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            DiscussionMocks.comment.copy(id = "0"),
         )
     }
     viewModel { (courseId: String) ->

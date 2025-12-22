@@ -227,8 +227,6 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 any(),
                 any(),
-                any(),
-                any(),
                 any()
             )
         } throws UnknownHostException()
@@ -272,8 +270,6 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 any(),
                 any(),
-                any(),
-                any(),
                 any()
             )
         } throws Exception()
@@ -294,8 +290,6 @@ class DiscussionThreadsViewModelTest {
                 "",
                 any(),
                 any(),
-                null,
-                range(1, 2)
             )
         } returns ThreadsData(
             threads,
@@ -306,8 +300,6 @@ class DiscussionThreadsViewModelTest {
             interactor.getFollowingThreads(
                 "",
                 any(),
-                any(),
-                null,
                 eq(3)
             )
         } returns ThreadsData(
@@ -625,6 +617,6 @@ class DiscussionThreadsViewModelTest {
 
         coVerify(exactly = 2) { interactor.getThreads(any(), any(), any(), any(), any()) }
     }
-}
+
 
 }

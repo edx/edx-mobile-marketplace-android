@@ -6,7 +6,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.ar.sceneform.rendering.ResourceManager
 import isInternetError
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -29,6 +28,7 @@ import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 import org.openedx.discussion.system.notifier.DiscussionThreadFollowed
 import org.openedx.foundation.presentation.SingleEventLiveData
 import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 
 class DiscussionThreadsViewModel(
     val courseId: String,

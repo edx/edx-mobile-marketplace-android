@@ -712,7 +712,7 @@ private fun DiscussionThreadsScreen(
                                                         textAlign = TextAlign.Center
                                                     )
                                                     Spacer(Modifier.height(40.dp))
-                                                    OpenEdXOutlinedButton(
+                                                    OpenEdXOutlinePrimaryButton(
                                                         modifier = Modifier
                                                             .widthIn(184.dp, Dp.Unspecified),
                                                         text = stringResource(
@@ -831,9 +831,9 @@ private fun DiscussionThreadsScreenTabletPreview() {
                     DiscussionMocks.thread,
                     DiscussionMocks.thread,
                     DiscussionMocks.thread
-                )
+                ),
+                isPostingEnabled = false
             ),
-            uiState = DiscussionThreadsUIState.Threads(listOf(mockPinnedThread, mockThread), true),
             uiMessage = null,
             onItemClick = {},
             onBackClick = {},

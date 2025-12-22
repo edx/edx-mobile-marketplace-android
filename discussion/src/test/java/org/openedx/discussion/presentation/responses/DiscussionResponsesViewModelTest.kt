@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -22,6 +23,7 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Pagination
+import org.openedx.core.extension.LinkedImageText
 import org.openedx.core.utils.Logger
 import org.openedx.discussion.R
 import org.openedx.discussion.DiscussionMocks
@@ -121,6 +123,7 @@ class DiscussionResponsesViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.comment.copy(id = "0"),
         )
         advanceUntilIdle()
 
@@ -146,6 +149,7 @@ class DiscussionResponsesViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.comment.copy(id = "0"),
         )
 
         advanceUntilIdle()
@@ -349,6 +353,7 @@ class DiscussionResponsesViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.comment.copy(id = "0"),
         )
         coEvery { interactor.setCommentVoted(any(), any()) } returns mockComment.copy(id = "0")
         every { analytics.logEvent(any(), any()) } returns Unit
@@ -384,6 +389,7 @@ class DiscussionResponsesViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.comment.copy(id = "0"),
         )
         coEvery { interactor.setCommentVoted(any(), any()) } returns mockComment.copy(id = "2")
         every { analytics.logEvent(any(), any()) } returns Unit
@@ -419,6 +425,7 @@ class DiscussionResponsesViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.comment.copy(id = "0"),
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } throws UnknownHostException()
         viewModel.setCommentReported("", false)
@@ -472,9 +479,9 @@ class DiscussionResponsesViewModelTest {
             interactor,
             resourceManager,
             notifier,
-            DiscussionMocks.comment.copy(id = "0")
             preferencesManager,
             analytics,
+            DiscussionMocks.comment.copy(id = "0"),
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } returns mockComment.copy(id = "0")
         every { analytics.logEvent(any(), any()) } returns Unit
@@ -506,6 +513,7 @@ class DiscussionResponsesViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.comment.copy(id = "0"),
         )
         coEvery { interactor.setCommentFlagged(any(), any()) } returns mockComment.copy(id = "0")
         every { analytics.logEvent(any(), any()) } returns Unit
@@ -536,6 +544,7 @@ class DiscussionResponsesViewModelTest {
             notifier,
             preferencesManager,
             analytics,
+            DiscussionMocks.comment.copy(id = "0"),
         )
         coEvery {
             interactor.createComment(
@@ -583,6 +592,7 @@ class DiscussionResponsesViewModelTest {
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         Assert.assertEquals(somethingWrong, message?.message)
+
     }
 
     @Test
@@ -603,13 +613,13 @@ class DiscussionResponsesViewModelTest {
             analytics,
             DiscussionMocks.comment.copy(id = "0")
         )
-        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
-        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
+        coEvery { interactor.createComment(any(), any(), any(),any()) } returns DiscussionMocks.comment
 
         viewModel.createComment("")
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.createComment(any(), any(), any(), any()) }
+
 
         assert(viewModel.uiMessage.value != null)
         assert(viewModel.uiState.value is DiscussionResponsesUIState.Success)
@@ -633,8 +643,7 @@ class DiscussionResponsesViewModelTest {
             analytics,
             DiscussionMocks.comment.copy(id = "0")
         )
-        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
-        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
+        coEvery { interactor.createComment(any(), any(), any(),any()) } returns DiscussionMocks.comment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")
@@ -661,8 +670,7 @@ class DiscussionResponsesViewModelTest {
             analytics,
             DiscussionMocks.comment.copy(id = "0")
         )
-        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
-        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
+        coEvery { interactor.createComment(any(), any(), any(),any()) } returns DiscussionMocks.comment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")

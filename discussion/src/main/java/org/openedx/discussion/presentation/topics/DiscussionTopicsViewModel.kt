@@ -3,7 +3,6 @@ package org.openedx.discussion.presentation.topics
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.ar.sceneform.rendering.ResourceManager
 import isInternetError
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -19,6 +18,7 @@ import org.openedx.discussion.presentation.BaseDiscussionViewModel
 import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 
 class DiscussionTopicsViewModel(
     val courseId: String,
@@ -56,11 +56,6 @@ class DiscussionTopicsViewModel(
                         isPostingEnabled = discussionConfig.isPostingEnabled,
                         data = response
                     )
-                } else {
-                    _uiState.value = DiscussionTopicsUIState.Error
-                }
-                if (response.isEmpty().not()) {
-                    _uiState.value = DiscussionTopicsUIState.Topics(response)
                 } else {
                     _uiState.value = DiscussionTopicsUIState.Error
                 }

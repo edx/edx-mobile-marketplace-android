@@ -1,7 +1,6 @@
 package org.openedx.discussion.presentation.threads
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.google.ar.sceneform.rendering.ResourceManager
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -33,6 +32,7 @@ import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadAdded
 import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import java.net.UnknownHostException
 import org.openedx.core.R as CoreR
 
@@ -51,7 +51,7 @@ class DiscussionAddThreadViewModelTest {
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong. Please try again later."
-    private val somethingWrong = "Something went wrong"
+//    private val somethingWrong = "Something went wrong"
 
     //region mockThread
 
@@ -102,11 +102,7 @@ class DiscussionAddThreadViewModelTest {
         children = emptyList()
     )
 
-    private val topics = listOf(
-        mockTopic.copy(id = "0"),
-        mockTopic.copy(id = "1"),
-        mockTopic.copy(id = "2")
-    )
+
 
     //endregion
 
@@ -241,4 +237,4 @@ class DiscussionAddThreadViewModelTest {
     }
 }
 
-}
+

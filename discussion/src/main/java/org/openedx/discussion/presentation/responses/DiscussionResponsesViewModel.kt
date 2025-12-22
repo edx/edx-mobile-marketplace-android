@@ -3,7 +3,6 @@ package org.openedx.discussion.presentation.responses
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.ar.sceneform.rendering.ResourceManager
 import isInternetError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +11,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.utils.Logger
-import org.openedx.core.R
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.presentation.BaseDiscussionViewModel
@@ -23,6 +22,7 @@ import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionResponseAdded
 import org.openedx.foundation.presentation.SingleEventLiveData
 import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import org.openedx.core.R as CoreR
 
 class DiscussionResponsesViewModel(
@@ -35,6 +35,7 @@ class DiscussionResponsesViewModel(
     private val notifier: DiscussionNotifier,
     private val corePreferences: CorePreferences,
     analytics: DiscussionAnalytics,
+    copy: DiscussionComment,
 ) : BaseDiscussionViewModel(courseId, threadId, analytics) {
 
     private val logger = Logger(TAG)
@@ -110,10 +111,10 @@ class DiscussionResponsesViewModel(
             } catch (e: Exception) {
                 if (e.isInternetError()) {
                     _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))
+                        UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_no_connection))
                 } else {
                     _uiMessage.value =
-                        UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_unknown_error))
+                        UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_unknown_error))
                 }
             } finally {
                 isLoading = false
@@ -154,12 +155,12 @@ class DiscussionResponsesViewModel(
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(
-                            resourceManager.getString(R.string.core_error_no_connection)
+                            resourceManager.getString(CoreR.string.core_error_no_connection)
                         )
                 } else {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(
-                            resourceManager.getString(R.string.core_error_unknown_error)
+                            resourceManager.getString(CoreR.string.core_error_unknown_error)
                         )
                 }
                 handleException(e)
@@ -198,12 +199,12 @@ class DiscussionResponsesViewModel(
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(
-                            resourceManager.getString(R.string.core_error_no_connection)
+                            resourceManager.getString(CoreR.string.core_error_no_connection)
                         )
                 } else {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(
-                            resourceManager.getString(R.string.core_error_unknown_error)
+                            resourceManager.getString(CoreR.string.core_error_unknown_error)
                         )
                 }
                 handleException(e)

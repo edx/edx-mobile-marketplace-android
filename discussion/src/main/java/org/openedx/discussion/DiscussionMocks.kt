@@ -46,7 +46,9 @@ object DiscussionMocks {
         users = null,
         responseCount = 2,
         anonymous = false,
-        anonymousToPeers = false
+        anonymousToPeers = false,
+        parsedRenderedBody = TODO(),
+        isAuthor = TODO()
     )
 
     val comment = DiscussionComment(
@@ -71,6 +73,18 @@ object DiscussionMocks {
         childCount = 0,
         children = emptyList(),
         profileImage = ProfileImage("", "", "", "", false),
-        users = mapOf("Preview Commenter" to DiscussionProfile(ProfileImage("", "", "", "", false)))
+        users = mapOf(
+            "Preview Commenter" to DiscussionProfile(
+                ProfileImage(
+                    "",
+                    "",
+                    "",
+                    "",
+                    false
+                )
+            )
+        ),
+        parsedRenderedBody = TODO(),
+        isAuthor = TODO()
     )
 }

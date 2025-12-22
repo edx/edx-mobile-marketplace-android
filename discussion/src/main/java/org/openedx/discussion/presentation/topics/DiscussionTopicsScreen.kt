@@ -196,7 +196,7 @@ private fun DiscussionTopicsUI(
                             .padding(horizontal = contentPaddings)
                             .fillMaxWidth(),
                         text = stringResource(id = R.string.discussion_search_all_posts),
-                        onClick = onSearchClick
+//                        onClick = onSearchClick
                     )
                 }
                 Surface(
@@ -236,9 +236,7 @@ private fun DiscussionTopicsUI(
                                                     painterResource = painterResource(
                                                         id = R.drawable.discussion_all_posts
                                                     ),
-                                                    name = stringResource(id = R.string.discussion_all_posts),
-                                                    painterResource = painterResource(id = R.drawable.discussion_all_posts),
-                                                    modifier = Modifier
+                                                      modifier = Modifier
                                                         .weight(1f)
                                                         .height(categoriesHeight),
                                                     onClick = {
@@ -291,10 +289,6 @@ private fun DiscussionTopicsUI(
                                     }
                                 }
 
-                                DiscussionTopicsUIState.Loading -> {}
-                                else -> {
-                                    NoContentScreen(noContentScreenType = NoContentScreenType.COURSE_DISCUSSIONS)
-                                }
                                 DiscussionTopicsUIState.Loading -> {
                                     CircularProgress()
                                 }
@@ -338,29 +332,6 @@ private fun ErrorDiscussionTopicsScreenPreview() {
         DiscussionTopicsUI(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             uiState = DiscussionTopicsUIState.Error,
-            uiState = DiscussionTopicsUIState.Topics(
-                listOf(
-                    DiscussionMocks.topic,
-                    DiscussionMocks.topic
-                )
-            ),
-            uiMessage = null,
-            onItemClick = { _, _, _ -> },
-            onSearchClick = {}
-        )
-    }
-}
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(name = "NEXUS_5_Light", device = Devices.NEXUS_5, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(name = "NEXUS_5_Dark", device = Devices.NEXUS_5, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun ErrorDiscussionTopicsScreenPreview() {
-    OpenEdXTheme {
-        DiscussionTopicsUI(
-            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = DiscussionTopicsUIState.Error,
             uiMessage = null,
             onItemClick = { _, _, _ -> },
             onSearchClick = {}
@@ -376,12 +347,12 @@ private fun DiscussionTopicsScreenTabletPreview() {
         DiscussionTopicsUI(
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             uiState = DiscussionTopicsUIState.Topics(
-                listOf(
+                isPostingEnabled = true,
+                data = listOf(
                     DiscussionMocks.topic,
                     DiscussionMocks.topic
                 )
             ),
-            uiState = DiscussionTopicsUIState.Topics(false, listOf(mockTopic, mockTopic)),
             uiMessage = null,
             onItemClick = { _, _, _ -> },
             onSearchClick = {}

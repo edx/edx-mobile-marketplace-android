@@ -5,7 +5,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.ar.sceneform.rendering.ResourceManager
 import isInternetError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +13,8 @@ import kotlinx.coroutines.launch
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.utils.Logger
-import org.openedx.core.R
+import org.openedx.discussion.DiscussionMocks
+import org.openedx.discussion.R
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
@@ -29,6 +29,7 @@ import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 import org.openedx.discussion.system.notifier.DiscussionThreadFollowed
 import org.openedx.foundation.presentation.SingleEventLiveData
 import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import org.openedx.core.R as CoreR
 
 class DiscussionCommentsViewModel(
@@ -323,7 +324,7 @@ class DiscussionCommentsViewModel(
                     author = response.author
                 )
 
-                notifier.send(DiscussionCommentAdded())
+                notifier.send(DiscussionCommentAdded(DiscussionMocks.comment))
             } catch (e: Exception) {
                 handleException(e)
             } finally {

@@ -1,10 +1,8 @@
 package org.openedx.discussion.presentation.comments
-
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import com.google.ar.sceneform.rendering.ResourceManager
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -44,6 +42,7 @@ import org.openedx.discussion.system.notifier.DiscussionCommentDataChanged
 import org.openedx.discussion.system.notifier.DiscussionNotifier
 import org.openedx.discussion.system.notifier.DiscussionThreadDataChanged
 import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import java.net.UnknownHostException
 import org.openedx.core.R as CoreR
 
@@ -64,6 +63,8 @@ class DiscussionCommentsViewModelTest {
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong. Please try again later."
+    private val commentAddedSuccessfully = "Comment Successfully added"
+
 
     //region mockThread
 
@@ -1012,10 +1013,17 @@ class DiscussionCommentsViewModelTest {
         every { resourceManager.getString(eq(DiscussionMocks.thread.type.resId)) } returns ""
 
         val viewModel = DiscussionCommentsViewModel(
-            interactor,
-            resourceManager,
-            notifier,
-            DiscussionMocks.thread
+            courseId = "",
+            thread = DiscussionMocks.thread,
+            responseId = "",
+            commentId = "",
+            isPostingEnabled = true,
+            interactor = interactor,
+            resourceManager = resourceManager,
+            notifier = notifier,
+            corePreferences = preferencesManager,
+            analytics = analytics,
+            copy = DiscussionMocks.thread
         )
 
         coEvery { notifier.notifier } returns flow {
@@ -1173,8 +1181,7 @@ class DiscussionCommentsViewModelTest {
                 analytics,
                 DiscussionMocks.thread
             )
-        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
-        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
+        coEvery { interactor.createComment(any(), any(), any(),any()) } returns DiscussionMocks.comment
 
         viewModel.createComment("")
         advanceUntilIdle()
@@ -1207,8 +1214,7 @@ class DiscussionCommentsViewModelTest {
             analytics,
             DiscussionMocks.thread
         )
-        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
-        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
+        coEvery { interactor.createComment(any(), any(), any(),any()) } returns DiscussionMocks.comment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")
@@ -1237,8 +1243,7 @@ class DiscussionCommentsViewModelTest {
             analytics,
             DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
-        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
-        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
+        coEvery { interactor.createComment(any(), any(), any(),any()) } returns DiscussionMocks.comment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")
@@ -1269,8 +1274,7 @@ class DiscussionCommentsViewModelTest {
             analytics,
             DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
         )
-        coEvery { interactor.createComment(any(), any(), any(), any()) } returns mockComment
-        coEvery { interactor.createComment(any(), any(), any()) } returns DiscussionMocks.comment
+        coEvery { interactor.createComment(any(), any(), any(),any()) } returns DiscussionMocks.comment
         every { preferencesManager.user?.username } returns ""
 
         viewModel.createComment("")

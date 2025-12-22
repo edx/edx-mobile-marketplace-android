@@ -160,8 +160,6 @@ fun ThreadMainItem(
                 )
             }
             IconText(
-                text = followText,
-                painter = painterResource(followIcon),
                 text = stringResource(id = R.string.discussion_follow),
                 painter = painterResource(
                     if (thread.following) {
@@ -254,7 +252,7 @@ fun CommentItem(
         Icons.Outlined.ThumbUp
     }
 
-    val highlightColor = MaterialTheme.appColors.highlightDiscussionResponse
+//    val highlightColor = MaterialTheme.appColors.highlightDiscussionResponse
     val normalColor = MaterialTheme.appColors.cardViewBackground
 
     val backgroundColor = remember { Animatable(normalColor) }
@@ -262,7 +260,7 @@ fun CommentItem(
     LaunchedEffect(comment.shouldHighlight) {
         if (comment.shouldHighlight) {
             repeat(5) {
-                backgroundColor.animateTo(highlightColor, animationSpec = tween(250))
+//                backgroundColor.animateTo(highlightColor, animationSpec = tween(250))
                 backgroundColor.animateTo(normalColor, animationSpec = tween(250))
             }
             onCommentPulseEnd(comment)
@@ -578,14 +576,14 @@ fun ThreadItem(
                 if (thread.unreadCommentCount > 0 && !thread.read) {
                     Box {
                         Icon(
-                            modifier = Modifier.size(iconSize),
+//                            modifier = Modifier.size(iconSize),
                             modifier = Modifier.size((MaterialTheme.appTypography.labelLarge.fontSize.value).dp),
                             painter = painterResource(id = R.drawable.discussion_ic_unread_replies),
                             tint = MaterialTheme.appColors.textPrimaryVariant,
                             contentDescription = null
                         )
                         Image(
-                            modifier = Modifier.size(iconSize),
+//                            modifier = Modifier.size(iconSize),
                             modifier = Modifier.size((MaterialTheme.appTypography.labelLarge.fontSize.value).dp),
                             painter = painterResource(id = R.drawable.discussion_ic_unread_replies_dot),
                             contentDescription = null

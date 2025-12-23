@@ -59,7 +59,6 @@ import org.openedx.auth.R
 import org.openedx.auth.presentation.ui.LoginTextField
 import org.openedx.core.AppUpdateState
 import org.openedx.core.ui.BackBtn
-import org.openedx.core.R
 import org.openedx.core.presentation.global.appupgrade.AppUpgradeRequiredScreen
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OpenEdXButton
@@ -68,9 +67,12 @@ import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
-import org.openedx.core.ui.theme.appTypographye
-import org.openedx.auth.R as authR
-import org.openedx.core.ui.windowSizeValue
+import org.openedx.core.ui.theme.appTypography
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.core.R as CoreR
 
 class RestorePasswordFragment : Fragment() {
@@ -184,7 +186,6 @@ private fun RestorePasswordScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp),
-            painter = painterResource(id = R.drawable.core_top_header),
             painter = painterResource(id = CoreR.drawable.core_top_header),
             contentScale = ContentScale.FillBounds,
             contentDescription = null
@@ -296,7 +297,7 @@ private fun RestorePasswordScreen(
                                         CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                                     }
                                 } else {
-                                    OpenEdXBrandButton(
+                                    OpenEdXButton(
                                         modifier = buttonWidth,
                                         text = stringResource(id = R.string.auth_reset_password),
                                         onClick = {
@@ -349,7 +350,7 @@ private fun RestorePasswordScreen(
                                     color = MaterialTheme.appColors.textPrimary
                                 )
                                 Spacer(Modifier.height(48.dp))
-                                OpenEdXBrandButton(
+                                OpenEdXButton(
                                     modifier = buttonWidth,
                                     text = stringResource(id = CoreR.string.core_sign_in),
                                     onClick = {

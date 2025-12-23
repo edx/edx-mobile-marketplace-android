@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openedx.auth.R
 import org.openedx.auth.data.model.AuthType
+import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -126,12 +128,12 @@ private fun SocialAuthButton(
 ) {
     val (iconRes, descriptionRes) = when (authType) {
         AuthType.GOOGLE -> Pair(
-            R.drawable.ic_auth_google,
+            R.drawable.auth_ic_google,
             if (isSignIn) R.string.auth_google else R.string.auth_continue_google
         )
 
         AuthType.FACEBOOK -> Pair(
-            R.drawable.ic_auth_facebook,
+            R.drawable.auth_ic_facebook,
             if (isSignIn) R.string.auth_facebook else R.string.auth_continue_facebook
         )
 
@@ -141,6 +143,7 @@ private fun SocialAuthButton(
         )
 
         AuthType.PASSWORD -> return
+        AuthType.BROWSER -> return
     }
 
     IconButton(
@@ -160,14 +163,16 @@ private fun SocialAuthButton(
             contentDescription = stringResource(id = descriptionRes),
             tint = Color.Unspecified
         )
-    Column(modifier = modifier) {
+    }
+    /*
+     Column(modifier = Modifier) {
         if (isGoogleAuthEnabled) {
             val stringRes = if (isSignIn) {
                 R.string.auth_google
             } else {
                 R.string.auth_continue_google
             }
-            OpenEdXOutlinedButton(
+            OpenEdXButton(
                 modifier = Modifier
                     .testTag("btn_google_auth")
                     .padding(top = 24.dp)
@@ -259,7 +264,8 @@ private fun SocialAuthButton(
                 }
             }
         }
-    }
+    }*/
+
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)

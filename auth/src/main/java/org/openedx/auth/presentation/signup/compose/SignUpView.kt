@@ -72,7 +72,7 @@ import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.OpenEdXBrandButton
+import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.SheetContent
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.isImeVisibleState
@@ -460,7 +460,7 @@ internal fun SignUpView(
                                         CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                                     }
                                 } else {
-                                    OpenEdXBrandButton(
+                                    OpenEdXButton(
                                         modifier = buttonWidth,
                                         text = stringResource(id = R.string.auth_create_account),
                                         onClick = {

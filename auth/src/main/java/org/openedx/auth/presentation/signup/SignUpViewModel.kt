@@ -5,6 +5,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.microsoft.identity.client.exception.MsalException
+import isInternetError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,6 +25,7 @@ import org.openedx.auth.presentation.AuthAnalyticsKey
 import org.openedx.auth.presentation.AuthRouter
 import org.openedx.auth.presentation.sso.OAuthHelper
 import org.openedx.core.ApiConstants
+import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.RegistrationField
@@ -33,7 +35,9 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.CrashlyticsHelper
-import org.openedx.core.utils.Logger]
+import org.openedx.core.utils.Logger
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import retrofit2.HttpException
 import org.openedx.core.R as coreR
 
@@ -146,8 +150,9 @@ class SignUpViewModel(
                 put(AuthAnalyticsKey.METHOD.key, authMethod.methodName.lowercase())
             }
         )
-        val mapFields = uiState.value.allFields.associate { it.name to it.placeholder } +
-                mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())
+       /* val mapFields = uiState.value.allFields.associate { it.name to it.placeholder } +
+                mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())*/
+        val mapFields = prepareMapFields()
         val resultMap = mapFields.toMutableMap()
         uiState.value.allFields.filter { !it.required }.forEach { (k, _) ->
             if (mapFields[k].isNullOrEmpty()) {
@@ -155,8 +160,6 @@ class SignUpViewModel(
             }
         }
         logEvent(AuthAnalyticsEvent.CREATE_ACCOUNT_CLICKED)
-        val mapFields = prepareMapFields()
-        _uiState.update { it.copy(isButtonLoading = true, validationError = false) }
 
         viewModelScope.launch {
             setErrorInstructions(emptyMap())
@@ -242,16 +245,13 @@ class SignUpViewModel(
                 )
             )
         } else {
+            val mapFields = prepareMapFields()
             _uiMessage.emit(
                 UIMessage.SnackBarMessage(
                     resourceManager.getString(coreR.string.core_error_unknown_error)
                 )
             )
                     handleRegistration(mapFields)
-                }
-            } catch (e: Exception) {
-                handleRegistrationError(e)
-            }
         }
     }
 
@@ -332,7 +332,7 @@ class SignUpViewModel(
                 logEvent(AuthAnalyticsEvent.SOCIAL_AUTH_SUCCESS, buildMap {
                     put(AuthAnalyticsKey.METHOD.key, authType.methodName.lowercase())
                 })
-                socialAuth.checkToken()
+                socialAuth?.checkToken()
             }.onFailure { exception ->
                 logger.e(throwable = exception)
                 _uiState.update { it.copy(isLoading = false) }

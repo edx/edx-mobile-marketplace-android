@@ -15,7 +15,7 @@ class OAuthHelper(
      * https://developers.facebook.com/docs/facebook-login/android/
      * https://github.com/AzureAD/microsoft-authentication-library-for-android
      */
-    internal suspend fun socialAuth(fragment: Fragment, authType: AuthType): SocialAuthResponse {
+    internal suspend fun socialAuth(fragment: Fragment, authType: AuthType): SocialAuthResponse? {
         return when (authType) {
             AuthType.PASSWORD -> throw IllegalArgumentException(PASSWORD_AUTH_NOT_SUPPORTED_MESSAGE)
             AuthType.GOOGLE -> googleAuthHelper.socialAuth(fragment.requireActivity())

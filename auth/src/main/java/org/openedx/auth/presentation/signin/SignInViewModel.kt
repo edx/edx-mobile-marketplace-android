@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.microsoft.identity.client.exception.MsalException
+import isInternetError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +25,7 @@ import org.openedx.auth.presentation.AuthAnalyticsKey
 import org.openedx.auth.presentation.AuthRouter
 import org.openedx.auth.presentation.sso.BrowserAuthHelper
 import org.openedx.auth.presentation.sso.OAuthHelper
+import org.openedx.core.BaseViewModel
 import org.openedx.core.Validator
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CalendarPreferences
@@ -37,6 +39,9 @@ import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.system.notifier.app.SignInEvent
 import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.Logger
+import org.openedx.foundation.presentation.SingleEventLiveData
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import org.openedx.core.R as CoreRes
 import retrofit2.HttpException
 import org.openedx.core.R as CoreR
@@ -113,7 +118,6 @@ class SignInViewModel(
                 _uiState.update { it.copy(loginSuccess = true) }
                 setMetadata(AuthType.PASSWORD)
                 logSignInSuccessEvent(AuthType.PASSWORD)
-                setUserId()
                 if (calendarPreferences.calendarUser != username) {
                     calendarPreferences.clearCalendarPreferences()
                     calendarInteractor.clearCalendarCachedData()
@@ -165,7 +169,7 @@ class SignInViewModel(
                     oAuthHelper.socialAuth(fragment, authType)
                 }
             }.onSuccess { socialAuthResponse ->
-                if (socialAuthResponse.accessToken.isNotEmpty()) {
+                if (socialAuthResponse?.accessToken!!.isNotEmpty()) {
                     socialAuthResponse.checkToken()
                 } else {
                     logSignInErrorEvent(authType, Exception(OAuthHelper.ACCESS_TOKEN_EMPTY_MESSAGE))
@@ -206,7 +210,7 @@ class SignInViewModel(
                     _uiState.update { it.copy(loginFailure = true) }
                 }.onSuccess {
                     _uiState.update { it.copy(loginSuccess = true) }
-                    setUserId()
+                    setMetadata(AuthType.PASSWORD)
                     appNotifier.send(SignInEvent())
                     _uiState.update { it.copy(showProgress = false) }
                 }

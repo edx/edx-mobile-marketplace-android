@@ -47,6 +47,8 @@ import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.Logger
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import java.net.UnknownHostException
 
 @ExperimentalCoroutinesApi
@@ -84,7 +86,9 @@ class SignUpViewModelTest {
             true,
             true,
             RegistrationField.Restrictions(),
-            emptyList()
+            emptyList(),
+            errorInstructions = "",
+            defaultValue = false
         ),
 
         RegistrationField(

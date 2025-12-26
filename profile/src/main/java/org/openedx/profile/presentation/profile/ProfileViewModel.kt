@@ -1,16 +1,21 @@
 package org.openedx.profile.presentation.profile
 
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import isInternetError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.openedx.core.BaseViewModel
 import org.openedx.core.R
-import org.openedx.core.extension.isInternetError
+import org.openedx.core.utils.Logger
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.profile.presentation.ProfileAnalyticsEvent
@@ -24,7 +29,7 @@ class ProfileViewModel(
     private val notifier: ProfileNotifier,
     private val analytics: ProfileAnalytics,
     val profileRouter: ProfileRouter
-) : BaseViewModel() {
+) : BaseViewModel(), LifecycleObserver {
 
     private val logger = Logger(TAG)
 

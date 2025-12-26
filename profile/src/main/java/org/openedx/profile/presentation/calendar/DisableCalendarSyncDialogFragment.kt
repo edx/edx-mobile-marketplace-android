@@ -37,7 +37,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.openedx.core.domain.model.CalendarData
 import org.openedx.core.presentation.dialog.DefaultDialogBox
 import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -159,7 +159,7 @@ private fun DisableCalendarSyncDialogView(
                 style = MaterialTheme.appTypography.bodyMedium,
                 color = MaterialTheme.appColors.textDark
             )
-            OpenEdXOutlinedButton(
+            OpenEdXOutlineBrandButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.profile_disable_syncing),
                 backgroundColor = MaterialTheme.appColors.background,

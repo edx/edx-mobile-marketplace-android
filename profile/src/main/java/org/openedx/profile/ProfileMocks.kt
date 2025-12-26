@@ -45,6 +45,9 @@ object ProfileMocks {
         ),
         faqUrl = "https://example.com/faq",
         supportEmail = "support@example.com",
-        versionName = "1.0.0"
+        versionName = "1.0.0",
+        isIAPEnabled = false,
+        feedbackFormUrl = "",
+        isPushNotificationsEnabled = false
     )
 }

@@ -29,8 +29,9 @@ import org.openedx.core.config.Config
 import org.openedx.core.domain.model.AgreementUrls
 import org.openedx.profile.ProfileMocks
 import org.openedx.core.domain.model.ProfileImage
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Account
 import org.openedx.profile.presentation.ProfileAnalytics

@@ -43,19 +43,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
-import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.Toolbar
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.settingsHeaderBackground
 import org.openedx.core.ui.statusBarsInset
 import org.koin.androidx.compose.koinViewModel
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.theme.OpenEdXTheme
+import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.appShapes
+import org.openedx.core.ui.theme.appTypography
 import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
 import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
+import org.openedx.profile.R
+import org.openedx.core.R as CoreR
 
 class CalendarFragment : Fragment() {
 
@@ -252,7 +255,7 @@ private fun CalendarView(
                                     color = MaterialTheme.appColors.textDark
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
-                                OpenEdXBrandButton(
+                                OpenEdXOutlineBrandButton(
                                     modifier = Modifier.fillMaxWidth(0.75f),
                                     text = stringResource(id = R.string.profile_set_up_calendar_sync),
                                     onClick = {
@@ -274,9 +277,11 @@ private fun CalendarView(
 @Composable
 private fun CalendarScreenPreview() {
     OpenEdXTheme {
-        CalendarScreen(
+        CalendarSetUpView(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
+            useRelativeDates = true,
             setUpCalendarSync = {},
+            onRelativeDateSwitchClick = { _ -> },
             onBackClick = {}
         )
     }

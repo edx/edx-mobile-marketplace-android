@@ -24,13 +24,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import org.openedx.core.domain.model.ProfileImage
-import org.openedx.core.R
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.profile.ProfileMocks
 import org.openedx.profile.R
+import org.openedx.core.R as CoreR
 import org.openedx.profile.domain.model.Account
 
 @Composable

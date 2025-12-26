@@ -53,6 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import org.openedx.core.AppUpdateState
 import org.openedx.core.domain.model.AgreementUrls
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.presentation.global.AppData
@@ -63,7 +64,7 @@ import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.ui.CheckingPurchasesDialog
 import org.openedx.core.ui.FakePurchasesFulfillmentCompleted
 import org.openedx.core.ui.IAPErrorDialog
-import org.openedx.core.ui.OpenEdXBrandButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.settingsHeaderBackground
@@ -72,6 +73,12 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.windowSizeValue
+import org.openedx.profile.ProfileMocks
+import org.openedx.profile.R
+import org.openedx.profile.domain.model.Configuration
 import org.openedx.profile.presentation.ui.SettingsDivider
 import org.openedx.profile.presentation.ui.SettingsItem
 import org.openedx.core.R as CoreR
@@ -212,6 +219,7 @@ internal fun SettingsScreen(
                                     SupportInfoSection(
                                         uiState = uiState,
                                         onAction = onAction,
+                                        appUpgradeEvent = appUpgradeEvent,
                                     )
 
                                     Spacer(modifier = Modifier.height(24.dp))
@@ -545,7 +553,7 @@ private fun LogoutDialog(
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.size(36.dp))
-                OpenEdXBrandButton(
+                OpenEdXOutlineBrandButton(
                     text = stringResource(id = R.string.profile_logout),
                     onClick = onLogoutClick,
                     content = {

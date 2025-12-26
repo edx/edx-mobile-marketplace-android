@@ -10,7 +10,12 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.core.domain.model.iap.IAPFlow
+import org.openedx.core.domain.model.iap.IAPFlowSource
+import org.openedx.core.presentation.dialog.IAPDialogFragment
+import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.ui.theme.OpenEdXTheme
+import org.openedx.foundation.presentation.rememberWindowSize
 
 class SettingsFragment : Fragment() {
 
@@ -28,6 +33,7 @@ class SettingsFragment : Fragment() {
                 val uiState by viewModel.uiState.collectAsState()
                 val iapUiState by viewModel.iapUiState.collectAsState()
                 val logoutSuccess by viewModel.successLogout.collectAsState(false)
+                val appUpgradeEvent by viewModel.appUpgradeEvent.collectAsState(null)
 
                 SettingsScreen(
                     windowSize = windowSize,

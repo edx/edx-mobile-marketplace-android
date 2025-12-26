@@ -64,12 +64,16 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import org.koin.androidx.compose.koinViewModel
+import org.openedx.core.extension.parcelable
 import org.openedx.core.presentation.dialog.DefaultDialogBox
+import org.openedx.core.ui.OpenEdXButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.crop
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.foundation.extension.toastMessage
 import org.openedx.profile.R
 import org.openedx.profile.presentation.calendar.NewCalendarDialogFragment.Companion.MAX_CALENDAR_TITLE_LENGTH
 import androidx.compose.ui.graphics.Color as ComposeColor
@@ -207,12 +211,12 @@ private fun NewCalendarDialog(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.appColors.textDark
             )
-            OpenEdXBrandButton(
+            OpenEdXOutlineBrandButton(
                 text = stringResource(id = R.string.profile_begin_syncing),
                 onClick = {
                     onBeginSyncingClick(
-                        calendarName.ifEmpty {
-                            NewCalendarDialogFragment.getDefaultCalendarName(
+                        calendarTitle.ifEmpty {
+                            NewCalendarDialogFragment.getDefaultCalendarTitle(
                                 context
                             )
                         },

@@ -3,7 +3,6 @@
 package org.openedx.profile.presentation.edit
 
 import android.content.res.Configuration
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
@@ -113,8 +112,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.AppDataConstants.DEFAULT_MIME_TYPE
 import org.openedx.core.domain.model.LanguageProficiency
+import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.domain.model.RegistrationField
-import org.openedx.core.extension.getFileName
 import org.openedx.core.extension.parcelable
 import org.openedx.core.extension.tagId
 import org.openedx.core.ui.AutoSizeText
@@ -135,6 +134,12 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.utils.LocaleUtils
+import org.openedx.foundation.extension.getFileName
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.profile.ProfileMocks
 import org.openedx.profile.R
 import org.openedx.profile.domain.model.Account
@@ -950,7 +955,7 @@ private fun ProfileFields(
     val lang = if (languageProficiency.isNotEmpty()) {
         LocaleUtils.getLanguageByLanguageCode(languageProficiency[0].code)
     } else ""
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+  /*  Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
 //        SelectableField(
 //            name = stringResource(id = R.string.profile_year),
 //            initialValue = mapFields[YEAR_OF_BIRTH].toString(),
@@ -960,7 +965,7 @@ private fun ProfileFields(
 //        )
     } else {
         ""
-    }
+    }*/
     Column(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {

@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.openedx.core.domain.model.CalendarData
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncState
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.settingsHeaderBackground
@@ -263,7 +263,7 @@ fun CalendarSyncSection(
 fun SyncOptionsButton(
     onChangeSyncOptionClick: () -> Unit
 ) {
-    OpenEdXOutlinedButton(
+    OpenEdXOutlineBrandButton(
         modifier = Modifier.fillMaxWidth(),
         text = stringResource(R.string.profile_change_sync_options),
         backgroundColor = MaterialTheme.appColors.background,

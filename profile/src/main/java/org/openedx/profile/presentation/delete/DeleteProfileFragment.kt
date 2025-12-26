@@ -55,10 +55,8 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.UIMessage
-import org.openedx.core.R
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.OpenEdXBrandButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.OpenEdXOutlinedTextField
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -68,6 +66,11 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.profile.R
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.profile.presentation.settings.SettingsViewModel
@@ -271,7 +274,7 @@ fun DeleteProfileScreen(
                             errorText = errorText
                         )
                         Spacer(Modifier.height(38.dp))
-                        OpenEdXBrandButton(
+                        OpenEdXOutlineBrandButton(
                             text = stringResource(id = R.string.profile_yes_delete_account),
                             enabled = uiState !is DeleteProfileFragmentUIState.Loading && password.isNotEmpty(),
                             backgroundColor = MaterialTheme.appColors.error,

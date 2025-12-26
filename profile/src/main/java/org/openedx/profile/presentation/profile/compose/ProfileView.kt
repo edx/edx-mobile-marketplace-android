@@ -36,8 +36,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.openedx.core.UIMessage
-import org.openedx.core.R
+import org.openedx.profile.R
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.Toolbar
@@ -45,8 +44,6 @@ import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.windowSizeValue
-import org.openedx.profile.R
 import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType
@@ -55,7 +52,6 @@ import org.openedx.profile.ProfileMocks
 import org.openedx.profile.presentation.profile.ProfileUIState
 import org.openedx.profile.presentation.ui.ProfileInfoSection
 import org.openedx.profile.presentation.ui.ProfileTopic
-import org.openedx.profile.presentation.ui.mockAccount
 import org.openedx.core.R as CoreR
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)

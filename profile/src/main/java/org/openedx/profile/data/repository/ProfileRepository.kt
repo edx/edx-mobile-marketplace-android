@@ -16,8 +16,7 @@ class ProfileRepository(
     private val api: ProfileApi,
     private val databaseManager: DatabaseManager,
     private val profilePreferences: ProfilePreferences,
-    private val corePreferences: CorePreferences,
-    private val databaseManager: DatabaseManager
+    private val corePreferences: CorePreferences
 ) {
 
     suspend fun getAccount(): Account {
@@ -62,8 +61,8 @@ class ProfileRepository(
                 ApiConstants.TOKEN_TYPE_REFRESH
             )
         } finally {
-            corePreferences.clear()
-            room.clearAllTables()
+            corePreferences.clearCorePreferences()
+            databaseManager.clearTables()
         }
     }
 }

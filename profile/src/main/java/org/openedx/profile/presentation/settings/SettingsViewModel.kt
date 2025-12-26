@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.ui.text.intl.Locale
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
+import isInternetError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.openedx.core.AppUpdateState
+import org.openedx.core.BaseViewModel
 import org.openedx.core.CalendarRouter
 import org.openedx.core.R
 import org.openedx.core.config.Config
@@ -22,8 +24,6 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.extension.isInternetError
-import org.openedx.core.extension.toIAPException
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.global.AppData
@@ -40,6 +40,8 @@ import org.openedx.core.system.notifier.app.RequestEnrolledCourseErrorEvent
 import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
 import org.openedx.core.utils.EmailUtil
 import org.openedx.core.utils.Logger
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Configuration
 import org.openedx.profile.presentation.ProfileAnalytics
@@ -48,6 +50,7 @@ import org.openedx.profile.presentation.ProfileAnalyticsKey
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.profile.system.notifier.account.AccountDeactivated
 import org.openedx.profile.system.notifier.profile.ProfileNotifier
+import toIAPException
 
 class SettingsViewModel(
     private val appData: AppData,
@@ -181,12 +184,12 @@ class SettingsViewModel(
     }
 
     fun appearanceSettingsClicked(fragmentManager: FragmentManager) {
-        router.navigateToAppearanceSettings(fragmentManager)
+        profileRouter.navigateToAppearanceSettings(fragmentManager)
         logProfileEvent(ProfileAnalyticsEvent.APPEARANCE_SETTING_CLICKED)
     }
 
     fun pushNotificationsSettingsClicked(fragmentManager: FragmentManager) {
-        router.navigateToPushNotificationsSettings(fragmentManager)
+        profileRouter.navigateToPushNotificationsSettings(fragmentManager)
         logProfileEvent((ProfileAnalyticsEvent.PUSH_NOTIFICATIONS_CLICKED))
     }
 

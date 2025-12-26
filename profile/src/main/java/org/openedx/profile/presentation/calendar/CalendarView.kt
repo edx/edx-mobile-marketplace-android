@@ -20,9 +20,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.utils.TimeUtils
 import org.openedx.profile.R
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -34,9 +35,13 @@ fun OptionsSection(
     val textDescription = if (isRelativeDatesEnabled) {
         stringResource(R.string.profile_show_relative_dates)
     } else {
+        val formatted = SimpleDateFormat(
+            "dd MMM yyyy",
+            Locale.getDefault()
+        ).format(Date())
         stringResource(
             R.string.profile_show_full_dates,
-            TimeUtils.formatToString(context, Date(), false)
+            formatted
         )
     }
     Column {

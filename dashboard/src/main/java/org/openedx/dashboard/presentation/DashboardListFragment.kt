@@ -75,12 +75,17 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.openedx.core.AppUpdateState
+import org.openedx.core.domain.model.Certificate
+import org.openedx.core.domain.model.CourseAssignments
+import org.openedx.core.domain.model.CourseSharingUtmParameters
+import org.openedx.core.domain.model.CourseStatus
+import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
 import org.openedx.core.domain.model.Progress
 import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.presentation.global.app_upgrade.AppUpgradeRecommendedBox
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
@@ -89,8 +94,6 @@ import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.PurchasesFulfillmentCompletedDialog
 import org.openedx.core.ui.UpgradeErrorDialog
 import org.openedx.core.ui.UpgradeToAccessView
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -444,6 +447,7 @@ private fun CourseItem(
             )
         )
     }
+    val imageUrl = apiHostUrl + enrolledCourse.course.courseImage
     val context = LocalContext.current
     Surface(
         modifier = Modifier
@@ -610,7 +614,6 @@ private fun DashboardListViewPreview() {
                     mockCourseEnrolled,
                     mockCourseEnrolled
                 ), isIAPEnabled = false
-                DashboardMocks.enrolledCourses(1)
             ),
             uiMessage = null,
             iapUiState = null,
@@ -636,7 +639,6 @@ private fun DashboardListViewTabletPreview() {
             windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
             apiHostUrl = "http://localhost:8000",
             state = DashboardUIState.Courses(
-                DashboardMocks.enrolledCourses(1)
                 courses = listOf(
                     mockCourseEnrolled,
                     mockCourseEnrolled,
@@ -657,11 +659,6 @@ private fun DashboardListViewTabletPreview() {
             onItemClick = {},
             onIAPAction = { _, _, _ -> },
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters()
-            onReloadClick = {},
-            hasInternetConnection = true,
-            refreshing = false,
-            canLoadMore = false,
-            paginationCallback = {},
         )
     }
 }
@@ -683,6 +680,9 @@ private fun EmptyStatePreview() {
             refreshing = false,
             canLoadMore = false,
             paginationCallback = {},
+            iapUiState = TODO(),
+            onIAPAction = TODO(),
+            appUpgradeParameters = TODO(),
         )
     }
 }

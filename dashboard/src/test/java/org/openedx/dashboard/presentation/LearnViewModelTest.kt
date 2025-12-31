@@ -43,14 +43,22 @@ class LearnViewModelTest {
 
     @Test
     fun `onSettingsClick calls navigateToSettings`() = runTest {
-        val viewModel = LearnViewModel(LearnTab.COURSES.name, config, dashboardRouter, analytics)
+        val viewModel = LearnViewModel(
+            LearnTab.COURSES.name, config, dashboardRouter, analytics,
+            pushManager = TODO(),
+            pushNotifier = TODO()
+        )
         viewModel.onSettingsClick(fragmentManager)
         verify { dashboardRouter.navigateToSettings(fragmentManager) }
     }
 
     @Test
     fun `getDashboardFragment returns correct fragment based on dashboardType`() = runTest {
-        val viewModel = LearnViewModel(LearnTab.COURSES.name, config, dashboardRouter, analytics)
+        val viewModel = LearnViewModel(
+            LearnTab.COURSES.name, config, dashboardRouter, analytics,
+            pushManager = TODO(),
+            pushNotifier = TODO()
+        )
         DashboardConfig.DashboardType.entries.forEach { type ->
             every { config.getDashboardConfig().getType() } returns type
             val dashboardFragment = viewModel.getDashboardFragment
@@ -60,21 +68,33 @@ class LearnViewModelTest {
 
     @Test
     fun `getProgramFragment returns correct program fragment`() = runTest {
-        val viewModel = LearnViewModel(LearnTab.COURSES.name, config, dashboardRouter, analytics)
+        val viewModel = LearnViewModel(
+            LearnTab.COURSES.name, config, dashboardRouter, analytics,
+            pushManager = TODO(),
+            pushNotifier = TODO()
+        )
         viewModel.getProgramFragment
         verify { dashboardRouter.getProgramFragment() }
     }
 
     @Test
     fun `isProgramTypeWebView returns correct view type`() = runTest {
-        val viewModel = LearnViewModel(LearnTab.COURSES.name, config, dashboardRouter, analytics)
+        val viewModel = LearnViewModel(
+            LearnTab.COURSES.name, config, dashboardRouter, analytics,
+            pushManager = TODO(),
+            pushNotifier = TODO()
+        )
         every { config.getProgramConfig().isViewTypeWebView() } returns true
         assertTrue(viewModel.isProgramTypeWebView)
     }
 
     @Test
     fun `logMyCoursesTabClickedEvent logs correct analytics event`() = runTest {
-        val viewModel = LearnViewModel(LearnTab.COURSES.name, config, dashboardRouter, analytics)
+        val viewModel = LearnViewModel(
+            LearnTab.COURSES.name, config, dashboardRouter, analytics,
+            pushManager = TODO(),
+            pushNotifier = TODO()
+        )
         viewModel.logMyCoursesTabClickedEvent()
 
         verify {
@@ -89,7 +109,11 @@ class LearnViewModelTest {
 
     @Test
     fun `logMyProgramsTabClickedEvent logs correct analytics event`() = runTest {
-        val viewModel = LearnViewModel(LearnTab.COURSES.name, config, dashboardRouter, analytics)
+        val viewModel = LearnViewModel(
+            LearnTab.COURSES.name, config, dashboardRouter, analytics,
+            pushManager = TODO(),
+            pushNotifier = TODO()
+        )
         viewModel.logMyProgramsTabClickedEvent()
 
         verify {

@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import isInternetError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
@@ -25,14 +27,12 @@ import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.toPurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.extension.isInternetError
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPEventLogger
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.CourseDataUpdated
@@ -49,6 +49,9 @@ import org.openedx.core.system.notifier.app.RequestEnrolledCourseEvent
 import org.openedx.core.utils.Logger
 import org.openedx.dashboard.domain.CourseStatusFilter
 import org.openedx.dashboard.domain.interactor.DashboardInteractor
+import org.openedx.foundation.presentation.SingleEventLiveData
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 
 
 @SuppressLint("StaticFieldLeak")

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -35,7 +34,8 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -47,7 +47,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -69,6 +68,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.koin.androidx.compose.koinViewModel
@@ -78,21 +78,36 @@ import org.openedx.core.domain.model.Certificate
 import org.openedx.core.domain.model.CourseAssignments
 import org.openedx.core.domain.model.CourseDateBlock
 import org.openedx.core.domain.model.CourseDatesCalendarSync
-import org.openedx.Lock
 import org.openedx.core.domain.model.CourseEnrollments
+import org.openedx.core.domain.model.CourseSharingUtmParameters
+import org.openedx.core.domain.model.CourseStatus
+import org.openedx.core.domain.model.CoursewareAccess
+import org.openedx.core.domain.model.DashboardCourseList
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.domain.model.Progress
+import org.openedx.core.exception.iap.IAPException
+import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OfflineModeDialog
+import org.openedx.core.ui.OpenEdXButton
+import org.openedx.core.ui.PurchasesFulfillmentCompletedDialog
 import org.openedx.core.ui.TextIcon
+import org.openedx.core.ui.UpgradeToAccessView
+import org.openedx.core.ui.UpgradeToAccessViewType
+import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.utils.TimeUtils
 import org.openedx.dashboard.R
+import org.openedx.foundation.extension.toImageLink
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.rememberWindowSize
 import java.util.Date
 import org.openedx.core.R as CoreR
 
@@ -106,13 +121,6 @@ fun DashboardGalleryView(
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val uiState by viewModel.uiState.collectAsState(DashboardGalleryUIState.Loading)
     val iapUiState by viewModel.iapUiState.collectAsState(IAPUIState.Clear)
-
-    val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
-    LaunchedEffect(lifecycleState) {
-        if (lifecycleState == Lifecycle.State.RESUMED) {
-            viewModel.updateCourses(isUpdating = false)
-        }
-    }
 
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
     LaunchedEffect(lifecycleState) {
@@ -202,24 +210,6 @@ private fun DashboardGalleryView(
     )
     var isInternetConnectionShown by rememberSaveable {
         mutableStateOf(false)
-    }
-
-    val contentWidth by remember(key1 = windowSize) {
-        mutableStateOf(
-            windowSize.windowSizeValue(
-                expanded = Modifier.widthIn(Dp.Unspecified, 560.dp),
-                compact = Modifier.fillMaxWidth(),
-            )
-        )
-    }
-
-    val contentPadding by remember(key1 = windowSize) {
-        mutableStateOf(
-            windowSize.windowSizeValue(
-                expanded = PaddingValues(0.dp),
-                compact = PaddingValues(horizontal = 16.dp)
-            )
-        )
     }
 
     Scaffold(
@@ -356,15 +346,16 @@ private fun DashboardGalleryView(
 private fun UserCourses(
     modifier: Modifier = Modifier,
     userCourses: CourseEnrollments,
-    contentPadding: PaddingValues,
     apiHostUrl: String,
     openCourse: (enrolledCourse: EnrolledCourse, source: ActionSource, isPrimaryCourse: Boolean) -> Unit,
     navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
     onViewAllClick: (isCardClicked: Boolean) -> Unit,
     resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
+    onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
     Column(
         modifier = modifier
+            .padding(vertical = 12.dp)
     ) {
         val primaryCourse = userCourses.primary
         if (primaryCourse != null) {
@@ -399,16 +390,11 @@ private fun SecondaryCourses(
     courseCount: Int,
     hasNextPage: Boolean,
     apiHostUrl: String,
-    contentPadding: PaddingValues,
     onCourseClick: (EnrolledCourse) -> Unit,
     onViewAllClick: (isCardClicked: Boolean) -> Unit
 ) {
     val windowSize = rememberWindowSize()
-    val itemsCount = if (windowSize.isTablet) {
-        TABLET_COURSE_LIST_ITEM_COUNT
-    } else {
-        MOBILE_COURSE_LIST_ITEM_COUNT
-    }
+    val itemsCount = if (windowSize.isTablet) 7 else 5
     val rows = if (windowSize.isTablet) 2 else 1
     val height = if (windowSize.isTablet) 322.dp else 152.dp
     val items = courses.take(itemsCount)
@@ -421,10 +407,8 @@ private fun SecondaryCourses(
         TextIcon(
             modifier = Modifier.padding(horizontal = 18.dp),
             text = stringResource(R.string.dashboard_view_all_with_count, courseCount + 1),
-            modifier = Modifier.padding(contentPadding),
-            text = stringResource(R.string.dashboard_view_all_with_count, courses.size + 1),
             textStyle = MaterialTheme.appTypography.titleSmall,
-            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            icon = Icons.Default.ChevronRight,
             color = MaterialTheme.appColors.textDark,
             iconModifier = Modifier.size(22.dp),
             onClick = {
@@ -436,7 +420,7 @@ private fun SecondaryCourses(
                 .fillMaxSize()
                 .height(height),
             rows = GridCells.Fixed(rows),
-            contentPadding = contentPadding,
+            contentPadding = PaddingValues(horizontal = 18.dp),
             content = {
                 items(items) {
                     CourseListItem(
@@ -591,8 +575,8 @@ private fun AssignmentItem(
             }
         }
         Icon(
-            modifier = Modifier.size(22.dp),
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            modifier = Modifier.size(16.dp),
+            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
             tint = MaterialTheme.appColors.textDark,
             contentDescription = null
         )
@@ -602,18 +586,18 @@ private fun AssignmentItem(
 @Composable
 private fun PrimaryCourseCard(
     isIAPEnabled: Boolean,
-    modifier: Modifier = Modifier,
     primaryCourse: EnrolledCourse,
     apiHostUrl: String,
-    useRelativeDates: Boolean,
-    navigateToDates: (EnrolledCourse) -> Unit,
-    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String) -> Unit,
-    openCourse: (EnrolledCourse) -> Unit,
+    navigateToDates: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
+    resumeBlockId: (enrolledCourse: EnrolledCourse, blockId: String, source: ActionSource) -> Unit,
+    openCourse: (enrolledCourse: EnrolledCourse, source: ActionSource) -> Unit,
+    onIAPAction: (IAPAction, EnrolledCourse?, IAPException?) -> Unit = { _, _, _ -> },
 ) {
-
     val orientation = LocalConfiguration.current.orientation
+
     Card(
-        modifier = modifier
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
             .fillMaxWidth()
             .padding(2.dp),
         backgroundColor = MaterialTheme.appColors.cardViewBackground,
@@ -915,8 +899,8 @@ private fun ResumeButton(
             }
         }
         Icon(
-            modifier = Modifier.size(22.dp),
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            modifier = Modifier.size(16.dp),
+            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
             tint = MaterialTheme.appColors.primaryButtonText,
             contentDescription = null
         )
@@ -972,7 +956,7 @@ private fun FindACourseButton(
     modifier: Modifier = Modifier,
     findACourseClick: () -> Unit
 ) {
-    OpenEdXBrandButton(
+    OpenEdXButton(
         modifier = modifier
             .padding(horizontal = 8.dp, vertical = 20.dp),
         text = stringResource(id = R.string.dashboard_find_a_course),

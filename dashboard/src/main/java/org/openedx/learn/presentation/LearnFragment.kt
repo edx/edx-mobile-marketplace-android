@@ -5,6 +5,7 @@ import android.view.View
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -35,14 +37,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.viewpager2.widget.ViewPager2
 import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.adapter.NavigationFragmentAdapter
 import org.openedx.core.presentation.global.viewBinding
-import org.openedx.core.ui.MainToolbar
 import org.openedx.core.ui.crop
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.statusBarsInset
@@ -73,8 +73,7 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
                     when (uiState.learnType) {
                         LearnType.COURSES -> 0
                         LearnType.PROGRAMS -> 1
-                    },
-                    false
+                    }, false
                 )
                 Header(
                     uiState = uiState,
@@ -84,11 +83,6 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
                     onNotificationBadgeClick = {
                         viewModel.onNotificationBadgeClick(requireActivity().supportFragmentManager)
                     }
-                    fragmentManager = requireParentFragment().parentFragmentManager,
-                    selectedLearnType = uiState.learnType,
-                    onUpdateLearnType = { learnType ->
-                        viewModel.updateLearnType(learnType)
-                    },
                 )
             }
         }
@@ -99,8 +93,8 @@ class LearnFragment : Fragment(R.layout.fragment_learn) {
         binding.viewPager.offscreenPageLimit = 2
 
         adapter = NavigationFragmentAdapter(this).apply {
-            addFragment { viewModel.getDashboardFragment }
-            addFragment { viewModel.getProgramFragment }
+            addFragment({ viewModel.getDashboardFragment })
+            addFragment({ viewModel.getProgramFragment })
         }
         binding.viewPager.adapter = adapter
         binding.viewPager.setUserInputEnabled(false)
@@ -125,9 +119,6 @@ private fun Header(
     uiState: LearnUIState,
     onUpdateLearnType: (LearnType) -> Unit,
     onNotificationBadgeClick: () -> Unit,
-    fragmentManager: FragmentManager,
-    selectedLearnType: LearnType,
-    onUpdateLearnType: (LearnType) -> Unit
 ) {
     val viewModel: LearnViewModel = koinViewModel()
     val windowSize = rememberWindowSize()
@@ -148,7 +139,7 @@ private fun Header(
             .then(contentWidth),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        MainToolbar(
+        Title(
             label = stringResource(id = R.string.dashboard_learn),
             showNotificationIcon = uiState.showNotificationIcon,
             hasUnreadNotifications = uiState.hasUnreadNotifications,
@@ -205,9 +196,6 @@ private fun Title(
                     contentDescription = stringResource(id = R.string.dashboard_notification_badge)
                 )
             }
-                selectedLearnType = selectedLearnType,
-                onUpdateLearnType = onUpdateLearnType
-            )
         }
     }
 }
@@ -297,10 +285,6 @@ private fun HeaderPreview() {
         Title(label = stringResource(id = R.string.dashboard_learn),
             showNotificationIcon = true,
             onNotificationBadgeClick = {})
-        MainToolbar(
-            label = stringResource(id = R.string.dashboard_learn),
-            onSettingsClick = {}
-        )
     }
 }
 

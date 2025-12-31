@@ -17,6 +17,10 @@ import org.openedx.core.domain.model.CourseSharingUtmParameters
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.domain.model.EnrolledCourseData
+import org.openedx.core.domain.model.Progress
+import org.openedx.core.presentation.iap.IAPUIState
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
 import java.util.Date
 
 class MyCoursesScreenTest {
@@ -58,7 +62,8 @@ class MyCoursesScreenTest {
             courseHandouts = "",
             discussionUrl = "",
             videoOutline = "",
-            isSelfPaced = false
+            isSelfPaced = false,
+            orgLogo = TODO()
         ),
         progress = Progress(0, 0),
         courseStatus = null,

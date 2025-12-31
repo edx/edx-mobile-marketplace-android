@@ -192,6 +192,10 @@ class AllEnrolledCoursesViewModel(
         }
     }
 
+    private fun dashboardCourseClickedEvent(courseId: String, courseName: String) {
+        analytics.dashboardCourseClickedEvent(courseId, courseName)
+    }
+
     private fun collectDiscoveryNotifier() {
         viewModelScope.launch {
             discoveryNotifier.notifier.collect {
@@ -214,7 +218,7 @@ class AllEnrolledCoursesViewModel(
         courseId: String,
         courseName: String,
     ) {
-        logCourseCardClickedEvent(courseId)
+        dashboardCourseClickedEvent(courseId, courseName)
         dashboardRouter.navigateToCourseOutline(
             fm = fragmentManager,
             courseId = courseId,
@@ -228,9 +232,6 @@ class AllEnrolledCoursesViewModel(
             params = buildMap {
                 put(DashboardAnalyticsKey.FILTER.key, filter)
             }
-            fm = fragmentManager,
-            courseId = courseId,
-            courseTitle = courseName
         )
     }
 

@@ -22,6 +22,7 @@ enum class DashboardAnalyticsEvent(val eventName: String, val biValue: String) {
     SECONDARY_COURSE_CARD_CLICKED(
         "Learn:Secondary Course Card Clicked",
         "edx.bi.app.learn.secondary_course.clicked"
+    ),
     MY_COURSES(
         "Learn:My Courses",
         "edx.bi.app.main_dashboard.learn.my_course"
@@ -45,6 +46,7 @@ enum class DashboardAnalyticsEvent(val eventName: String, val biValue: String) {
     COURSE_CARD_CLICKED(
         "MyCourses:Course Card Clicked",
         "edx.bi.app.my_courses.course_card.clicked"
+    ),
     MY_PROGRAMS(
         "Learn:My Programs",
         "edx.bi.app.main_dashboard.learn.my_programs"

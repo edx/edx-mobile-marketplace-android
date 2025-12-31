@@ -8,6 +8,7 @@ interface AllEnrolledCoursesAction {
     object SwipeRefresh : AllEnrolledCoursesAction
     object EndOfPage : AllEnrolledCoursesAction
     object Back : AllEnrolledCoursesAction
+    object Search : AllEnrolledCoursesAction
     data class OpenCourse(val enrolledCourse: EnrolledCourse) : AllEnrolledCoursesAction
     data class FilterChange(val courseStatusFilter: CourseStatusFilter?) : AllEnrolledCoursesAction
 }

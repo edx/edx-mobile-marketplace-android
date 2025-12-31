@@ -1,7 +1,6 @@
 package org.openedx.courses.presentation
 
 import android.content.res.Configuration
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -71,36 +70,26 @@ import androidx.fragment.app.FragmentManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.koin.androidx.compose.koinViewModel
-import org.openedx.core.UIMessage
-import org.openedx.core.domain.model.Certificate
-import org.openedx.core.domain.model.CourseAssignments
-import org.openedx.core.domain.model.CourseSharingUtmParameters
-import org.openedx.core.domain.model.CourseStatus
-import org.openedx.core.domain.model.CoursewareAccess
+import org.openedx.Lock
+import org.openedx.core.R
 import org.openedx.core.domain.model.EnrolledCourse
-import org.openedx.core.domain.model.EnrolledCourseData
-import org.openedx.core.domain.model.Progress
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.RoundTabsBar
 import org.openedx.core.ui.displayCutoutForLandscape
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.TimeUtils
 import org.openedx.courses.presentation.AllEnrolledCoursesFragment.Companion.LOAD_MORE_THRESHOLD
 import org.openedx.courses.presentation.AllEnrolledCoursesFragment.Companion.MOBILE_GRID_COLUMNS
 import org.openedx.courses.presentation.AllEnrolledCoursesFragment.Companion.TABLET_GRID_COLUMNS
 import org.openedx.dashboard.DashboardMocks
-import org.openedx.dashboard.R
 import org.openedx.dashboard.domain.CourseStatusFilter
-import org.openedx.foundation.extension.toImageLink
 import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.rememberWindowSize
 import org.openedx.foundation.presentation.windowSizeValue
@@ -138,6 +127,10 @@ fun AllEnrolledCoursesView(
                     fragmentManager.popBackStack()
                 }
 
+                AllEnrolledCoursesAction.Search -> {
+                    viewModel.navigateToCourseSearch(fragmentManager)
+                }
+
                 is AllEnrolledCoursesAction.OpenCourse -> {
                     with(action.enrolledCourse) {
                         viewModel.navigateToCourseOutline(
@@ -149,25 +142,22 @@ fun AllEnrolledCoursesView(
                 }
 
                 is AllEnrolledCoursesAction.FilterChange -> {
-                    viewModel.changeFilter(action.courseStatusFilter)
+                    viewModel.getCourses(action.courseStatusFilter)
                 }
             }
         }
     )
 }
 
-@OptIn(
-    ExperimentalMaterialApi::class,
-    ExperimentalComposeUiApi::class,
-    ExperimentalFoundationApi::class
-)
+@Suppress("MaximumLineLength")
+@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun AllEnrolledCoursesView(
     apiHostUrl: String,
     state: AllEnrolledCoursesUIState,
     uiMessage: UIMessage?,
     hasInternetConnection: Boolean,
-    onAction: (AllEnrolledCoursesAction) -> Unit,
+    onAction: (AllEnrolledCoursesAction) -> Unit
 ) {
     val windowSize = rememberWindowSize()
     val layoutDirection = LocalLayoutDirection.current
@@ -283,7 +273,10 @@ private fun AllEnrolledCoursesView(
                                             layoutDirection
                                         ),
                                         end = contentPaddings.calculateEndPadding(layoutDirection)
-                                    )
+                                    ),
+                                onSearchClick = {
+                                    onAction(AllEnrolledCoursesAction.Search)
+                                }
                             )
                             RoundTabsBar(
                                 modifier = Modifier.align(Alignment.Start),
@@ -309,71 +302,34 @@ private fun AllEnrolledCoursesView(
 
                                 !state.courses.isNullOrEmpty() -> {
                                     Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.TopCenter
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(contentPaddings),
+                                        contentAlignment = Alignment.Center
                                     ) {
                                         Column(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ) {
                                             LazyVerticalGrid(
-                                                modifier = Modifier
-                                                    .fillMaxHeight(),
+                                                modifier = Modifier.fillMaxHeight(),
                                                 state = scrollState,
                                                 columns = GridCells.Fixed(columns),
                                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                                content = {
-                                                    items(state.courses) { course ->
-                                                        CourseItem(
-                                                            course = course,
-                                                            apiHostUrl = apiHostUrl,
-                                                            onClick = {
-                                                                onAction(
-                                                                    AllEnrolledCoursesAction.OpenCourse(
-                                                                        it
-                                                                    )
-                                                                )
-                                                            }
-                                                        )
-                                                    }
-                                                    item(span = { GridItemSpan(columns) }) {
-                                                        if (state.canLoadMore) {
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .height(180.dp),
-                                                                contentAlignment = Alignment.Center
-                                                            ) {
-                                                                CircularProgressIndicator(
-                                                                    color = MaterialTheme.appColors.primary
-                                                                )
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                        LazyVerticalGrid(
-                                            modifier = Modifier
-                                                .fillMaxHeight(),
-                                            state = scrollState,
-                                            columns = GridCells.Fixed(columns),
-                                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                            contentPadding = contentPaddings,
-                                            content = {
+                                                contentPadding = contentPaddings
+                                            ) {
                                                 items(state.courses) { course ->
                                                     CourseItem(
                                                         course = course,
                                                         apiHostUrl = apiHostUrl,
                                                         onClick = {
-                                                            onAction(
-                                                                AllEnrolledCoursesAction.OpenCourse(
-                                                                    it
-                                                                )
-                                                            )
+                                                            onAction(AllEnrolledCoursesAction.OpenCourse(it))
                                                         }
                                                     )
                                                 }
+
+                                                // Load more indicator
                                                 item(span = { GridItemSpan(columns) }) {
                                                     if (state.canLoadMore) {
                                                         Box(
@@ -389,13 +345,11 @@ private fun AllEnrolledCoursesView(
                                                     }
                                                 }
                                             }
-                                        )
-                                        if (scrollState.shouldLoadMore(
-                                                firstVisibleIndex,
-                                                LOAD_MORE_THRESHOLD
-                                            )
-                                        ) {
-                                            onAction(AllEnrolledCoursesAction.EndOfPage)
+
+                                            // Trigger loading more when near end
+                                            if (scrollState.shouldLoadMore(firstVisibleIndex, LOAD_MORE_THRESHOLD)) {
+                                                onAction(AllEnrolledCoursesAction.EndOfPage)
+                                            }
                                         }
                                     }
                                 }
@@ -517,9 +471,9 @@ fun CourseItem(
                     maxLines = 2
                 )
             }
-//            if (!course.course.coursewareAccess?.errorCode.isNullOrEmpty()) {
-//                Lock()
-//            }
+            if (!course.course.coursewareAccess?.errorCode.isNullOrEmpty()) {
+                Lock()
+            }
         }
     }
 }
@@ -527,16 +481,31 @@ fun CourseItem(
 @Composable
 fun Header(
     modifier: Modifier = Modifier,
+    onSearchClick: () -> Unit
 ) {
     Box(
         modifier = modifier.fillMaxWidth()
     ) {
         Text(
             modifier = Modifier.align(Alignment.CenterStart),
-            text = stringResource(id = R.string.dashboard_all_courses),
+            text = stringResource(id = org.openedx.dashboard.R.string.dashboard_all_courses),
             color = MaterialTheme.appColors.textDark,
             style = MaterialTheme.appTypography.headlineBold
         )
+        IconButton(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .offset(x = 12.dp),
+            onClick = {
+                onSearchClick()
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+                tint = MaterialTheme.appColors.textDark
+            )
+        }
     }
 }
 
@@ -553,7 +522,7 @@ fun EmptyState(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.dashboard_ic_book),
+                painter = painterResource(id = R.drawable.core_ic_book),
                 tint = MaterialTheme.appColors.textFieldBorder,
                 contentDescription = null
             )
@@ -563,7 +532,7 @@ fun EmptyState(
                     .testTag("txt_empty_state_title")
                     .fillMaxWidth(),
                 text = stringResource(
-                    id = R.string.dashboard_no_status_courses,
+                    id = org.openedx.dashboard.R.string.dashboard_no_status_courses,
                     stringResource(currentCourseStatus.labelResId)
                 ),
                 color = MaterialTheme.appColors.textDark,
@@ -615,46 +584,3 @@ private fun AllEnrolledCoursesPreview() {
         )
     }
 }
-
-private val mockCourseAssignments = CourseAssignments(null, emptyList())
-private val mockCourseEnrolled = EnrolledCourse(
-    auditAccessExpires = Date(),
-    created = "created",
-    certificate = Certificate(""),
-    mode = "mode",
-    isActive = true,
-    progress = Progress.DEFAULT_PROGRESS,
-    courseStatus = CourseStatus("", emptyList(), "", ""),
-    courseAssignments = mockCourseAssignments,
-    course = EnrolledCourseData(
-        id = "id",
-        name = "name",
-        number = "",
-        org = "Org",
-        orgLogo = "",
-        start = Date(),
-        startDisplay = "",
-        startType = "",
-        end = Date(),
-        upgradeDeadline = "",
-        subscriptionId = "",
-        coursewareAccess = CoursewareAccess(
-            false,
-            "204",
-            "",
-            "",
-            "",
-            ""
-        ),
-        media = null,
-        courseImage = "",
-        courseAbout = "",
-        courseSharingUtmParameters = CourseSharingUtmParameters("", ""),
-        courseUpdates = "",
-        courseHandouts = "",
-        discussionUrl = "",
-        videoOutline = "",
-        isSelfPaced = false
-    ),
-    productInfo = null
-)

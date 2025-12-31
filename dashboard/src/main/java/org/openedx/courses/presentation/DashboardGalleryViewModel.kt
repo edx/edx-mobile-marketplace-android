@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
+import isInternetError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.model.CourseEnrollments
@@ -26,14 +28,12 @@ import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.toPurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.extension.isInternetError
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPEventLogger
 import org.openedx.core.presentation.iap.IAPRequestType
 import org.openedx.core.presentation.iap.IAPUIState
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.CourseDataUpdated
@@ -56,7 +56,9 @@ import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
 import org.openedx.dashboard.presentation.DashboardAnalyticsKey
 import org.openedx.dashboard.presentation.DashboardRouter
 import org.openedx.dashboard.presentation.PrimaryCourseCardAction
-
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.system.ResourceManager
 @SuppressLint("StaticFieldLeak")
 class DashboardGalleryViewModel(
     private val context: Context,
@@ -152,20 +154,6 @@ class DashboardGalleryViewModel(
                     }
                 } else {
                     _uiState.value =
-                        DashboardGalleryUIState.Courses(
-                            cachedCourseEnrollments.mapToDomain(),
-                            corePreferences.isRelativeDatesEnabled
-                        )
-                }
-                val cachedCourseEnrollments = fileUtil.getObjectFromFile<CourseEnrollments>()
-                if (cachedCourseEnrollments == null) {
-                    if (networkConnection.isOnline()) {
-                        _uiState.value = DashboardGalleryUIState.Loading
-                    } else {
-                        _uiState.value = DashboardGalleryUIState.Empty
-                    }
-                } else {
-                    _uiState.value =
                         DashboardGalleryUIState.Courses(cachedCourseEnrollments.mapToDomain(), true)
                 }
                 if (networkConnection.isOnline()) {
@@ -236,7 +224,6 @@ class DashboardGalleryViewModel(
         isUpdating: Boolean = true,
         isIAPFlow: Boolean = false
     ) {
-    fun updateCourses(isUpdating: Boolean = true) {
         if (isLoading) {
             return
         }
@@ -246,8 +233,6 @@ class DashboardGalleryViewModel(
 
     fun refreshPushBadgeCount() {
         viewModelScope.launch { pushNotifier.send(PushEvent.RefreshBadgeCount) }
-        _updating.value = isUpdating
-        getCourses()
     }
 
     fun navigateToDiscovery() {

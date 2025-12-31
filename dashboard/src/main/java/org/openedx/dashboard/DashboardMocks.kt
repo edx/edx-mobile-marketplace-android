@@ -34,11 +34,12 @@ object DashboardMocks {
         name = "Introduction to Testing",
         number = "CS101",
         org = "OpenEdX",
+        orgLogo = "",
         start = Date(),
         startDisplay = "Jan 01",
         startType = "",
         end = Date(),
-        dynamicUpgradeDeadline = "",
+        upgradeDeadline = "",
         subscriptionId = "",
         coursewareAccess = CoursewareAccess(
             hasAccess = true,
@@ -73,7 +74,8 @@ object DashboardMocks {
             lastVisitedBlockId = "",
             lastVisitedUnitDisplayName = "Unit name"
         ),
-        courseAssignments = courseAssignments
+        courseAssignments = courseAssignments,
+        productInfo = TODO()
     )
 
     fun enrolledCourses(count: Int) = List(count) { enrolledCourse }

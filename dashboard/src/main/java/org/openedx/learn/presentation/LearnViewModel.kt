@@ -1,7 +1,15 @@
 package org.openedx.learn.presentation
 
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.openedx.DashboardNavigator
+import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.PushEvent
@@ -11,8 +19,8 @@ import org.openedx.dashboard.presentation.DashboardAnalytics
 import org.openedx.dashboard.presentation.DashboardAnalyticsEvent
 import org.openedx.dashboard.presentation.DashboardAnalyticsKey
 import org.openedx.dashboard.presentation.DashboardRouter
-
 import org.openedx.learn.LearnType
+
 class LearnViewModel(
     openTab: String,
     private val config: Config,
@@ -21,18 +29,6 @@ class LearnViewModel(
     private val pushManager: PushGlobalManager,
     private val pushNotifier: PushNotifier
 ) : BaseViewModel() {
-    private val _uiState = MutableStateFlow(
-        LearnUIState(
-            if (openTab == LearnTab.PROGRAMS.name) {
-                LearnType.PROGRAMS
-            } else {
-                LearnType.COURSES
-            }
-        )
-    )
-
-    val uiState: StateFlow<LearnUIState>
-        get() = _uiState.asStateFlow()
 
     private val logger = Logger(TAG)
 
@@ -52,6 +48,10 @@ class LearnViewModel(
 
     private val dashboardType get() = config.getDashboardConfig().getType()
     val isProgramTypeWebView get() = config.getProgramConfig().isViewTypeWebView()
+
+    fun onSettingsClick(fragmentManager: FragmentManager) {
+        dashboardRouter.navigateToSettings(fragmentManager)
+    }
 
     val getDashboardFragment get() = DashboardNavigator(dashboardType).getDashboardFragment()
 
@@ -76,6 +76,15 @@ class LearnViewModel(
                 logTabClickedEvent(learnType)
             }
         }
+    }
+
+
+    fun logMyCoursesTabClickedEvent() {
+        logScreenEvent(DashboardAnalyticsEvent.MY_COURSES)
+    }
+
+    fun logMyProgramsTabClickedEvent() {
+        logScreenEvent(DashboardAnalyticsEvent.MY_PROGRAMS)
     }
 
     private fun checkNotificationCount() {

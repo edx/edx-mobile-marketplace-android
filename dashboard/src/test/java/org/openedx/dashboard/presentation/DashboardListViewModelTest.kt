@@ -35,7 +35,6 @@ import org.openedx.core.domain.model.DashboardCourseList
 import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.domain.model.Pagination
 import org.openedx.core.presentation.IAPAnalytics
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.CourseDataUpdated

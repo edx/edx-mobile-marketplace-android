@@ -168,6 +168,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             this.player = player
             this.setShowNextButton(false)
             this.setShowPreviousButton(false)
+            this.controllerHideOnTouch = false
             this.setFullscreenButtonClickListener {
                 if (viewModel.enterFullscreen()) {
                     VideoFullScreenFragment.newInstance()
@@ -199,10 +200,12 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private fun showVideoControllerIndefinitely(show: Boolean) {
         if (show) {
             binding.playerView.controllerAutoShow = false
-            binding.playerView.controllerShowTimeoutMs = 0
+            binding.playerView.controllerShowTimeoutMs =0
+            binding.playerView.controllerHideOnTouch = true
         } else {
             binding.playerView.controllerAutoShow = true
-            binding.playerView.controllerShowTimeoutMs = 2000
+            binding.playerView.controllerShowTimeoutMs = 1000
+            binding.playerView.controllerHideOnTouch = false
         }
         binding.playerView.showController()
     }

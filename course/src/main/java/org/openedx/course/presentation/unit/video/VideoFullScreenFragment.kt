@@ -34,9 +34,12 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
@@ -94,6 +97,8 @@ class VideoFullScreenFragment : DialogFragment() {
         }
     }
 
+
+
     @androidx.annotation.OptIn(UnstableApi::class)
     @Composable
     private fun PlayerComposeView() {
@@ -122,6 +127,7 @@ class VideoFullScreenFragment : DialogFragment() {
                 .systemBarsPadding()
         ) {
             val context = LocalContext.current
+            var state  = false
             val playerView = remember {
                 PlayerView(context).apply {
                     player = viewModel.exoPlayer
@@ -135,10 +141,36 @@ class VideoFullScreenFragment : DialogFragment() {
                         player = viewModel.exoPlayer!!,
                         scope = scope,
                         onBadgeVisibilityChange = { showDoubleSpeedBadge = it },
-                    )
-                }
-            }
 
+                        )
+
+                    viewModel.state.onEach {
+                        when {
+                            it.activePlayerType == PlayerType.EXO_REGULAR -> {
+                                state=false
+                            }
+                            it.activePlayerType == PlayerType.CHROME_CAST -> {
+                                state=true
+                            }
+
+                            it.isVideoEnded && !appReviewManager.isDialogShowed -> {
+                                appReviewManager.tryToOpenRateDialog()
+                            }
+                        }
+                    }.launchIn(viewLifecycleOwner.lifecycleScope)
+                    if (state) {
+                        controllerAutoShow = false
+                        controllerShowTimeoutMs = 0
+                        controllerHideOnTouch = false
+                    } else {
+                        controllerAutoShow = false
+                        controllerShowTimeoutMs = 1000
+                        controllerHideOnTouch = false
+                    }
+                    showController()
+                }
+
+            }
             AndroidView(
                 modifier = Modifier
                     .fillMaxSize()
@@ -158,6 +190,7 @@ class VideoFullScreenFragment : DialogFragment() {
         }
     }
 
+
     override fun onPause() {
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         viewModel.exoPlayer?.removeListener(exoPlayerListener)
@@ -174,4 +207,6 @@ class VideoFullScreenFragment : DialogFragment() {
         const val TAG = "VideoFullScreenFragment"
         fun newInstance() = VideoFullScreenFragment()
     }
+
+
 }

@@ -7,8 +7,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.OpenEdXPrimaryButton
+import org.openedx.core.ui.PageIndicator
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
@@ -133,6 +132,7 @@ fun NextFinishButton(
                     Text(
                         modifier = Modifier.testTag("txt_next"),
                         text = stringResource(id = R.string.whats_new_navigation_next),
+                        color = MaterialTheme.appColors.primaryButtonText,
                         style = MaterialTheme.appTypography.labelLarge
                     )
                     Spacer(Modifier.width(8.dp))

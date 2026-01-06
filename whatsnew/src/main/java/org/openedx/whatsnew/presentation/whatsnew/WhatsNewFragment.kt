@@ -63,9 +63,14 @@ import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
+import org.openedx.whatsnew.R
 import org.openedx.whatsnew.domain.model.WhatsNewItem
 import org.openedx.whatsnew.domain.model.WhatsNewMessage
 import org.openedx.whatsnew.presentation.ui.NavigationUnitsButtons
+import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment.Companion.BASE_ALPHA_VALUE
 import org.openedx.core.R as CoreR
 
 class WhatsNewFragment : Fragment() {

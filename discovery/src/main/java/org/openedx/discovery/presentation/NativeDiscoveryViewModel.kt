@@ -3,16 +3,19 @@ package org.openedx.discovery.presentation
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import isInternetError
 import kotlinx.coroutines.launch
+import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.connection.NetworkConnection
-import org.openedx.core.system.notifier.app.AppNotifier
-import org.openedx.core.system.notifier.app.AppUpgradeEvent
 import org.openedx.core.utils.Logger
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.domain.model.Course
+import org.openedx.foundation.presentation.SingleEventLiveData
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 
 class NativeDiscoveryViewModel(
     private val config: Config,

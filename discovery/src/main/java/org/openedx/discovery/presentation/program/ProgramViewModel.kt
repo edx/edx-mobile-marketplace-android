@@ -2,13 +2,16 @@ package org.openedx.discovery.presentation.program
 
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
+import isInternetError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.config.Config
-import org.openedx.core.extension.isInternetError
+import org.openedx.core.presentation.global.AppData
+import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
@@ -17,6 +20,8 @@ import org.openedx.core.system.notifier.NavigationToDiscovery
 import org.openedx.core.utils.Logger
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
 import org.openedx.discovery.presentation.DiscoveryRouter
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.system.ResourceManager
 
 class ProgramViewModel(
     private val appData: AppData,
@@ -105,16 +110,13 @@ class ProgramViewModel(
         viewModelScope.launch { notifier.send(NavigationToDiscovery()) }
     }
 
-    fun onPageLoadError() {
-        viewModelScope.launch {
-            _uiState.emit(ProgramUIState.Error(if (networkConnection.isOnline()) ErrorType.UNKNOWN_ERROR else ErrorType.CONNECTION_ERROR))
-        }
+    fun navigateToSettings(fragmentManager: FragmentManager) {
+        router.navigateToSettings(fragmentManager)
     }
 
     companion object {
         private const val TAG = "ProgramViewModel"
     }
-
     fun onPageLoadError() {
         viewModelScope.launch {
             _uiState.emit(

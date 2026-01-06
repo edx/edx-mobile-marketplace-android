@@ -48,7 +48,6 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.UIMessage
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
 import org.openedx.core.presentation.dialog.alert.InfoDialogFragment
 import org.openedx.core.presentation.global.webview.WebViewUIAction
@@ -65,6 +64,11 @@ import org.openedx.discovery.R
 import org.openedx.discovery.presentation.DiscoveryAnalyticsScreen
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority
+import org.openedx.foundation.presentation.UIMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import java.util.concurrent.atomic.AtomicReference
 import org.openedx.core.R as CoreR
 
@@ -129,6 +133,7 @@ class CourseInfoFragment : Fragment() {
                     webViewUIState = webViewState,
                     uiMessage = uiMessage,
                     uriScheme = viewModel.uriScheme,
+                    isRegistrationEnabled = viewModel.isRegistrationEnabled,
                     userAgent = viewModel.appUserAgent,
                     hasInternetConnection = hasInternetConnection,
                     onWebViewUIAction = { action ->
@@ -257,7 +262,6 @@ private fun CourseInfoScreen(
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
     onUriClick: (String, Authority) -> Unit,
-    onUriClick: (String, linkAuthority) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -414,7 +418,6 @@ fun CourseInfoScreenPreview() {
             ),
             uiMessage = null,
             uriScheme = "",
-            userAgent = "",
             isRegistrationEnabled = true,
             userAgent = "",
             hasInternetConnection = false,

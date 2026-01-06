@@ -45,6 +45,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.extension.loadUrl
+import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
 import org.openedx.core.presentation.dialog.alert.InfoDialogFragment
 import org.openedx.core.presentation.global.webview.WebViewUIAction
@@ -60,6 +61,11 @@ import org.openedx.discovery.R
 import org.openedx.discovery.presentation.DiscoveryAnalyticsScreen
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority
+import org.openedx.foundation.extension.toastMessage
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.core.R as coreR
 
 class ProgramFragment : Fragment() {
@@ -247,11 +253,9 @@ private fun ProgramInfoScreen(
     isNestedFragment: Boolean,
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
-    onWebViewUIAction: (WebViewUIAction) -> Unit,
     onSettingsClick: () -> Unit,
     onBackClick: () -> Unit,
     onUriClick: (String, Authority) -> Unit,
-    onUriClick: (String, linkAuthority) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current

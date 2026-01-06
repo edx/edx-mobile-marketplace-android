@@ -34,7 +34,6 @@ class WebViewDiscoveryViewModel(
 
     val appUserAgent get() = appData.appUserAgent
 
-
     private var _discoveryUrl = webViewConfig.baseUrl
     val discoveryUrl: String
         get() {
@@ -59,8 +58,13 @@ class WebViewDiscoveryViewModel(
     }
 
     fun onWebPageLoadError() {
-        _uiState.value =
-            WebViewUIState.Error(if (networkConnection.isOnline()) ErrorType.UNKNOWN_ERROR else ErrorType.CONNECTION_ERROR)
+        _uiState.value = WebViewUIState.Error(
+            if (networkConnection.isOnline()) {
+                ErrorType.UNKNOWN_ERROR
+            } else {
+                ErrorType.CONNECTION_ERROR
+            }
+        )
     }
 
     fun updateDiscoveryUrl(url: String) {
@@ -85,6 +89,10 @@ class WebViewDiscoveryViewModel(
 
     fun navigateToSignIn(fragmentManager: FragmentManager) {
         router.navigateToSignIn(fragmentManager, null, null)
+    }
+
+    fun navigateToSettings(fragmentManager: FragmentManager) {
+        router.navigateToSettings(fragmentManager)
     }
 
     fun courseInfoClickedEvent(courseId: String) {

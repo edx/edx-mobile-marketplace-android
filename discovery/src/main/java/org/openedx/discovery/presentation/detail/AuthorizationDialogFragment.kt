@@ -41,7 +41,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import org.koin.android.ext.android.inject
 import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appShapes
@@ -185,7 +185,7 @@ private fun AuthorizationDialogPortraitView(
             )
             Spacer(Modifier.height(42.dp))
             Row {
-                OpenEdXOutlinedButton(
+                OpenEdXOutlinePrimaryButton(
                     modifier = Modifier.weight(1f),
                     borderColor = MaterialTheme.appColors.primaryButtonBackground,
                     textColor = MaterialTheme.appColors.primaryButtonBackground,
@@ -274,7 +274,7 @@ private fun AuthorizationDialogLandscapeView(
                     Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    OpenEdXOutlinedButton(
+                    OpenEdXOutlinePrimaryButton(
                         borderColor = MaterialTheme.appColors.primaryButtonBackground,
                         textColor = MaterialTheme.appColors.primaryButtonBackground,
                         text = stringResource(id = coreR.string.core_sign_in),

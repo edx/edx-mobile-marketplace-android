@@ -1,7 +1,5 @@
 package org.openedx.discovery.presentation.program
 
-import org.openedx.core.UIMessage
-import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.foundation.presentation.UIMessage
 

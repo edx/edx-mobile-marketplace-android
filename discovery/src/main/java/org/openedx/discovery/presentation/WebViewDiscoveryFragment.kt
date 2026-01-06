@@ -72,6 +72,10 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
 import org.openedx.discovery.presentation.catalog.WebViewLink
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
+import org.openedx.foundation.presentation.rememberWindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import org.openedx.core.R as CoreR
 
 class WebViewDiscoveryFragment : Fragment() {
@@ -100,6 +104,7 @@ class WebViewDiscoveryFragment : Fragment() {
                     contentUrl = viewModel.discoveryUrl,
                     uriScheme = viewModel.uriScheme,
                     userAgent = viewModel.appUserAgent,
+                    isRegistrationEnabled = viewModel.isRegistrationEnabled,
                     hasInternetConnection = hasInternetConnection,
                     onWebViewUIAction = { action ->
                         when (action) {
@@ -168,6 +173,9 @@ class WebViewDiscoveryFragment : Fragment() {
                     onSignInClick = {
                         viewModel.navigateToSignIn(parentFragmentManager)
                     },
+                    onSettingsClick = {
+                        viewModel.navigateToSettings(requireActivity().supportFragmentManager)
+                    },
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStackImmediate()
                     }
@@ -197,6 +205,7 @@ private fun WebViewDiscoveryScreen(
     isPreLogin: Boolean,
     contentUrl: String,
     uriScheme: String,
+    isRegistrationEnabled: Boolean,
     userAgent: String,
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
@@ -204,7 +213,8 @@ private fun WebViewDiscoveryScreen(
     onUriClick: (String, WebViewLink.Authority) -> Unit,
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
-    onBackClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onBackClick: () -> Unit
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -412,7 +422,6 @@ private fun WebViewDiscoveryScreenPreview() {
             isPreLogin = false,
             contentUrl = "https://www.example.com/",
             uriScheme = "",
-            userAgent = "",
             isRegistrationEnabled = true,
             userAgent = "",
             hasInternetConnection = false,
@@ -421,7 +430,6 @@ private fun WebViewDiscoveryScreenPreview() {
             onUriClick = { _, _ -> },
             onRegisterClick = {},
             onSignInClick = {},
-            onBackClick = {},
             onSettingsClick = {},
             onBackClick = {},
         )

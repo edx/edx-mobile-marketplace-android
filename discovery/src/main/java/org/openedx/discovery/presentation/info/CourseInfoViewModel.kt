@@ -16,12 +16,8 @@ import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.presentation.CoreAnalyticsKey
 import org.openedx.core.presentation.global.AppData
-import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
-import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
-import org.openedx.core.presentation.global.webview.WebViewUIState
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
 import org.openedx.core.system.notifier.DiscoveryNotifier

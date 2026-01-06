@@ -49,7 +49,6 @@ import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.db.DownloadModelEntity
-import org.openedx.core.module.download.DownloadHelper
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
 import org.openedx.core.module.db.TranscriptsDownloadedState

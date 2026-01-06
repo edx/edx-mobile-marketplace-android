@@ -1,12 +1,8 @@
 package org.openedx.core.extension
 
-import android.content.Context
-import android.content.res.Resources
-import android.graphics.Rect
-import android.util.DisplayMetrics
-import android.view.View
-import android.view.ViewGroup
 import android.webkit.WebView
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.openedx.core.system.AppCookieManager

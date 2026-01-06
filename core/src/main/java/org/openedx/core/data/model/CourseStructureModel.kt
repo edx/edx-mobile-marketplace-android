@@ -71,7 +71,6 @@ data class CourseStructureModel(
             certificate = certificate?.mapToDomain(),
             isSelfPaced = isSelfPaced ?: false,
             progress = progress?.mapToDomain(),
-            progress = progress?.mapToDomain(),
             enrollmentDetails = enrollmentDetails.mapToDomain(),
             productInfo = courseModes?.find { it.isVerifiedMode() }
                 ?.takeIf { it.storeSku.isNotNullOrEmpty() }

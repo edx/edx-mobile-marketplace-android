@@ -31,7 +31,6 @@ import org.openedx.core.domain.model.DownloadCoursePreview
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.db.DownloadModelEntity
-import org.openedx.core.module.download.DownloadHelper
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.presentation.DownloadsAnalytics
 import org.openedx.core.presentation.dialog.downloaddialog.DownloadDialogManager

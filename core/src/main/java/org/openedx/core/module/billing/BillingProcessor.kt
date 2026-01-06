@@ -28,8 +28,8 @@ import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.extension.decodeToLong
 import org.openedx.core.extension.decodeToString
 import org.openedx.core.extension.encodeToString
-import org.openedx.core.extension.safeResume
 import org.openedx.core.utils.Logger
+import org.openedx.foundation.extension.safeResume
 
 class BillingProcessor(
     context: Context,

@@ -1,5 +1,6 @@
 package org.openedx.core.extension
 import android.util.Patterns
+import java.util.Locale
 import java.util.regex.Pattern
 
 

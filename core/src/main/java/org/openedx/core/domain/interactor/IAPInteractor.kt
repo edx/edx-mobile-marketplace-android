@@ -1,228 +1,118 @@
-package org.openedx.core.domain.interactor
+package org.openedx.core.data.model
 
-import android.content.Context
-import androidx.fragment.app.FragmentActivity
-import com.android.billingclient.api.BillingClient.BillingResponseCode
-import com.android.billingclient.api.ProductDetails
-import com.android.billingclient.api.Purchase
-import org.openedx.core.ApiConstants
-import org.openedx.core.R
-import org.openedx.core.config.Config
-import org.openedx.core.data.repository.iap.IAPRepository
+import com.google.gson.Gson
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.annotations.SerializedName
+import org.openedx.core.data.model.room.BlockDb
+import org.openedx.core.data.model.room.CourseStructureEntity
+import org.openedx.core.data.model.room.MediaDb
+import org.openedx.core.data.model.room.discovery.ProgressDb
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.model.EnrolledCourse
+import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.iap.ProductInfo
-import org.openedx.core.domain.model.iap.PurchaseFlowData
-import org.openedx.core.exception.iap.IAPException
-import org.openedx.core.extension.toIAPException
-import org.openedx.core.module.billing.BillingProcessor
-import org.openedx.core.module.billing.getCourseId
-import org.openedx.core.module.billing.getPriceAmount
-import org.openedx.core.module.billing.getUserId
-import org.openedx.core.presentation.global.AppData
-import org.openedx.core.presentation.iap.IAPRequestType
-import org.openedx.core.system.ResourceManager
-import org.openedx.core.utils.EmailUtil
-import org.openedx.core.utils.Logger
+import org.openedx.core.extension.isNotNullOrEmpty
 import org.openedx.core.utils.TimeUtils
+import java.lang.reflect.Type
 
-class IAPInteractor(
-    private val appData: AppData,
-    private val billingProcessor: BillingProcessor,
-    private val config: Config,
-    private val repository: IAPRepository,
-    private val preferencesManager: CorePreferences,
-    private val resourceManager: ResourceManager,
+data class CourseStructureModel(
+    @SerializedName("root")
+    val root: String,
+    @SerializedName("blocks")
+    val blockData: Map<String, Block>,
+    @SerializedName("id")
+    var id: String?,
+    @SerializedName("name")
+    var name: String?,
+    @SerializedName("number")
+    var number: String?,
+    @SerializedName("org")
+    var org: String?,
+    @SerializedName("start")
+    var start: String?,
+    @SerializedName("start_display")
+    var startDisplay: String?,
+    @SerializedName("start_type")
+    var startType: String?,
+    @SerializedName("end")
+    var end: String?,
+    @SerializedName("media")
+    var media: Media?,
+    @SerializedName("course_access_details")
+    val courseAccessDetails: CourseAccessDetails,
+    @SerializedName("certificate")
+    val certificate: Certificate?,
+    @SerializedName("enrollment_details")
+    val enrollmentDetails: EnrollmentDetails,
+    @SerializedName("is_self_paced")
+    var isSelfPaced: Boolean?,
+    @SerializedName("course_progress")
+    val progress: Progress?,
+    @SerializedName("course_modes")
+    val courseModes: List<CourseMode>?,
 ) {
-    private val logger = Logger(TAG)
-    private val iapConfig
-        get() = preferencesManager.appConfig.iapConfig
-    val isIAPEnabled
-        get() = iapConfig.isEnabled
-    val isUpgradeEnabled
-        get() = iapConfig.isUpgradeEnabled(appData.versionName)
-
-    fun showFeedbackScreen(context: Context, message: String) {
-        EmailUtil.showFeedbackScreen(
-            context = context,
-            feedbackEmailAddress = config.getFeedbackEmailAddress(),
-            subject = context.getString(R.string.core_error_upgrading_course_in_app),
-            feedback = message,
-            appVersion = appData.versionName
+    fun mapToDomain(): CourseStructure {
+        return CourseStructure(
+            root = root,
+            blockData = blockData.map {
+                it.value.mapToDomain(blockData)
+            },
+            id = id ?: "",
+            name = name ?: "",
+            number = number ?: "",
+            org = org ?: "",
+            start = TimeUtils.iso8601ToDate(start ?: ""),
+            startDisplay = startDisplay ?: "",
+            startType = startType ?: "",
+            end = TimeUtils.iso8601ToDate(end ?: ""),
+            media = media?.mapToDomain(),
+            courseAccessDetails = courseAccessDetails.mapToDomain(),
+            certificate = certificate?.mapToDomain(),
+            isSelfPaced = isSelfPaced ?: false,
+            progress = progress?.mapToDomain(),
+            enrollmentDetails = enrollmentDetails.mapToDomain(),
+            productInfo = courseModes?.find { it.isVerifiedMode() }
+                ?.takeIf { it.storeSku.isNotNullOrEmpty() }
+                ?.run { ProductInfo(storeSku = storeSku!!, lmsUSDPrice = minPrice ?: 0.0) }
         )
     }
 
-    suspend fun loadPrice(productId: String): ProductDetails.OneTimePurchaseOfferDetails {
-        val response = billingProcessor.querySyncDetails(productId)
-        val productDetails = response.productDetailsList?.firstOrNull()?.oneTimePurchaseOfferDetails
-        val billingResult = response.billingResult
-
-        if (billingResult.responseCode == BillingResponseCode.OK) {
-            if (productDetails != null) {
-                return productDetails
-            } else {
-                throw IAPException(
-                    requestType = IAPRequestType.NO_SKU_CODE,
-                    httpErrorCode = billingResult.responseCode,
-                    errorMessage = billingResult.debugMessage
-                )
-            }
-        } else {
-            throw IAPException(
-                requestType = IAPRequestType.PRICE_CODE,
-                httpErrorCode = billingResult.responseCode,
-                errorMessage = billingResult.debugMessage
-            )
-        }
-    }
-
-    suspend fun purchaseItem(
-        activity: FragmentActivity,
-        courseId: String,
-        productInfo: ProductInfo,
-        purchaseListeners: BillingProcessor.PurchaseListeners,
-    ) {
-        preferencesManager.user?.id?.let { id ->
-            billingProcessor.setPurchaseListener(purchaseListeners)
-            billingProcessor.purchaseItem(activity, id, courseId, productInfo)
-        }
-    }
-
-    suspend fun createOrder(
-        courseId: String,
-        currencyCode: String,
-        price: Double,
-        purchaseToken: String,
-    ) {
-        repository.createOrder(
-            courseId = courseId,
-            currencyCode = currencyCode,
-            price = price,
-            paymentProcessor = ApiConstants.IAPFields.PAYMENT_PROCESSOR,
-            purchaseToken = purchaseToken
+    fun mapToRoomEntity(): CourseStructureEntity {
+        return CourseStructureEntity(
+            root,
+            blocks = blockData.map { BlockDb.createFrom(it.value) },
+            id = id ?: "",
+            name = name ?: "",
+            number = number ?: "",
+            org = org ?: "",
+            start = start ?: "",
+            startDisplay = startDisplay ?: "",
+            startType = startType ?: "",
+            end = end ?: "",
+            media = MediaDb.createFrom(media),
+            courseAccessDetails = courseAccessDetails.mapToRoomEntity(),
+            certificate = certificate?.mapToRoomEntity(),
+            isSelfPaced = isSelfPaced ?: false,
+            progress = progress?.mapToRoomEntity() ?: ProgressDb.DEFAULT_PROGRESS,
+            enrollmentDetails = enrollmentDetails.mapToRoomEntity()
         )
     }
 
-    suspend fun consumePurchaseByToken(purchaseToken: String) {
-        val result = billingProcessor.consumePurchase(purchaseToken)
-        if (result.responseCode !in listOf(
-                BillingResponseCode.OK,
-                BillingResponseCode.ITEM_NOT_OWNED
-            )
-        ) {
-            throw IAPException(
-                requestType = IAPRequestType.CONSUME_CODE,
-                httpErrorCode = result.responseCode,
-                errorMessage = result.debugMessage
-            )
-        }
-    }
-
-    suspend fun consumePurchaseByCourseId(enrolledCourseId: String) {
-        val purchases = billingProcessor.queryPurchases()
-        val purchasedCourse = purchases.firstOrNull { purchase ->
-            val userAccountId = purchase.getUserId()
-            val courseId = purchase.getCourseId()
-
-            userAccountId == preferencesManager.user?.id && courseId == enrolledCourseId
-        }
-        purchasedCourse?.purchaseToken?.let {
-            consumePurchaseByToken(it)
-        }
-    }
-
-    suspend fun processUnfulfilledPurchase(
-        userId: Long,
-        enrolledCourses: List<EnrolledCourse>,
-        verificationInitiated: (PurchaseFlowData) -> Unit = {},
-    ): PurchaseFlowData? {
-        val purchases = billingProcessor.queryPurchases()
-        val userPurchases = purchases.filter { purchase ->
-            val userAccountId = purchase.getUserId()
-            val courseId = purchase.getCourseId()
-
-            userAccountId == userId && enrolledCourses.any { enrolledCourse ->
-                courseId == enrolledCourse.course.id && enrolledCourse.isAuditMode
-            }
-        }
-        if (userPurchases.isNotEmpty()) {
-            userPurchases.first().let { purchase ->
-                val courseVerified = enrolledCourses.find { enrolledCourse ->
-                    enrolledCourse.course.id == purchase.getCourseId()
-                }
-                courseVerified?.let {
-                    val productDetails =
-                        billingProcessor.querySyncDetails(purchase.products[0]).productDetailsList?.firstOrNull()
-                    val purchaseProductFlow = PurchaseFlowData(
-                        courseId = courseVerified.course.id,
-                        orgName = courseVerified.course.org,
-                        orgLogo = courseVerified.course.orgLogo,
-                        isSelfPaced = courseVerified.course.isSelfPaced,
-                        productInfo = courseVerified.productInfo,
-                    ).apply {
-                        this.purchaseToken = purchase.purchaseToken
-                        productDetails?.oneTimePurchaseOfferDetails?.let {
-                            this.price = it.getPriceAmount()
-                            this.currencyCode = it.priceCurrencyCode
-                        }
-                        this.flowStartTime = TimeUtils.getCurrentTime()
-                    }
-                    verificationInitiated(purchaseProductFlow)
-                    startUnfulfilledVerification(courseVerified.course.id, purchase)
-                    return purchaseProductFlow
+    class Deserializer(val corePreferences: CorePreferences) :
+        JsonDeserializer<CourseStructureModel> {
+        override fun deserialize(
+            json: JsonElement?,
+            typeOfT: Type?,
+            context: JsonDeserializationContext?,
+        ): CourseStructureModel {
+            val courseStructure = Gson().fromJson(json, CourseStructureModel::class.java)
+            if (corePreferences.appConfig.iapConfig.productPrefix.isNullOrEmpty().not()) {
+                courseStructure.courseModes?.forEach { courseModes ->
+                    courseModes.setStoreProductSku(corePreferences.appConfig.iapConfig.productPrefix!!)
                 }
             }
-        } else {
-            purchases.forEach {
-                billingProcessor.consumePurchase(it.purchaseToken)
-            }
+            return courseStructure
         }
-        return null
-    }
-
-    private suspend fun startUnfulfilledVerification(courseId: String, userPurchase: Purchase) {
-        val productDetail =
-            billingProcessor.querySyncDetails(userPurchase.products.first()).productDetailsList?.firstOrNull()
-        productDetail?.oneTimePurchaseOfferDetails?.takeIf {
-            userPurchase.getCourseId().isNullOrEmpty().not()
-        }?.let { oneTimeProductDetails ->
-            createOrder(
-                courseId = courseId,
-                currencyCode = oneTimeProductDetails.priceCurrencyCode,
-                price = oneTimeProductDetails.getPriceAmount(),
-                purchaseToken = userPurchase.purchaseToken,
-            )
-        }
-    }
-
-    suspend fun detectUnfulfilledPurchase(
-        enrolledCourses: List<EnrolledCourse>,
-        verificationInitiated: (PurchaseFlowData) -> Unit,
-        onSuccess: (PurchaseFlowData) -> Unit,
-        onFailure: (IAPException) -> Unit,
-    ) {
-        if (isUpgradeEnabled) {
-            preferencesManager.user?.id?.let { userId ->
-                runCatching {
-                    processUnfulfilledPurchase(userId, enrolledCourses, verificationInitiated)
-                }.onSuccess { purchaseFlowData ->
-                    purchaseFlowData?.let {
-                        onSuccess(purchaseFlowData)
-                    }
-                }.onFailure {
-                    logger.e(throwable = it)
-                    onFailure(
-                        it.toIAPException(
-                            requestType = IAPRequestType.UNFULFILLED_CODE,
-                            defaultMessage = resourceManager.getString(R.string.core_error_unknown_error)
-                        )
-                    )
-                }
-            }
-        }
-    }
-
-    companion object {
-        private const val TAG = "IAPInteractor"
     }
 }

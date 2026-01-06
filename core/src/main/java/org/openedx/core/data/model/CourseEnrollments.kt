@@ -56,8 +56,6 @@ data class CourseEnrollments(
                 )
             } catch (ex: Exception) {
                 logger.e(throwable = ex)
-            } catch (e: Exception) {
-                e.printStackTrace()
                 null
             }
         }
@@ -68,8 +66,8 @@ data class CourseEnrollments(
                     (json as JsonObject).get("enrollments"),
                     DashboardCourseList::class.java
                 )
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (ex: Exception) {
+                logger.e(throwable = ex)
                 DashboardCourseList(
                     next = null,
                     previous = null,

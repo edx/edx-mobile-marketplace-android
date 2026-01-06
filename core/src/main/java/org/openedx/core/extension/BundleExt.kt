@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import com.google.gson.Gson
 import org.openedx.core.utils.Logger
+import org.openedx.foundation.extension.genericType
 import java.io.Serializable
 
 inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? = when {

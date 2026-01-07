@@ -326,14 +326,12 @@ fun CertificatePreview(
                         .padding(start = 8.dp),
                     horizontalAlignment = Alignment.End
                 ) {
-                    AsyncImage(
+                    Image(
                         modifier = Modifier
                             .height(28.dp)
                             .wrapContentWidth(),
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(orgLogo)
-                            .build(),
-                        contentDescription = null,
+                        painter = painterResource(id = R.drawable.outline_default),
+                        contentDescription = null
                     )
 
                     SignatureInfo(stringResource(R.string.iap_certificate_preview_author_1))

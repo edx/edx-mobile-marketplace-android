@@ -91,6 +91,5 @@ enum class IAPAnalyticsKeys(val key: String) {
     ERROR_ALERT_TYPE("error_alert_type"),
     SHOW_CERTIFICATE_PREVIEW("show_certificate_preview"),
     CERT_PREVIEW_VARIENT("cert_preview_varient"),
-    PRICE("price"),
     ATTEMPTS_TO_PURCHASE("attempts_to_purchase")
 }

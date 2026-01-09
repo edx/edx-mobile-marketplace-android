@@ -36,6 +36,18 @@ enum class IAPAnalyticsEvent(val eventName: String, val biValue: String) {
         "Payments:Error Alert Action",
         "edx.bi.app.payments.error_alert_action"
     ),
+    IAP_CERT_PREVIEW_SHOWN(
+        "Payments:Cert Preview Shown",
+        "edx.bi.app.payments.Cert_Preview_Shown"
+    ),
+    IAP_CERT_PREVIEW_PURCHASED(
+        "Payments:Cert Preview Purchased",
+        "edx.bi.app.payments.Cert_Preview_Purchased"
+    ),
+    IAP_CERT_COURSE_COMPLETED(
+        "Payments:Cert Course Completed",
+        "edx.bi.app.payments.Cert_Course_Completed"
+    ),
     IAP_UNFULFILLED_PURCHASE_INITIATED(
         "Payments:Unfulfilled Purchase Initiated",
         "edx.bi.app.payments.unfulfilled_purchase.initiated"
@@ -77,4 +89,8 @@ enum class IAPAnalyticsKeys(val key: String) {
     ACTION("action"),
     SCREEN_NAME("screen_name"),
     ERROR_ALERT_TYPE("error_alert_type"),
+    SHOW_CERTIFICATE_PREVIEW("show_certificate_preview"),
+    CERT_PREVIEW_VARIENT("cert_preview_varient"),
+    PRICE("price"),
+    ATTEMPTS_TO_PURCHASE("attempts_to_purchase")
 }

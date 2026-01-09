@@ -8,15 +8,13 @@ import com.google.gson.JsonParser
 import org.openedx.core.domain.model.AgreementUrls
 import java.io.InputStreamReader
 
-@Suppress("TooManyFunctions")
 class Config(context: Context) {
 
     private var configProperties: JsonObject = try {
         val inputStream = context.assets.open("config/config.json")
         val config = JsonParser.parseReader(InputStreamReader(inputStream))
         config.asJsonObject
-    } catch (e: Exception) {
-        e.printStackTrace()
+    } catch (_: Exception) {
         JsonObject()
     }
 
@@ -104,10 +102,6 @@ class Config(context: Context) {
         return getBoolean(PUSH_NOTIFICATIONS_ENABLED, false)
     }
 
-    fun getDownloadsConfig(): AppLevelDownloadsConfig {
-        return getExperimentalFeaturesConfig().appLevelDownloadsConfig
-    }
-
     fun getBranchConfig(): BranchConfig {
         return getObjectOrNewInstance(BRANCH, BranchConfig::class.java)
     }
@@ -122,22 +116,6 @@ class Config(context: Context) {
 
     fun getCourseUIConfig(): UIConfig {
         return getObjectOrNewInstance(UI_COMPONENTS, UIConfig::class.java)
-    }
-
-    fun isRegistrationEnabled(): Boolean {
-        return getBoolean(REGISTRATION_ENABLED, true)
-    }
-
-    fun isBrowserLoginEnabled(): Boolean {
-        return getBoolean(BROWSER_LOGIN, false)
-    }
-
-    fun isBrowserRegistrationEnabled(): Boolean {
-        return getBoolean(BROWSER_REGISTRATION, false)
-    }
-
-    private fun getExperimentalFeaturesConfig(): ExperimentalFeaturesConfig {
-        return getObjectOrNewInstance(EXPERIMENTAL_FEATURES, ExperimentalFeaturesConfig::class.java)
     }
 
     fun getOptimizelyConfig(): OptimizelyConfig {
@@ -175,14 +153,12 @@ class Config(context: Context) {
             try {
                 cls.getDeclaredConstructor().newInstance()
             } catch (e: InstantiationException) {
-                throw ConfigParsingException(e)
+                throw RuntimeException(e)
             } catch (e: IllegalAccessException) {
-                throw ConfigParsingException(e)
+                throw RuntimeException(e)
             }
         }
     }
-
-    class ConfigParsingException(cause: Throwable) : Exception(cause)
 
     private fun getObject(key: String): JsonElement? {
         return configProperties.get(key)
@@ -207,13 +183,9 @@ class Config(context: Context) {
         private const val GOOGLE = "GOOGLE"
         private const val MICROSOFT = "MICROSOFT"
         private const val PRE_LOGIN_EXPERIENCE_ENABLED = "PRE_LOGIN_EXPERIENCE_ENABLED"
-        private const val REGISTRATION_ENABLED = "REGISTRATION_ENABLED"
-        private const val BROWSER_LOGIN = "BROWSER_LOGIN"
-        private const val BROWSER_REGISTRATION = "BROWSER_REGISTRATION"
         private const val DISCOVERY = "DISCOVERY"
         private const val PROGRAM = "PROGRAM"
         private const val DASHBOARD = "DASHBOARD"
-        private const val EXPERIMENTAL_FEATURES = "EXPERIMENTAL_FEATURES"
         private const val PUSH_NOTIFICATIONS_ENABLED = "PUSH_NOTIFICATIONS_ENABLED"
         private const val BRANCH = "BRANCH"
         private const val UI_COMPONENTS = "UI_COMPONENTS"

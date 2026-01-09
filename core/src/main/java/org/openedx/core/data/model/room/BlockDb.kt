@@ -51,9 +51,7 @@ data class BlockDb(
     @Embedded
     val assignmentProgress: AssignmentProgressDb?,
     @ColumnInfo("due")
-    val due: String?,
-    @Embedded
-    val offlineDownload: OfflineDownloadDb?,
+    val due: String?
 ) {
     fun mapToDomain(blocks: List<BlockDb>): DomainBlock {
         val blockType = BlockType.getBlockType(type)
@@ -86,7 +84,6 @@ data class BlockDb(
             authorizationDenialReason = AuthorizationDenialReason.from(authorizationDenialReason),
             assignmentProgress = assignmentProgress?.mapToDomain(),
             due = TimeUtils.iso8601ToDate(due ?: ""),
-            offlineDownload = offlineDownload?.mapToDomain()
         )
     }
 
@@ -113,8 +110,7 @@ data class BlockDb(
                     containsGatedContent = containsGatedContent ?: false,
                     authorizationDenialReason = authorizationDenialReason ?: "",
                     assignmentProgress = assignmentProgress?.mapToRoomEntity(),
-                    due = due,
-                    offlineDownload = offlineDownload?.mapToRoomEntity()
+                    due = due
                 )
             }
         }
@@ -154,6 +150,7 @@ data class StudentViewDataDb(
                 topicId = studentViewData?.topicId ?: ""
             )
         }
+
     }
 }
 
@@ -194,6 +191,7 @@ data class EncodedVideosDb(
             )
         }
     }
+
 }
 
 data class VideoInfoDb(
@@ -238,29 +236,11 @@ data class AssignmentProgressDb(
     val numPointsEarned: Float?,
     @ColumnInfo("num_points_possible")
     val numPointsPossible: Float?,
-    val shortLabel: String?
 ) {
     fun mapToDomain() = DomainAssignmentProgress(
-        assignmentType = assignmentType,
+        assignmentType = assignmentType ?: "",
         numPointsEarned = numPointsEarned ?: 0f,
         numPointsPossible = numPointsPossible ?: 0f,
-        shortLabel = shortLabel ?: ""
+        ""
     )
-}
-
-data class OfflineDownloadDb(
-    @ColumnInfo("file_url")
-    var fileUrl: String?,
-    @ColumnInfo("last_modified")
-    var lastModified: String?,
-    @ColumnInfo("file_size")
-    var fileSize: Long?,
-) {
-    fun mapToDomain(): org.openedx.core.domain.model.OfflineDownload {
-        return org.openedx.core.domain.model.OfflineDownload(
-            fileUrl = fileUrl ?: "",
-            lastModified = lastModified,
-            fileSize = fileSize ?: 0
-        )
-    }
 }

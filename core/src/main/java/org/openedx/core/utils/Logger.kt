@@ -1,7 +1,7 @@
 package org.openedx.core.utils
 
 import android.util.Log
-import org.openedx.core.BuildConfig
+import org.openedx.foundation.BuildConfig
 
 class Logger(private val tag: String) {
 

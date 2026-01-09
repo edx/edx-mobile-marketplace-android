@@ -1,6 +1,7 @@
 package org.openedx.core.ui.theme
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
@@ -60,7 +61,7 @@ private val DarkColorPalette = AppColors(
 
     warning = dark_warning,
     info = dark_info,
-    infoVariant = dark_info_variant,
+    info_variant = dark_info_variant,
     onWarning = dark_onWarning,
     onInfo = dark_onInfo,
 
@@ -109,10 +110,6 @@ private val DarkColorPalette = AppColors(
 
     certificatePreviewHeading = dark_certificate_preview_headline,
     certificatePreviewMessage = dark_certificate_preview_message,
-    progressBarBackgroundColor = dark_progress_bar_background_color,
-    gradeProgressBarBorder = dark_grade_progress_bar_color,
-    gradeProgressBarBackground = dark_grade_progress_bar_background,
-    assignmentCardBorder = dark_assignment_card_border,
 )
 
 private val LightColorPalette = AppColors(
@@ -166,7 +163,7 @@ private val LightColorPalette = AppColors(
 
     warning = light_warning,
     info = light_info,
-    infoVariant = light_info_variant,
+    info_variant = light_info_variant,
     onWarning = light_onWarning,
     onInfo = light_onInfo,
 
@@ -204,9 +201,17 @@ private val LightColorPalette = AppColors(
     progressBarColor = light_progress_bar_color,
     progressBarBackgroundColor = light_progress_bar_background_color,
 
-    gradeProgressBarBorder = light_grade_progress_bar_color,
-    gradeProgressBarBackground = light_grade_progress_bar_background,
-    assignmentCardBorder = light_assignment_card_border,
+    primaryCardCautionBackground = light_primary_card_caution_background,
+    primaryCardInfoBackground = light_primary_card_info_background,
+
+    inboxTimeMarkerColor = light_inbox_time_marker_color,
+    notificationPrimerBadge = light_notification_primer_badge,
+    notificationPrimerCardBackground = light_notification_primer_card_background,
+
+    highlightDiscussionResponse = light_highlight_discussion_response,
+
+    certificatePreviewHeading = light_certificate_preview_headline,
+    certificatePreviewMessage = light_certificate_preview_message,
 )
 
 val MaterialTheme.appColors: AppColors
@@ -225,11 +230,11 @@ fun OpenEdXTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
 
     MaterialTheme(
         colors = colors.material,
-        // typography = LocalTypography.current.material,
+        //typography = LocalTypography.current.material,
         shapes = LocalShapes.current.material,
     ) {
         CompositionLocalProvider(
-            LocalOverscrollFactory provides null,
+            LocalOverscrollConfiguration provides null,
             content = content
         )
     }

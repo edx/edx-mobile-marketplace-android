@@ -1,4 +1,3 @@
-
 package org.openedx.core.data.model.room
 
 import androidx.room.ColumnInfo

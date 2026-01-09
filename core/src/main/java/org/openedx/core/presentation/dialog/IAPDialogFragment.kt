@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,8 +15,6 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
@@ -88,13 +86,12 @@ class IAPDialogFragment : DialogFragment() {
                     topBar = {
                         if (isFullScreenLoader.not()) {
                             Row(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Spacer(Modifier.weight(1f))
                                 Icon(
                                     modifier = Modifier.clickable { onDismiss() },
-                                    imageVector = Icons.Filled.Close,
+                                    painter = painterResource(id = R.drawable.core_ic_back),
                                     contentDescription = null
                                 )
                             }
@@ -102,7 +99,7 @@ class IAPDialogFragment : DialogFragment() {
                     },
                     bottomBar = {
                         if (isFullScreenLoader.not()) {
-                            Box(modifier = Modifier.padding(all = 16.dp)) {
+                            Box(modifier = Modifier.padding(all = 8.dp)) {
                                 when {
                                     (iapState is IAPUIState.Loading ||
                                             iapState is IAPUIState.PurchaseProduct ||

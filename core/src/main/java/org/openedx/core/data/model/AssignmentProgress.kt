@@ -27,6 +27,6 @@ data class AssignmentProgress(
         assignmentType = assignmentType,
         numPointsEarned = numPointsEarned,
         numPointsPossible = numPointsPossible,
-        shortLabel = shortLabel
+       // shortLabel = shortLabel
     )
 }

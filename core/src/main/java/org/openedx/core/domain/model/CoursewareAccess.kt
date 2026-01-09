@@ -23,3 +23,5 @@ data class CoursewareAccess(
         userFragment = userFragment,
     )
 }
+
+

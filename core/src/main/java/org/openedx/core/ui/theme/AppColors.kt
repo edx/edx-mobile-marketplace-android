@@ -43,7 +43,7 @@ data class AppColors(
     val bottomSheetToggle: Color,
     val warning: Color,
     val info: Color,
-    val infoVariant: Color,
+    val info_variant: Color,
     val onWarning: Color,
     val onInfo: Color,
 
@@ -80,9 +80,17 @@ data class AppColors(
 
     val progressBarColor: Color,
     val progressBarBackgroundColor: Color,
-    val gradeProgressBarBorder: Color,
-    val gradeProgressBarBackground: Color,
-    val assignmentCardBorder: Color,
+
+    val primaryCardCautionBackground: Color,
+    val primaryCardInfoBackground: Color,
+
+    val inboxTimeMarkerColor: Color,
+    val notificationPrimerBadge: Color,
+    val notificationPrimerCardBackground: Color,
+
+    val highlightDiscussionResponse: Color,
+    val certificatePreviewHeading: Color,
+    val certificatePreviewMessage: Color,
 ) {
     val primary: Color get() = material.primary
     val primaryVariant: Color get() = material.primaryVariant

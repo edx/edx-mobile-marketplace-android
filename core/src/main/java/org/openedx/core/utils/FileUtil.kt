@@ -6,8 +6,6 @@ import com.google.gson.GsonBuilder
 import org.openedx.core.R
 import java.io.File
 import java.util.Collections
-import java.util.zip.ZipException
-import java.util.zip.ZipFile
 
 class FileUtil(val context: Context) {
 
@@ -45,26 +43,6 @@ class FileUtil(val context: Context) {
             null
         }
     }
-
-fun FileUtil.unzipFile(filepath: String): String? {
-    val archive = File(filepath)
-    val destinationFolder = File(
-        archive.parentFile.absolutePath + "/" + archive.name + "-unzipped"
-    )
-    try {
-        if (!destinationFolder.exists()) {
-            destinationFolder.mkdirs()
-        }
-        val zip = ZipFile(archive)
-        zip.extractAll(destinationFolder.absolutePath)
-        deleteFile(archive.absolutePath)
-        return destinationFolder.absolutePath
-    } catch (e: ZipException) {
-        e.printStackTrace()
-        deleteFile(destinationFolder.absolutePath)
-    }
-    return null
-}
 
     /**
      * Deletes all the files and directories in the app's external storage directory.
@@ -107,4 +85,3 @@ fun FileUtil.unzipFile(filepath: String): String? {
 enum class Directories {
     VIDEOS, SUBTITLES
 }
-

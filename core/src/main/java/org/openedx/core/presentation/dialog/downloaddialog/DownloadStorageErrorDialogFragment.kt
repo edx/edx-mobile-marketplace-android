@@ -49,7 +49,7 @@ import org.openedx.core.presentation.dialog.downloaddialog.DownloadDialogManager
 import org.openedx.core.presentation.dialog.downloaddialog.DownloadStorageErrorDialogFragment.Companion.STORAGE_BAR_MIN_SIZE
 import org.openedx.core.system.StorageManager
 import org.openedx.core.ui.AutoSizeText
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
@@ -140,7 +140,7 @@ private fun DownloadStorageErrorDialogView(
                     text = downloadDialogResource.title,
                     style = MaterialTheme.appTypography.titleLarge,
                     color = MaterialTheme.appColors.textDark,
-                    minSize = MaterialTheme.appTypography.titleLarge.fontSize.value - 1
+                    //minSize = MaterialTheme.appTypography.titleLarge.fontSize.value - 1
                 )
             }
             Column(
@@ -162,7 +162,7 @@ private fun DownloadStorageErrorDialogView(
                 style = MaterialTheme.appTypography.bodyMedium,
                 color = MaterialTheme.appColors.textDark
             )
-            OpenEdXOutlinedButton(
+            OpenEdXOutlineBrandButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.core_cancel),
                 backgroundColor = MaterialTheme.appColors.background,

@@ -73,7 +73,7 @@ data class Block(
             authorizationDenialReason = AuthorizationDenialReason.from(authorizationDenialReason),
             due = TimeUtils.iso8601ToDate(due ?: ""),
             assignmentProgress = assignmentProgress?.mapToDomain(displayName.orEmpty()),
-            offlineDownload = offlineDownload?.mapToDomain()
+            //offlineDownload = offlineDownload?.mapToDomain()
         )
     }
 

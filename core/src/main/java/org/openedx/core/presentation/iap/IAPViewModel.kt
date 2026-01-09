@@ -29,20 +29,20 @@ import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isNull
-import org.openedx.core.extension.toIAPException
 import org.openedx.core.feature.FeatureManager
-import org.openedx.core.feature.FeatureRequests
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseId
 import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.global.AppData
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.CourseDataUpdated
+import org.openedx.core.system.notifier.IAPEvent
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
+import org.openedx.foundation.system.ResourceManager
+import toIAPException
 
 class IAPViewModel(
     private val purchaseFlowData: PurchaseFlowData,
@@ -54,6 +54,7 @@ class IAPViewModel(
     val appData: AppData,
     corePreferences: CorePreferences,
     analytics: IAPAnalytics,
+    private val appContext: Context
 ) : BaseViewModel() {
     private val logger = Logger(TAG)
 
@@ -101,11 +102,16 @@ class IAPViewModel(
     }
 
     init {
-        viewModelScope.launch {
-            if (config.getOptimizelyConfig().enabled) {
-                isCertificatePreviewEnabled =
-                    featureManager.getDecision(FeatureRequests.ValuePropCertificatePreview)
-                        ?.getBoolean(FeatureRequests.CertificatePreviewEnabled.key, false) ?: false
+        user?.id?.let { userId ->
+            val userId: Long = user.id
+            isCertificatePreviewEnabled = isUserIdOdd(userId)
+            if (isCertificatePreviewEnabled) {
+                eventLogger.onCertificatePreviewShown(
+                    isCertificatePreviewEnabled,
+                    purchaseFlowData.courseId,
+                    getVarient(isCertificatePreviewEnabled),
+                    appContext
+                )
             }
         }
 
@@ -196,6 +202,11 @@ class IAPViewModel(
 
     fun startPurchaseFlow() {
         eventLogger.upgradeNowClickedEvent()
+        eventLogger.onUpgradeButtonTapped(
+            isCertificatePreviewEnabled,
+            purchaseFlowData.courseId,
+            getVarient(isCertificatePreviewEnabled)
+        )
         _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
         purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
         val courseName = purchaseFlowData.courseName
@@ -264,6 +275,13 @@ class IAPViewModel(
                 }.onSuccess {
                     if (eventLogger.isSilentIAPFlow.isNull()) {
                         eventLogger.upgradeSuccessEvent()
+                        eventLogger.onCertificatePreviewPurchased(
+                            isCertificatePreviewEnabled,
+                            purchaseFlowData.courseId,
+                            getVarient(isCertificatePreviewEnabled),
+                            purchaseFlowData.price,
+                            appContext
+                        )
                     }
                     purchaseFlowData.isConsumed = true
                     // The IAP dialog will be dismissed by `CourseUnitContainerFragment` after
@@ -380,6 +398,14 @@ class IAPViewModel(
         } else {
             _uiState.value = IAPUIState.Clear
         }
+    }
+
+    fun isUserIdOdd(userId: Long): Boolean {
+        return userId % 2L != 0L
+    }
+
+    private fun getVarient(certificatePreviewEnabled: Boolean): String {
+        return if (certificatePreviewEnabled) "varient" else "baseline"
     }
 
     fun clearIAPFLow() {

@@ -39,8 +39,8 @@ import org.openedx.core.domain.model.DownloadDialogResource
 import org.openedx.core.presentation.dialog.DefaultDialogBox
 import org.openedx.core.ui.AutoSizeText
 import org.openedx.core.ui.IconText
-import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OpenEdXBrandButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
@@ -87,7 +87,7 @@ class DownloadConfirmDialogFragment : DialogFragment(), DownloadDialog {
                     )
 
                     DownloadConfirmDialogType.REMOVE -> DownloadDialogResource(
-                        title = stringResource(id = R.string.core_download_remove_offline_content),
+                            title = stringResource(id = R.string.core_download_remove_offline_content),
                         description = stringResource(
                             id = R.string.core_download_remove_dialog_description,
                             sizeSumString
@@ -172,7 +172,7 @@ private fun DownloadConfirmDialogView(
                     text = downloadDialogResource.title,
                     style = MaterialTheme.appTypography.titleLarge,
                     color = MaterialTheme.appColors.textDark,
-                    minSize = MaterialTheme.appTypography.titleLarge.fontSize.value - 1
+                    //minSize = MaterialTheme.appTypography.titleLarge.fontSize.value - 1
                 )
             }
             Column(
@@ -196,20 +196,20 @@ private fun DownloadConfirmDialogView(
             val onClick: () -> Unit
             when (dialogType) {
                 DownloadConfirmDialogType.REMOVE -> {
-                    buttonText = stringResource(id = R.string.core_remove)
+                        buttonText = stringResource(id = R.string.core_remove)
                     buttonIcon = Icons.Rounded.Delete
                     buttonColor = MaterialTheme.appColors.error
                     onClick = onRemoveClick
                 }
 
                 else -> {
-                    buttonText = stringResource(id = R.string.core_download)
+                    buttonText = stringResource(id = R.string.core_downloaded)
                     buttonIcon = Icons.Outlined.CloudDownload
                     buttonColor = MaterialTheme.appColors.secondaryButtonBackground
                     onClick = onConfirmClick
                 }
             }
-            OpenEdXButton(
+            OpenEdXBrandButton(
                 text = buttonText,
                 backgroundColor = buttonColor,
                 onClick = onClick,
@@ -222,7 +222,7 @@ private fun DownloadConfirmDialogView(
                     )
                 }
             )
-            OpenEdXOutlinedButton(
+            OpenEdXOutlineBrandButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.core_cancel),
                 backgroundColor = MaterialTheme.appColors.background,

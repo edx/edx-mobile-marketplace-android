@@ -46,6 +46,8 @@ import org.openedx.core.extension.isEmailValid
 import org.openedx.core.extension.replaceLinkTags
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.utils.EmailUtil
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.windowSizeValue
 import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalComposeUiApi::class)

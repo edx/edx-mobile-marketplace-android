@@ -6,7 +6,6 @@ import okhttp3.OkHttpClient
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.openedx.core.config.Config
-import org.openedx.core.presentation.dialog.IAPDialogFragment.Companion.TAG
 import org.openedx.core.utils.Logger
 import retrofit2.Retrofit
 import java.io.File
@@ -39,45 +38,38 @@ abstract class AbstractDownloader : KoinComponent {
     open suspend fun download(
         url: String,
         path: String
-    ): DownloadResult {
+    ): Boolean {
         isCanceled = false
         return try {
-            val responseBody = downloadApi.downloadFile(url).body() ?: return DownloadResult.ERROR
-            initializeFile(path)
-            responseBody.byteStream().use { inputStream ->
-                FileOutputStream(File(path)).use { outputStream ->
-                    writeToFile(inputStream, outputStream)
+            val response = downloadApi.downloadFile(url).body()
+            if (response != null) {
+                val file = File(path)
+                if (file.exists()) {
+                    file.delete()
                 }
+                file.createNewFile()
+                input = response.byteStream()
+                currentDownloadingFilePath = path
+                fos = FileOutputStream(file)
+                fos.use { output ->
+                    val buffer = ByteArray(4 * 1024)
+                    var read: Int
+                    while (input!!.read(buffer).also { read = it } != -1) {
+                        output?.write(buffer, 0, read)
+                    }
+                    output?.flush()
+                }
+                true
+            } else {
+                false
             }
-            DownloadResult.SUCCESS
         } catch (e: Exception) {
-            e.printStackTrace()
-            if (isCanceled) DownloadResult.CANCELED else DownloadResult.ERROR
+            logger.e(throwable = e)
+            false
         } finally {
-            closeResources()
+            fos?.close()
+            input?.close()
         }
-    }
-
-    private fun initializeFile(path: String) {
-        val file = File(path)
-        if (file.exists()) file.delete()
-        file.createNewFile()
-        currentDownloadingFilePath = path
-    }
-
-    private fun writeToFile(inputStream: InputStream, outputStream: FileOutputStream) {
-        val buffer = ByteArray(BUFFER_SIZE)
-        var bytesRead: Int
-        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-            outputStream.write(buffer, 0, bytesRead)
-        }
-        outputStream.flush()
-    }
-
-    private fun closeResources() {
-        fos?.close()
-        input?.close()
-        currentDownloadingFilePath = null
     }
 
 
@@ -88,7 +80,7 @@ abstract class AbstractDownloader : KoinComponent {
                 fos?.close()
                 input?.close()
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.e(throwable = e)
             }
         }
         currentDownloadingFilePath?.let {
@@ -99,11 +91,7 @@ abstract class AbstractDownloader : KoinComponent {
         }
     }
 
-    enum class DownloadResult {
-        SUCCESS, CANCELED, ERROR
-    }
-
     companion object {
-        private const val BUFFER_SIZE = 4 * 1024
+        private const val TAG = "AbstractDownloader"
     }
 }

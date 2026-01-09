@@ -34,8 +34,8 @@ import org.openedx.core.R
 import org.openedx.core.domain.model.DownloadDialogResource
 import org.openedx.core.presentation.dialog.DefaultDialogBox
 import org.openedx.core.ui.AutoSizeText
-import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.OpenEdXOutlinedButton
+import org.openedx.core.ui.OpenEdXBrandButton
+import org.openedx.core.ui.OpenEdXOutlineBrandButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
@@ -153,7 +153,7 @@ private fun DownloadErrorDialogView(
                     text = downloadDialogResource.title,
                     style = MaterialTheme.appTypography.titleLarge,
                     color = MaterialTheme.appColors.textDark,
-                    minSize = MaterialTheme.appTypography.titleLarge.fontSize.value - 1
+                    //minSize = MaterialTheme.appTypography.titleLarge.fontSize.value - 1
                 )
             }
             Column(
@@ -171,13 +171,13 @@ private fun DownloadErrorDialogView(
                 color = MaterialTheme.appColors.textDark
             )
             if (dialogType == DownloadErrorDialogType.DOWNLOAD_FAILED) {
-                OpenEdXButton(
+                OpenEdXBrandButton(
                     text = stringResource(id = R.string.core_error_try_again),
                     backgroundColor = MaterialTheme.appColors.secondaryButtonBackground,
                     onClick = onTryAgainClick,
                 )
             }
-            OpenEdXOutlinedButton(
+            OpenEdXOutlineBrandButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = dismissButtonText,
                 backgroundColor = MaterialTheme.appColors.background,

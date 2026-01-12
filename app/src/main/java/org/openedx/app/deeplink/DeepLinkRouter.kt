@@ -11,7 +11,6 @@ import org.openedx.auth.presentation.signin.SignInFragment
 import org.openedx.core.FragmentViewType
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.handouts.HandoutsType
@@ -60,26 +59,6 @@ class DeepLinkRouter(
 
     private fun handleProgramAndProfileNavigation(fm: FragmentManager, deepLink: DeepLink) {
         when (deepLink.type) {
-            // Program
-            DeepLinkType.PROGRAM -> {
-                navigateToProgram(
-                    fm = fm,
-                    deepLink = deepLink
-                )
-                return
-            }
-            // Profile
-            DeepLinkType.PROFILE,
-            DeepLinkType.USER_PROFILE,
-                -> {
-                navigateToProfile(fm = fm)
-                return
-            }
-
-            else -> {
-                //ignore
-            }
-        }
             DeepLinkType.PROGRAM -> navigateToProgram(fm, deepLink)
             DeepLinkType.PROFILE, DeepLinkType.USER_PROFILE -> navigateToProfile(fm)
             else -> handleCourseRelatedNavigation(fm, deepLink)
@@ -92,11 +71,16 @@ class DeepLinkRouter(
             val course = getCourseDetails(courseId) ?: return@launch navigateToDashboard(fm)
             if (!course.isEnrolled) return@launch navigateToDashboard(fm)
 
-            handleSpecificCourseNavigation(fm, deepLink, course.name)
+            handleSpecificCourseNavigation(fm, deepLink, course.name,courseId)
         }
     }
 
-    private fun handleSpecificCourseNavigation(fm: FragmentManager, deepLink: DeepLink, courseTitle: String) {
+    private suspend fun handleSpecificCourseNavigation(
+        fm: FragmentManager,
+        deepLink: DeepLink,
+        courseTitle: String,
+        courseId: String
+    ) {
         navigateToDashboard(fm)
         when (deepLink.type) {
             DeepLinkType.COURSE_DASHBOARD, DeepLinkType.ENROLL, DeepLinkType.ADD_BETA_TESTER -> {
@@ -120,7 +104,7 @@ class DeepLinkRouter(
                     navigateToCourseDashboard(
                         fm = fm,
                         deepLink = deepLink,
-                        courseTitle = course.name
+                        courseTitle = courseTitle
                     )
                     navigateToCourseComponent(
                         fm = fm,
@@ -134,7 +118,7 @@ class DeepLinkRouter(
             }
 
             // Course Discussions
-            val isPostingEnabled = getCourseDiscussionConfig(courseId)?.isPostingEnabled ?: run {
+            val isPostingEnabled = getCourseDiscussionConfig(courseId)?.isPostingEnabled ?: run launch@{
                 navigateToDashboard(fm = fm)
                 navigateToCourseDiscussion(
                     fm = fm,
@@ -166,7 +150,7 @@ class DeepLinkRouter(
                     navigateToDiscussionPost(
                         fm = fm,
                         deepLink = deepLink,
-                        isPostingEnabled = isPostingEnabled,
+                        isPostingEnabled = isPostingEnabled as Boolean,
                     )
                 }
 
@@ -179,7 +163,7 @@ class DeepLinkRouter(
                     navigateToDiscussionComment(
                         fm = fm,
                         deepLink = deepLink,
-                        isPostingEnabled = isPostingEnabled,
+                        isPostingEnabled = isPostingEnabled as Boolean,
                     )
                 }
             DeepLinkType.UNENROLL, DeepLinkType.REMOVE_BETA_TESTER -> {} // Just navigate to dashboard
@@ -190,12 +174,12 @@ class DeepLinkRouter(
             DeepLinkType.COURSE_ANNOUNCEMENT -> navigateToCourseAnnouncementWithMore(fm, deepLink)
             DeepLinkType.COURSE_COMPONENT -> navigateToCourseComponentWithDashboard(fm, deepLink, courseTitle)
             DeepLinkType.DISCUSSION_TOPIC -> navigateToDiscussionTopicWithDiscussion(fm, deepLink)
-            DeepLinkType.DISCUSSION_POST -> navigateToDiscussionPostWithDiscussion(fm, deepLink)
+            DeepLinkType.DISCUSSION_POST -> navigateToDiscussionPostWithDiscussion(fm, deepLink,isPostingEnabled as Boolean)
             DeepLinkType.DISCUSSION_COMMENT, DeepLinkType.FORUM_RESPONSE -> {
-                navigateToDiscussionResponseWithDiscussion(fm, deepLink)
+                navigateToDiscussionResponseWithDiscussion(fm, deepLink,isPostingEnabled as Boolean)
             }
 
-            DeepLinkType.FORUM_COMMENT -> navigateToDiscussionCommentWithDiscussion(fm, deepLink)
+            DeepLinkType.FORUM_COMMENT -> navigateToDiscussionCommentWithDiscussion(fm, deepLink,isPostingEnabled as Boolean)
             else -> {} // ignore
         }
     }
@@ -206,18 +190,6 @@ class DeepLinkRouter(
         navigateToCourseHandout(fm, deepLink)
     }
 
-                DeepLinkType.FORUM_RESPONSE -> {
-                    navigateToDashboard(fm = fm)
-                    navigateToCourseDiscussion(
-                        fm = fm,
-                        deepLink = deepLink
-                    )
-                    navigateToDiscussionResponse(
-                        fm = fm,
-                        deepLink = deepLink,
-                        isPostingEnabled = isPostingEnabled,
-                    )
-                }
     private fun navigateToCourseAnnouncementWithMore(fm: FragmentManager, deepLink: DeepLink) {
         navigateToCourseMore(fm, deepLink)
         navigateToCourseAnnouncement(fm, deepLink)
@@ -233,19 +205,31 @@ class DeepLinkRouter(
         navigateToDiscussionTopic(fm, deepLink)
     }
 
-    private fun navigateToDiscussionPostWithDiscussion(fm: FragmentManager, deepLink: DeepLink) {
+    private fun navigateToDiscussionPostWithDiscussion(
+        fm: FragmentManager,
+        deepLink: DeepLink,
+        isPostingEnabled: Boolean
+    ) {
         navigateToCourseDiscussion(fm, deepLink)
-        navigateToDiscussionPost(fm, deepLink)
+        navigateToDiscussionPost(fm, deepLink,isPostingEnabled)
     }
 
-    private fun navigateToDiscussionResponseWithDiscussion(fm: FragmentManager, deepLink: DeepLink) {
+    private fun navigateToDiscussionResponseWithDiscussion(
+        fm: FragmentManager,
+        deepLink: DeepLink,
+        isPostingEnabled: Boolean
+    ) {
         navigateToCourseDiscussion(fm, deepLink)
-        navigateToDiscussionResponse(fm, deepLink)
+        navigateToDiscussionResponse(fm, deepLink,isPostingEnabled)
     }
 
-    private fun navigateToDiscussionCommentWithDiscussion(fm: FragmentManager, deepLink: DeepLink) {
+    private fun navigateToDiscussionCommentWithDiscussion(
+        fm: FragmentManager,
+        deepLink: DeepLink,
+        isPostingEnabled: Boolean
+    ) {
         navigateToCourseDiscussion(fm, deepLink)
-        navigateToDiscussionComment(fm, deepLink)
+        navigateToDiscussionComment(fm, deepLink,isPostingEnabled)
     }
 
     // Returns true if there was a successful redirect to the discovery screen
@@ -352,7 +336,6 @@ class DeepLinkRouter(
                 courseId = courseId,
                 courseTitle = "",
                 openTab = "DISCUSSIONS"
-                openTab = "DISCUSSIONS",
             )
         }
     }

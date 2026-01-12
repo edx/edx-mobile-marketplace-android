@@ -4,13 +4,15 @@ import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import org.openedx.core.data.model.room.CourseCalendarEventEntity
+import org.openedx.core.data.model.room.CourseCalendarStateEntity
 import org.openedx.core.data.model.room.CourseEnrollmentDetailsEntity
+import org.openedx.core.data.model.room.CourseProgressEntity
 import org.openedx.core.data.model.room.CourseStructureEntity
 import org.openedx.core.data.model.room.DownloadCoursePreview
 import org.openedx.core.data.model.room.OfflineXBlockProgress
 import org.openedx.core.data.model.room.VideoProgressEntity
 import org.openedx.core.data.model.room.discovery.EnrolledCourseEntity
-import org.openedx.core.data.storage.CourseDao
 import org.openedx.core.module.db.CalendarDao
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.db.DownloadModelEntity
@@ -46,12 +48,6 @@ const val DATABASE_NAME = "OpenEdX_db"
         AutoMigration(2, 3),
         AutoMigration(3, 4),
         AutoMigration(4, DATABASE_VERSION),
-    ],
-    version = DATABASE_VERSION
-    autoMigrations = [
-        AutoMigration(1, 2),
-        AutoMigration(2, 3),
-        AutoMigration(3, DATABASE_VERSION),
     ],
     version = DATABASE_VERSION
 )

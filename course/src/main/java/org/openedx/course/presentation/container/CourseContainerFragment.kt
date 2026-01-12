@@ -1,5 +1,6 @@
 package org.openedx.course.presentation.container
 
+import android.Manifest
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -182,10 +183,6 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
     private fun observe() {
         viewModel.dataReady.observe(viewLifecycleOwner) { isReady ->
-            if (isReady.isFalse()) {
-                viewModel.courseRouter.navigateToNoAccess(
-                    requireActivity().supportFragmentManager,
-                    viewModel.courseName
             if (isReady.isTrue()) {
                 if (viewModel.calendarSyncUIState.value.isCalendarSyncEnabled) {
                     setUpCourseCalendar()
@@ -203,7 +200,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     pushNotificationPermissionLauncher.launch(
-                        android.Manifest.permission.POST_NOTIFICATIONS
+                        Manifest.permission.POST_NOTIFICATIONS
                     )
                 }
             }
@@ -239,7 +236,8 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
                 fragmentManager = fm,
                 onRefresh = { page ->
                     onRefresh(page)
-                }
+                },
+                isNavigationEnabled = isNavigationEnabled
             )
         }
     }

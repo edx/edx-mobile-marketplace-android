@@ -1,6 +1,5 @@
 package org.openedx.app.data.networking
 
-import android.util.Log
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
@@ -24,7 +23,6 @@ import org.openedx.core.BuildConfig
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.notifier.app.AppNotifier
-import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
@@ -102,38 +100,6 @@ class OauthRefreshTokenAuthenticator(
         return null
     }
 
-        val errorCode = getErrorCode(response.peekBody(Long.MAX_VALUE).string())
-        if (errorCode != null) {
-            when (errorCode) {
-                TOKEN_EXPIRED_ERROR_MESSAGE,
-                JWT_TOKEN_EXPIRED,
-                    -> {
-                    try {
-                        val newAuth = refreshAccessToken(refreshToken)
-                        if (newAuth != null) {
-                            return response.request.newBuilder()
-                                .header(
-                                    HEADER_AUTHORIZATION,
-                                    config.getAccessTokenType() + " " + newAuth.accessToken
-                                )
-                                .build()
-                        } else {
-                            val actualToken = preferencesManager.accessToken
-                            if (actualToken != accessToken) {
-                                return response.request.newBuilder()
-                                    .header(
-                                        HEADER_AUTHORIZATION,
-                                        "${config.getAccessTokenType()} $actualToken"
-                                    )
-                                    .build()
-                            }
-                            return null
-                        }
-                    } catch (e: Exception) {
-                        logger.e(throwable = e, metadata = mapOf("errorCode" to errorCode))
-                        return null
-                    }
-                }
     // Helper function for handling token expiration logic
     private fun handleTokenExpired(response: Response, refreshToken: String, accessToken: String): Request? {
         return try {
@@ -164,37 +130,18 @@ class OauthRefreshTokenAuthenticator(
         }
     }
 
-                TOKEN_NONEXISTENT_ERROR_MESSAGE,
-                TOKEN_INVALID_GRANT_ERROR_MESSAGE,
-                JWT_INVALID_TOKEN,
-                    -> {
-                    // Retry request with the current access_token if the original access_token used in
-                    // request does not match the current access_token. This case can occur when
-                    // asynchronous calls are made and are attempting to refresh the access_token where
-                    // one call succeeds but the other fails. https://github.com/edx/edx-app-android/pull/834
-                    val authHeaders = response.request.headers[HEADER_AUTHORIZATION]
-                        ?.split(" ".toRegex())
-                    if (authHeaders?.toTypedArray()?.getOrNull(1) != accessToken) {
-                        return response.request.newBuilder()
-                            .header(
-                                HEADER_AUTHORIZATION,
-                                "${config.getAccessTokenType()} $accessToken"
-                            ).build()
-                    }
-
-                    runBlocking {
-                        appNotifier.send(LogoutEvent(true))
-                    }
-                }
-
-                DISABLED_USER_ERROR_MESSAGE,
-                JWT_DISABLED_USER_ERROR_MESSAGE,
-                JWT_USER_EMAIL_MISMATCH,
-                    -> {
-                    runBlocking {
-                        appNotifier.send(LogoutEvent(true))
-                    }
-                }
+    // Helper function for handling invalid token logic
+    private fun handleInvalidToken(response: Response, accessToken: String): Request? {
+        val authHeaders = response.request.headers[HEADER_AUTHORIZATION]?.split(" ".toRegex())
+        return if (authHeaders?.toTypedArray()?.getOrNull(1) != accessToken) {
+            response.request.newBuilder()
+                .header(
+                    HEADER_AUTHORIZATION,
+                    "${config.getAccessTokenType()} $accessToken"
+                ).build()
+        } else {
+            runBlocking {
+                appNotifier.send(LogoutEvent(true))
             }
             null
         }

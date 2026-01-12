@@ -50,32 +50,12 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        initViewPager()
-
-        binding.bottomNavView.setOnItemSelectedListener {
-            when (it.itemId) {
-                R.id.fragmentLearn -> {
-                    viewModel.logLearnTabClickedEvent()
-                    binding.viewPager.setCurrentItem(0, false)
-                }
-
-                R.id.fragmentDiscover -> {
-                    viewModel.logDiscoveryTabClickedEvent()
-                    binding.viewPager.setCurrentItem(1, false)
-                }
-
-                R.id.fragmentProfile -> {
-                    viewModel.logProfileTabClickedEvent()
-                    binding.viewPager.setCurrentItem(2, false)
-                }
-            }
-            true
-        }
-
-        viewModel.isBottomBarEnabled.observe(viewLifecycleOwner) { isBottomBarEnabled ->
-            enableBottomBar(isBottomBarEnabled)
-        }
+        handleArguments()
+        setupBottomNavigation()
+        setupViewPager()
+        setupBottomPopup()
+        observeViewModel()
+    }
 
     private fun handleArguments() {
         requireArguments().apply {
@@ -95,6 +75,9 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 HomeTab.PROGRAMS.name -> {
                     binding.bottomNavView.selectedItemId = R.id.fragmentLearn
                 }
+            }
+        }
+    }
 
     private fun setupBottomNavigation() {
         val openTabArg = requireArguments().getString(ARG_OPEN_TAB, HomeTab.LEARN.name)

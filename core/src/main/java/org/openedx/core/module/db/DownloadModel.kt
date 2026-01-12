@@ -15,11 +15,11 @@ data class DownloadModel(
 )
 
 enum class DownloadedState {
-    WAITING, DOWNLOADING, DOWNLOADED, NOT_DOWNLOADED;
+    WAITING, DOWNLOADING, DOWNLOADED, NOT_DOWNLOADED, LOADING_COURSE_STRUCTURE;
 
     val isWaitingOrDownloading: Boolean
         get() {
-            return this == WAITING || this == DOWNLOADING
+            return this == WAITING || this == DOWNLOADING || this == LOADING_COURSE_STRUCTURE
         }
 
     val isDownloaded: Boolean
@@ -33,5 +33,5 @@ enum class TranscriptsDownloadedState {
 }
 
 enum class FileType {
-    VIDEO, UNKNOWN
+    VIDEO, X_BLOCK
 }

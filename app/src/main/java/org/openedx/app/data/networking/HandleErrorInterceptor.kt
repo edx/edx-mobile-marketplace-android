@@ -21,13 +21,6 @@ class HandleErrorInterceptor(
         val responseCode = response.code
         if (responseCode in 400..500 && response.body != null) {
             val jsonStr = response.peekBody(Long.MAX_VALUE).string()
-        return if (isErrorResponse(response)) {
-            val jsonStr = response.body?.string()
-            if (jsonStr != null) handleErrorResponse(response, jsonStr) else response
-        } else {
-            response
-        }
-    }
 
             try {
                 val errorResponse = gson.fromJson(jsonStr, ErrorResponse::class.java)
@@ -57,30 +50,9 @@ class HandleErrorInterceptor(
                 throw IOException("JsonSyntaxException $jsonStr", e)
             }
         }
-    private fun isErrorResponse(response: Response): Boolean {
-        return response.code in 400..500 && response.body != null
+        return response
     }
 
-    private fun handleErrorResponse(response: Response, jsonStr: String): Response {
-        return try {
-            val errorResponse = gson.fromJson(jsonStr, ErrorResponse::class.java)
-            handleParsedErrorResponse(errorResponse) ?: response
-        } catch (e: JsonSyntaxException) {
-            throw IOException("JsonSyntaxException $jsonStr", e)
-        }
-    }
-
-    private fun handleParsedErrorResponse(errorResponse: ErrorResponse?): Response? {
-        val exception = when {
-            errorResponse?.error == ERROR_INVALID_GRANT -> EdxError.InvalidGrantException()
-            errorResponse?.error == ERROR_USER_NOT_ACTIVE -> EdxError.UserNotActiveException()
-            errorResponse?.errorDescription != null ->
-                EdxError.ValidationException(errorResponse.errorDescription.orEmpty())
-
-            else -> return null
-        }
-        throw exception
-    }
 
     companion object {
         const val ERROR_INVALID_GRANT = "invalid_grant"

@@ -20,8 +20,8 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.CalendarRouter
 import org.openedx.core.R
 import org.openedx.core.config.Config
+import org.openedx.core.data.model.IAPInteractor
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.EnrolledCourse
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.module.DownloadWorkerController

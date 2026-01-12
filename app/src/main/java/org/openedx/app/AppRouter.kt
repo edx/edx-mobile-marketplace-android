@@ -16,7 +16,6 @@ import org.openedx.core.presentation.global.appupgrade.UpgradeRequiredFragment
 import org.openedx.core.presentation.global.webview.WebContentFragment
 import org.openedx.core.presentation.settings.video.VideoQualityFragment
 import org.openedx.core.presentation.settings.video.VideoQualityType
-import org.openedx.core.utils.Logger
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.container.CourseContainerFragment
 import org.openedx.course.presentation.container.NoAccessCourseContainerFragment
@@ -25,7 +24,6 @@ import org.openedx.course.presentation.handouts.HandoutsWebViewFragment
 import org.openedx.course.presentation.section.CourseSectionFragment
 import org.openedx.course.presentation.unit.container.CourseUnitContainerFragment
 import org.openedx.course.presentation.unit.container.CourseViewMode
-import org.openedx.course.presentation.unit.video.VideoFullScreenFragment
 import org.openedx.course.presentation.unit.video.YoutubeVideoFullScreenFragment
 import org.openedx.course.settings.download.DownloadQueueFragment
 import org.openedx.courses.presentation.AllEnrolledCoursesFragment
@@ -64,7 +62,7 @@ import org.openedx.profile.presentation.video.VideoSettingsFragment
 import org.openedx.whatsnew.WhatsNewRouter
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
 
-class AppRouter :
+abstract class AppRouter :
     AuthRouter,
     DiscoveryRouter,
     DashboardRouter,
@@ -193,7 +191,6 @@ class AppRouter :
                 courseTitle = courseTitle,
                 showTrackSelection = showTrackSelection,
             )
-            CourseContainerFragment.newInstance(courseId, courseTitle)
         )
     }
     // endregion
@@ -214,10 +211,6 @@ class AppRouter :
                 courseTitle = courseTitle,
                 openTab = openTab,
                 resumeBlockId = resumeBlockId,
-                courseId,
-                courseTitle,
-                openTab,
-                resumeBlockId
             )
         )
     }
@@ -544,10 +537,5 @@ class AppRouter :
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-    //endregion
-
-    companion object {
-        private const val TAG = "AppRouter"
     }
 }

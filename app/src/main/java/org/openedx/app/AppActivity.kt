@@ -33,6 +33,9 @@ import org.openedx.core.presentation.global.InsetHolder
 import org.openedx.core.presentation.global.WindowSizeHolder
 import org.openedx.core.utils.Logger
 import org.openedx.core.worker.CalendarSyncScheduler
+import org.openedx.foundation.extension.requestApplyInsetsWhenAttached
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.WindowType
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.whatsnew.WhatsNewManager
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
@@ -191,12 +194,12 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
             }
         }
 
+    }
     private fun observeLogoutEvent() {
         viewModel.logoutUser.observe(this) {
             profileRouter.restartApp(supportFragmentManager, viewModel.isLogistrationEnabled)
         }
     }
-
     private fun observeDownloadFailedDialog() {
         lifecycleScope.launch {
             viewModel.downloadFailedDialog.collect {
@@ -242,6 +245,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
                 }
             }
         }
+    }
 
         private fun addFragment(fragment: Fragment) {
             supportFragmentManager.beginTransaction()

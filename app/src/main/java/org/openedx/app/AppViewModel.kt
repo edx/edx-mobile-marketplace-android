@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
+import androidx.room.RoomDatabase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -17,9 +18,7 @@ import org.openedx.app.deeplink.DeepLink
 import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.system.push.RefreshFirebaseTokenWorker
 import org.openedx.app.system.push.SyncFirebaseTokenWorker
-import org.openedx.core.BaseViewModel
 import org.openedx.core.DatabaseManager
-import org.openedx.core.SingleEventLiveData
 import org.openedx.core.config.Config
 import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.data.model.User
@@ -37,7 +36,6 @@ import org.openedx.core.utils.Logger
 import org.openedx.core.utils.Directories
 import org.openedx.foundation.presentation.BaseViewModel
 import org.openedx.foundation.presentation.SingleEventLiveData
-import org.openedx.foundation.utils.FileUtil
 
 @SuppressLint("StaticFieldLeak")
 class AppViewModel(
@@ -160,8 +158,9 @@ class AppViewModel(
         }
     }
 
-    companion object {
+    private companion object {
         private const val LOGOUT_EVENT_THRESHOLD = 5000L
+        private const val TAG = "AppViewModel"
     }
 
     fun handleDiscussionNotification(deepLink: DeepLink) {
@@ -173,9 +172,5 @@ class AppViewModel(
                 logger.e(throwable = e)
             }
         }
-    }
-
-    companion object {
-        private const val TAG = "AppViewModel"
     }
 }

@@ -13,7 +13,6 @@ import org.openedx.auth.presentation.signin.SignInViewModel
 import org.openedx.auth.presentation.signup.SignUpViewModel
 import org.openedx.core.Validator
 import org.openedx.core.data.repository.iap.IAPRepository
-import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.domain.interactor.CalendarInteractor
 import org.openedx.core.presentation.dialog.selectorbottomsheet.SelectDialogViewModel
@@ -58,6 +57,7 @@ import org.openedx.discovery.presentation.search.CourseSearchViewModel
 import org.openedx.discussion.data.repository.DiscussionRepository
 import org.openedx.discussion.domain.interactor.DiscussionInteractor
 import org.openedx.discussion.domain.model.DiscussionComment
+import org.openedx.discussion.domain.model.Thread
 import org.openedx.discussion.presentation.comments.DiscussionCommentsViewModel
 import org.openedx.discussion.presentation.responses.DiscussionResponsesViewModel
 import org.openedx.discussion.presentation.search.DiscussionSearchThreadViewModel
@@ -101,10 +101,14 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
+            get(),
         )
     }
-    viewModel { MainViewModel(get(), get(), get(), get()) }
-    viewModel { MainViewModel(get(), get(), get(), get(), get()) }
+    viewModel { MainViewModel(
+        get(), get(), get(), get(), get(),
+        get(),
+    ) }
 
     factory { AuthRepository(get(), get(), get()) }
     factory { AuthInteractor(get()) }
@@ -179,7 +183,6 @@ val screenModule = module {
         )
     }
 
-    viewModel { DashboardListViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { (windowSize: WindowSize) ->
         DashboardGalleryViewModel(
             get(),
@@ -198,15 +201,11 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            windowSize
         )
     }
     viewModel { AllEnrolledCoursesViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { (openTab: String) ->
         LearnViewModel(openTab, get(), get(), get(), get(), get())
-    }
-    viewModel { (openTab: String) ->
-        LearnViewModel(openTab, get(), get(), get())
     }
 
     factory { DiscoveryRepository(get(), get(), get()) }
@@ -235,7 +234,7 @@ val screenModule = module {
             profileRouter = get(),
         )
     }
-    viewModel { (account: Account) -> EditProfileViewModel(get(), get(), get(), get(), account) }
+    viewModel { (account: Account) -> EditProfileViewModel(get(), get(), get(), get(), get(),account,) }
     viewModel { AppearanceSettingsViewModel(get(), get()) }
     viewModel { (account: Account) ->
         EditProfileViewModel(
@@ -310,13 +309,11 @@ val screenModule = module {
         )
     }
     viewModel { (courseId: String, courseTitle: String, resumeBlockId: String) ->
-    viewModel { (courseId: String, courseTitle: String, showTrackSelection: Boolean, resumeBlockId: String, openTab: String) ->
         CourseContainerViewModel(
             courseId,
             courseTitle,
-            showTrackSelection,
+            get(),
             resumeBlockId,
-            openTab,
             get(),
             get(),
             get(),
@@ -337,6 +334,7 @@ val screenModule = module {
         CourseContentAllViewModel(
             courseId,
             courseTitle,
+            get(),
             get(),
             get(),
             get(),
@@ -401,8 +399,6 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            get(),
-            get(),
         )
     }
     viewModel { (courseId: String) ->
@@ -421,30 +417,27 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            get()
+            get(),
             get(),
             get(),
         )
     }
-    viewModel { (courseId: String, blockId: String) ->
-        BaseVideoViewModel(
-    viewModel { (courseId: String) -> BaseVideoViewModel(courseId, get()) }
-    viewModel { (courseId: String) -> VideoViewModel(courseId, get(), get(), get(), get()) }
+    viewModel { (courseId: String) -> BaseVideoViewModel(courseId, get(),get()) }
+    viewModel { (courseId: String) -> VideoViewModel(courseId, get(), get(), get(), get(),get()) }
     viewModel { (courseId: String, videoUrl: String, blockId: String) ->
         VideoUnitViewModel(
             courseId,
-            blockId,
             videoUrl,
             blockId,
             get(),
             get(),
             get(),
             get(),
-            get()
+            get(),
+            get(),
+            get(),
         )
     }
-    viewModel { (courseId: String, blockId: String) ->
-        VideoViewModel(
     viewModel { (courseId: String, videoUrl: String, blockId: String) ->
         EncodedVideoUnitViewModel(
             courseId,
@@ -453,40 +446,19 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            get()
-        )
-    }
-    viewModel { (courseId: String, blockId: String) ->
-        VideoUnitViewModel(
-            courseId,
-            blockId,
             get(),
             get(),
             get(),
             get(),
-            get()
-        )
-    }
-    viewModel { (courseId: String, blockId: String, title: String) ->
-        EncodedVideoUnitViewModel(
-            courseId = courseId,
-            blockId = blockId,
-            title = title,
-            context = get(),
-            preferencesManager = get(),
-            castManager = get(),
-            courseRepository = get(),
-            notifier = get(),
-            networkConnection = get(),
-            transcriptManager = get(),
-            courseAnalytics = get(),
+            get(),
+            get(),
         )
     }
     viewModel { (courseId: String, enrollmentMode: String) ->
         CourseDatesViewModel(
             courseId,
-            enrollmentMode,
             get(),
+            enrollmentMode,
             get(),
             get(),
             get(),
@@ -512,7 +484,7 @@ val screenModule = module {
     viewModel { CourseSearchViewModel(get(), get(), get(), get(), get()) }
     viewModel { SelectDialogViewModel(get()) }
 
-    single { DiscussionRepository(get(), get(), get(), get(), get()) }
+    single { DiscussionRepository(get(), get(), get(),get(),get()) }
     factory { DiscussionInteractor(get()) }
     viewModel { (courseId: String, courseTitle: String) ->
         DiscussionTopicsViewModel(
@@ -525,11 +497,11 @@ val screenModule = module {
             get()
         )
     }
-    viewModel { (courseId: String, topicId: String, threadId: String, threadType: String) ->
+    viewModel { (courseId: String, topicId: String, threadType: String) ->
         DiscussionThreadsViewModel(
             courseId,
             topicId,
-            threadId,
+            get(),
             threadType,
             get(),
             get(),
@@ -537,50 +509,44 @@ val screenModule = module {
             get(),
             get(),
             get(),
+
+
         )
     }
-    viewModel { (courseId: String, thread: Thread, responseId: String, commentId: String, isPostingEnabled: Boolean) ->
+    viewModel { (thread: Thread) ->
         DiscussionCommentsViewModel(
-            courseId,
+            get(),
             thread,
-            responseId,
-            commentId,
-            isPostingEnabled,
             get(),
             get(),
             get(),
             get(),
             get(),
-            DiscussionMocks.thread.copy(type = DiscussionType.QUESTION),
+            get(),
+            get(),
+            get(),
+            get(),
         )
     }
-    viewModel { (courseId: String, threadId: String, isPostingEnabled: Boolean, comment: DiscussionComment) ->
+    viewModel { (comment: DiscussionComment) ->
         DiscussionResponsesViewModel(
-            courseId,
-            threadId,
-            isPostingEnabled,
+            get(),
+            get(),
+            get(),
             comment,
             get(),
             get(),
             get(),
             get(),
             get(),
-            DiscussionMocks.comment.copy(id = "0"),
+            get(),
         )
     }
+    viewModel { (courseId: String) -> DiscussionAddThreadViewModel(courseId, get(), get(), get(),get()) }
     viewModel { (courseId: String) ->
-        DiscussionAddThreadViewModel(
-            courseId,
-            get(),
-            get(),
-            get(),
-            get()
-        )
-    }
-    viewModel { (courseId: String, isPostingEnabled: Boolean) ->
         DiscussionSearchThreadViewModel(
             courseId,
-            isPostingEnabled,
+            get(),
             get(),
             get(),
             get(),
@@ -596,22 +562,6 @@ val screenModule = module {
             get(),
             get(),
             get(),
-        )
-    }
-
-    single { IAPRepository(get()) }
-    factory { IAPInteractor(get(), get(), get(), get(), get(), get()) }
-    viewModel { (purchaseFlowData: PurchaseFlowData) ->
-        IAPViewModel(
-            purchaseFlowData = purchaseFlowData,
-            iapInteractor = get(),
-            resourceManager = get(),
-            iapNotifier = get(),
-            config = get(),
-            featureManager = get(),
-            appData = get(),
-            corePreferences = get(),
-            analytics = get(),
         )
     }
 
@@ -636,15 +586,10 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
         )
     }
-    viewModel { HtmlUnitViewModel(get(), get(), get(), get(), get()) }
 
-    viewModel { (blockId: String, courseId: String) ->
-        UnlockContentViewModel(blockId, courseId, get(), get(), get(), get())
-    }
-
-    viewModel { ProgramViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { ProgramViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { (courseId: String, courseTitle: String) ->

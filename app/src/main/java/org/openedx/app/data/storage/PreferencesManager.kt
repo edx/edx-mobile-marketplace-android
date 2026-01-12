@@ -14,8 +14,12 @@ import org.openedx.core.domain.model.VideoPlaybackSpeed
 import org.openedx.core.domain.model.VideoQuality
 import org.openedx.core.domain.model.VideoSettings
 import org.openedx.core.extension.replaceSpace
+import org.openedx.core.system.CalendarManager
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.data.storage.CoursePreferences
+import org.openedx.notifications.data.storage.NotificationsPreferences
+import org.openedx.notifications.domain.model.NotificationsConfiguration
+import org.openedx.notifications.domain.model.NotificationsPrimerConfiguration
 import org.openedx.profile.data.model.Account
 import org.openedx.profile.data.storage.ProfilePreferences
 import org.openedx.whatsnew.data.storage.WhatsNewPreferences
@@ -27,7 +31,7 @@ class PreferencesManager(context: Context) :
     WhatsNewPreferences,
     InAppReviewPreferences,
     CoursePreferences,
-    CalendarPreferences {
+    CalendarPreferences, NotificationsPreferences {
 
     private val sharedPreferences =
         context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE)
@@ -51,7 +55,6 @@ class PreferencesManager(context: Context) :
     private fun getLong(key: String, defValue: Long = 0L): Long {
         return sharedPreferences.getLong(key, defValue)
     }
-    private fun getLong(key: String, defValue: Long = 0): Long = sharedPreferences.getLong(key, defValue)
 
     private fun saveBoolean(key: String, value: Boolean) {
         sharedPreferences.edit().apply {

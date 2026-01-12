@@ -11,8 +11,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openedx.core.CalendarRouter
 import org.openedx.core.R
-import org.openedx.core.BaseViewModel
-import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.CalendarInteractor
@@ -51,11 +49,9 @@ class CourseDatesViewModel(
     private val courseNotifier: CourseNotifier,
     private val interactor: CourseInteractor,
     private val resourceManager: ResourceManager,
-    private val corePreferences: CorePreferences,
     private val coursePreferences: CoursePreferences,
     private val courseAnalytics: CourseAnalytics,
     private val config: Config,
-    val courseRouter: CourseRouter,
     private val calendarInteractor: CalendarInteractor,
     private val calendarNotifier: CalendarNotifier,
     private val corePreferences: CorePreferences,

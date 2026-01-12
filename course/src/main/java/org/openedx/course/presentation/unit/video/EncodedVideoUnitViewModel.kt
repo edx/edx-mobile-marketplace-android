@@ -39,6 +39,7 @@ import org.openedx.core.module.TranscriptManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.course.data.repository.CourseRepository
+import org.openedx.course.module.CastManager
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 
@@ -49,7 +50,6 @@ class EncodedVideoUnitViewModel(
     blockId: String,
     val title: String,
     videoUrl: String,
-    blockId: String,
     private val context: Context,
     private val preferencesManager: CorePreferences,
     private val castManager: CastManager,

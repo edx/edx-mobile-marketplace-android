@@ -1,7 +1,6 @@
 package org.openedx.app
 
 import android.content.Context
-import org.openedx.app.analytics.Analytics
 import org.openedx.app.analytics.FirebaseAnalytics
 import org.openedx.app.analytics.SegmentAnalytics
 import org.openedx.auth.presentation.AuthAnalytics
@@ -14,11 +13,15 @@ import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.dashboard.presentation.DashboardAnalytics
 import org.openedx.discovery.presentation.DiscoveryAnalytics
 import org.openedx.discussion.presentation.DiscussionAnalytics
+import org.openedx.foundation.interfaces.Analytics
 import org.openedx.notifications.presentation.NotificationsAnalytics
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.whatsnew.presentation.WhatsNewAnalytics
 
-class AnalyticsManager :
+class AnalyticsManager (
+    context: Context,
+    config: Config,
+) :
     AppAnalytics,
     AppReviewAnalytics,
     AuthAnalytics,
@@ -29,7 +32,7 @@ class AnalyticsManager :
     DiscussionAnalytics,
     ProfileAnalytics,
     WhatsNewAnalytics,
-    DownloadsAnalytics {
+    DownloadsAnalytics, IAPAnalytics, NotificationsAnalytics {
 
     private val analytics: MutableList<Analytics> = mutableListOf()
     init {
@@ -38,16 +41,14 @@ class AnalyticsManager :
             addAnalyticsTracker(FirebaseAnalytics(context = context))
         }
 
-    fun addAnalyticsTracker(analytic: Analytics) {
-        analytics.add(analytic)
         val segmentConfig = config.getSegmentConfig()
         if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank()) {
             addAnalyticsTracker(SegmentAnalytics(context = context, config = config))
         }
     }
 
-    private fun addAnalyticsTracker(analytic: Analytics) {
-        services.add(analytic)
+    fun addAnalyticsTracker(analytic: Analytics) {
+        analytics.add(analytic)
     }
 
     private fun logEvent(event: Event, params: Map<String, Any?> = mapOf()) {
@@ -222,48 +223,7 @@ class AnalyticsManager :
         )
     }
 
-    override fun discussionAllPostsClickedEvent(
-        courseId: String,
-        courseName: String
-    ) {
-        logEvent(
-            Event.DISCUSSION_ALL_POSTS_CLICKED,
-            buildMap {
-                put(Key.COURSE_ID.keyName, courseId)
-                put(Key.COURSE_NAME.keyName, courseName)
-            }
-        )
-    }
 
-    override fun discussionFollowingClickedEvent(
-        courseId: String,
-        courseName: String
-    ) {
-        logEvent(
-            Event.DISCUSSION_FOLLOWING_CLICKED,
-            buildMap {
-                put(Key.COURSE_ID.keyName, courseId)
-                put(Key.COURSE_NAME.keyName, courseName)
-            }
-        )
-    }
-
-    override fun discussionTopicClickedEvent(
-        courseId: String,
-        courseName: String,
-        topicId: String,
-        topicName: String,
-    ) {
-        logEvent(
-            Event.DISCUSSION_TOPIC_CLICKED,
-            buildMap {
-                put(Key.COURSE_ID.keyName, courseId)
-                put(Key.COURSE_NAME.keyName, courseName)
-                put(Key.TOPIC_ID.keyName, topicId)
-                put(Key.TOPIC_NAME.keyName, topicName)
-            }
-        )
-    }
 }
 
 enum class Event(val eventName: String) {
@@ -286,8 +246,6 @@ private enum class Key(val keyName: String) {
     COURSE_NAME("course_name"),
     BLOCK_ID("block_id"),
     BLOCK_NAME("block_name"),
-    TOPIC_ID("topic_id"),
-    TOPIC_NAME("topic_name"),
     FORCE("force"),
     LABEL("label"),
     COURSE_COUNT("courses_count"),

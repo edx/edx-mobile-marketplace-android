@@ -5,7 +5,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.segment.analytics.kotlin.core.Analytics
 import org.openedx.core.utils.Logger
 
-class FirebaseAnalytics(context: Context) : Analytics {
+class FirebaseAnalytics(context: Context) :  org.openedx.foundation.interfaces.Analytics {
 
     private val logger = Logger(TAG)
     private val tracker: FirebaseAnalytics = FirebaseAnalytics.getInstance(context)

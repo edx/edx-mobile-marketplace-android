@@ -26,9 +26,8 @@ import org.openedx.app.AppAnalytics
 import org.openedx.app.AppViewModel
 import org.openedx.app.data.storage.PreferencesManager
 import org.openedx.app.deeplink.DeepLinkRouter
-import org.openedx.core.DatabaseManager
-import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.room.AppDatabase
+import org.openedx.core.DatabaseManager
 import org.openedx.core.CoreMocks
 import org.openedx.core.config.Config
 import org.openedx.core.config.FirebaseConfig
@@ -40,8 +39,6 @@ import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.FileUtil
-import org.openedx.core.system.notifier.app.LogoutEvent
-import org.openedx.foundation.utils.FileUtil
 
 @ExperimentalCoroutinesApi
 class AppViewModelTest {
@@ -53,6 +50,7 @@ class AppViewModelTest {
 
     private val config = mockk<Config>()
     private val notifier = mockk<AppNotifier>()
+    private val room = mockk<AppDatabase>()
     private val databaseManager = mockk<DatabaseManager>()
     private val preferencesManager = mockk<PreferencesManager>()
     private val analytics = mockk<AppAnalytics>()
@@ -93,15 +91,16 @@ class AppViewModelTest {
             config,
             notifier,
             databaseManager,
+            notifier,
+            room,
             preferencesManager,
             dispatcher,
             analytics,
             deepLinkRouter,
             fileUtil,
-            context,
             pushManager,
             downloadNotifier,
-            context,
+            context
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -130,12 +129,13 @@ class AppViewModelTest {
             config,
             notifier,
             databaseManager,
+            notifier,
+            room,
             preferencesManager,
             dispatcher,
             analytics,
             deepLinkRouter,
             fileUtil,
-            context,
             pushManager,
             downloadNotifier,
             context,
@@ -170,15 +170,16 @@ class AppViewModelTest {
             config,
             notifier,
             databaseManager,
+            notifier,
+            room,
             preferencesManager,
             dispatcher,
             analytics,
             deepLinkRouter,
             fileUtil,
-            context,
             pushManager,
             downloadNotifier,
-            context,
+            context
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()

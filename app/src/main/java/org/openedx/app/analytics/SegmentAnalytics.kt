@@ -1,16 +1,17 @@
 package org.openedx.app.analytics
 
 import android.content.Context
+import com.braze.Braze
 import com.segment.analytics.kotlin.core.BaseEvent
 import com.segment.analytics.kotlin.core.ScreenEvent
 import com.segment.analytics.kotlin.core.TrackEvent
 import com.segment.analytics.kotlin.core.platform.EventPlugin
 import com.segment.analytics.kotlin.core.platform.Plugin
-import com.segment.analytics.kotlin.destinations.braze.BrazeDestination
 import com.segment.analytics.kotlin.destinations.firebase.FirebaseDestination
 import org.openedx.app.BuildConfig
 import org.openedx.core.config.Config
 import org.openedx.core.utils.Logger
+import org.openedx.foundation.interfaces.Analytics
 import com.segment.analytics.kotlin.android.Analytics as SegmentAnalyticsBuilder
 import com.segment.analytics.kotlin.core.Analytics as SegmentTracker
 
@@ -56,7 +57,7 @@ class SegmentAnalytics(context: Context, config: Config) : Analytics {
         if (config.getFirebaseConfig()
                 .isSegmentAnalyticsSource() && config.getBrazeConfig().isEnabled
         ) {
-            tracker.add(plugin = BrazeDestination(context))
+          //  tracker.add(plugin = BrazeDestination(context))
         }
         SegmentTracker.debugLogsEnabled = BuildConfig.DEBUG
         logger.d { "Segment Analytics Builder Initialised" }

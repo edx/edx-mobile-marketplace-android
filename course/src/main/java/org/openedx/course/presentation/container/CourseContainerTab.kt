@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Moving
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.rounded.PlayCircleFilled
 import androidx.compose.ui.graphics.vector.ImageVector
 import org.openedx.core.ui.TabItem
 import org.openedx.course.R
@@ -25,6 +26,8 @@ enum class CourseContainerTab(
     OFFLINE(R.string.course_container_nav_downloads, Icons.Filled.CloudDownload),
     DISCUSSIONS(R.string.course_container_nav_discussions, Icons.AutoMirrored.Filled.Chat),
     MORE(R.string.course_container_nav_more, Icons.AutoMirrored.Filled.TextSnippet),
+    VIDEOS(R.string.course_container_nav_videos, Icons.Rounded.PlayCircleFilled),
+
 }
 
 enum class CourseContentTab(

@@ -55,7 +55,6 @@ import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.FileType
 import org.openedx.core.ui.IconText
 import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.OpenEdXOutlinedButton
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
@@ -182,7 +181,7 @@ private fun CourseOfflineUI(
                             )
                         } else if (uiState.isDownloading) {
                             Spacer(modifier = Modifier.height(20.dp))
-                            OpenEdXOutlinedButton(
+                            OpenEdXButton(
                                 modifier = Modifier.fillMaxWidth(),
                                 text = stringResource(R.string.core_cancel_course_download),
                                 backgroundColor = MaterialTheme.appColors.background,
@@ -265,7 +264,7 @@ private fun LargestDownloads(
             )
         }
         if (!isDownloading) {
-            OpenEdXOutlinedButton(
+            OpenEdXButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(R.string.core_remove_all_downloads),
                 backgroundColor = MaterialTheme.appColors.background,

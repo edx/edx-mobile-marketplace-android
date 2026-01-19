@@ -243,11 +243,17 @@ private fun CourseHomeUI(
                                         CourseDatesBannerTablet(
                                             banner = uiState.datesBannerInfo,
                                             resetDates = onResetDatesClick,
+                                            modifier = TODO(),
+                                            bannerType = TODO(),
+                                            onDismissClick = TODO(),
                                         )
                                     } else {
                                         CourseDatesBanner(
                                             banner = uiState.datesBannerInfo,
                                             resetDates = onResetDatesClick,
+                                            modifier = TODO(),
+                                            bannerType = TODO(),
+                                            onDismissClick = TODO(),
                                         )
                                     }
                                 }

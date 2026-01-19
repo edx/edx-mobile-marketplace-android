@@ -1,5 +1,7 @@
 package org.openedx.course.presentation.ui
 
+import android.R.attr.onClick
+import android.R.attr.textColor
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -38,6 +40,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
@@ -45,8 +49,10 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Snackbar
+import androidx.compose.material.SnackbarDefaults.backgroundColor
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -73,6 +79,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -93,12 +100,13 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.jsoup.Jsoup
 import org.openedx.core.BlockType
+import org.openedx.core.CoreMocks
 import org.openedx.core.domain.model.AssignmentProgress
-import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseBannerType
-import org.openedx.core.extension.nonZero
+import org.openedx.core.domain.model.Progress
+import org.openedx.core.extension.safeDivBy
 import org.openedx.core.extension.toFileSize
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
@@ -106,9 +114,11 @@ import org.openedx.core.module.db.FileType
 import org.openedx.core.module.db.TranscriptsDownloadedState
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.IconText
+import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
 import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.OpenEdXTertiaryButton
+import org.openedx.core.ui.TextIcon
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -117,11 +127,9 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.utils.TimeUtils
 import org.openedx.core.utils.VideoPreview
-import org.openedx.course.CourseMocks
 import org.openedx.course.R
 import org.openedx.course.presentation.outline.getUnitBlockIcon
 import org.openedx.foundation.extension.nonZero
-import org.openedx.foundation.extension.toFileSize
 import subtitleFile.Caption
 import subtitleFile.TimedTextObject
 import java.util.Date
@@ -138,10 +146,6 @@ fun CourseSectionCard(
 ) {
     val iconModifier = Modifier.size(24.dp)
 
-    Column(
-        Modifier
-            .clickable { onItemClick(block) }
-            .background(MaterialTheme.appColors.cardViewBackground)) {
     Column(
         modifier = Modifier.clickable { onItemClick(block) }
     ) {
@@ -373,7 +377,7 @@ fun NavigationUnitsButtons(
         horizontalArrangement = Arrangement.Center
     ) {
         if (hasPrevBlock) {
-            OpenEdXOutlinePrimaryButton(
+            OutlinedButton(
                 modifier = Modifier
                     .height(42.dp),
                 text = stringResource(R.string.course_navigation_prev),
@@ -465,7 +469,7 @@ fun HorizontalPageIndicator(
     defaultColor: Color = Color.Gray,
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
         modifier = modifier
     ) {
         blocks.forEachIndexed { index, block ->
@@ -660,7 +664,8 @@ fun CourseVideoSection(
     }
     val downloadBlockIds = downloadedStateMap.keys.filter { it in block.descendants }
     var showDeleteVideoDialog by remember { mutableStateOf(false) }
-
+    val videoCardWidth = 192.dp
+    val rowHorizontalArrangement = 8.dp
     if (showDeleteVideoDialog) {
         ShowDeleteVideoConfirmationDialog(
             blockTitle = block.displayName,
@@ -675,15 +680,7 @@ fun CourseVideoSection(
     }
 
     Column(
-        modifier = modifier
-            .clip(MaterialTheme.appShapes.cardShape)
-            .noRippleClickable { onItemClick(block) }
-            .background(MaterialTheme.appColors.cardViewBackground)
-            .border(
-                1.dp,
-                MaterialTheme.appColors.cardViewBorder,
-                MaterialTheme.appShapes.cardShape
-            )
+        modifier = Modifier.padding(vertical = 8.dp)
     ) {
         CourseVideoSectionHeader(
             block = block,
@@ -869,20 +866,7 @@ fun CourseVideoSectionHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        CardArrow(degrees = arrowDegrees)
-        if (block.isCompleted()) {
-            val completedIconPainter = painterResource(R.drawable.course_ic_task_alt)
-            val completedIconColor = MaterialTheme.appColors.successGreen
-            val completedIconDescription =
-                stringResource(id = R.string.course_accessibility_section_completed)
-
-            Icon(
-                painter = completedIconPainter,
-                contentDescription = completedIconDescription,
-                tint = completedIconColor
-            )
-        }
-        Text(
+        Column(
             modifier = Modifier.weight(1f),
         ) {
             Text(
@@ -905,11 +889,6 @@ fun CourseVideoSectionHeader(
         DownloadIcon(
             downloadedState = downloadedState,
             onDownloadClick = onDownloadClick
-            text = block.displayName,
-            style = MaterialTheme.appTypography.titleMedium,
-            color = MaterialTheme.appColors.textPrimary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
         )
         Row(
             modifier = Modifier.fillMaxHeight(),
@@ -1415,9 +1394,9 @@ fun DatesShiftedSnackBar(
                     backgroundColor = MaterialTheme.appColors.background,
                     textColor = MaterialTheme.appColors.primary,
                     borderColor = MaterialTheme.appColors.primary,
-                    onClick = {
-                        onViewDates()
-                    }
+                {
+                    onViewDates()
+                }.also { onClick = it }
                 )
             }
         }
@@ -1782,7 +1761,10 @@ private fun CourseSubSectionItemPreview() {
     OpenEdXTheme {
         CourseSubSectionItem(
             block = mockChapterBlock,
-            onClick = {}
+            onClick = {},
+            modifier = TODO(),
+            useRelativeDates = TODO(),
+            showDueDate = TODO()
         )
     }
 }
@@ -1818,5 +1800,7 @@ private val mockChapterBlock = Block(
     containsGatedContent = false,
     authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
     assignmentProgress = AssignmentProgress("", 1f, 2f),
-    due = Date()
+    due = Date(),
+    downloadModel = TODO(),
+    offlineDownload = TODO()
 )

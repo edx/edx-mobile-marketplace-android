@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.os.Build
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -779,11 +778,6 @@ private fun CollapsingLayoutMobile(
                 },
             content = navigation,
         )
-
-        val bodyPadding =
-            expandedTopHeight.value + offset.value + backgroundImageHeight.value + navigationHeight.value - blurImagePaddingPx * factor
-        val bodyModifier = if (isEnabled) {
-            Modifier
         val bodyPadding = expandedTopHeight.value + offset.value + backgroundImageHeight.value +
                 navigationHeight.value - blurImagePaddingPx * factor
         val bodyModifier = if (isEnabled) {

@@ -2,6 +2,7 @@
 <resources>
     <string name="profile_full_profile">Full profile</string>
     <string name="profile_limited_profile">Limited profile</string>
+    <string name="profile_delete_profile">Delete Account</string>
     <string name="profile_edit_profile">Edit profile</string>
     <string name="profile_edit">Edit</string>
     <string name="profile_save">Save</string>

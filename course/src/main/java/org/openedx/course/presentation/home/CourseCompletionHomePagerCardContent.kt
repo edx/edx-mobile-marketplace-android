@@ -24,7 +24,6 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.course.R
 import org.openedx.course.presentation.progress.CourseCompletionCircularProgress
-import org.openedx.course.presentation.ui.CourseSection
 
 @Composable
 fun CourseCompletionHomePagerCardContent(

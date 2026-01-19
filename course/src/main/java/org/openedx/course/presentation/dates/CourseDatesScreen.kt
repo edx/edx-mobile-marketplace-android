@@ -33,6 +33,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -61,31 +63,25 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentManager
 import org.openedx.core.NoContentScreenType
-import org.openedx.core.UIMessage
-import org.openedx.core.data.model.DateType
-import org.openedx.core.NoContentScreenType
 import org.openedx.core.domain.model.CourseDateBlock
 import org.openedx.core.domain.model.DatesSection
-import org.openedx.core.extension.isNotEmptyThenLet
 import org.openedx.core.extension.isTrue
 import org.openedx.core.presentation.CoreAnalyticsScreen
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncState
 import org.openedx.core.ui.CircularProgress
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncUIState
-import org.openedx.core.ui.CircularProgress
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.NoContentScreen
-import org.openedx.core.ui.NoContentScreen
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.utils.TimeUtils.formatToString
 import org.openedx.core.utils.clearTime
 import org.openedx.course.CourseMocks
+import org.openedx.course.R
 import org.openedx.course.presentation.ui.CourseDatesBanner
 import org.openedx.course.presentation.ui.CourseDatesBannerTablet
 import org.openedx.course.presentation.unit.container.CourseViewMode
@@ -276,7 +272,7 @@ private fun CourseDatesUI(
                                         )
                                     }
                                 }
-
+}
                                 if (courseBanner.isBannerAvailableForUserType(isSelfPaced) && canShowPLSBanner) {
                                     item {
                                         if (windowSize.isTablet) {
@@ -372,8 +368,6 @@ private fun CourseDatesUI(
                             }
                         }
 
-                        DatesUIState.Error -> {
-                            NoContentScreen(noContentScreenType = NoContentScreenType.COURSE_DATES)
                         CourseDatesUIState.Error -> {
                             NoContentScreen(noContentScreenType = NoContentScreenType.COURSE_DATES)
                         }
@@ -486,11 +480,6 @@ fun ExpandableView(
             .background(MaterialTheme.appColors.cardViewBackground, MaterialTheme.shapes.medium)
             .border(0.75.dp, MaterialTheme.appColors.cardViewBorder, MaterialTheme.shapes.medium)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp, start = 16.dp, end = 8.dp, bottom = 8.dp)
-                .clickable { expanded = !expanded }) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -741,7 +730,7 @@ private fun EmptyCourseDatesScreenPreview() {
     OpenEdXTheme {
         CourseDatesUI(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = DatesUIState.Error,
+            uiState = CourseDatesUIState.Error,
             uiMessage = null,
             isSelfPaced = true,
             canShowPLSBanner = true,
@@ -751,6 +740,8 @@ private fun EmptyCourseDatesScreenPreview() {
             onSyncDates = {},
             onCalendarSyncSwitch = {},
             onPLSBannerDismiss = {},
+            useRelativeDates = TODO(),
+            onCalendarSyncStateClick = TODO(),
         )
     }
 }

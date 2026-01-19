@@ -22,6 +22,7 @@ import org.openedx.core.extension.getSequentialBlocks
 import org.openedx.core.extension.getVerticalBlocks
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncState
+import org.openedx.core.presentation.settings.calendarsync.CalendarSyncUIState
 import org.openedx.core.system.notifier.CalendarSyncEvent.CreateCalendarSyncEvent
 import org.openedx.core.system.notifier.CourseDatesShifted
 import org.openedx.core.system.notifier.CourseLoading

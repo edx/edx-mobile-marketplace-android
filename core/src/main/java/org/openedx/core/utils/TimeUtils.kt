@@ -6,6 +6,7 @@ import com.google.gson.internal.bind.util.ISO8601Utils
 import org.openedx.core.R
 import org.openedx.core.domain.model.StartType
 import org.openedx.foundation.system.ResourceManager
+import java.text.DateFormat
 import java.text.ParseException
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
@@ -16,6 +17,7 @@ import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 
+@Suppress("MagicNumber")
 object TimeUtils {
 
     private val POSIX_LOCALE = Locale.Builder()
@@ -29,6 +31,86 @@ object TimeUtils {
     private const val FORMAT_ISO_8601_WITH_TIME_ZONE = "yyyy-MM-dd'T'HH:mm:ssXXX"
 
     private const val SEVEN_DAYS_IN_MILLIS = 604800000L
+
+    fun formatToString(context: Context, date: Date, useRelativeDates: Boolean): String {
+        if (!useRelativeDates) {
+            val locale = Locale.Builder().setLanguage(Locale.getDefault().language).build()
+            val dateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM, locale)
+            return dateFormat.format(date)
+        }
+
+        val now = Calendar.getInstance()
+        val inputDate = Calendar.getInstance().apply { time = date }
+        val daysDiff = ((now.timeInMillis - inputDate.timeInMillis) / (1000 * 60 * 60 * 24)).toInt()
+        return when {
+            daysDiff in -5..-1 -> DateUtils.formatDateTime(
+                context,
+                date.time,
+                DateUtils.FORMAT_SHOW_WEEKDAY
+            ).toString()
+
+            daysDiff == -6 -> context.getString(R.string.core_next) + " " + DateUtils.formatDateTime(
+                context,
+                date.time,
+                DateUtils.FORMAT_SHOW_WEEKDAY
+            ).toString()
+
+            daysDiff in -1..1 -> DateUtils.getRelativeTimeSpanString(
+                date.time,
+                now.timeInMillis,
+                DateUtils.DAY_IN_MILLIS,
+                DateUtils.FORMAT_ABBREV_TIME
+            ).toString()
+
+            daysDiff in 2..6 -> DateUtils.getRelativeTimeSpanString(
+                date.time,
+                now.timeInMillis,
+                DateUtils.DAY_IN_MILLIS
+            ).toString()
+
+            inputDate.get(Calendar.YEAR) == now.get(Calendar.YEAR) -> {
+                DateUtils.getRelativeTimeSpanString(
+                    date.time,
+                    now.timeInMillis,
+                    DateUtils.DAY_IN_MILLIS,
+                    DateUtils.FORMAT_SHOW_DATE
+                ).toString()
+            }
+
+            else -> {
+                DateUtils.getRelativeTimeSpanString(
+                    date.time,
+                    now.timeInMillis,
+                    DateUtils.DAY_IN_MILLIS,
+                    DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_YEAR
+                ).toString()
+            }
+        }
+    }
+    fun formatToDueInString(context: Context, date: Date): String {
+        val now = Calendar.getInstance()
+        val dueDate = Calendar.getInstance().apply { time = date }
+        now.set(Calendar.HOUR_OF_DAY, 0)
+        now.set(Calendar.MINUTE, 0)
+        now.set(Calendar.SECOND, 0)
+        now.set(Calendar.MILLISECOND, 0)
+        dueDate.set(Calendar.HOUR_OF_DAY, 0)
+        dueDate.set(Calendar.MINUTE, 0)
+        dueDate.set(Calendar.SECOND, 0)
+        dueDate.set(Calendar.MILLISECOND, 0)
+        val daysDifference =
+            ((dueDate.timeInMillis - now.timeInMillis) / (24 * 60 * 60 * 1000)).toInt()
+        return when {
+            daysDifference < 0 -> context.getString(R.string.core_date_type_past_due)
+            daysDifference == 0 -> context.getString(R.string.core_date_type_today)
+            else -> context.getString(R.string.core_date_format_due_in_days, daysDifference)
+        }
+    }
+
+    fun formatToMonthDay(date: Date): String {
+        val sdf = SimpleDateFormat(FORMAT_MONTH_DAY, Locale.getDefault())
+        return sdf.format(date)
+    }
 
     fun getCurrentTime(): Long {
         return Calendar.getInstance().timeInMillis

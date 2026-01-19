@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -26,13 +25,8 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Divider
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarData
@@ -40,11 +34,6 @@ import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -89,6 +78,7 @@ import org.openedx.core.domain.model.toPurchaseFlowData
 import org.openedx.core.extension.isNotNull
 import org.openedx.core.extension.isTrue
 import org.openedx.core.extension.takeIfNotEmpty
+import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.viewBinding
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPRequestType
@@ -97,27 +87,17 @@ import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialog
 import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogType
 import org.openedx.core.ui.CheckmarkView
 import org.openedx.core.ui.HandleUIMessage
-import org.openedx.core.ui.IconText
 import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.OfflineModeDialog
-import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.OpenEdXOutlineBrandButton
-import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
-import org.openedx.core.ui.OpenEdXPrimaryButton
 import org.openedx.core.ui.OpenEdXButton
-import org.openedx.core.ui.PageIndicator
 import org.openedx.core.ui.RoundTabsBar
 import org.openedx.core.ui.UnlockingAccessView
 import org.openedx.core.ui.UpgradeToAccessView
 import org.openedx.core.ui.UpgradeToAccessViewType
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.rememberWindowSize
-import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.theme.appTypography
-import org.openedx.core.utils.TimeUtils
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.utils.PermissionUtils
 import org.openedx.core.utils.TimeUtils
@@ -132,8 +112,11 @@ import org.openedx.course.presentation.home.CourseHomePagerTab
 import org.openedx.course.presentation.home.CourseHomeScreen
 import org.openedx.course.presentation.offline.CourseOfflineScreen
 import org.openedx.course.presentation.progress.CourseProgressScreen
+import org.openedx.course.presentation.ui.DatesShiftedSnackBar
 import org.openedx.discussion.presentation.topics.DiscussionTopicsScreen
-import org.openedx.core.R as coreR
+import org.openedx.foundation.presentation.WindowSize
+import org.openedx.foundation.presentation.rememberWindowSize
+import java.util.Date
 
 class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
@@ -146,8 +129,16 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
             requireArguments().getBoolean(ARG_SHOW_TRACK_SELECTION, false),
             requireArguments().getString(ARG_RESUME_BLOCK, ""),
             requireArguments().getString(ARG_OPEN_TAB, CourseContainerTab.HOME.name)
-            requireArguments().getString(ARG_RESUME_BLOCK, "")
         )
+    }
+
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { isGranted ->
+        viewModel.logCalendarPermissionAccess(!isGranted.containsValue(false))
+        if (!isGranted.containsValue(false)) {
+            viewModel.setCalendarSyncDialogType(CalendarSyncDialogType.SYNC_DIALOG)
+        }
     }
 
     private val pushNotificationPermissionLauncher = registerForActivityResult(
@@ -208,6 +199,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
         viewModel.errorMessage.observe(viewLifecycleOwner) {
             snackBar = Snackbar.make(binding.root, it, Snackbar.LENGTH_SHORT)
             snackBar?.show()
+
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.showProgress.collect {
@@ -236,8 +228,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
                 fragmentManager = fm,
                 onRefresh = { page ->
                     onRefresh(page)
-                },
-                isNavigationEnabled = isNavigationEnabled
+                }
             )
         }
     }
@@ -248,6 +239,12 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
             setContent {
                 OpenEdXTheme {
                     val syncState by viewModel.calendarSyncUIState.collectAsState()
+
+                    LaunchedEffect(key1 = syncState.checkForOutOfSync) {
+                        if (syncState.isCalendarSyncEnabled && syncState.checkForOutOfSync.get()) {
+                            viewModel.checkIfCalendarOutOfDate()
+                        }
+                    }
 
                     LaunchedEffect(syncState.uiMessage.get()) {
                         syncState.uiMessage.get().takeIfNotEmpty()?.let {
@@ -338,7 +335,6 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
             openTab: String = CourseContainerTab.HOME.name,
             resumeBlockId: String = "",
             showTrackSelection: Boolean = false,
-            resumeBlockId: String = "",
         ): CourseContainerFragment {
             val fragment = CourseContainerFragment()
             fragment.arguments = bundleOf(
@@ -357,7 +353,6 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 @Composable
 fun CourseDashboard(
     viewModel: CourseContainerViewModel,
-    isNavigationEnabled: Boolean,
     isResumed: Boolean,
     openTab: String,
     fragmentManager: FragmentManager,
@@ -367,6 +362,10 @@ fun CourseDashboard(
     val refreshing by viewModel.refreshing.collectAsState(true)
     val courseImage by viewModel.courseImage.collectAsState()
     val uiMessage by viewModel.uiMessage.collectAsState(null)
+    val isNavigationEnabled by viewModel.isNavigationEnabled.collectAsState()
+    val courseContainerTabs by viewModel.courseContainerTabs.collectAsState()
+    val dataReady = viewModel.dataReady.observeAsState()
+
     val requiredTab = when (openTab.uppercase()) {
         CourseContainerTab.HOME.name -> CourseContainerTab.HOME
         CourseContainerTab.DATES.name -> CourseContainerTab.DATES
@@ -375,11 +374,35 @@ fun CourseDashboard(
         CourseContainerTab.MORE.name -> CourseContainerTab.MORE
         else -> CourseContainerTab.HOME
     }
+
+    val pagerState = rememberPagerState(
+        initialPage = CourseContainerTab.entries.indexOf(requiredTab),
+        pageCount = { courseContainerTabs.size }
+    )
+
+    val contentTabPagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { CourseContentTab.entries.size }
+    )
+
+    val homePagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { CourseHomePagerTab.entries.size }
+    )
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = refreshing,
+        onRefresh = { onRefresh(pagerState.currentPage) }
+    )
+
+    val snackState = remember { SnackbarHostState() }
+    val tabState = rememberLazyListState()
+    val windowSize = rememberWindowSize()
+    val scope = rememberCoroutineScope()
+    var selectedContentTab by remember { mutableStateOf(CourseContentTab.ALL) }
+    val scaffoldState = rememberScaffoldState()
+
     OpenEdXTheme {
-        val windowSize = rememberWindowSize()
-        val scope = rememberCoroutineScope()
-        val scaffoldState = rememberScaffoldState()
-        val fragmentManager = fragmentActivity.supportFragmentManager
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
@@ -394,67 +417,6 @@ fun CourseDashboard(
             val uiMessage by viewModel.uiMessage.collectAsState(null)
             val courseContainerTabs by viewModel.courseContainerTabs.collectAsState()
 
-    val pagerState = rememberPagerState(
-        initialPage = CourseContainerTab.entries.indexOf(requiredTab),
-        pageCount = { CourseContainerTab.entries.size }
-    )
-    val contentTabPagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = { CourseContentTab.entries.size }
-    )
-    val homePagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = { CourseHomePagerTab.entries.size }
-    )
-    val accessStatus = viewModel.courseAccessStatus.observeAsState()
-    val tabState = rememberLazyListState()
-    val snackState = remember { SnackbarHostState() }
-    var selectedContentTab by remember { mutableStateOf(CourseContentTab.ALL) }
-    val pullRefreshState = rememberPullRefreshState(
-        refreshing = refreshing,
-        onRefresh = { onRefresh(pagerState.currentPage) }
-    )
-
-    OpenEdXTheme {
-        val windowSize = rememberWindowSize()
-        val scope = rememberCoroutineScope()
-        val scaffoldState = rememberScaffoldState()
-        Scaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .navigationBarsPadding(),
-            scaffoldState = scaffoldState,
-            backgroundColor = MaterialTheme.appColors.background,
-            bottomBar = {
-                val currentPage = CourseContainerTab.entries[pagerState.currentPage]
-                Box {
-                    if (currentPage == CourseContainerTab.CONTENT &&
-                        selectedContentTab == CourseContentTab.ASSIGNMENTS
-                    ) {
-                        AssignmentsBottomBar(scope = scope, pagerState = pagerState)
-                    } else if (currentPage == CourseContainerTab.HOME) {
-                        HomeNavigationRow(homePagerState = homePagerState)
-                    }
-                    var isInternetConnectionShown by rememberSaveable {
-                        mutableStateOf(false)
-                    }
-                    if (!isInternetConnectionShown && !viewModel.hasInternetConnection) {
-                        OfflineModeDialog(
-                            Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.BottomCenter),
-                            onDismissCLick = {
-                                isInternetConnectionShown = true
-                            },
-                            onReloadClick = {
-                                isInternetConnectionShown = viewModel.hasInternetConnection
-                                onRefresh(pagerState.currentPage)
-                            }
-                        )
-                    }
-                }
-            }
-        ) { paddingValues ->
             val pagerState = rememberPagerState(
                 initialPage = viewModel.getOpenTabIndex(),
                 pageCount = { courseContainerTabs.size }
@@ -596,6 +558,9 @@ fun CourseDashboard(
                                             isNavigationEnabled = isNavigationEnabled,
                                             isResumed = isResumed,
                                             fragmentManager = fragmentManager,
+                                            contentTabPagerState = TODO(),
+                                            homePagerState = TODO(),
+                                            onContentTabSelected = TODO(),
                                         )
                                     }
 
@@ -609,85 +574,6 @@ fun CourseDashboard(
                             pullRefreshState,
                             Modifier.align(Alignment.TopCenter)
                         )
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    CollapsingLayout(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(paddingValues)
-                            .pullRefresh(pullRefreshState),
-                        courseImage = courseImage,
-                        imageHeight = 200,
-                        expandedTop = {
-                            ExpandedHeaderContent(
-                                courseTitle = viewModel.courseName,
-                                org = viewModel.courseDetails?.courseInfoOverview?.org ?: ""
-                            )
-                        },
-                        collapsedTop = {
-                            CollapsedHeaderContent(
-                                courseTitle = viewModel.courseName
-                            )
-                        },
-                        navigation = {
-                            if (isNavigationEnabled) {
-                                RoundTabsBar(
-                                    items = CourseContainerTab.entries,
-                                    contentPadding = PaddingValues(
-                                        horizontal = 12.dp,
-                                        vertical = 16.dp
-                                    ),
-                                    rowState = tabState,
-                                    pagerState = pagerState,
-                                    withPager = true,
-                                    onTabClicked = viewModel::courseContainerTabClickedEvent
-                                )
-                            }
-                        },
-                        isEnabled = CourseAccessError.NONE == accessStatus.value,
-                        onBackClick = {
-                            fragmentManager.popBackStack()
-                        },
-                        bodyContent = {
-                            when (accessStatus.value) {
-                                CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE,
-                                CourseAccessError.NOT_YET_STARTED,
-                                CourseAccessError.UNKNOWN -> {
-                                    CourseAccessErrorView(
-                                        viewModel = viewModel,
-                                        accessError = accessStatus.value,
-                                        fragmentManager = fragmentManager,
-                                    )
-                                }
-
-                                CourseAccessError.NONE -> {
-                                    DashboardPager(
-                                        windowSize = windowSize,
-                                        viewModel = viewModel,
-                                        pagerState = pagerState,
-                                        contentTabPagerState = contentTabPagerState,
-                                        homePagerState = homePagerState,
-                                        isResumed = isResumed,
-                                        fragmentManager = fragmentManager,
-                                        onContentTabSelected = { tab ->
-                                            selectedContentTab = tab
-                                        }
-                                    )
-                                }
-
-                                else -> {}
-                            }
-                        }
-                    )
-                    PullRefreshIndicator(
-                        refreshing,
-                        pullRefreshState,
-                        Modifier.align(Alignment.TopCenter)
-                    )
 
                         var isInternetConnectionShown by rememberSaveable {
                             mutableStateOf(false)
@@ -726,20 +612,6 @@ fun CourseDashboard(
                             )
                         }
                     }
-                    SnackbarHost(
-                        modifier = Modifier.align(Alignment.BottomStart),
-                        hostState = snackState
-                    ) { snackbarData: SnackbarData ->
-                        DatesShiftedSnackBar(
-                            showAction = CourseContainerTab.entries[pagerState.currentPage] != CourseContainerTab.DATES,
-                            onViewDates = {
-                                scrollToDates(scope, pagerState)
-                            },
-                            onClose = {
-                                snackbarData.dismiss()
-                            }
-                        )
-                    }
                 }
             }
         }
@@ -755,6 +627,7 @@ private fun DashboardPager(
     courseContainerTabs: List<CourseContainerTab>,
     pagerState: PagerState,
     contentTabPagerState: PagerState,
+    isNavigationEnabled: Boolean,
     homePagerState: PagerState,
     isResumed: Boolean,
     fragmentManager: FragmentManager,
@@ -764,9 +637,8 @@ private fun DashboardPager(
 
     HorizontalPager(
         state = pagerState,
-        userScrollEnabled = isNavigationEnabled,
-        beyondBoundsPageCount = courseContainerTabs.size
         userScrollEnabled = false,
+//        beyondBoundsPageCount = courseContainerTabs.size,
         beyondViewportPageCount = CourseContainerTab.entries.size
     ) { page ->
         when (viewModel.getTabByIndex(page)) {
@@ -780,17 +652,6 @@ private fun DashboardPager(
                     homePagerState = homePagerState,
                     onResetDatesClick = {
                         viewModel.onRefresh(CourseContainerTab.DATES)
-                    }
-                )
-            }
-
-            CourseContainerTab.VIDEOS -> {
-                CourseVideosScreen(
-                    windowSize = windowSize,
-                    viewModel = koinViewModel(
-                        parameters = { parametersOf(viewModel.courseId, viewModel.courseName) }
-                    ),
-                    fragmentManager = fragmentManager
                     },
                     onNavigateToContent = { contentTab ->
                         scope.launch {
@@ -903,6 +764,8 @@ private fun DashboardPager(
                     }
                 )
             }
+
+            CourseContainerTab.VIDEOS -> TODO()
         }
     }
 }
@@ -1173,7 +1036,7 @@ private fun AuditExpiredUpgradableView(
                     }
 
                     is IAPUIState.ProductData -> {
-                        OpenEdXBrandButton(
+                        OpenEdXButton(
                             modifier = Modifier.fillMaxWidth(),
                             text = stringResource(
                                 id = CoreR.string.iap_upgrade_price,
@@ -1193,157 +1056,6 @@ private fun AuditExpiredUpgradableView(
     }
 }
 
-@Composable
-private fun CourseAccessErrorView(
-    viewModel: CourseContainerViewModel,
-    accessError: CourseAccessError?,
-    fragmentManager: FragmentManager,
-) {
-    var icon: Painter = painterResource(id = R.drawable.course_ic_circled_arrow_up)
-    var message = ""
-    when (accessError) {
-        CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE -> {
-            message = stringResource(
-                R.string.course_error_expired_not_upgradeable_title,
-                TimeUtils.getCourseAccessFormattedDate(
-                    LocalContext.current,
-                    viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires ?: Date()
-                )
-            )
-        }
-
-        CourseAccessError.AUDIT_EXPIRED_UPGRADABLE -> {
-            message = stringResource(
-                R.string.course_error_expired_upgradeable_title,
-                TimeUtils.getCourseAccessFormattedDate(
-                    LocalContext.current,
-                    viewModel.courseDetails?.courseAccessDetails?.auditAccessExpires ?: Date()
-                )
-            )
-        }
-
-        CourseAccessError.NOT_YET_STARTED -> {
-            icon = painterResource(id = R.drawable.course_ic_calendar)
-            message = stringResource(
-                R.string.course_error_not_started_title,
-                viewModel.courseDetails?.courseInfoOverview?.startDisplay ?: ""
-            )
-        }
-
-        CourseAccessError.UNKNOWN -> {
-            icon = painterResource(id = R.drawable.course_ic_not_supported_block)
-            message = stringResource(R.string.course_an_error_occurred)
-        }
-
-        else -> {}
-    }
-
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsInset()
-            .background(MaterialTheme.appColors.background),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    Image(
-                        modifier = Modifier
-                            .size(96.dp)
-                            .padding(bottom = 12.dp),
-                        painter = icon,
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(MaterialTheme.appColors.progressBarBackgroundColor),
-                    )
-                }
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    textAlign = TextAlign.Center,
-                    text = message,
-                    style = MaterialTheme.appTypography.bodyMedium,
-                    color = MaterialTheme.appColors.textDark
-                )
-            }
-            SetupCourseAccessErrorButtons(
-                viewModel = viewModel,
-                accessError = accessError,
-                fragmentManager = fragmentManager,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SetupCourseAccessErrorButtons(
-    viewModel: CourseContainerViewModel,
-    accessError: CourseAccessError?,
-    fragmentManager: FragmentManager,
-) {
-    when (accessError) {
-        CourseAccessError.AUDIT_EXPIRED_NOT_UPGRADABLE,
-        CourseAccessError.NOT_YET_STARTED,
-            -> {
-            OpenEdXPrimaryButton(
-                text = stringResource(R.string.course_label_back),
-                onClick = { fragmentManager.popBackStack() },
-            )
-        }
-
-        CourseAccessError.AUDIT_EXPIRED_UPGRADABLE -> {
-            OpenEdXOutlinePrimaryButton(
-                text = stringResource(R.string.course_find_new_course_button),
-                onClick = {
-                    viewModel.courseRouter.navigateToDiscover(fragmentManager)
-                }
-            )
-            UpgradeToAccessView(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                type = UpgradeToAccessViewType.AUDIT_EXPIRED,
-            ) {
-                viewModel.courseDetails?.let {
-                    IAPDialogFragment.newInstance(
-                        it.toPurchaseFlowData(
-                            iapFlow = IAPFlow.USER_INITIATED,
-                            screenName = IAPFlowSource.COURSE_DASHBOARD.screen,
-                        )
-                    ).show(
-                        fragmentManager,
-                        IAPDialogFragment.TAG
-                    )
-                }
-            }
-        }
-
-        CourseAccessError.UNKNOWN -> {
-            if (viewModel.hasInternetConnection) {
-                OpenEdXPrimaryButton(
-                    text = stringResource(R.string.course_label_back),
-                    onClick = { fragmentManager.popBackStack() },
-                )
-            }
-        }
-
-        else -> {}
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 private fun scrollToTab(
     scope: CoroutineScope,
@@ -1351,102 +1063,6 @@ private fun scrollToTab(
     pagerState: PagerState,
 ) {
     scope.launch {
-        pagerState.scrollToPage(CourseContainerTab.entries.indexOf(CourseContainerTab.DATES))
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-private fun scrollToProgress(scope: CoroutineScope, pagerState: PagerState) {
-    scope.launch {
-        pagerState.scrollToPage(CourseContainerTab.entries.indexOf(CourseContainerTab.PROGRESS))
-    }
-}
-
-@Composable
-private fun HomeNavigationRow(homePagerState: PagerState) {
-    val homeCoroutineScope = rememberCoroutineScope()
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.appColors.background),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val isPreviousPageEnabled = homePagerState.currentPage > 0
-        IconButton(
-            modifier = Modifier.size(60.dp),
-            enabled = homePagerState.currentPage > 0,
-            onClick = {
-                homeCoroutineScope.launch {
-                    homePagerState.animateScrollToPage(homePagerState.currentPage - 1)
-                }
-            }
-        ) {
-            Icon(
-                modifier = Modifier.size(12.dp),
-                imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
-                contentDescription = stringResource(coreR.string.core_previous),
-                tint = if (isPreviousPageEnabled) {
-                    MaterialTheme.appColors.textDark
-                } else {
-                    MaterialTheme.appColors.textFieldHint
-                }
-            )
-        }
-        PageIndicator(
-            modifier = Modifier.padding(vertical = 16.dp),
-            numberOfPages = CourseHomePagerTab.entries.size,
-            selectedPage = homePagerState.currentPage,
-            defaultRadius = 8.dp,
-            space = 8.dp,
-            selectedLength = 24.dp,
-        )
-        val isNextPageEnabled = homePagerState.currentPage < CourseHomePagerTab.entries.size - 1
-        IconButton(
-            modifier = Modifier.size(60.dp),
-            enabled = isNextPageEnabled,
-            onClick = {
-                homeCoroutineScope.launch {
-                    homePagerState.animateScrollToPage(homePagerState.currentPage + 1)
-                }
-            }
-        ) {
-            Icon(
-                modifier = Modifier.size(12.dp),
-                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                contentDescription = stringResource(coreR.string.core_next),
-                tint = if (isNextPageEnabled) {
-                    MaterialTheme.appColors.textDark
-                } else {
-                    MaterialTheme.appColors.textFieldHint
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun AssignmentsBottomBar(
-    scope: CoroutineScope,
-    pagerState: PagerState
-) {
-    Column(
-        modifier = Modifier.background(MaterialTheme.appColors.background),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Divider(modifier = Modifier.fillMaxWidth())
-        TextButton(
-            onClick = {
-                scrollToProgress(scope, pagerState)
-            }
-        ) {
-            IconText(
-                text = stringResource(R.string.course_review_grading_policy),
-                painter = painterResource(id = coreR.drawable.core_ic_mountains),
-                color = MaterialTheme.appColors.primary,
-                textStyle = MaterialTheme.appTypography.labelLarge
-            )
-        }
         pagerState.animateScrollToPage(pageIndex)
     }
 }

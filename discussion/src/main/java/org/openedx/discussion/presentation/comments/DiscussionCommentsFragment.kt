@@ -43,7 +43,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -57,7 +56,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
@@ -78,13 +76,17 @@ import kotlinx.coroutines.delay
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
+import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.ProfileImage
 import org.openedx.core.extension.TextConverter
 import org.openedx.core.extension.parcelable
 import org.openedx.core.extension.smoothScrollToIndex
 import org.openedx.core.ui.BackBtn
 import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.WindowSize
+import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
+import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.shouldLoadMore
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -93,6 +95,7 @@ import org.openedx.core.ui.theme.appShapes
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.discussion.DiscussionMocks
 import org.openedx.discussion.R
+import org.openedx.core.ui.windowSizeValue
 import org.openedx.discussion.domain.model.DiscussionComment
 import org.openedx.discussion.domain.model.DiscussionType
 import org.openedx.discussion.domain.model.Thread
@@ -100,11 +103,7 @@ import org.openedx.discussion.presentation.DiscussionRouter
 import org.openedx.discussion.presentation.comments.DiscussionCommentsFragment.Companion.LOAD_MORE_THRESHOLD
 import org.openedx.discussion.presentation.ui.CommentItem
 import org.openedx.discussion.presentation.ui.ThreadMainItem
-import org.openedx.foundation.presentation.UIMessage
-import org.openedx.foundation.presentation.WindowSize
-import org.openedx.foundation.presentation.WindowType
-import org.openedx.foundation.presentation.rememberWindowSize
-import org.openedx.foundation.presentation.windowSizeValue
+
 
 
 class DiscussionCommentsFragment : Fragment() {
@@ -256,6 +255,7 @@ class DiscussionCommentsFragment : Fragment() {
             return fragment
         }
     }
+
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -609,7 +609,9 @@ private fun DiscussionCommentsScreenPreview() {
             showProgress = false,
             isPostingEnabled = false,
             paginationCallBack = {},
-            onItemClick = { _, _, _ -> },
+            onItemClick = { _, _, _ ->
+
+            },
             onCommentClick = {},
             onAddResponseClick = {},
             onBackClick = {},
@@ -619,6 +621,7 @@ private fun DiscussionCommentsScreenPreview() {
         )
     }
 }
+
 
 @Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)

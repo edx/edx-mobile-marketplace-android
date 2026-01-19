@@ -51,7 +51,6 @@ import org.openedx.course.presentation.ui.CourseDatesBanner
 import org.openedx.course.presentation.ui.CourseDatesBannerTablet
 import org.openedx.course.presentation.ui.CourseMessage
 import org.openedx.course.presentation.ui.CourseProgress
-import org.openedx.course.presentation.ui.CourseSection
 import org.openedx.course.presentation.ui.ResumeCourseButton
 import org.openedx.course.presentation.unit.container.CourseViewMode
 import org.openedx.foundation.extension.takeIfNotEmpty

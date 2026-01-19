@@ -8,6 +8,6 @@ sealed class DatesUIState {
         val courseDatesResult: CourseDatesResult,
         val calendarSyncState: CalendarSyncState,
     ) : DatesUIState()
-    data object Error : DatesUIState()
+    data object Error : DatesUIState(), CourseDatesUIState
     data object Loading : DatesUIState()
 }

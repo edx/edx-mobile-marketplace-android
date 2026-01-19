@@ -13,6 +13,7 @@ import org.openedx.core.data.model.DownloadCoursePreview
 import org.openedx.core.data.model.EnrollmentStatus
 import org.openedx.core.data.model.HandoutsModel
 import org.openedx.core.data.model.ResetCourseDates
+import org.openedx.core.domain.model.CourseDatesBannerInfo
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -69,6 +70,9 @@ interface CourseApi {
     @POST("/api/course_experience/v1/reset_course_deadlines")
     suspend fun resetCourseDates(@Body courseBody: Map<String, String>): ResetCourseDates
 
+//    @GET("/api/course_experience/v1/course_deadlines_info/{course_id}")
+//    suspend fun getDatesBannerInfo(@Path("course_id") courseId: String): CourseDatesBannerInfo
+
     @GET("/api/mobile/v1/course_info/{course_id}/handouts")
     suspend fun getHandouts(@Path("course_id") courseId: String): HandoutsModel
 
@@ -84,11 +88,6 @@ interface CourseApi {
         @Query("requested_fields") fields: List<String> = emptyList()
     ): CourseEnrollments
 
-    @GET("/api/mobile/v1/course_info/{course_id}/enrollment_details")
-    suspend fun getEnrollmentDetails(
-        @Path("course_id") courseId: String,
-    ): CourseEnrollmentDetails
-
     @Multipart
     @POST("/courses/{course_id}/xblock/{block_id}/handler/xmodule_handler/problem_check")
     suspend fun submitOfflineXBlockProgress(
@@ -101,6 +100,11 @@ interface CourseApi {
     suspend fun getEnrollmentsStatus(
         @Path("username") username: String
     ): List<EnrollmentStatus>
+
+    @GET("/api/mobile/v1/course_info/{course_id}/enrollment_details")
+    suspend fun getEnrollmentDetails(
+        @Path("course_id") courseId: String,
+    ): CourseEnrollmentDetails
 
     @GET("/api/mobile/v1/download_courses/{username}")
     suspend fun getDownloadCoursesPreview(

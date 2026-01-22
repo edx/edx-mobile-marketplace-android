@@ -182,9 +182,33 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
+    @UnstableApi
     override fun onPause() {
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onPause()
+        viewModel.exoPlayer?.apply {
+            playWhenReady = false
+            pause()
+        }
+        viewModel.getCastPlayer()?.pause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.exoPlayer?.apply {
+            playWhenReady = false
+            pause()
+        }
+    }
+
+    @UnstableApi
+    override fun setMenuVisibility(menuVisible: Boolean) {
+        super.setMenuVisibility(menuVisible)
+        if (menuVisible) {
+            viewModel.onFragmentVisible()
+        } else {
+            viewModel.onFragmentHidden()
+        }
     }
 
     @UnstableApi

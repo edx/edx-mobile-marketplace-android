@@ -80,7 +80,7 @@ class EncodedVideoUnitViewModel(
 
     var exoPlayer: ExoPlayer? = null
         private set
-    private var playWhenReadyState: Boolean = true
+    private var playWhenReadyState: Boolean = false
     private val _state = MutableStateFlow(PlayerState())
     internal val state: StateFlow<PlayerState>
         get() = _state
@@ -90,6 +90,7 @@ class EncodedVideoUnitViewModel(
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition = 0L
+    private var wasFullscreen = false
 
     init {
         transcriptObject.asFlow().distinctUntilChanged().mapNotNull {
@@ -213,13 +214,19 @@ class EncodedVideoUnitViewModel(
         if ((_state.value.activePlayerType == PlayerType.EXO_REGULAR || _state.value.activePlayerType == PlayerType.EXO_FULL_SCREEN)
             && !isPlayerPrepared
         ) {
-            setPlayerMedia(getMediaItem())
-            exoPlayer?.prepare()
-            exoPlayer?.seekTo(currentWindow, playbackPosition)
             exoPlayer?.playWhenReady = playWhenReady
-            isPlayerPrepared = true
+            castManager.attachCastPlayer { /* unchanged */ }
+            exoPlayer?.addListener(exoPlayerListener)
+            if (!isPlayerPrepared) {
+                setPlayerMedia(getMediaItem())
+                exoPlayer?.prepare()
+                isPlayerPrepared = true
+            }
+            exoPlayer?.seekTo(currentWindow, playbackPosition)
 
-
+        }
+        if (wasFullscreen) {
+            _state.update { it.copy(activePlayerType = PlayerType.EXO_FULL_SCREEN) }
         }
         startUpdatingVideoTime()
     }
@@ -236,8 +243,12 @@ class EncodedVideoUnitViewModel(
 
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
-        playWhenReady = exoPlayer?.playWhenReady.isTrue()
-        exoPlayer?.pause()
+        exoPlayer?.let { player ->
+            playbackPosition = player.currentPosition
+            currentWindow = player.currentMediaItemIndex
+            playWhenReady = player.playWhenReady
+            player.pause()
+        }
     }
 
     private fun initPlayer() {
@@ -261,13 +272,26 @@ class EncodedVideoUnitViewModel(
 
             // Restore playback position and playWhenReady from saved state
             seekTo(playbackPosition)
-            playWhenReady = playWhenReadyState
+            playWhenReady = false
 
-            prepare()
         }
         _state.update { it.copy(activePlayerType = PlayerType.EXO_REGULAR) }
         logVideoLoadedEvent(videoUrl)
     }
+
+    fun onFragmentVisible() {
+        if (!isPlayerPrepared) {
+            exoPlayer?.prepare()
+            exoPlayer?.playWhenReady = true
+            isPlayerPrepared = true
+        }
+    }
+
+    fun onFragmentHidden() {
+        exoPlayer?.playWhenReady = false
+        exoPlayer?.pause()
+    }
+
     private fun buildMediaSource(videoUrl: String): MediaSource {
         val uri = videoUrl.toUri()
         return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context))
@@ -328,6 +352,7 @@ class EncodedVideoUnitViewModel(
 
     fun enterFullscreen(): Boolean {
         if (state.value.activePlayerType == PlayerType.CHROME_CAST) return false
+        wasFullscreen = true
         applyTrackSelector(isSubtitlesDisabled = false)
         _state.update { it.copy(activePlayerType = PlayerType.EXO_FULL_SCREEN) }
         return true

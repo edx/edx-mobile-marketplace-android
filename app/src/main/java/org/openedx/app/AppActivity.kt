@@ -80,6 +80,11 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         super.onSaveInstanceState(outState)
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Do nothing – fragments & player remain alive
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()

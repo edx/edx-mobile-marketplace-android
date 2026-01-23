@@ -1,5 +1,6 @@
 package org.openedx.core.module.download
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -136,7 +137,7 @@ abstract class BaseDownloadViewModel(
                 val url = videoInfo?.url ?: ""
                 val extension = url.split('.').lastOrNull() ?: "mp4"
                 val path =
-                    folder + File.separator + "${Sha1Util.SHA1(block.displayName)}.$extension"
+                    folder + File.separator + "${Sha1Util.SHA1(block.id)}.$extension"
                 val transcriptUrls = block.studentViewData?.transcripts?.toMap() ?: emptyMap()
                 val transcriptPaths = getTranscriptPaths(folder, transcriptUrls)
                 if (downloadModelList.find { it.id == blockId && it.downloadedState.isDownloaded } == null) {

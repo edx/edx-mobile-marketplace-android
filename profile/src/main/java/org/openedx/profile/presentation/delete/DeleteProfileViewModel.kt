@@ -25,7 +25,7 @@ class DeleteProfileViewModel(
     private val notifier: ProfileNotifier,
     private val validator: Validator,
     private val analytics: ProfileAnalytics,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

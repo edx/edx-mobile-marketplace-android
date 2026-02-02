@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.config.Config
-import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.extension.readAsText
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
@@ -27,15 +26,10 @@ class HtmlUnitViewModel(
     private val appData: AppData,
     private val edxCookieManager: AppCookieManager,
     private val networkConnection: NetworkConnection,
-    private val notifier: CourseNotifier,
-    private val courseInteractor: CourseInteractor,
-    private val offlineProgressSyncScheduler: OfflineProgressSyncScheduler
+    private val notifier: CourseNotifier
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow<HtmlUnitUIState>(HtmlUnitUIState.Loading)
-    val uiState = _uiState.asStateFlow()
-
-    private val _uiState = MutableStateFlow<HtmlUnitUIState>(HtmlUnitUIState.Initialization)
     val uiState = _uiState.asStateFlow()
 
     private val _injectJSList = MutableStateFlow<List<String>>(listOf())
@@ -57,28 +51,6 @@ class HtmlUnitViewModel(
     fun onWebPageLoadError() {
         _uiState.value =
             HtmlUnitUIState.Error(if (networkConnection.isOnline()) ErrorType.UNKNOWN_ERROR else ErrorType.CONNECTION_ERROR)
-    }
-
-    init {
-        tryToSyncProgress()
-    }
-
-    fun onWebPageLoading() {
-        _uiState.value = HtmlUnitUIState.Loading
-    }
-
-    fun onWebPageLoaded() {
-        _uiState.value = HtmlUnitUIState.Loaded()
-    }
-
-    fun onWebPageLoadError() {
-        _uiState.value = HtmlUnitUIState.Error(
-            if (networkConnection.isOnline()) {
-                ErrorType.UNKNOWN_ERROR
-            } else {
-                ErrorType.CONNECTION_ERROR
-            }
-        )
     }
 
     fun setWebPageLoaded(assets: AssetManager) {

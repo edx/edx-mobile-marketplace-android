@@ -26,8 +26,6 @@ import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseStructureUpdated
-import org.openedx.core.system.notifier.VideoNotifier
-import org.openedx.core.system.notifier.VideoQualityChanged
 import org.openedx.core.utils.Logger
 import org.openedx.course.R
 import org.openedx.course.domain.interactor.CourseInteractor

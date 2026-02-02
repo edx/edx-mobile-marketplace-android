@@ -28,7 +28,7 @@ class EditProfileViewModel(
     private val analytics: ProfileAnalytics,
     val config: Config,
     account: Account,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

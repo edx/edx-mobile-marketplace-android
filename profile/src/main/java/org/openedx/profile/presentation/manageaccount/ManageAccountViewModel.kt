@@ -30,7 +30,7 @@ class ManageAccountViewModel(
     private val notifier: ProfileNotifier,
     private val analytics: ProfileAnalytics,
     val profileRouter: ProfileRouter
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
     private val logger = Logger(TAG)
 
     private val _uiState: MutableStateFlow<ManageAccountUIState> = MutableStateFlow(ManageAccountUIState.Loading)

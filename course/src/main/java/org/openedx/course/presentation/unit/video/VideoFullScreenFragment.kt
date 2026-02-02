@@ -34,12 +34,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import android.view.View
-import android.widget.FrameLayout
 import androidx.annotation.OptIn
-import androidx.core.os.bundleOf
-import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.Fragment
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
@@ -47,7 +42,6 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import androidx.media3.common.util.Clock
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -67,9 +61,7 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.course.R
 import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
 import org.openedx.core.R as CoreR
-import org.openedx.course.databinding.FragmentVideoFullScreenBinding
 import org.openedx.course.presentation.CourseAnalyticsKey
-import org.openedx.foundation.extension.requestApplyInsetsWhenAttached
 
 class VideoFullScreenFragment : DialogFragment() {
 
@@ -315,3 +307,4 @@ class VideoFullScreenFragment : DialogFragment() {
         fun newInstance() = VideoFullScreenFragment()
     }
 }
+

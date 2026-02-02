@@ -76,11 +76,9 @@ class CourseContentAllViewModel(
     preferencesManager,
     workerController,
     coreAnalytics,
-    downloadHelper
+    downloadHelper,
+    resourceManager,
 ) {
-    private val logger = Logger(TAG)
-
-    val isCourseNestedListEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
     val isCourseDropdownNavigationEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
     private val _uiState =
@@ -88,16 +86,9 @@ class CourseContentAllViewModel(
     val uiState: StateFlow<CourseContentAllUIState>
         get() = _uiState.asStateFlow()
 
-    private val _uiMessage = MutableSharedFlow<UIMessage>()
-    val uiMessage: SharedFlow<UIMessage>
-        get() = _uiMessage.asSharedFlow()
-
     private val _resumeBlockId = MutableSharedFlow<String>()
     val resumeBlockId: SharedFlow<String>
         get() = _resumeBlockId.asSharedFlow()
-
-    private val _canShowPLSBanner = MutableStateFlow(false)
-    val canShowPLSBanner: StateFlow<Boolean> = _canShowPLSBanner
 
     private var resumeSectionBlock: Block? = null
     private var resumeVerticalBlock: Block? = null
@@ -119,15 +110,6 @@ class CourseContentAllViewModel(
                             getCourseData()
                         }
                     }
-
-                    is CourseOpenBlock -> {
-                        _resumeBlockId.emit(event.blockId)
-                    }
-
-                    is RefreshPLSBanner -> {
-                        _canShowPLSBanner.value =
-                            coursePreferences.canShowPLSBanner(courseId, event.bannerType)
-                    }
                 }
             }
         }
@@ -144,7 +126,6 @@ class CourseContentAllViewModel(
                         courseSubSections = courseSubSections,
                         courseSectionsState = state.courseSectionsState,
                         subSectionsDownloadsCount = subSectionsDownloadsCount,
-                        datesBannerInfo = state.datesBannerInfo,
                         useRelativeDates = preferencesManager.isRelativeDatesEnabled
                         datesBannerInfo = state.datesBannerInfo
                     )
@@ -161,12 +142,11 @@ class CourseContentAllViewModel(
                 super.saveDownloadModels(folder, courseId, id)
             } else {
                 viewModelScope.launch {
-                    _uiMessage.emit(
+                    sendMessage(
                         UIMessage.ToastMessage(
                             resourceManager.getString(courseR.string.course_can_download_only_with_wifi)
                         )
                     )
-                    _uiMessage.emit(UIMessage.ToastMessage(resourceManager.getString(R.string.course_can_download_only_with_wifi)))
                 }
             }
         } else {
@@ -192,8 +172,6 @@ class CourseContentAllViewModel(
                 courseSubSections = courseSubSections,
                 courseSectionsState = courseSectionsState,
                 subSectionsDownloadsCount = subSectionsDownloadsCount,
-                datesBannerInfo = state.datesBannerInfo
-                datesBannerInfo = state.datesBannerInfo,
                 useRelativeDates = preferencesManager.isRelativeDatesEnabled
             )
 
@@ -201,17 +179,6 @@ class CourseContentAllViewModel(
         } else {
             false
         }
-    }
-
-    fun onPLSBannerViewed() {
-        logPLSBannerEvents(CourseAnalyticsEvent.PLS_BANNER_VIEWED)
-    }
-
-    fun onDismissPLSBanner(bannerType: String) {
-        _canShowPLSBanner.value = false
-        coursePreferences.markPLSBannerDismissed(courseId, bannerType)
-        viewModelScope.launch { courseNotifier.send(RefreshPLSBanner(bannerType)) }
-        logPLSBannerEvents(CourseAnalyticsEvent.PLS_BANNER_DISMISSED)
     }
 
     private fun getCourseDataInternal() {
@@ -231,9 +198,7 @@ class CourseContentAllViewModel(
             }.collect { (courseStructure, courseStatus, courseDates) ->
                 if (courseStructure == null) return@collect
                 val blocks = courseStructure.blockData
-                val datesBannerInfo = courseDates.courseBanner
 
-                checkIfCalendarOutOfDate(courseDates.datesSection.values.flatten())
                 checkIfCalendarOutOfDate(courseDates.datesSection.values.flatten())
                 updateOutdatedOfflineXBlocks(courseStructure)
 
@@ -246,18 +211,6 @@ class CourseContentAllViewModel(
         blocks: List<Block>,
         courseStructure: CourseStructure,
         courseStatus: CourseComponentStatus,
-        datesBannerInfo: CourseDatesBannerInfo
-    ) {
-        setBlocks(blocks)
-        courseSubSections.clear()
-        courseSubSectionUnit.clear()
-        val sortedStructure = courseStructure.copy(blockData = sortBlocks(blocks))
-        initDownloadModelsStatus()
-    private suspend fun initializeCourseData(
-        blocks: List<Block>,
-        courseStructure: CourseStructure,
-        courseStatus: CourseComponentStatus,
-        datesBannerInfo: CourseDatesBannerInfo,
     ) {
         setBlocks(blocks)
         courseSubSections.clear()
@@ -265,26 +218,6 @@ class CourseContentAllViewModel(
         val sortedStructure = courseStructure.copy(blockData = sortBlocks(blocks))
         initDownloadModelsStatus()
 
-        _uiState.value = CourseOutlineUIState.CourseData(
-            courseStructure = sortedStructure,
-            downloadedState = getDownloadModelsStatus(),
-            resumeComponent = getResumeBlock(blocks, courseStatus.lastVisitedBlockId),
-            resumeUnitTitle = resumeVerticalBlock?.displayName ?: "",
-            courseSubSections = courseSubSections,
-            courseSectionsState = getCourseSectionExpandedState(sortedStructure.blockData),
-            subSectionsDownloadsCount = subSectionsDownloadsCount,
-            datesBannerInfo = datesBannerInfo,
-        )
-        _canShowPLSBanner.value =
-            coursePreferences.canShowPLSBanner(courseId, datesBannerInfo.bannerType.name)
-    }
-
-    private suspend fun handleCourseDataError(e: Throwable) {
-        logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
-        _uiState.value = CourseOutlineUIState.Error
-        val errorMessage = when {
-            e.isInternetError() -> CoreR.string.core_error_no_connection
-            else -> CoreR.string.core_error_unknown_error
         val courseSectionsState =
             (_uiState.value as? CourseContentAllUIState.CourseData)?.courseSectionsState
                 ?: blocks.getChapterBlocks().associate { it.id to !it.isCompleted() }
@@ -414,22 +347,6 @@ class CourseContentAllViewModel(
         }
     }
 
-    private fun getCourseSectionExpandedState(blockData: List<Block>): Map<String, Boolean> {
-        val expandedState = mutableMapOf<String, Boolean>()
-
-        // Open only the first incomplete section (if any)
-        blockData.firstOrNull { !it.isCompleted() }?.id
-            ?.let { expandedState[it] = true }
-
-        // Merge in any existing overrides (existing takes precedence)
-        val existingState = (_uiState.value as? CourseOutlineUIState.CourseData)
-            ?.courseSectionsState
-            .orEmpty()
-        expandedState.putAll(existingState)
-
-        return expandedState
-    }
-
     fun viewCertificateTappedEvent() {
         analytics.logEvent(
             CourseAnalyticsEvent.VIEW_CERTIFICATE.eventName,
@@ -510,114 +427,110 @@ class CourseContentAllViewModel(
         blocksIds.forEach { blockId ->
             if (isBlockDownloaded(blockId)) {
                 removeDownloadModels(blockId)
-    fun downloadBlocks(blocksIds: List<String>, fragmentManager: FragmentManager) {
-        viewModelScope.launch {
-            val courseData = _uiState.value as? CourseContentAllUIState.CourseData ?: return@launch
+                fun downloadBlocks(blocksIds: List<String>, fragmentManager: FragmentManager) {
+                    viewModelScope.launch {
+                        val courseData =
+                            _uiState.value as? CourseContentAllUIState.CourseData ?: return@launch
 
-            val subSectionsBlocks =
-                courseData.courseSubSections.values.flatten().filter { it.id in blocksIds }
+                        val subSectionsBlocks =
+                            courseData.courseSubSections.values.flatten()
+                                .filter { it.id in blocksIds }
 
-            val blocks = subSectionsBlocks.flatMap { subSectionsBlock ->
-                val verticalBlocks =
-                    allBlocks.values.filter { it.id in subSectionsBlock.descendants }
-                allBlocks.values.filter { it.id in verticalBlocks.flatMap { it.descendants } }
-            }
+                        val blocks = subSectionsBlocks.flatMap { subSectionsBlock ->
+                            val verticalBlocks =
+                                allBlocks.values.filter { it.id in subSectionsBlock.descendants }
+                            allBlocks.values.filter { it.id in verticalBlocks.flatMap { it.descendants } }
+                        }
 
-            val downloadableBlocks = blocks.filter { it.isDownloadable }
-            val downloadingBlocks = blocksIds.filter { isBlockDownloading(it) }
-            val isAllBlocksDownloaded = downloadableBlocks.all { isBlockDownloaded(it.id) }
+                        val downloadableBlocks = blocks.filter { it.isDownloadable }
+                        val downloadingBlocks = blocksIds.filter { isBlockDownloading(it) }
+                        val isAllBlocksDownloaded =
+                            downloadableBlocks.all { isBlockDownloaded(it.id) }
 
-            val notDownloadedSubSectionBlocks = subSectionsBlocks.mapNotNull { subSectionsBlock ->
-                val verticalBlocks =
-                    allBlocks.values.filter { it.id in subSectionsBlock.descendants }
-                val notDownloadedBlocks = allBlocks.values.filter {
-                    it.id in verticalBlocks.flatMap { it.descendants } && it.isDownloadable && !isBlockDownloaded(
-                        it.id
-                    )
-                }
-                if (notDownloadedBlocks.isNotEmpty()) {
-                    subSectionsBlock
-                } else {
-                    null
-                }
-            }
+                        val notDownloadedSubSectionBlocks =
+                            subSectionsBlocks.mapNotNull { subSectionsBlock ->
+                                val verticalBlocks =
+                                    allBlocks.values.filter { it.id in subSectionsBlock.descendants }
+                                val notDownloadedBlocks = allBlocks.values.filter {
+                                    it.id in verticalBlocks.flatMap { it.descendants } && it.isDownloadable && !isBlockDownloaded(
+                                        it.id
+                                    )
+                                }
+                                if (notDownloadedBlocks.isNotEmpty()) {
+                                    subSectionsBlock
+                                } else {
+                                    null
+                                }
+                            }
 
-            val requiredSubSections = notDownloadedSubSectionBlocks.ifEmpty {
-                subSectionsBlocks
-            }
+                        val requiredSubSections = notDownloadedSubSectionBlocks.ifEmpty {
+                            subSectionsBlocks
+                        }
 
-            if (downloadingBlocks.isNotEmpty()) {
-                val downloadableChildren =
-                    downloadingBlocks.flatMap { getDownloadableChildren(it).orEmpty() }
-                if (config.getCourseUIConfig().isCourseDownloadQueueEnabled) {
-                    courseRouter.navigateToDownloadQueue(fragmentManager, downloadableChildren)
-                } else {
-                    downloadableChildren.forEach {
-                        if (!isBlockDownloaded(it)) {
-                            removeBlockDownloadModel(it)
+                        if (downloadingBlocks.isNotEmpty()) {
+                            val downloadableChildren =
+                                downloadingBlocks.flatMap { getDownloadableChildren(it).orEmpty() }
+                            if (config.getCourseUIConfig().isCourseDownloadQueueEnabled) {
+                                courseRouter.navigateToDownloadQueue(
+                                    fragmentManager,
+                                    downloadableChildren
+                                )
+                            } else {
+                                downloadableChildren.forEach {
+                                    if (!isBlockDownloaded(it)) {
+                                        removeBlockDownloadModel(it)
+                                    }
+                                }
+                            }
+                        } else {
+                            downloadDialogManager.showPopup(
+                                subSectionsBlocks = requiredSubSections,
+                                courseId = courseId,
+                                isBlocksDownloaded = isAllBlocksDownloaded,
+                                fragmentManager = fragmentManager,
+                                removeDownloadModels = ::removeDownloadModels,
+                                saveDownloadModels = { blockId ->
+                                    saveDownloadModels(
+                                        fileUtil.getExternalAppDir().path,
+                                        courseId,
+                                        blockId
+                                    )
+                                }
+                            )
                         }
                     }
                 }
-            } else {
-                downloadDialogManager.showPopup(
-                    subSectionsBlocks = requiredSubSections,
-                    courseId = courseId,
-                    isBlocksDownloaded = isAllBlocksDownloaded,
-                    fragmentManager = fragmentManager,
-                    removeDownloadModels = ::removeDownloadModels,
-                    saveDownloadModels = { blockId ->
-                        saveDownloadModels(fileUtil.getExternalAppDir().path, courseId, blockId)
-                    }
-                )
-            }
-        }
-    }
 
-    private fun updateOutdatedOfflineXBlocks(courseStructure: CourseStructure) {
-        viewModelScope.launch {
-            if (!isOfflineBlocksUpToDate) {
-                val xBlocks = courseStructure.blockData.filter { it.isxBlock }
-                if (xBlocks.isNotEmpty()) {
-                    val xBlockIds = xBlocks.map { it.id }.toSet()
-                    val savedDownloadModelsMap = interactor.getAllDownloadModels()
-                        .filter { it.id in xBlockIds }
-                        .associateBy { it.id }
+                private fun updateOutdatedOfflineXBlocks(courseStructure: CourseStructure) {
+                    viewModelScope.launch {
+                        if (!isOfflineBlocksUpToDate) {
+                            val xBlocks = courseStructure.blockData.filter { it.isxBlock }
+                            if (xBlocks.isNotEmpty()) {
+                                val xBlockIds = xBlocks.map { it.id }.toSet()
+                                val savedDownloadModelsMap = interactor.getAllDownloadModels()
+                                    .filter { it.id in xBlockIds }
+                                    .associateBy { it.id }
 
-                    val outdatedBlockIds = xBlocks
-                        .filter { block ->
-                            val savedBlock = savedDownloadModelsMap[block.id]
-                            savedBlock != null && block.offlineDownload?.lastModified != savedBlock.lastModified
+                                val outdatedBlockIds = xBlocks
+                                    .filter { block ->
+                                        val savedBlock = savedDownloadModelsMap[block.id]
+                                        savedBlock != null && block.offlineDownload?.lastModified != savedBlock.lastModified
+                                    }
+                                    .map { it.id }
+
+                                outdatedBlockIds.forEach { blockId ->
+                                    interactor.removeDownloadModel(blockId)
+                                }
+                                saveDownloadModels(
+                                    fileUtil.getExternalAppDir().path,
+                                    courseId,
+                                    outdatedBlockIds
+                                )
+                            }
+                            isOfflineBlocksUpToDate = true
                         }
-                        .map { it.id }
-
-                    outdatedBlockIds.forEach { blockId ->
-                        interactor.removeDownloadModel(blockId)
                     }
-                    saveDownloadModels(
-                        fileUtil.getExternalAppDir().path,
-                        courseId,
-                        outdatedBlockIds
-                    )
                 }
-                isOfflineBlocksUpToDate = true
             }
         }
     }
-
-    private fun logPLSBannerEvents(event: CourseAnalyticsEvent) {
-        analytics.logEvent(
-            event.eventName,
-            buildMap {
-                put(CourseAnalyticsKey.NAME.key, event.biValue)
-                put(CourseAnalyticsKey.COURSE_ID.key, courseId)
-                put(CourseAnalyticsKey.COURSE_NAME.key, courseTitle)
-                put(CourseAnalyticsKey.BANNER_TYPE.key, CourseBannerType.RESET_DATES.name)
-                put(CourseAnalyticsKey.SCREEN_NAME.key, CourseAnalyticsKey.COURSE_DASHBOARD.key)
-            }
-        )
-    }
-
-    companion object {
-        private const val TAG = "CourseOutlineViewModel"
-    }
-}

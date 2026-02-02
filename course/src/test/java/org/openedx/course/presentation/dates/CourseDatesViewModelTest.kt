@@ -1,6 +1,7 @@
 package org.openedx.course.presentation.dates
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.google.type.Date
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -40,8 +41,7 @@ import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.DatesSection
 import org.openedx.core.domain.model.EnrollmentDetails
-import org.openedx.core.system.CalendarManager
-import org.openedx.core.system.ResourceManager
+import org.openedx.core.domain.model.User
 import org.openedx.core.system.notifier.CalendarSyncEvent.CreateCalendarSyncEvent
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier

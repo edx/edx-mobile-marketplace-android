@@ -3,8 +3,8 @@ package org.openedx.course.presentation.unit.html
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
@@ -15,7 +15,6 @@ import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
-import android.webkit.WebResourceError
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -29,6 +28,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
@@ -45,7 +45,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.Dp
@@ -57,18 +59,13 @@ import androidx.fragment.app.Fragment
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import org.openedx.core.extension.loadUrl
 import org.openedx.core.system.AppCookieManager
-import org.openedx.core.ui.FullScreenErrorView
-import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.roundBorderWithoutBottom
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
-import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.EmailUtil
-import org.openedx.foundation.extension.applyDarkModeIfEnabled
+import org.openedx.core.worker.CalendarSyncWorker.Companion.ARG_COURSE_ID
 import org.openedx.foundation.extension.isEmailValid
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.rememberWindowSize
@@ -111,13 +108,6 @@ class HtmlUnitFragment : Fragment() {
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
-            OpenEdXTheme {
-                val windowSize = rememberWindowSize()
-                val uiState by viewModel.uiState.collectAsState()
-
-                var hasInternetConnection by remember {
-                    mutableStateOf(viewModel.isOnline)
-                }
             HtmlUnitView(
                 viewModel = viewModel,
                 blockUrl = blockUrl,
@@ -257,14 +247,6 @@ fun HtmlUnitView(
         val injectJSList by viewModel.injectJSList.collectAsState()
         val uiState by viewModel.uiState.collectAsState()
 
-                val border = if (!isSystemInDarkTheme() && !viewModel.isCourseUnitProgressEnabled) {
-                    Modifier.roundBorderWithoutBottom(
-                        borderWidth = 2.dp,
-                        cornerRadius = 30.dp
-                    )
-                } else {
-                    Modifier
-                }
         val configuration = LocalConfiguration.current
 
         val bottomPadding =
@@ -283,73 +265,16 @@ fun HtmlUnitView(
             Modifier
         }
 
-                Surface(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
-                    color = MaterialTheme.appColors.background
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.appColors.background)
-                            .then(border),
-                        contentAlignment = Alignment.TopCenter
-                    ) {
-                        if ((uiState is HtmlUnitUIState.Error).not()) {
-                            if (hasInternetConnection) {
-                                HTMLContentView(
-                                    windowSize = windowSize,
-                                    url = blockUrl,
-                                    cookieManager = viewModel.cookieManager,
-                                    userAgent = viewModel.appUserAgent,
-                                    isLoading = uiState is HtmlUnitUIState.Loading,
-                                    injectJSList = injectJSList,
-                                    onCompletionSet = {
-                                        viewModel.notifyCompletionSet()
-                                    },
-                                    onWebPageLoading = {
-                                        viewModel.onWebPageLoading()
-                                    },
-                                    onWebPageLoaded = {
-                                        if ((uiState is HtmlUnitUIState.Error).not()) {
-                                            viewModel.onWebPageLoaded()
-                                        }
-                                        if (isAdded) viewModel.setWebPageLoaded(requireContext().assets)
-                                    },
-                                    onWebPageLoadError = {
-                                        viewModel.onWebPageLoadError()
-                                    }
-                                )
-                            } else {
-                                viewModel.onWebPageLoadError()
-                            }
-                        }
-                        if (uiState is HtmlUnitUIState.Error) {
-                            val errorType = (uiState as HtmlUnitUIState.Error).errorType
-                            FullScreenErrorView(errorType = errorType) {
-                                hasInternetConnection = viewModel.isOnline
-                                viewModel.onWebPageLoading()
-                            }
-                        }
-                        if (uiState is HtmlUnitUIState.Loading && hasInternetConnection) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .zIndex(1f),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                            }
-                        }
         Surface(
             modifier = Modifier
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
-            color = MaterialTheme.colors.background
+            color = Color.White
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = bottomPadding)
+                    .background(Color.White)
                     .then(border),
                 contentAlignment = Alignment.TopCenter
             ) {
@@ -416,13 +341,12 @@ private fun HTMLContentView(
     windowSize: WindowSize,
     url: String,
     cookieManager: AppCookieManager,
-    userAgent: String,
+    apiHostURL: String,
     isLoading: Boolean,
     injectJSList: List<String>,
     onCompletionSet: () -> Unit,
     onWebPageLoading: () -> Unit,
     onWebPageLoaded: () -> Unit,
-    onWebPageLoadError: () -> Unit,
     saveXBlockProgress: (String) -> Unit,
     onShowFileChooser: (ValueCallback<Array<Uri>>, WebChromeClient.FileChooserParams?) -> Boolean,
     onWebPageLoadError: () -> Unit,
@@ -534,7 +458,7 @@ private fun HTMLContentView(
                         request: WebResourceRequest,
                         errorResponse: WebResourceResponse,
                     ) {
-                        if (request.url.toString() == view.url) {
+                        if (request.url.toString().startsWith(apiHostURL)) {
                             when (errorResponse.statusCode) {
                                 403, 401, 404 -> {
                                     coroutineScope.launch {
@@ -565,7 +489,6 @@ private fun HTMLContentView(
                     setSupportZoom(true)
                     loadsImagesAutomatically = true
                     domStorageEnabled = true
-                    userAgentString = "$userAgentString $userAgent"
                     allowFileAccess = true
                     allowContentAccess = true
                     useWideViewPort = true

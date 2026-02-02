@@ -18,11 +18,12 @@ import kotlinx.coroutines.withContext
 import org.openedx.core.BaseViewModel
 import org.openedx.core.BlockType
 import org.openedx.core.config.Config
-import org.openedx.core.domain.helper.VideoPreviewHelper
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
+import org.openedx.core.presentation.dialog.IAPDialogFragment.Companion.TAG
+import org.openedx.core.presentation.iap.IAPEventLogger.PreviewCounter.get
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSectionChanged
@@ -45,7 +46,7 @@ class CourseUnitContainerViewModel(
     private val analytics: CourseAnalytics,
     private val corePreferences: CorePreferences,
     iapNotifier: IAPNotifier,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

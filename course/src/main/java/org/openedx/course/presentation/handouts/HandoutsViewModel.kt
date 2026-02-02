@@ -21,7 +21,7 @@ class HandoutsViewModel(
     private val config: Config,
     private val interactor: CourseInteractor,
     private val courseAnalytics: CourseAnalytics,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

@@ -28,9 +28,9 @@ import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.presentation.iap.IAPEventLogger
 import org.openedx.core.presentation.iap.IAPRequestType
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.domain.interactor.CourseInteractor
+import org.openedx.foundation.system.ResourceManager
 
 class UnlockContentViewModel(
     val blockId: String,
@@ -39,7 +39,7 @@ class UnlockContentViewModel(
     private val iapInteractor: IAPInteractor,
     private val resourceManager: ResourceManager,
     analytics: IAPAnalytics,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
         override fun onPurchaseComplete(purchase: Purchase) {

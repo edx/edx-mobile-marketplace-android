@@ -32,7 +32,7 @@ class ProgramViewModel(
     private val edxCookieManager: AppCookieManager,
     private val resourceManager: ResourceManager,
     private val interactor: DiscoveryInteractor,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
     private val logger = Logger(TAG)
 
     val uriScheme: String get() = config.getUriScheme()

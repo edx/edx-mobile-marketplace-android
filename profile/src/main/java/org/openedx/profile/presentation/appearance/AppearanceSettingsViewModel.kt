@@ -14,7 +14,7 @@ import org.openedx.profile.presentation.ProfileAnalyticsKey
 class AppearanceSettingsViewModel(
     private val preferences: CorePreferences,
     private val analytics: ProfileAnalytics,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val _appThemeMode = MutableStateFlow(AppThemeMode.MATCH_DEVICE)
     val appThemeMode: StateFlow<AppThemeMode>

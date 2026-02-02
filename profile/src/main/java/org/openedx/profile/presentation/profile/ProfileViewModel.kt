@@ -29,7 +29,7 @@ class ProfileViewModel(
     private val notifier: ProfileNotifier,
     private val analytics: ProfileAnalytics,
     val profileRouter: ProfileRouter
-) : BaseViewModel(), LifecycleObserver {
+) : BaseViewModel(resourceManager), LifecycleObserver {
 
     private val logger = Logger(TAG)
 

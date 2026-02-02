@@ -42,7 +42,6 @@ import org.openedx.core.utils.Logger
 import org.openedx.foundation.presentation.SingleEventLiveData
 import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.system.ResourceManager
-import org.openedx.core.R as CoreRes
 import retrofit2.HttpException
 import org.openedx.core.R as CoreR
 
@@ -64,7 +63,7 @@ class SignInViewModel(
     val courseId: String?,
     val infoType: String?,
     val authCode: String,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger("SignInViewModel")
 

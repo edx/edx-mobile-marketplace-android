@@ -40,7 +40,7 @@ import org.openedx.core.R
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.iap.IAPAction
 import org.openedx.core.ui.IAPErrorDialog
-import org.openedx.core.ui.OpenEdXBrandButton
+import org.openedx.core.ui.OpenEdXButton
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
@@ -195,7 +195,7 @@ private fun GradedAssignmentLockedCard(
             }
 
             is UnlockContentUIState.ProductData -> {
-                OpenEdXBrandButton(
+                OpenEdXButton(
                     text = stringResource(
                         id = R.string.iap_upgrade_price,
                         uiState.formattedPrice,

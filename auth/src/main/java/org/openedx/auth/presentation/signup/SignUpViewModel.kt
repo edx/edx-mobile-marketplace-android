@@ -53,7 +53,7 @@ class SignUpViewModel(
     private val router: AuthRouter,
     val courseId: String?,
     val infoType: String?,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger("SignUpViewModel")
 

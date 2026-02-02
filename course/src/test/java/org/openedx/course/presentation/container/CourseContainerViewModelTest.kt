@@ -2,6 +2,7 @@ package org.openedx.course.presentation.container
 
 import android.graphics.Bitmap
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.google.common.base.Verify.verify
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -33,7 +34,6 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.CourseAccessDetails
-import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseDatesCalendarSync
 import org.openedx.core.domain.model.CourseEnrollmentDetails
 import org.openedx.core.domain.model.CourseEnrollmentDetailsSource
@@ -43,8 +43,6 @@ import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.presentation.IAPAnalytics
-import org.openedx.core.system.CalendarManager
-import org.openedx.core.system.ResourceManager
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
@@ -52,7 +50,6 @@ import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.worker.CalendarSyncScheduler
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.Logger
-import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -73,7 +70,6 @@ class CourseContainerViewModelTest {
     private val config = mockk<Config>()
     private val interactor = mockk<CourseInteractor>()
     private val networkConnection = mockk<NetworkConnection>()
-    private val courseNotifier = spyk<CourseNotifier>()
     private val iapNotifier = spyk<IAPNotifier>()
     private val iapInteractor = mockk<IAPInteractor>()
     private val courseAnalytics = mockk<CourseAnalytics>()

@@ -18,7 +18,7 @@ class NotificationsPrimerViewModel(
     private val interactor: NotificationsInteractor,
     private val preferences: NotificationsPreferences,
     private val analytics: NotificationsAnalytics,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

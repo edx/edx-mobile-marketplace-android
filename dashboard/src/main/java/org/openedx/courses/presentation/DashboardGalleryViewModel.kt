@@ -77,7 +77,7 @@ class DashboardGalleryViewModel(
     private val windowSize: WindowSize,
     private val analytics: DashboardAnalytics,
     iapAnalytics: IAPAnalytics,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

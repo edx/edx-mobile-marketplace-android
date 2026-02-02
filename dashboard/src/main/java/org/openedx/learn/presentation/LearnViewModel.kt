@@ -28,7 +28,7 @@ class LearnViewModel(
     private val analytics: DashboardAnalytics,
     private val pushManager: PushGlobalManager,
     private val pushNotifier: PushNotifier
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

@@ -182,36 +182,17 @@ class CourseUnitContainerAdapter(
         }
     }
 
-            (block.isDiscussionBlock && block.studentViewData?.topicId.isNullOrEmpty().not()) -> {
-                DiscussionThreadsFragment.newInstance(
-                    threadType = DiscussionTopicsViewModel.TOPIC,
-                    courseId = viewModel.courseId,
-                    topicId = block.studentViewData?.topicId ?: "",
-                    threadId = "",
-                    responseId = "",
-                    commentId = "",
-                    title = block.displayName,
-                    viewType = FragmentViewType.MAIN_CONTENT.name,
-                    blockId = block.id,
-                )
-            }
-
-            block.isHTMLBlock ||
-                    block.isProblemBlock ||
-                    block.isOpenAssessmentBlock ||
-                    block.isDragAndDropBlock ||
-                    block.isWordCloudBlock ||
-                    block.isLTIConsumerBlock ||
-                    block.isSurveyBlock -> {
-                HtmlUnitFragment.newInstance(block.id, block.studentViewUrl)
-            }
-
-            else -> {
-                NotSupportedUnitFragment.newInstance(
-                    block.id,
-                    block.lmsWebUrl
-                )
-            }
-        }
+    private fun createDiscussionFragment(block: Block): Fragment {
+        return DiscussionThreadsFragment.newInstance(
+            DiscussionTopicsViewModel.TOPIC,
+            viewModel.courseId,
+            block.studentViewData?.topicId ?: "",
+            block.displayName,
+            FragmentViewType.MAIN_CONTENT.name,
+            block.id,
+            title = TODO(),
+            viewType = TODO(),
+            blockId = TODO()
+        )
     }
 }

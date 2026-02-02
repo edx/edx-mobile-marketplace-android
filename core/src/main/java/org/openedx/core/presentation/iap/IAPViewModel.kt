@@ -36,7 +36,6 @@ import org.openedx.core.module.billing.getPriceAmount
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.notifier.CourseDataUpdated
-import org.openedx.core.system.notifier.IAPEvent
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.utils.Logger
@@ -55,7 +54,7 @@ class IAPViewModel(
     corePreferences: CorePreferences,
     analytics: IAPAnalytics,
     private val appContext: Context
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
     private val logger = Logger(TAG)
 
     private val _uiState = MutableStateFlow<IAPUIState>(IAPUIState.Loading(IAPLoaderType.PRICE))

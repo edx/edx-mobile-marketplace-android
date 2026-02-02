@@ -68,6 +68,8 @@ dependencies {
     implementation "androidx.media3:media3-ui:$media3_version"
     implementation "androidx.media3:media3-cast:$media3_version"
     implementation "me.saket.extendedspans:extendedspans:$extented_spans_version"
+    implementation 'androidx.compose.foundation:foundation-layout:1.10.1'
+    implementation 'com.google.firebase:protolite-well-known-types:18.0.1'
 
     // Test dependencies...
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

@@ -4,19 +4,21 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import isInternetError
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.BlockType
 import org.openedx.core.R
+import org.openedx.core.UIMessage
 import org.openedx.core.domain.model.Block
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSectionChanged
-import org.openedx.core.utils.Logger
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseAnalyticsKey
 import org.openedx.course.presentation.unit.container.CourseViewMode
+import org.openedx.foundation.presentation.SingleEventLiveData
 import org.openedx.foundation.system.ResourceManager
 
 
@@ -26,18 +28,7 @@ class CourseSectionViewModel(
     private val resourceManager: ResourceManager,
     private val notifier: CourseNotifier,
     private val analytics: CourseAnalytics,
-) : BaseViewModel() {
-    coreAnalytics: CoreAnalytics,
-    workerController: DownloadWorkerController,
-    downloadDao: DownloadDao,
-) : BaseDownloadViewModel(
-    courseId,
-    downloadDao,
-    preferencesManager,
-    workerController,
-    coreAnalytics
-) {
-    private val logger = Logger(TAG)
+) : BaseViewModel(resourceManager) {
 
     private val _uiState = MutableLiveData<CourseSectionUIState>(CourseSectionUIState.Loading)
     val uiState: LiveData<CourseSectionUIState>
@@ -78,10 +69,6 @@ class CourseSectionViewModel(
                         sectionName = sequentialBlock.displayName
                     )
             } catch (e: Exception) {
-                logger.e(
-                    throwable = e,
-                    metadata = mapOf("blockId" to blockId, "courseId" to courseId)
-                )
                 if (e.isInternetError()) {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(R.string.core_error_no_connection))

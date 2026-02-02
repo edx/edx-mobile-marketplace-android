@@ -20,6 +20,7 @@ import org.openedx.core.presentation.CoreAnalyticsEvent
 import org.openedx.core.presentation.CoreAnalyticsKey
 import org.openedx.core.utils.Directories
 import org.openedx.core.utils.Sha1Util
+import org.openedx.foundation.system.ResourceManager
 import java.io.File
 
 abstract class BaseDownloadViewModel(
@@ -28,9 +29,10 @@ abstract class BaseDownloadViewModel(
     private val preferencesManager: CorePreferences,
     private val workerController: DownloadWorkerController,
     private val analytics: CoreAnalytics,
-) : BaseViewModel() {
+    resourceManager: ResourceManager,
+) : BaseViewModel(resourceManager) {
 
-    private val allBlocks = hashMapOf<String, Block>()
+    val allBlocks = hashMapOf<String, Block>()
 
     private val downloadableChildrenMap = hashMapOf<String, List<String>>()
     private val downloadModelsStatus = hashMapOf<String, DownloadedState>()
@@ -44,7 +46,7 @@ abstract class BaseDownloadViewModel(
 
     init {
         viewModelScope.launch {
-            downloadDao.readAllData().map { list -> list.map { it.mapToDomain() } }
+            downloadDao.getAllDataFlow().map { list -> list.map { it.mapToDomain() } }
                 .collect { downloadModels ->
                     updateDownloadModelsStatus(downloadModels)
                     _downloadModelsStatusFlow.emit(downloadModelsStatus)
@@ -57,8 +59,8 @@ abstract class BaseDownloadViewModel(
         _downloadModelsStatusFlow.emit(downloadModelsStatus)
     }
 
-    private suspend fun getDownloadModelList(): List<DownloadModel> {
-        return downloadDao.readAllData().first().map { it.mapToDomain() }
+    suspend fun getDownloadModelList(): List<DownloadModel> {
+        return downloadDao.getAllDataFlow().first().map { it.mapToDomain() }
     }
 
     private suspend fun updateDownloadModelsStatus(models: List<DownloadModel>) {
@@ -95,6 +97,10 @@ abstract class BaseDownloadViewModel(
     protected fun setBlocks(list: List<Block>) {
         downloadableChildrenMap.clear()
         allBlocks.clear()
+        allBlocks.putAll(list.map { it.id to it })
+    }
+
+    protected fun addBlocks(list: List<Block>) {
         allBlocks.putAll(list.map { it.id to it })
     }
 

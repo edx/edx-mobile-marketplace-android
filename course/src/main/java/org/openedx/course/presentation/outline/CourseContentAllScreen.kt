@@ -54,6 +54,7 @@ import org.openedx.course.presentation.ui.CourseProgress
 import org.openedx.course.presentation.ui.ResumeCourseButton
 import org.openedx.course.presentation.unit.container.CourseViewMode
 import org.openedx.foundation.extension.takeIfNotEmpty
+
 import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.presentation.WindowSize
 import org.openedx.foundation.presentation.WindowType

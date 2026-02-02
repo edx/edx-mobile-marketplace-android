@@ -37,10 +37,8 @@ import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseDatesCalendarSync
 import org.openedx.core.domain.model.CourseEnrollmentDetails
 import org.openedx.core.domain.model.CourseStructure
-import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.extension.isFalse
 import org.openedx.core.extension.isTrue
-import org.openedx.core.domain.model.CourseEnrollmentDetailsSource
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
@@ -117,7 +115,7 @@ class CourseContainerViewModel(
     private val calendarSyncScheduler: CalendarSyncScheduler,
     val courseRouter: CourseRouter,
     iapAnalytics: IAPAnalytics,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

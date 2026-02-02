@@ -29,7 +29,7 @@ class NotificationsInboxViewModel(
     private val notificationsRouter: NotificationsRouter,
     private val resourceManager: ResourceManager,
     private val analytics: NotificationsAnalytics,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

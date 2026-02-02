@@ -60,6 +60,8 @@ import org.openedx.course.databinding.FragmentCourseUnitContainerBinding
 import org.openedx.course.presentation.ChapterEndFragmentDialog
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.DialogListener
+import org.openedx.course.presentation.ui.HorizontalPageIndicator
+import org.openedx.course.presentation.ui.VerticalPageIndicator
 
 class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_container) {
 

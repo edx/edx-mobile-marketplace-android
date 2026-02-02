@@ -29,12 +29,13 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
+import org.openedx.core.BlockType
 import org.openedx.core.CoreMocks
 import org.openedx.core.R
 import org.openedx.core.config.Config
+import org.openedx.core.data.model.DateType
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.AssignmentProgress
-import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseAccessDetails
@@ -48,6 +49,7 @@ import org.openedx.core.domain.model.DatesSection
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
+import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadModelEntity
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
@@ -67,6 +69,7 @@ import org.openedx.foundation.presentation.UIMessage
 import org.openedx.foundation.system.ResourceManager
 import org.openedx.foundation.utils.FileUtil
 import java.net.UnknownHostException
+import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CourseOutlineViewModelTest {

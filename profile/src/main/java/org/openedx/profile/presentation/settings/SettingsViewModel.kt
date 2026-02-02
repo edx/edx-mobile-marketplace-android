@@ -67,7 +67,7 @@ class SettingsViewModel(
     private val calendarRouter: CalendarRouter,
     private val appNotifier: AppNotifier,
     private val profileNotifier: ProfileNotifier,
-) : BaseViewModel() {
+) : BaseViewModel(resourceManager) {
 
     private val logger = Logger(TAG)
 

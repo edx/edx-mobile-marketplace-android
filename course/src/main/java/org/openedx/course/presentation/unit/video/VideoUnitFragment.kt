@@ -3,8 +3,10 @@ package org.openedx.course.presentation.unit.video
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.annotation.OptIn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
@@ -16,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.window.layout.WindowMetricsCalculator
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -56,6 +59,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        retainInstance = true
         windowSize = computeWindowSizeClasses()
         lifecycle.addObserver(viewModel)
         requireArguments().apply {
@@ -71,6 +75,10 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        attachPlayerToView()
+
+
         binding.cvVideoTitle?.setContent {
             OpenEdXTheme {
                 VideoTitle(text = viewModel.title)
@@ -159,6 +167,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }.launchIn(viewLifecycleOwner.lifecycleScope)
 
         enableLongPressDoubleSpeed()
+        adjustLayoutForOrientation()
+        moveVideoAndTitleSideBySide()
     }
 
     @OptIn(UnstableApi::class)
@@ -181,26 +191,33 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onResume() {
         super.onResume()
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        attachPlayerToView()
     }
 
     @UnstableApi
     override fun onPause() {
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        super.onPause()
-        viewModel.exoPlayer?.apply {
-            playWhenReady = false
-            pause()
+        if (!requireActivity().isChangingConfigurations) {
+            viewModel.exoPlayer?.apply {
+                playWhenReady = false
+                pause()
+            }
+            viewModel.getCastPlayer()?.pause()
         }
-        viewModel.getCastPlayer()?.pause()
+
+        super.onPause()
     }
 
     override fun onStop() {
         super.onStop()
-        viewModel.exoPlayer?.apply {
-            playWhenReady = false
-            pause()
+        if (!requireActivity().isChangingConfigurations) {
+            viewModel.exoPlayer?.apply {
+                playWhenReady = false
+                pause()
+            }
         }
     }
+
 
     @UnstableApi
     override fun setMenuVisibility(menuVisible: Boolean) {
@@ -219,6 +236,135 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
         super.onDestroy()
     }
+    @OptIn(UnstableApi::class)
+    private fun attachPlayerToView() {
+        binding.playerView.apply {
+            player = null
+            player = viewModel.exoPlayer
+            controllerAutoShow = true
+            controllerHideOnTouch = false
+            showController()
+        }
+    }
+
+    private fun adjustLayoutForOrientation() {
+        val orientation = resources.configuration.orientation
+        val isTablet = windowSize?.isTablet == true
+        val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE && !isTablet
+
+        binding.root.apply {
+            if (this is LinearLayout) {
+                this.orientation = if (isLandscape) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
+
+                // Safe update for playerView
+                (binding.playerView?.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
+                    if (isLandscape) {
+                        params.width = 0
+                        params.height = LinearLayout.LayoutParams.MATCH_PARENT
+                        params.weight = 2f
+                    } else {
+                        params.width = LinearLayout.LayoutParams.MATCH_PARENT
+                        params.height = LinearLayout.LayoutParams.WRAP_CONTENT
+                        params.weight = 0f
+                    }
+                    binding.playerView?.layoutParams = params
+                }
+
+                // Safe update for cvVideoTitle
+                (binding.cvVideoTitle?.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
+                    if (isLandscape) {
+                        params.width = 0
+                        params.height = LinearLayout.LayoutParams.MATCH_PARENT
+                        params.weight = 1f
+                    } else {
+                        params.width = LinearLayout.LayoutParams.MATCH_PARENT
+                        params.height = LinearLayout.LayoutParams.WRAP_CONTENT
+                        params.weight = 0f
+                    }
+                    binding.cvVideoTitle?.layoutParams = params
+                }
+            }
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        moveVideoAndTitleSideBySide()
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun moveVideoAndTitleSideBySide() {
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                windowSize?.isTablet != true
+
+        val rootParent = binding.playerView.parent as? ViewGroup ?: return
+
+        if (isLandscape) {
+            // Create horizontal container if not exists
+            var horizontalLayout = rootParent.findViewWithTag<LinearLayout>("horizontal_container")
+            if (horizontalLayout == null) {
+                horizontalLayout = LinearLayout(requireContext()).apply {
+                    tag = "horizontal_container"
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                    )
+                }
+                // Add to root parent
+                safeAddView(rootParent, horizontalLayout)
+            } else {
+                horizontalLayout.removeAllViews()
+            }
+
+            // Video with weight 2
+            binding.playerView?.let { player ->
+                (player.parent as? ViewGroup)?.removeView(player)
+                player.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                player.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 2f)
+                horizontalLayout.addView(player)
+            }
+
+            // Title / subtitles with weight 1
+            binding.cvVideoTitle?.let { title ->
+                (title.parent as? ViewGroup)?.removeView(title)
+                title.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+                horizontalLayout.addView(title)
+            }
+
+        } else {
+            // Portrait: remove horizontal layout if exists
+            val horizontalLayout = rootParent.findViewWithTag<LinearLayout>("horizontal_container")
+            if (horizontalLayout != null) {
+                horizontalLayout.removeAllViews()
+                rootParent.removeView(horizontalLayout)
+
+                binding.playerView?.let { player ->
+                    player.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    player.layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    safeAddView(rootParent, player)
+                }
+
+                binding.cvVideoTitle?.let { title ->
+                    title.layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    safeAddView(rootParent, title)
+                }
+            }
+        }
+    }
+
+    // Safe add view helper
+    private fun safeAddView(parent: ViewGroup, child: View) {
+        (child.parent as? ViewGroup)?.removeView(child)
+        parent.addView(child)
+    }
+
 
     @UnstableApi
     private fun showVideoControllerIndefinitely(show: Boolean) {
@@ -271,3 +417,4 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 }
+

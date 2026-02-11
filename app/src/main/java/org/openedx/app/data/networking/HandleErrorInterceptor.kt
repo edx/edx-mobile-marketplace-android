@@ -46,7 +46,7 @@ class HandleErrorInterceptor(
                 }
             } catch (e: JsonSyntaxException) {
                 logger.e(throwable = e, metadata = mapOf("json" to jsonStr))
-                throw IOException("JsonSyntaxException $jsonStr", e)
+                return response
             }
         }
 

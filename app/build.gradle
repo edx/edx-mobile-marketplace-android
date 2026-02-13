@@ -6,6 +6,7 @@ def platformName = config.getOrDefault("PLATFORM_NAME", "OpenEdX")
 def themeDirectory = config.getOrDefault("THEME_DIRECTORY", "openedx")
 def firebaseConfig = config.get('FIREBASE')
 def firebaseEnabled = firebaseConfig?.getOrDefault('ENABLED', false)
+def datadog = config.get("DATADOG") ?: [:]
 
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
@@ -66,7 +67,19 @@ android {
             setupFirebaseConfigFields(it)
         }
     }
+    productFlavors.all { flavor ->
+        flavor.buildConfigField "boolean", "DD_ENABLED",
+                "${datadog.getOrDefault("ENABLED", false)}"
 
+        flavor.buildConfigField "String", "DD_ENV",
+                "\"${datadog.getOrDefault("DATADOG_ENVIRONMENT", "stage")}\""
+
+        flavor.buildConfigField "String", "DD_CLIENT_TOKEN",
+                "\"${datadog.getOrDefault("DATADOG_CLIENT_TOKEN", "")}\""
+
+        flavor.buildConfigField "String", "DD_APPLICATION_ID",
+                "\"${datadog.getOrDefault("DATADOG_APPLICATION_ID", "")}\""
+    }
     sourceSets {
         prod {
             res.srcDirs += ["src/$themeDirectory/res"]
@@ -160,6 +173,12 @@ dependencies {
     // Braze SDK Integration
     implementation "com.braze:braze-segment-kotlin:1.4.2"
     implementation "com.braze:android-sdk-ui:30.2.0"
+    // Datadog DSK Integration
+//    implementation("com.datadoghq:dd-sdk-android:2.0.0")
+    implementation "com.datadoghq:dd-sdk-android-rum:3.6.0"
+    implementation "com.datadoghq:dd-sdk-android-logs:3.6.0"
+    implementation "com.datadoghq:dd-sdk-android-trace:3.6.0" // optional
+    implementation "com.datadoghq:dd-sdk-android-webview:3.6.0" // if using WebView
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'

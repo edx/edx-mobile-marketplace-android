@@ -404,7 +404,7 @@ class IAPViewModel(
     }
 
     private fun getVarient(certificatePreviewEnabled: Boolean): String {
-        return if (certificatePreviewEnabled) "varient" else "baseline"
+        return if (certificatePreviewEnabled) "treatment" else "control"
     }
 
     fun clearIAPFLow() {

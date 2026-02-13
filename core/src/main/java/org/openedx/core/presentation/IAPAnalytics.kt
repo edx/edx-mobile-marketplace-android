@@ -90,7 +90,6 @@ enum class IAPAnalyticsKeys(val key: String) {
     SCREEN_NAME("screen_name"),
     ERROR_ALERT_TYPE("error_alert_type"),
     SHOW_CERTIFICATE_PREVIEW("show_certificate_preview"),
-    CERT_PREVIEW_VARIENT("cert_preview_varient"),
-    PRICE("price"),
+    CERT_PREVIEW_VARIENT("cert_preview_variant"),
     ATTEMPTS_TO_PURCHASE("attempts_to_purchase")
 }

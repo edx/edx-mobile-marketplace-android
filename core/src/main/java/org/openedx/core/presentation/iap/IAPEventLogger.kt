@@ -230,7 +230,7 @@ class IAPEventLogger(
             put(IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key, previewCount.toString())
             put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
             put(IAPAnalyticsKeys.CERT_PREVIEW_VARIENT.key, varient)
-            put(IAPAnalyticsKeys.PRICE.key, price.toString())
+            put(IAPAnalyticsKeys.LMS_USD_PRICE.key, price.toString())
         })
         PreviewCounter.clear(appContext, courseId.toString())
     }

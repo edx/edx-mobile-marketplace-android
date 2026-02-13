@@ -169,6 +169,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         enableLongPressDoubleSpeed()
         adjustLayoutForOrientation()
         moveVideoAndTitleSideBySide()
+        resetControllerAfterLayoutChange()
     }
 
     @OptIn(UnstableApi::class)
@@ -290,6 +291,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         moveVideoAndTitleSideBySide()
+        resetControllerAfterLayoutChange()
     }
 
     @OptIn(UnstableApi::class)
@@ -365,7 +367,17 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         parent.addView(child)
     }
 
-
+    @OptIn(UnstableApi::class)
+    private fun resetControllerAfterLayoutChange() {
+        binding.playerView.apply {
+            hideController()
+            post {
+                controllerAutoShow = true
+                controllerHideOnTouch = false
+                showController()
+            }
+        }
+    }
     @UnstableApi
     private fun showVideoControllerIndefinitely(show: Boolean) {
         if (show) {

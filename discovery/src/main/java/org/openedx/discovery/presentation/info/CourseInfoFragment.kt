@@ -45,7 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.os.bundleOf
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.UIMessage
@@ -191,7 +193,7 @@ class CourseInfoFragment : Fragment() {
                             Authority.EXTERNAL -> {
                                 context?.let { ctx ->
                                     activity?.let { act ->
-                                        ActionDialogFragment.newInstance(
+                                        val dialog = ActionDialogFragment.newInstance(
                                             title = ctx.getString(CoreR.string.core_leaving_the_app),
                                             message = ctx.getString(
                                                 CoreR.string.core_leaving_the_app_message,
@@ -199,10 +201,8 @@ class CourseInfoFragment : Fragment() {
                                             ),
                                             url = param,
                                             source = DiscoveryAnalyticsScreen.COURSE_INFO.screenName
-                                        ).show(
-                                            act.supportFragmentManager,
-                                            ActionDialogFragment::class.simpleName
                                         )
+                                        showActionDialogSafely(act, dialog)
                                     }
                                 }
                             }
@@ -227,7 +227,17 @@ class CourseInfoFragment : Fragment() {
             }
         }
     }
+    private fun showActionDialogSafely(
+        act: FragmentActivity,
+        dialog: DialogFragment
+    ) {
+        if (act.isFinishing || act.isDestroyed) return
 
+        val fm = act.supportFragmentManager
+        if (fm.isStateSaved) return
+
+        dialog.show(fm, ActionDialogFragment::class.simpleName)
+    }
     companion object {
         private const val ARG_PATH_ID = "path_id"
         private const val ARG_INFO_TYPE = "info_type"

@@ -4,6 +4,11 @@ import android.app.Application
 import com.braze.Braze
 import com.braze.configuration.BrazeConfig
 import com.braze.ui.BrazeDeeplinkHandler
+import com.datadog.android.Datadog
+import com.datadog.android.DatadogSite
+import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.Rum
+import com.datadog.android.rum.RumConfiguration
 import com.google.firebase.FirebaseApp
 import io.branch.referral.Branch
 import org.koin.android.ext.android.inject
@@ -17,13 +22,48 @@ import org.openedx.app.di.screenModule
 import org.openedx.core.config.Config
 import org.openedx.featuremanagement.di.FeatureModuleProvider
 import org.openedx.notifications.di.NotificationsModuleProvider
-
+import com.datadog.android.core.configuration.Configuration
 class OpenEdXApp : Application() {
 
     private val config by inject<Config>()
 
     override fun onCreate() {
         super.onCreate()
+//        android.util.Log.d(
+//            "DD_CHECK",
+//            "FLAVOR=${BuildConfig.FLAVOR}, ENV=${BuildConfig.DD_ENV}, TOKEN=${BuildConfig.DD_CLIENT_TOKEN}, APP_ID=${BuildConfig.DD_APPLICATION_ID}"
+//        )
+        // -------------------- Datadog Core --------------------
+
+        if (BuildConfig.DD_CLIENT_TOKEN.isNotEmpty() && BuildConfig.DD_APPLICATION_ID.isNotEmpty()
+        ) {
+
+            val configuration = Configuration.Builder(
+                clientToken = BuildConfig.DD_CLIENT_TOKEN,
+                env = BuildConfig.DD_ENV,
+                variant = BuildConfig.BUILD_TYPE
+            )
+                .useSite(DatadogSite.US1)
+                .build()
+
+            Datadog.initialize(
+                context = this,
+                configuration = configuration,
+                trackingConsent = TrackingConsent.GRANTED
+            )
+
+            val rumConfig = RumConfiguration.Builder(
+                BuildConfig.DD_APPLICATION_ID
+            )
+                .trackUserInteractions()
+                .trackLongTasks()
+                .trackNonFatalAnrs(enabled = true) // ✅ fixed
+                .build()
+
+            Rum.enable(rumConfig)
+        }
+
+        // -------------------- End Datadog --------------------
 
         initializeKoinModules()
 
@@ -78,4 +118,9 @@ class OpenEdXApp : Application() {
         ).flatten()
         loadKoinModules(koinModules)
     }
+    /**
+     * Optional: enable WebView tracking for Datadog
+     * Call this wherever your WebView is initialized:
+     * DatadogWebViewTracking.enable(webView, strategy = DatadogWebViewTracking.Strategy.SEND_FULL_PAGE)
+     */
 }

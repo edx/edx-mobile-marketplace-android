@@ -10,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import org.openedx.core.extension.applyDarkModeIfEnabled
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
+import com.datadog.android.webview.WebViewTracking
+import androidx.core.net.toUri
 
 @SuppressLint("SetJavaScriptEnabled", "ComposableNaming")
 @Composable
@@ -122,6 +124,10 @@ fun CatalogWebViewScreen(
             isVerticalScrollBarEnabled = false
             isHorizontalScrollBarEnabled = false
 
+            val host = url.toUri().host
+            if (!host.isNullOrEmpty()) {
+                WebViewTracking.enable(this, listOf(host))
+            }
             loadUrl(url)
             applyDarkModeIfEnabled(isDarkTheme)
         }

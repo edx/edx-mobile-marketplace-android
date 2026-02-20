@@ -340,11 +340,11 @@ private fun DiscoveryWebView(
 
     val consumeWindowInsets = if (isPreLogin) {
         WindowInsets.navigationBars
-            .add(WindowInsets(bottom = 112.dp)) // The size of AuthButtonPanel
+            .add(WindowInsets(bottom = 112.dp)) // AuthButtonsPanel height
             .asPaddingValues()
     } else {
         WindowInsets.navigationBars
-            .add(WindowInsets(bottom = 56.dp)) // The size of BottomNavigationView
+            .add(WindowInsets(bottom = 56.dp)) // BottomNavigationView height
             .asPaddingValues()
     }
 

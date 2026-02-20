@@ -74,6 +74,7 @@ class SignUpViewModelTest {
         ApiConstants.EMAIL to "user@gmail.com",
         ApiConstants.PASSWORD to "password123",
         "honor_code" to "true",
+        ApiConstants.RegistrationFields.CAPTCHA_TOKEN to "true"
     )
 
     private val listOfFields = listOf(
@@ -87,7 +88,7 @@ class SignUpViewModelTest {
             required = true,
             defaultValue = false,
             restrictions = RegistrationField.Restrictions(),
-            options = emptyList()
+            options = emptyList(),
         ),
 
         RegistrationField(
@@ -130,6 +131,7 @@ class SignUpViewModelTest {
         mockkObject(CrashlyticsHelper)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
         every { CrashlyticsHelper.setUserId(any()) } returns Unit
+        coEvery { interactor.getRecaptchaToken(any()) } returns ""
     }
 
     @After

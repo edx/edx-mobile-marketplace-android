@@ -7,6 +7,10 @@ plugins {
     id 'kotlin-parcelize'
     id 'com.google.devtools.ksp'
 }
+def config = rootProject.ext.configHelper.fetchConfig()
+def datadog = config.get("DATADOG") ?: [:]
+def discovery = config.get("DISCOVERY") ?: [:]
+def discoveryWebView = discovery.get("WEBVIEW") ?: [:]
 
 android {
     compileSdk = 35
@@ -18,6 +22,20 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+
+        buildConfigField "String", "DISCOVERY_TYPE",
+                "\"${discovery.getOrDefault("TYPE", "webview")}\""
+
+        buildConfigField "String", "DISCOVERY_BASE_URL",
+                "\"${discoveryWebView.getOrDefault("BASE_URL", "")}\""
+
+        buildConfigField "String", "DISCOVERY_COURSE_DETAIL_TEMPLATE",
+                "\"${discoveryWebView.getOrDefault("COURSE_DETAIL_TEMPLATE", "")}\""
+
+        buildConfigField "String", "DISCOVERY_PROGRAM_DETAIL_TEMPLATE",
+                "\"${discoveryWebView.getOrDefault("PROGRAM_DETAIL_TEMPLATE", "")}\""
+
+
     }
 
     namespace = 'org.openedx.discovery'
@@ -43,6 +61,7 @@ android {
     buildFeatures {
         viewBinding = true
         compose = true
+        buildConfig = true
     }
 
     flavorDimensions += "env"
@@ -74,5 +93,11 @@ dependencies {
     testImplementation "io.mockk:mockk-android:$mockk_version"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version"
     testImplementation "androidx.arch.core:core-testing:$android_arch_version"
+    // Datadog DSK Integration
+//    implementation("com.datadoghq:dd-sdk-android:2.0.0")
+    implementation "com.datadoghq:dd-sdk-android-rum:3.6.0"
+    implementation "com.datadoghq:dd-sdk-android-logs:3.6.0"
+    implementation "com.datadoghq:dd-sdk-android-trace:3.6.0" // optional
+    implementation "com.datadoghq:dd-sdk-android-webview:3.6.0" // if using WebView
 
 }

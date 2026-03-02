@@ -220,7 +220,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     }
 
 
-    @UnstableApi
+    /*@UnstableApi
     override fun setMenuVisibility(menuVisible: Boolean) {
         super.setMenuVisibility(menuVisible)
         if (menuVisible) {
@@ -228,7 +228,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         } else {
             viewModel.onFragmentHidden()
         }
-    }
+    }*/
 
     @UnstableApi
     override fun onDestroy() {

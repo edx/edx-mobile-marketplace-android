@@ -573,7 +573,7 @@ private fun DashboardPager(
     HorizontalPager(
         state = pagerState,
         userScrollEnabled = isNavigationEnabled,
-        beyondBoundsPageCount = courseContainerTabs.size
+        beyondViewportPageCount = CourseContainerTab.entries.size
     ) { page ->
         when (viewModel.getTabByIndex(page)) {
             CourseContainerTab.HOME -> {

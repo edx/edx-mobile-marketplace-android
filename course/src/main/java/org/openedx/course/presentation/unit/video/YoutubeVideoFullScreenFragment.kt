@@ -12,7 +12,7 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.YouTubePlayerTracker
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.ui.DefaultPlayerUiController
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.DefaultPlayerUiController
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -70,7 +70,7 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
         binding.root.requestApplyInsetsWhenAttached()
 
         lifecycle.addObserver(binding.youtubePlayerView)
-        val options = IFramePlayerOptions.Builder()
+        val options = IFramePlayerOptions.Builder(requireActivity())
             .controls(0)
             .rel(0)
             .build()
@@ -114,7 +114,7 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
                 binding.youtubePlayerView.isVisible = true
                 val defPlayerUiController =
                     DefaultPlayerUiController(binding.youtubePlayerView, youTubePlayer)
-                defPlayerUiController.setFullScreenButtonClickListener {
+                defPlayerUiController.setFullscreenButtonClickListener {
                     parentFragmentManager.popBackStack()
                 }
 

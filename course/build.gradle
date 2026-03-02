@@ -65,6 +65,8 @@ dependencies {
     implementation project(path: ':core')
     implementation project(path: ':discussion')
     implementation "com.pierfrancescosoffritti.androidyoutubeplayer:core:$youtubeplayer_version"
+    implementation "com.pierfrancescosoffritti.androidyoutubeplayer:custom-ui:$youtubeplayer_version"
+
     implementation "androidx.media3:media3-exoplayer:$media3_version"
     implementation "androidx.media3:media3-exoplayer-hls:$media3_version"
     implementation "androidx.media3:media3-ui:$media3_version"

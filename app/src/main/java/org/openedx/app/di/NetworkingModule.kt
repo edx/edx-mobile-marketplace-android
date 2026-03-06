@@ -1,5 +1,8 @@
 package org.openedx.app.di
 
+import com.datadog.android.okhttp.DatadogEventListener
+import com.datadog.android.okhttp.DatadogInterceptor
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.qualifier.named
@@ -32,8 +35,25 @@ val networkingModule = module {
             readTimeout(60, TimeUnit.SECONDS)
             addInterceptor(HeadersInterceptor(get(), get(), get()))
             if (BuildConfig.DEBUG) {
-                addNetworkInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+                addNetworkInterceptor(
+                    HttpLoggingInterceptor()
+                        .setLevel(HttpLoggingInterceptor.Level.BODY)
+                )
             }
+
+            val config = get<Config>()
+            val host = config.getApiHostURL()
+                .toHttpUrl()
+                .host
+
+            val tracedHosts = listOf(host)
+
+            addInterceptor(
+                DatadogInterceptor.Builder(tracedHosts).build()
+            )
+            eventListenerFactory(
+                DatadogEventListener.Factory()
+            )
             addInterceptor(HandleErrorInterceptor(get()))
             addInterceptor(AppUpgradeInterceptor(get()))
             addInterceptor(get<OauthRefreshTokenAuthenticator>())

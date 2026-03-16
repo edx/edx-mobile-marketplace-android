@@ -2,6 +2,7 @@ package org.openedx.app
 
 import android.content.Context
 import org.openedx.app.analytics.Analytics
+import org.openedx.app.analytics.datadog.DatadogAnalytics
 import org.openedx.app.analytics.FirebaseAnalytics
 import org.openedx.app.analytics.SegmentAnalytics
 import org.openedx.auth.presentation.AuthAnalytics
@@ -27,14 +28,15 @@ class AnalyticsManager(
     private val services: ArrayList<Analytics> = arrayListOf()
 
     init {
-        // Initialise all the analytics libraries here
+        // Initialise all analytics libraries
         if (config.getFirebaseConfig().isFirebaseAnalyticsSource()) {
-            addAnalyticsTracker(FirebaseAnalytics(context = context))
+            addAnalyticsTracker(FirebaseAnalytics(context))
         }
         val segmentConfig = config.getSegmentConfig()
         if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank() && config.getFirebaseConfig().isSegmentAnalyticsSource()) {
-            addAnalyticsTracker(SegmentAnalytics(context = context, config = config))
+            addAnalyticsTracker(SegmentAnalytics(context, config))
         }
+        addAnalyticsTracker(DatadogAnalytics()) // Datadog is added here
     }
 
     private fun addAnalyticsTracker(analytic: Analytics) {
@@ -42,27 +44,20 @@ class AnalyticsManager(
     }
 
     private fun logEvent(event: Event, params: Map<String, Any?> = mapOf()) {
-        services.forEach { analytics ->
-            analytics.logEvent(event.eventName, params)
-        }
+        services.forEach { it.logEvent(event.eventName, params) }
+
     }
 
     override fun logScreenEvent(screenName: String, params: Map<String, Any?>) {
-        services.forEach { analytics ->
-            analytics.logScreenEvent(screenName, params)
-        }
+        services.forEach { it.logScreenEvent(screenName, params) }
     }
 
     override fun logEvent(event: String, params: Map<String, Any?>) {
-        services.forEach { analytics ->
-            analytics.logEvent(event, params)
-        }
+        services.forEach { it.logEvent(event, params) }
     }
 
     private fun setUserId(userId: Long) {
-        services.forEach { analytics ->
-            analytics.logUserId(userId)
-        }
+        services.forEach { it.logUserId(userId) }
     }
 
     override fun dashboardCourseClickedEvent(courseId: String, courseName: String) {
@@ -100,9 +95,7 @@ class AnalyticsManager(
         })
     }
 
-    override fun sequentialClickedEvent(
-        courseId: String, courseName: String, blockId: String, blockName: String,
-    ) {
+    override fun sequentialClickedEvent(courseId: String, courseName: String, blockId: String, blockName: String) {
         logEvent(Event.SEQUENTIAL_CLICKED, buildMap {
             put(Key.COURSE_ID.keyName, courseId)
             put(Key.COURSE_NAME.keyName, courseName)
@@ -111,9 +104,7 @@ class AnalyticsManager(
         })
     }
 
-    override fun nextBlockClickedEvent(
-        courseId: String, courseName: String, blockId: String, blockName: String,
-    ) {
+    override fun nextBlockClickedEvent(courseId: String, courseName: String, blockId: String, blockName: String) {
         logEvent(Event.NEXT_BLOCK_CLICKED, buildMap {
             put(Key.COURSE_ID.keyName, courseId)
             put(Key.COURSE_NAME.keyName, courseName)
@@ -122,9 +113,7 @@ class AnalyticsManager(
         })
     }
 
-    override fun prevBlockClickedEvent(
-        courseId: String, courseName: String, blockId: String, blockName: String,
-    ) {
+    override fun prevBlockClickedEvent(courseId: String, courseName: String, blockId: String, blockName: String) {
         logEvent(Event.PREV_BLOCK_CLICKED, buildMap {
             put(Key.COURSE_ID.keyName, courseId)
             put(Key.COURSE_NAME.keyName, courseName)
@@ -133,9 +122,7 @@ class AnalyticsManager(
         })
     }
 
-    override fun finishVerticalClickedEvent(
-        courseId: String, courseName: String, blockId: String, blockName: String,
-    ) {
+    override fun finishVerticalClickedEvent(courseId: String, courseName: String, blockId: String, blockName: String) {
         logEvent(Event.FINISH_VERTICAL_CLICKED, buildMap {
             put(Key.COURSE_ID.keyName, courseId)
             put(Key.COURSE_NAME.keyName, courseName)
@@ -144,9 +131,7 @@ class AnalyticsManager(
         })
     }
 
-    override fun finishVerticalNextClickedEvent(
-        courseId: String, courseName: String, blockId: String, blockName: String,
-    ) {
+    override fun finishVerticalNextClickedEvent(courseId: String, courseName: String, blockId: String, blockName: String) {
         logEvent(Event.FINISH_VERTICAL_NEXT_CLICKED, buildMap {
             put(Key.COURSE_ID.keyName, courseId)
             put(Key.COURSE_NAME.keyName, courseName)

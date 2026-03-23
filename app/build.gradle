@@ -40,7 +40,7 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 6002032
-        versionName = "6.2.32"
+        versionName = "6.3.0"
 
         resourceConfigurations += ["en", "uk"]
 
@@ -173,8 +173,7 @@ dependencies {
     // Braze SDK Integration
     implementation "com.braze:braze-segment-kotlin:1.4.2"
     implementation "com.braze:android-sdk-ui:30.2.0"
-    // Datadog DSK Integration
-//    implementation("com.datadoghq:dd-sdk-android:2.0.0")
+    // Datadog SDK Integration
     implementation "com.datadoghq:dd-sdk-android-rum:3.6.0"
     implementation "com.datadoghq:dd-sdk-android-logs:3.6.0"
     implementation "com.datadoghq:dd-sdk-android-trace:3.6.0" // optional

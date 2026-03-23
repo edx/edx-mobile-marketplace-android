@@ -55,17 +55,17 @@ android {
             dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
-        }
+    }
         develop {
             dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
-        }
+    }
         stage {
             dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
-        }
+    }
     }
     productFlavors.all { flavor ->
         flavor.buildConfigField "boolean", "DD_ENABLED",

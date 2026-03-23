@@ -18,6 +18,7 @@ class Config(context: Context) {
         JsonObject()
     }
 
+
     fun getAppId(): String {
         return getString(APPLICATION_ID, "")
     }
@@ -62,6 +63,10 @@ class Config(context: Context) {
 
     fun getFirebaseConfig(): FirebaseConfig {
         return getObjectOrNewInstance(FIREBASE, FirebaseConfig::class.java)
+    }
+
+    fun getDatadogConfig(): DatadogConfig {
+        return getObjectOrNewInstance(DATADOG, DatadogConfig::class.java)
     }
 
     fun getSegmentConfig(): SegmentConfig {
@@ -193,6 +198,7 @@ class Config(context: Context) {
         private const val OPTIMIZELY = "OPTIMIZELY"
         private const val VIDEO_PLAYER = "VIDEO_PLAYER"
         private const val RECAPTCHA = "RECAPTCHA"
+        private const val DATADOG = "DATADOG"
     }
 
     enum class ViewType {

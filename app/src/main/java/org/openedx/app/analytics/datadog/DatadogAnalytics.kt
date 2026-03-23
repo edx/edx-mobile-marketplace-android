@@ -4,8 +4,11 @@ import com.datadog.android.Datadog
 import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.RumActionType
 import org.openedx.app.analytics.Analytics
+import org.openedx.core.utils.Logger
 
 class DatadogAnalytics : Analytics {
+
+    private val logger = Logger(TAG)
 
     override fun logEvent(event: String, params: Map<String, Any?>) {
         logDatadogEvent(event, params)
@@ -23,7 +26,7 @@ class DatadogAnalytics : Analytics {
                 null
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e)
         }
     }
 
@@ -32,10 +35,13 @@ class DatadogAnalytics : Analytics {
             GlobalRumMonitor.get().addAction(
                 RumActionType.CUSTOM,
                 eventName,
-                attributes.filterValues { it != null }.mapValues { it.value as Any }
+                attributes
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.e(throwable = e)
         }
+    }
+    companion object {
+        private const val TAG = "DatadogAnalytics"
     }
 }

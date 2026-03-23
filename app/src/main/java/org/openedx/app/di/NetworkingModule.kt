@@ -12,7 +12,6 @@ import org.openedx.app.data.networking.HandleErrorInterceptor
 import org.openedx.app.data.networking.HeadersInterceptor
 import org.openedx.app.data.networking.OauthRefreshTokenAuthenticator
 import org.openedx.auth.data.api.AuthApi
-import org.openedx.core.BuildConfig
 import org.openedx.core.config.Config
 import org.openedx.core.data.api.CookiesApi
 import org.openedx.core.data.api.CourseApi
@@ -24,6 +23,7 @@ import org.openedx.profile.data.api.ProfileApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import org.openedx.app.BuildConfig
 
 val networkingModule = module {
 
@@ -42,18 +42,15 @@ val networkingModule = module {
             }
 
             val config = get<Config>()
-            val host = config.getApiHostURL()
-                .toHttpUrl()
-                .host
+            val datadogConfig = config.getDatadogConfig()
 
-            val tracedHosts = listOf(host)
+            if (datadogConfig.ENABLED && datadogConfig.CLIENT_TOKEN.isNotEmpty()) {
+                val host = config.getApiHostURL().toHttpUrl().host
+                val tracedHosts = listOf(host)
 
-            addInterceptor(
-                DatadogInterceptor.Builder(tracedHosts).build()
-            )
-            eventListenerFactory(
-                DatadogEventListener.Factory()
-            )
+                addInterceptor(DatadogInterceptor.Builder(tracedHosts).build())
+                eventListenerFactory(DatadogEventListener.Factory())
+            }
             addInterceptor(HandleErrorInterceptor(get()))
             addInterceptor(AppUpgradeInterceptor(get()))
             addInterceptor(get<OauthRefreshTokenAuthenticator>())

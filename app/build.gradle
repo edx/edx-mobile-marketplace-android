@@ -55,17 +55,17 @@ android {
             dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
-        }
+    }
         develop {
             dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
-        }
+    }
         stage {
             dimension = 'env'
             setupBranchConfigFields(it)
             setupFirebaseConfigFields(it)
-        }
+    }
     }
     productFlavors.all { flavor ->
         flavor.buildConfigField "boolean", "DD_ENABLED",
@@ -174,7 +174,6 @@ dependencies {
     implementation "com.braze:braze-segment-kotlin:1.4.2"
     implementation "com.braze:android-sdk-ui:30.2.0"
     // Datadog SDK Integration
-//    implementation("com.datadoghq:dd-sdk-android:2.0.0")
     implementation "com.datadoghq:dd-sdk-android-rum:3.6.0"
     implementation "com.datadoghq:dd-sdk-android-logs:3.6.0"
     implementation "com.datadoghq:dd-sdk-android-trace:3.6.0" // optional

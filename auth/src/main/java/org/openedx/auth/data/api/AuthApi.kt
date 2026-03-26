@@ -45,6 +45,7 @@ interface AuthApi {
     @GET(ApiConstants.URL_REGISTRATION_FIELDS)
     suspend fun getRegistrationFields(): RegistrationFields
 
+    @Headers("Mobile-Platform-Identifier: android")
     @FormUrlEncoded
     @POST(ApiConstants.URL_REGISTER)
     suspend fun registerUser(@FieldMap fields: Map<String, String>)

@@ -1,5 +1,6 @@
 package org.openedx.auth.domain.interactor
 
+import com.google.android.recaptcha.RecaptchaAction
 import org.openedx.auth.data.model.AuthType
 import org.openedx.auth.data.model.ValidationFields
 import org.openedx.auth.data.repository.AuthRepository
@@ -33,5 +34,8 @@ class AuthInteractor(private val repository: AuthRepository) {
     suspend fun passwordReset(email: String): Boolean {
         return repository.passwordReset(email)
     }
+
+    suspend fun getRecaptchaToken(recaptchaAction: RecaptchaAction) =
+        repository.getRecaptchaToken(recaptchaAction)
 
 }

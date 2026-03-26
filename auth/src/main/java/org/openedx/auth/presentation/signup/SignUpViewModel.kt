@@ -32,6 +32,8 @@ import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.domain.model.createHonorCodeField
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.extension.isNotNullOrEmpty
+import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
@@ -56,7 +58,8 @@ class SignUpViewModel(
 ) : BaseViewModel() {
 
     private val logger = Logger("SignUpViewModel")
-
+    var captchaName : String? =""
+    var reCaptchaToken: String =""
     private val _uiState = MutableStateFlow(
         SignUpUIState(
             isFacebookAuthEnabled = config.getFacebookConfig().isEnabled(),
@@ -86,6 +89,9 @@ class SignUpViewModel(
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             try {
+                reCaptchaToken = interactor.getRecaptchaToken(
+                    recaptchaAction = RecaptchaManager.RecaptchaActionRegistration
+                )
                 updateFields(interactor.getRegistrationFields())
             } catch (e: Exception) {
                 logger.e(throwable = e)
@@ -122,6 +128,10 @@ class SignUpViewModel(
             val marketingEmails =
                 allFields.find { it.name == ApiConstants.RegistrationFields.MARKETING_EMAILS }
             mutableAllFields.remove(honourCode)
+            val captchaTokenField=allFields.find { it.name == ApiConstants.RegistrationFields.CAPTCHA_TOKEN }
+            if(captchaTokenField!=null) {
+                captchaName = captchaTokenField.name
+            }
             requiredFields.addAll(mutableAllFields.filter { it.required })
             optionalFields.addAll(mutableAllFields.filter { !it.required })
             requiredFields.remove(marketingEmails)
@@ -151,8 +161,12 @@ class SignUpViewModel(
             }
         )
         val mapFields = uiState.value.allFields.associate { it.name to it.placeholder } +
-                mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())
+                mapOf(ApiConstants.RegistrationFields.HONOR_CODE to true.toString())+
+                mapOf(ApiConstants.RegistrationFields.CAPTCHA_TOKEN to true.toString())
         val resultMap = mapFields.toMutableMap()
+        if(captchaName.isNotNullOrEmpty()) {
+            reCaptchaToken.let { resultMap.put(captchaName.toString(), it) }
+        }
         uiState.value.allFields.filter { !it.required }.forEach { (k, _) ->
             if (mapFields[k].isNullOrEmpty()) {
                 resultMap.remove(k)

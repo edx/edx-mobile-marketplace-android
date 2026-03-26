@@ -31,15 +31,15 @@ if (firebaseEnabled) {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = appId
         minSdk = 24
-        targetSdk = 35
-        versionCode =  6003000
-        versionName =  "6.3.0"
+        targetSdk = 36
+        versionCode =  6003001
+        versionName =  "6.3.1"
 
         resourceConfigurations += ["en", "uk"]
 

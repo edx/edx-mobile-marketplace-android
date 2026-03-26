@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -70,212 +71,215 @@ class IAPDialogFragment : DialogFragment() {
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
-            OpenEdXTheme {
-                val iapState by iapViewModel.uiState.collectAsState()
-                val uiMessage by iapViewModel.uiMessage.collectAsState(null)
-                val scaffoldState = rememberScaffoldState()
+            Box(Modifier.safeDrawingPadding()) {
+                OpenEdXTheme {
+                    val iapState by iapViewModel.uiState.collectAsState()
+                    val uiMessage by iapViewModel.uiMessage.collectAsState(null)
+                    val scaffoldState = rememberScaffoldState()
 
-                var selectedOption by remember { mutableStateOf(CourseTrack.CERTIFICATE) }
+                    var selectedOption by remember { mutableStateOf(CourseTrack.CERTIFICATE) }
 
-                val isFullScreenLoader =
-                    (iapState as? IAPUIState.Loading)?.loaderType == IAPLoaderType.FULL_SCREEN
-                isCancelable = !isFullScreenLoader
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    backgroundColor = MaterialTheme.appColors.background,
-                    topBar = {
-                        if (isFullScreenLoader.not()) {
-                            Row(
-                                modifier = Modifier.padding(8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Icon(
-                                    modifier = Modifier.clickable { onDismiss() },
-                                    painter = painterResource(id = R.drawable.core_ic_back),
-                                    contentDescription = null
-                                )
+                    val isFullScreenLoader =
+                        (iapState as? IAPUIState.Loading)?.loaderType == IAPLoaderType.FULL_SCREEN
+                    isCancelable = !isFullScreenLoader
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        backgroundColor = MaterialTheme.appColors.background,
+                        topBar = {
+                            if (isFullScreenLoader.not()) {
+                                Row(
+                                    modifier = Modifier.padding(8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Icon(
+                                        modifier = Modifier.clickable { onDismiss() },
+                                        painter = painterResource(id = R.drawable.core_ic_back),
+                                        contentDescription = null
+                                    )
+                                }
                             }
-                        }
-                    },
-                    bottomBar = {
-                        if (isFullScreenLoader.not()) {
-                            Box(modifier = Modifier.padding(all = 8.dp)) {
-                                when {
-                                    (iapState is IAPUIState.Loading ||
-                                            iapState is IAPUIState.PurchaseProduct ||
-                                            iapState is IAPUIState.Error) -> {
-                                        Box(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                        },
+                        bottomBar = {
+                            if (isFullScreenLoader.not()) {
+                                Box(modifier = Modifier.padding(all = 8.dp)) {
+                                    when {
+                                        (iapState is IAPUIState.Loading ||
+                                                iapState is IAPUIState.PurchaseProduct ||
+                                                iapState is IAPUIState.Error) -> {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                                            }
                                         }
-                                    }
 
-                                    iapState is IAPUIState.ProductData &&
-                                            iapViewModel.purchaseData.formattedPrice.isNotNullOrEmpty() &&
-                                            iapViewModel.purchaseData.iapFlow == IAPFlow.USER_INITIATED -> {
-                                        if (iapViewModel.purchaseData.screenName == IAPFlowSource.TRACK_SELECTION.screen) {
-                                            val buttonText =
-                                                if (selectedOption == CourseTrack.CERTIFICATE) {
-                                                    stringResource(
-                                                        id = R.string.iap_continue_to_payment,
-                                                        iapViewModel.purchaseData.formattedPrice!!,
-                                                    )
-                                                } else {
-                                                    stringResource(id = R.string.iap_continue_with_free_track)
-                                                }
-                                            OpenEdXBrandButton(
-                                                text = buttonText,
-                                                onClick = {
+                                        iapState is IAPUIState.ProductData &&
+                                                iapViewModel.purchaseData.formattedPrice.isNotNullOrEmpty() &&
+                                                iapViewModel.purchaseData.iapFlow == IAPFlow.USER_INITIATED -> {
+                                            if (iapViewModel.purchaseData.screenName == IAPFlowSource.TRACK_SELECTION.screen) {
+                                                val buttonText =
                                                     if (selectedOption == CourseTrack.CERTIFICATE) {
-                                                        iapViewModel.startPurchaseFlow()
+                                                        stringResource(
+                                                            id = R.string.iap_continue_to_payment,
+                                                            iapViewModel.purchaseData.formattedPrice!!,
+                                                        )
                                                     } else {
-                                                        iapViewModel.eventLogger.logContinueToFreeTrackClickedEvent()
-                                                        onDismiss()
+                                                        stringResource(id = R.string.iap_continue_with_free_track)
                                                     }
-                                                })
-                                        } else {
-                                            OpenEdXBrandButton(
-                                                text = stringResource(
-                                                    id = R.string.iap_upgrade_price,
-                                                    iapViewModel.purchaseData.formattedPrice!!,
-                                                ),
-                                                onClick = {
-                                                    iapViewModel.startPurchaseFlow()
-                                                })
+                                                OpenEdXBrandButton(
+                                                    text = buttonText,
+                                                    onClick = {
+                                                        if (selectedOption == CourseTrack.CERTIFICATE) {
+                                                            iapViewModel.startPurchaseFlow()
+                                                        } else {
+                                                            iapViewModel.eventLogger.logContinueToFreeTrackClickedEvent()
+                                                            onDismiss()
+                                                        }
+                                                    })
+                                            } else {
+                                                OpenEdXBrandButton(
+                                                    text = stringResource(
+                                                        id = R.string.iap_upgrade_price,
+                                                        iapViewModel.purchaseData.formattedPrice!!,
+                                                    ),
+                                                    onClick = {
+                                                        iapViewModel.startPurchaseFlow()
+                                                    })
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                ) { contentPadding ->
+                    ) { contentPadding ->
 
-                    HandleUIMessage(
-                        uiMessage = uiMessage,
-                        scaffoldState = scaffoldState,
-                        onDisplayed = {
-                            if (iapState is IAPUIState.CourseDataUpdated) {
+                        HandleUIMessage(
+                            uiMessage = uiMessage,
+                            scaffoldState = scaffoldState,
+                            onDisplayed = {
+                                if (iapState is IAPUIState.CourseDataUpdated) {
+                                    onDismiss()
+                                }
+                            }
+                        )
+
+                        when (iapState) {
+                            is IAPUIState.PurchaseProduct -> {
+                                iapViewModel.purchaseItem(requireActivity())
+                            }
+
+                            is IAPUIState.Error -> {
+                                val iapException = (iapState as IAPUIState.Error).iapException
+                                IAPErrorDialog(iapException = iapException, onIAPAction = { iapAction ->
+                                    when (iapAction) {
+                                        IAPAction.ACTION_RELOAD_PRICE -> {
+                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                                iapException.requestType.request,
+                                                IAPAction.ACTION_RELOAD_PRICE.action
+                                            )
+                                            iapViewModel.loadPrice()
+                                        }
+
+                                        IAPAction.ACTION_CLOSE -> {
+                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                                iapException.requestType.request,
+                                                IAPAction.ACTION_CLOSE.action
+                                            )
+                                            onDismiss()
+                                        }
+
+                                        IAPAction.ACTION_OK -> {
+                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                                iapException.requestType.request,
+                                                IAPAction.ACTION_OK.action
+                                            )
+                                            onDismiss()
+                                        }
+
+                                        IAPAction.ACTION_REFRESH -> {
+                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                                iapException.requestType.request,
+                                                IAPAction.ACTION_REFRESH.action
+                                            )
+                                            iapViewModel.refreshCourse()
+                                        }
+
+                                        IAPAction.ACTION_GET_HELP -> {
+                                            iapViewModel.showFeedbackScreen(
+                                                requireActivity(),
+                                                iapException.requestType.request,
+                                                iapException.getFormattedErrorMessage()
+                                            )
+                                            onDismiss()
+                                        }
+
+                                        IAPAction.ACTION_RETRY -> {
+                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                                iapException.requestType.request,
+                                                IAPAction.ACTION_RETRY.action
+                                            )
+                                            if (iapException.requestType == IAPRequestType.CONSUME_CODE) {
+                                                iapViewModel.retryToConsumeOrder()
+                                            } else if (iapException.requestType == IAPRequestType.CREATE_ORDER_CODE) {
+                                                iapViewModel.retryCreateOrder()
+                                            }
+                                        }
+
+                                        else -> {
+                                            // ignore
+                                        }
+                                    }
+                                })
+                            }
+
+                            is IAPUIState.Clear -> {
                                 onDismiss()
                             }
-                        }
-                    )
 
-                    when (iapState) {
-                        is IAPUIState.PurchaseProduct -> {
-                            iapViewModel.purchaseItem(requireActivity())
+                            else -> {}
                         }
 
-                        is IAPUIState.Error -> {
-                            val iapException = (iapState as IAPUIState.Error).iapException
-                            IAPErrorDialog(iapException = iapException, onIAPAction = { iapAction ->
-                                when (iapAction) {
-                                    IAPAction.ACTION_RELOAD_PRICE -> {
-                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
-                                            iapException.requestType.request,
-                                            IAPAction.ACTION_RELOAD_PRICE.action
+                        if (isFullScreenLoader) {
+                            UnlockingAccessView()
+                        } else if (TextUtils.isEmpty(iapViewModel.purchaseData.courseName).not()) {
+                            if (iapViewModel.purchaseData.screenName == IAPFlowSource.TRACK_SELECTION.screen) {
+                                val courseExpiresDate =
+                                    iapViewModel.purchaseData.courseExpiresDate?.let {
+                                        TimeUtils.getCourseAccessFormattedDate(
+                                            LocalContext.current,
+                                            it
                                         )
-                                        iapViewModel.loadPrice()
-                                    }
-
-                                    IAPAction.ACTION_CLOSE -> {
-                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
-                                            iapException.requestType.request,
-                                            IAPAction.ACTION_CLOSE.action
-                                        )
-                                        onDismiss()
-                                    }
-
-                                    IAPAction.ACTION_OK -> {
-                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
-                                            iapException.requestType.request,
-                                            IAPAction.ACTION_OK.action
-                                        )
-                                        onDismiss()
-                                    }
-
-                                    IAPAction.ACTION_REFRESH -> {
-                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
-                                            iapException.requestType.request,
-                                            IAPAction.ACTION_REFRESH.action
-                                        )
-                                        iapViewModel.refreshCourse()
-                                    }
-
-                                    IAPAction.ACTION_GET_HELP -> {
-                                        iapViewModel.showFeedbackScreen(
-                                            requireActivity(),
-                                            iapException.requestType.request,
-                                            iapException.getFormattedErrorMessage()
-                                        )
-                                        onDismiss()
-                                    }
-
-                                    IAPAction.ACTION_RETRY -> {
-                                        iapViewModel.eventLogger.logIAPErrorActionEvent(
-                                            iapException.requestType.request,
-                                            IAPAction.ACTION_RETRY.action
-                                        )
-                                        if (iapException.requestType == IAPRequestType.CONSUME_CODE) {
-                                            iapViewModel.retryToConsumeOrder()
-                                        } else if (iapException.requestType == IAPRequestType.CREATE_ORDER_CODE) {
-                                            iapViewModel.retryCreateOrder()
-                                        }
-                                    }
-
-                                    else -> {
-                                        // ignore
-                                    }
-                                }
-                            })
-                        }
-
-                        is IAPUIState.Clear -> {
-                            onDismiss()
-                        }
-
-                        else -> {}
-                    }
-
-                    if (isFullScreenLoader) {
-                        UnlockingAccessView()
-                    } else if (TextUtils.isEmpty(iapViewModel.purchaseData.courseName).not()) {
-                        if (iapViewModel.purchaseData.screenName == IAPFlowSource.TRACK_SELECTION.screen) {
-                            val courseExpiresDate =
-                                iapViewModel.purchaseData.courseExpiresDate?.let {
-                                    TimeUtils.getCourseAccessFormattedDate(
-                                        LocalContext.current,
-                                        it
-                                    )
-                                } ?: ""
-                            TrackSelectionFeature(
-                                modifier = Modifier.padding(contentPadding),
-                                courseName = iapViewModel.purchaseData.courseName!!,
-                                price = iapViewModel.purchaseData.formattedPrice ?: "",
-                                expiryDate = courseExpiresDate,
-                                selectedTrack = selectedOption,
-                                onTrackSelection = { option ->
-                                    selectedOption = option
-                                },
-                            )
+                                    } ?: ""
+                                TrackSelectionFeature(
+                                    modifier = Modifier.padding(contentPadding),
+                                    courseName = iapViewModel.purchaseData.courseName!!,
+                                    price = iapViewModel.purchaseData.formattedPrice ?: "",
+                                    expiryDate = courseExpiresDate,
+                                    selectedTrack = selectedOption,
+                                    onTrackSelection = { option ->
+                                        selectedOption = option
+                                    },
+                                )
+                            } else {
+                                ValuePropUpgradeFeatures(
+                                    modifier = Modifier.padding(contentPadding),
+                                    previewCertificate = iapViewModel.isCertificatePreviewEnabled,
+                                    appName = iapViewModel.appData.appName,
+                                    courseName = iapViewModel.purchaseData.courseName!!,
+                                    learnerName = iapViewModel.user?.name,
+                                    orgName = iapViewModel.purchaseData.orgName
+                                        ?: iapViewModel.appData.appName,
+                                    orgLogo = iapViewModel.purchaseData.orgLogo
+                                )
+                            }
                         } else {
-                            ValuePropUpgradeFeatures(
-                                modifier = Modifier.padding(contentPadding),
-                                previewCertificate = iapViewModel.isCertificatePreviewEnabled,
-                                appName = iapViewModel.appData.appName,
-                                courseName = iapViewModel.purchaseData.courseName!!,
-                                learnerName = iapViewModel.user?.name,
-                                orgName = iapViewModel.purchaseData.orgName
-                                    ?: iapViewModel.appData.appName,
-                                orgLogo = iapViewModel.purchaseData.orgLogo
-                            )
+                            // ignore
                         }
-                    } else {
-                        // ignore
                     }
                 }
             }
+
         }
     }
 

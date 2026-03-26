@@ -141,7 +141,6 @@ dependencies {
     api "com.squareup.okhttp3:logging-interceptor:$logginginterceptor_version"
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.okio:okio:3.7.0")
 
     // Koin DI
     api "io.insert-koin:koin-core:$koin_version"

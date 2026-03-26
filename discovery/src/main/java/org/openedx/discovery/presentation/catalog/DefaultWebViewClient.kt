@@ -20,6 +20,7 @@ open class DefaultWebViewClient(
 
     private var hostForThisPage: String? = null
     private var isPossibleRedirection = true
+    private var hasRetried = false
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
@@ -60,9 +61,10 @@ open class DefaultWebViewClient(
         request: WebResourceRequest,
         errorResponse: WebResourceResponse,
     ) {
-        if (request.url.toString() == view.url) {
+        if (request.url.toString() == view.url && !hasRetried) {
             when (errorResponse.statusCode) {
                 403, 401, 404 -> {
+                    hasRetried = true
                     refreshSessionCookie()
                     webView.loadUrl(request.url.toString())
                 }

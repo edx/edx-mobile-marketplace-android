@@ -42,7 +42,20 @@ fun CatalogWebViewScreen(
 
                 override fun onPageCommitVisible(view: WebView?, url: String?) {
                     super.onPageCommitVisible(view, url)
-                    onWebPageLoaded()
+
+                    view?.evaluateJavascript("""
+                    (function() {
+                        const text = document.body.innerText || "";
+                        return text.includes("Page not found") || text.includes("404");
+                    })();
+                    """
+                    ) { result ->
+                        if (result == "true") {
+                            onWebPageLoadError()
+                        } else {
+                            onWebPageLoaded()
+                        }
+                    }
                 }
 
                 override fun shouldOverrideUrlLoading(

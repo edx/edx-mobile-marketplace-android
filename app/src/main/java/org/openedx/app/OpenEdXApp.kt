@@ -23,14 +23,22 @@ import org.openedx.core.config.Config
 import org.openedx.featuremanagement.di.FeatureModuleProvider
 import org.openedx.notifications.di.NotificationsModuleProvider
 import com.datadog.android.core.configuration.Configuration
+import org.openedx.app.data.storage.PreferencesManager
+import kotlin.getValue
 class OpenEdXApp : Application() {
 
     private val config by inject<Config>()
+    private val corePreferences by inject<PreferencesManager>()
 
     override fun onCreate() {
         super.onCreate()
-        initializeDatadog()
         initializeKoinModules()
+        val config: Config by inject()
+        val corePreferences: PreferencesManager by inject()
+
+        if (corePreferences.isDatadogEnabled) {
+            initializeDatadog()
+        }
 
         if (config.getFirebaseConfig().enabled) {
             FirebaseApp.initializeApp(this)
@@ -63,6 +71,10 @@ class OpenEdXApp : Application() {
         }
     }
     private fun initializeDatadog(){
+
+        if (!corePreferences.isDatadogEnabled) {
+            return
+        }
         if (BuildConfig.DD_CLIENT_TOKEN.isNotEmpty() && BuildConfig.DD_APPLICATION_ID.isNotEmpty()
         ) {
 

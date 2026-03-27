@@ -70,7 +70,10 @@ class SettingsViewModel(
     private val logger = Logger(TAG)
 
     private val _uiState: MutableStateFlow<SettingsUIState> =
-        MutableStateFlow(SettingsUIState.Data(configuration))
+        MutableStateFlow(SettingsUIState.Data(
+            configuration,
+            isDatadogEnabled = corePreferences.isDatadogEnabled
+        ))
     internal val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
 
     private val _iapUiState: MutableStateFlow<IAPUIState?> = MutableStateFlow(null)
@@ -109,6 +112,13 @@ class SettingsViewModel(
         collectProfileEvent()
     }
 
+    fun setDatadogEnabled(enabled: Boolean) {
+        corePreferences.isDatadogEnabled = enabled // persist
+        val currentData = _uiState.value
+        if (currentData is SettingsUIState.Data) {
+            _uiState.value = currentData.copy(isDatadogEnabled = enabled)
+        }
+    }
     fun logout() {
         logProfileEvent(ProfileAnalyticsEvent.LOGOUT_CLICKED)
         viewModelScope.launch {

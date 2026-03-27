@@ -65,4 +65,5 @@
     <string name="profile_restore_purchaes">Restore purchases</string>
     <string name="profile_push_notifications">Push notifications</string>
     <string name="profile_appearance">Appearance</string>
+    <string name="profile_datadog_tracking">Datadog Tracking</string>
 </resources>

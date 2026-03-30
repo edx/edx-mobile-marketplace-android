@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Rewind triangle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,6l-8,6l8,6z" />
+
+    <!-- Second rewind triangle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,6l-8,6l8,6z" />
+</vector>

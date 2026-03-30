@@ -1,0 +1,12 @@
+package org.openedx.course.presentation.videos
+
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+
+class SharedViewModel : ViewModel() {
+
+    val buttonVisibility = MutableLiveData<Boolean>()
+    val navigationBarVisibility = MutableLiveData<Boolean>()
+
+
+}

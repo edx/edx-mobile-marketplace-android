@@ -1,5 +1,6 @@
 package org.openedx.course.presentation.unit.container
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.LayoutInflater
@@ -22,6 +23,7 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.cast.framework.CastButtonFactory
@@ -52,6 +54,7 @@ import org.openedx.course.presentation.ui.NavigationUnitsButtons
 import org.openedx.course.presentation.ui.SubSectionUnitsList
 import org.openedx.course.presentation.ui.SubSectionUnitsTitle
 import org.openedx.course.presentation.ui.VerticalPageIndicator
+import org.openedx.course.presentation.videos.SharedViewModel
 
 
 class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_container) {
@@ -59,6 +62,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     private val binding: FragmentCourseUnitContainerBinding
         get() = _binding!!
     private var _binding: FragmentCourseUnitContainerBinding? = null
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     private val viewModel by viewModel<CourseUnitContainerViewModel> {
         parametersOf(
@@ -181,7 +185,11 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             componentId = ""
         }
 
-        binding.cvNavigationBar.setContent {
+        binding.cvNavigationBar?.setContent {
+            NavigationBar()
+        }
+
+        binding.cvNavigationBar1?.setContent {
             NavigationBar()
         }
 
@@ -223,6 +231,36 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             }
             binding.cvCount.isVisible = true
         }
+        sharedViewModel.buttonVisibility.observe(viewLifecycleOwner) { visible ->
+            binding.btnBack.visibility =
+                if (visible) View.VISIBLE else View.GONE
+            binding.subSectionUnitsTitle.visibility =
+                if (visible) View.VISIBLE else View.GONE
+            binding.horizontalProgress.visibility =
+                if (visible) View.VISIBLE else View.GONE
+            binding.cvNavigationBar.visibility =
+                if (visible) View.VISIBLE else View.GONE
+            binding.cvCount.visibility =
+                if (visible) View.VISIBLE else View.GONE
+
+
+            if (visible) {
+                val insetHolder = requireActivity() as InsetHolder
+                val containerParams =
+                    binding.viewPager.layoutParams as ConstraintLayout.LayoutParams
+                containerParams.bottomMargin = insetHolder.bottomInset
+                binding.viewPager.layoutParams = containerParams
+
+            } else {
+                val containerParams =
+                    binding.viewPager.layoutParams as ConstraintLayout.LayoutParams
+                containerParams.bottomMargin = 0
+                binding.viewPager.layoutParams = containerParams
+            }
+
+
+        }
+
 
         binding.btnBack.setContent {
             val title = if (viewModel.isCourseExpandableSectionsEnabled) {
@@ -424,16 +462,16 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     }
 
     private fun handleUnitsClick() {
-        if (binding.subSectionUnitsList.visibility == View.VISIBLE) {
-            binding.subSectionUnitsList.visibility = View.GONE
-            binding.subSectionUnitsBg.visibility = View.GONE
-            viewModel.setUnitsListVisibility(false)
-
-        } else {
-            binding.subSectionUnitsList.visibility = View.VISIBLE
-            binding.subSectionUnitsBg.visibility = View.VISIBLE
-            viewModel.setUnitsListVisibility(true)
-        }
+//        if (binding.subSectionUnitsList.visibility == View.VISIBLE) {
+//            binding.subSectionUnitsList.visibility = View.GONE
+//            binding.subSectionUnitsBg.visibility = View.GONE
+//            viewModel.setUnitsListVisibility(false)
+//
+//        } else {
+//            binding.subSectionUnitsList.visibility = View.VISIBLE
+//            binding.subSectionUnitsBg.visibility = View.VISIBLE
+//            viewModel.setUnitsListVisibility(true)
+//        }
     }
 
     @Composable
@@ -501,4 +539,42 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             return fragment
         }
     }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        if (_binding == null || !isAdded) return
+
+        val isLandscape =
+            resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        fun Int.dpToPx(): Int {
+            return (this * resources.displayMetrics.density).toInt()
+        }
+
+        // ✅ Safe margin update
+        (binding.mediaRouteButton.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
+            it.marginEnd = if (isLandscape) 40.dpToPx() else 20.dpToPx()
+            it.topMargin = if (isLandscape) 20.dpToPx() else 15.dpToPx()
+
+            binding.mediaRouteButton.layoutParams = it
+        }
+        (binding.cvNavigationBar1?.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
+            it.topMargin = if (isLandscape) 10.dpToPx() else 0.dpToPx()
+
+            binding.cvNavigationBar1?.layoutParams = it
+        }
+
+
+        if (_binding == null) return
+
+        binding.cvNavigationBar1?.visibility =
+            if (isLandscape) View.VISIBLE else View.GONE
+
+        binding.cvNavigationBar?.visibility =
+            if (isLandscape) View.GONE else View.VISIBLE
+
+    }
+
 }
+

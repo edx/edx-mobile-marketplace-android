@@ -45,6 +45,7 @@
                 android:layout_marginTop="30dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_pip"
+                android:contentDescription="@string/picture_in_picture"
                 app:tint="@android:color/white" />
 
         </androidx.media3.ui.PlayerView>

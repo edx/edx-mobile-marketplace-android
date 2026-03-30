@@ -74,6 +74,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     private var lastPlayState: Boolean? = null
 
+    private var isRegistered = false
+
+
     private var lastVideoAspectRatio: Rational? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,7 +87,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             viewModel.transcripts = stringToObject<Map<String, String>>(
                 getString(ARG_TRANSCRIPT_URL, "")
             ) ?: emptyMap()
-            viewModel.isDownloaded = getBoolean(ARG_DOWNLOADED)
         }
         viewModel.downloadSubtitles()
         //init PictureInPictureParams, requires Android O and above
@@ -248,8 +250,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             this.setFullscreenButtonClickListener {
                 if (viewModel.enterFullscreen()) {
                     VideoFullScreenFragment.newInstance()
-                        .show(childFragmentManager,      VideoFullScreenFragment.TAG)
-                }
+                        .show(childFragmentManager, VideoFullScreenFragment.TAG)                }
             }
         }
     }
@@ -261,6 +262,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onPause() {
         super.onPause()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!requireActivity().isInPictureInPictureMode) {
+                requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+        } else {
+            requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
     }
 
     @UnstableApi
@@ -363,8 +371,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         // Prefer the actual video aspect if known
         lastVideoAspectRatio?.let { pictureInPictureParamsBuilder?.setAspectRatio(it) }
 
-        // Android 12+ for smoother resize
-        pictureInPictureParamsBuilder?.setSeamlessResizeEnabled(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            pictureInPictureParamsBuilder?.setSeamlessResizeEnabled(true)
+        }
 
         updatePipActions()
         pictureInPictureParamsBuilder?.build()?.let {
@@ -378,7 +387,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onStop() {
         super.onStop()
 
-        requireContext().unregisterReceiver(pipActionReceiver)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                requireActivity().unregisterReceiver(pipActionReceiver)
+            } catch (e: IllegalArgumentException) {
+
+            }
+        }
 
         // Do NOT stop when in PiP
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
@@ -396,14 +411,20 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onStart() {
         super.onStart()
-        ContextCompat.registerReceiver(requireContext(), pipActionReceiver, IntentFilter().apply {
-            addAction(ACTION_PLAY)
-            addAction(ACTION_PAUSE)
-            addAction(ACTION_FORWARD)
-            addAction(ACTION_REWIND)
-        }, ContextCompat.RECEIVER_EXPORTED)
-
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isRegistered) {
+            ContextCompat.registerReceiver(
+                requireContext(),
+                pipActionReceiver,
+                IntentFilter().apply {
+                    addAction(ACTION_PLAY)
+                    addAction(ACTION_PAUSE)
+                    addAction(ACTION_FORWARD)
+                    addAction(ACTION_REWIND)
+                },
+                ContextCompat.RECEIVER_EXPORTED
+            )
+            isRegistered = true
+        }
 
     }
 
@@ -417,7 +438,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.pipBtn?.isVisible = false
             binding.playerView.useController = false
             sharedViewModel.buttonVisibility.value = false
-            binding.cvVideoTitle!!.visibility = View.GONE
+            binding.cvVideoTitle?.visibility = View.GONE
             // Clear all margins for PiP
             clearAllMarginsAndConstraints()
 
@@ -582,7 +603,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         } else {
             // PORTRAIT
             binding.cvVideoTitle?.visibility = View.VISIBLE
-            val playerMarginTop = resources.getDimensionPixelSize(R.dimen.potrait_video_margin_top)
+            val playerMarginTop = resources.getDimensionPixelSize(R.dimen.portrait_video_margin_top)
 
             // VIDEO CARD
             constraintSet.connect(
@@ -773,7 +794,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             when (intent?.action) {
 
                 ACTION_PLAY -> viewModel.exoPlayer?.apply {
-                    // ✅ Only restart if video ended
+                    // Only restart if video ended
                     if (playbackState == Player.STATE_ENDED) {
                         seekTo(0)
                     }
@@ -787,7 +808,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 ACTION_REWIND -> seekBy(-10000)
             }
 
-            // ✅ Update PiP controls to reflect play/pause state
+            // Update PiP controls to reflect play/pause state
             updatePipActions()
         }
     }
@@ -857,6 +878,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     }
 
 }
+
 
 
 

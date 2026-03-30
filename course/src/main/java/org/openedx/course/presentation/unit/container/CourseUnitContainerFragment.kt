@@ -462,16 +462,15 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     }
 
     private fun handleUnitsClick() {
-//        if (binding.subSectionUnitsList.visibility == View.VISIBLE) {
-//            binding.subSectionUnitsList.visibility = View.GONE
-//            binding.subSectionUnitsBg.visibility = View.GONE
-//            viewModel.setUnitsListVisibility(false)
-//
-//        } else {
-//            binding.subSectionUnitsList.visibility = View.VISIBLE
-//            binding.subSectionUnitsBg.visibility = View.VISIBLE
-//            viewModel.setUnitsListVisibility(true)
-//        }
+        if (binding.subSectionUnitsList.visibility == View.VISIBLE) {
+            binding.subSectionUnitsList.visibility = View.GONE
+            binding.subSectionUnitsBg.visibility = View.GONE
+            viewModel.setUnitsListVisibility(false)
+        } else {
+            binding.subSectionUnitsList.visibility = View.VISIBLE
+            binding.subSectionUnitsBg.visibility = View.VISIBLE
+            viewModel.setUnitsListVisibility(true)
+        }
     }
 
     @Composable

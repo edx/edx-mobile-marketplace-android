@@ -184,6 +184,5 @@ internal interface SettingsScreenAction {
     object PushNotificationsSettingsClick : SettingsScreenAction
     object RestorePurchaseClick : SettingsScreenAction
     object FeedbackFormClick : SettingsScreenAction
-    data class DatadogToggle(val enabled: Boolean) : SettingsScreenAction
 }
 

@@ -28,7 +28,6 @@ class AnalyticsManager(
     private val services: ArrayList<Analytics> = arrayListOf()
 
     init {
-        // Initialise all analytics libraries
         if (config.getFirebaseConfig().isFirebaseAnalyticsSource()) {
             addAnalyticsTracker(FirebaseAnalytics(context))
         }
@@ -36,7 +35,10 @@ class AnalyticsManager(
         if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank() && config.getFirebaseConfig().isSegmentAnalyticsSource()) {
             addAnalyticsTracker(SegmentAnalytics(context, config))
         }
-        addAnalyticsTracker(DatadogAnalytics()) // Datadog is added here
+        val datadogConfig = config.getDatadogConfig()
+        if (datadogConfig.enabled) {
+            addAnalyticsTracker(DatadogAnalytics())
+        }
     }
 
     private fun addAnalyticsTracker(analytic: Analytics) {

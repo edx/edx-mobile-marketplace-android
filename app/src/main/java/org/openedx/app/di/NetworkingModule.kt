@@ -2,7 +2,7 @@ package org.openedx.app.di
 
 import com.datadog.android.okhttp.DatadogEventListener
 import com.datadog.android.okhttp.DatadogInterceptor
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.qualifier.named
@@ -24,6 +24,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import org.openedx.app.BuildConfig
+import org.openedx.core.data.storage.CorePreferences
 
 val networkingModule = module {
 
@@ -43,13 +44,29 @@ val networkingModule = module {
 
             val config = get<Config>()
             val datadogConfig = config.getDatadogConfig()
+            val corePreferences = get<CorePreferences>()
+            val isUserEnabled = corePreferences.isDatadogEnabled
 
-            if (datadogConfig.ENABLED && datadogConfig.CLIENT_TOKEN.isNotEmpty()) {
-                val host = config.getApiHostURL().toHttpUrl().host
-                val tracedHosts = listOf(host)
+            if (
+                datadogConfig.enabled &&
+                datadogConfig.clientToken.isNotEmpty() &&
+                isUserEnabled
+            ) {
+                val host = config.getApiHostURL()
+                    ?.takeIf { it.isNotBlank() }
+                    ?.toHttpUrlOrNull()
+                    ?.host
 
-                addInterceptor(DatadogInterceptor.Builder(tracedHosts).build())
-                eventListenerFactory(DatadogEventListener.Factory())
+                if (!host.isNullOrEmpty()) {
+                    val tracedHosts = listOf(host)
+
+                    addInterceptor(
+                        DatadogInterceptor.Builder(tracedHosts).build()
+                    )
+                    eventListenerFactory(
+                        DatadogEventListener.Factory()
+                    )
+                }
             }
             addInterceptor(HandleErrorInterceptor(get()))
             addInterceptor(AppUpgradeInterceptor(get()))

@@ -1,7 +1,14 @@
 package org.openedx.core.config
 
+import com.google.gson.annotations.SerializedName
+
 data class DatadogConfig(
-    val ENABLED: Boolean = false,
-    val CLIENT_TOKEN: String = "",
-    val ENVIRONMENT: String = ""
+    @SerializedName("ENABLED")
+    val enabled: Boolean = false,
+
+    @SerializedName("CLIENT_TOKEN")
+    val clientToken: String = "",
+
+    @SerializedName("ENVIRONMENT")
+    val environment: String = ""
 )

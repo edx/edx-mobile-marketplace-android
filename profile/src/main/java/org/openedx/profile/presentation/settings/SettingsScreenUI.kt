@@ -55,7 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import org.openedx.core.domain.model.AgreementUrls
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.presentation.global.AppData
@@ -95,7 +95,7 @@ internal fun SettingsScreen(
     onAction: (SettingsScreenAction) -> Unit,
     onIAPAction: (IAPAction, IAPException?) -> Unit,
 ) {
-    val viewModel: SettingsViewModel = viewModel()
+    val viewModel: SettingsViewModel = koinViewModel()
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
     val contentWidth by remember(key1 = windowSize) {
@@ -209,7 +209,6 @@ internal fun SettingsScreen(
                                         },
                                         onDatadogToggleChanged = { enabled ->
                                             viewModel.setDatadogEnabled(enabled)
-                                            onAction(SettingsScreenAction.DatadogToggle(enabled))
                                         }
                                     )
 
@@ -340,7 +339,7 @@ private fun SettingsSection(
                         modifier = Modifier
                             .weight(1f)
                             .testTag("txt_datadog_tracking"),
-                        text = "Datadog Tracker",
+                        text = stringResource(R.string.profile_datadog_tracking),
                         color = MaterialTheme.appColors.textPrimary,
                         style = MaterialTheme.appTypography.titleMedium
                     )

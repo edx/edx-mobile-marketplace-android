@@ -33,8 +33,6 @@ class OpenEdXApp : Application() {
     override fun onCreate() {
         super.onCreate()
         initializeKoinModules()
-        val config: Config by inject()
-        val corePreferences: PreferencesManager by inject()
 
         if (corePreferences.isDatadogEnabled) {
             initializeDatadog()

@@ -35,7 +35,7 @@
 
         <!-- ComposeView -->
         <androidx.compose.ui.platform.ComposeView
-            android:id="@+id/cv_navigationBar1"
+            android:id="@+id/top_cv_navigationBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:elevation="4dp"

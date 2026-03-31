@@ -356,16 +356,17 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView.useController = false
 
-        val cs = ConstraintSet()
-        cs.clone(binding.rootLayout as ConstraintLayout)
-        // Clear any existing ratio on the card
-        cs.setDimensionRatio(binding.cardView.id, null) // If your ConstraintSet version doesn’t accept null, set "0:0"
-        // Make the card follow content
-        cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
-        cs.constrainHeight(binding.cardView.id, ConstraintSet.WRAP_CONTENT)
-        cs.applyTo(binding.rootLayout as ConstraintLayout)
-
-
+        val rootLayout = binding.rootLayout
+        if (rootLayout is ConstraintLayout) {
+            val cs = ConstraintSet()
+            cs.clone(rootLayout)
+            // Clear any existing ratio on the card
+            cs.setDimensionRatio(binding.cardView.id, null) // If your ConstraintSet version doesn’t accept null, set "0:0"
+            // Make the card follow content
+            cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
+            cs.constrainHeight(binding.cardView.id, ConstraintSet.WRAP_CONTENT)
+            cs.applyTo(rootLayout)
+        }
         resetConstraintsForPip()
 
         // Prefer the actual video aspect if known

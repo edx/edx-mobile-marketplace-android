@@ -189,7 +189,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             NavigationBar()
         }
 
-        binding.cvNavigationBar1?.setContent {
+        binding.topCvNavigationBar?.setContent {
             NavigationBar()
         }
 
@@ -231,34 +231,19 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             }
             binding.cvCount.isVisible = true
         }
+
         sharedViewModel.buttonVisibility.observe(viewLifecycleOwner) { visible ->
-            binding.btnBack.visibility =
-                if (visible) View.VISIBLE else View.GONE
-            binding.subSectionUnitsTitle.visibility =
-                if (visible) View.VISIBLE else View.GONE
-            binding.horizontalProgress.visibility =
-                if (visible) View.VISIBLE else View.GONE
-            binding.cvNavigationBar.visibility =
-                if (visible) View.VISIBLE else View.GONE
-            binding.cvCount.visibility =
-                if (visible) View.VISIBLE else View.GONE
+            binding.btnBack.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.subSectionUnitsTitle.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.horizontalProgress.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.cvNavigationBar.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.cvCount.visibility = if (visible) View.VISIBLE else View.GONE
 
-
-            if (visible) {
-                val insetHolder = requireActivity() as InsetHolder
-                val containerParams =
-                    binding.viewPager.layoutParams as ConstraintLayout.LayoutParams
-                containerParams.bottomMargin = insetHolder.bottomInset
-                binding.viewPager.layoutParams = containerParams
-
-            } else {
-                val containerParams =
-                    binding.viewPager.layoutParams as ConstraintLayout.LayoutParams
-                containerParams.bottomMargin = 0
-                binding.viewPager.layoutParams = containerParams
-            }
-
-
+            val containerParams =
+                binding.viewPager.layoutParams as ConstraintLayout.LayoutParams
+            containerParams.bottomMargin =
+                if (visible) (requireActivity() as InsetHolder).bottomInset else 0
+            binding.viewPager.layoutParams = containerParams
         }
 
 
@@ -558,21 +543,24 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
 
             binding.mediaRouteButton.layoutParams = it
         }
-        (binding.cvNavigationBar1?.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
+        (binding.topCvNavigationBar?.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
             it.topMargin = if (isLandscape) 10.dpToPx() else 0.dpToPx()
 
-            binding.cvNavigationBar1?.layoutParams = it
+            binding.topCvNavigationBar?.layoutParams = it
         }
 
 
         if (_binding == null) return
 
-        binding.cvNavigationBar1?.visibility =
-            if (isLandscape) View.VISIBLE else View.GONE
-
-        binding.cvNavigationBar?.visibility =
-            if (isLandscape) View.GONE else View.VISIBLE
-
+        if (binding.topCvNavigationBar != null) {
+            binding.topCvNavigationBar?.visibility =
+                if (isLandscape) View.VISIBLE else View.GONE
+            binding.cvNavigationBar?.visibility =
+                if (isLandscape) View.GONE else View.VISIBLE
+        } else {
+            // Fallback: ensure at least one navigation bar remains visible
+            binding.cvNavigationBar?.visibility = View.VISIBLE
+        }
     }
 
 }

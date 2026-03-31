@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 
 class SharedViewModel : ViewModel() {
 
-    val buttonVisibility = MutableLiveData<Boolean>()
-    val navigationBarVisibility = MutableLiveData<Boolean>()
+    val buttonVisibility = MutableLiveData<Boolean>(true)
+    val navigationBarVisibility = MutableLiveData<Boolean>(true)
 
 
 }

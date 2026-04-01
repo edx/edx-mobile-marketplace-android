@@ -188,7 +188,6 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         binding.cvNavigationBar?.setContent {
             NavigationBar()
         }
-
         binding.topCvNavigationBar?.setContent {
             NavigationBar()
         }
@@ -451,6 +450,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             binding.subSectionUnitsList.visibility = View.GONE
             binding.subSectionUnitsBg.visibility = View.GONE
             viewModel.setUnitsListVisibility(false)
+
         } else {
             binding.subSectionUnitsList.visibility = View.VISIBLE
             binding.subSectionUnitsBg.visibility = View.VISIBLE
@@ -536,7 +536,6 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             return (this * resources.displayMetrics.density).toInt()
         }
 
-        // ✅ Safe margin update
         (binding.mediaRouteButton.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
             it.marginEnd = if (isLandscape) 40.dpToPx() else 20.dpToPx()
             it.topMargin = if (isLandscape) 20.dpToPx() else 15.dpToPx()

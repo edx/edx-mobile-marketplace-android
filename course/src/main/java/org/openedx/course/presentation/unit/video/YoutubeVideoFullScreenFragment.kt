@@ -21,7 +21,6 @@ import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.global.viewBinding
 import org.openedx.course.R
 import org.openedx.course.databinding.FragmentYoutubeVideoFullScreenBinding
-import org.openedx.course.presentation.CourseAnalyticsKey
 
 class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_full_screen) {
 
@@ -115,8 +114,13 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
                 val defPlayerUiController =
                     DefaultPlayerUiController(binding.youtubePlayerView, youTubePlayer)
                 defPlayerUiController.setFullscreenButtonClickListener {
-                    parentFragmentManager.popBackStack()
-                }
+                         parentFragmentManager.setFragmentResult(
+                            "FULLSCREEN_EXIT",
+                            Bundle()
+                        )
+
+                        parentFragmentManager.popBackStack()
+                    }
 
                 binding.youtubePlayerView.setCustomPlayerUi(defPlayerUiController.rootView)
 

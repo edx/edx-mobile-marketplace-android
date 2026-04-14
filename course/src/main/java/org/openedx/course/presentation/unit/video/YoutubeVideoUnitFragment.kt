@@ -435,7 +435,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             // Clear everything and reset
             clearAllMarginsAndConstraints()
 
-            binding.cardView.radius = resources.getDimension(R.dimen.subtitle_margin_top)
+            binding.cardView.radius = resources.getDimension(R.dimen.card_corner_radius)
 
             (binding.youtubePlayerView.layoutParams as FrameLayout.LayoutParams).apply {
                 width = FrameLayout.LayoutParams.MATCH_PARENT

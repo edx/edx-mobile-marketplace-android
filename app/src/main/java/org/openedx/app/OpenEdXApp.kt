@@ -1,7 +1,6 @@
 package org.openedx.app
 
 import android.app.Application
-import android.util.Log
 import com.braze.Braze
 import com.braze.configuration.BrazeConfig
 import com.braze.ui.BrazeDeeplinkHandler

@@ -155,6 +155,9 @@ class SettingsFragment : Fragment() {
 
                             else -> {}
                         }
+                    },
+                    onDatadogToggleChanged = { enabled ->
+                        viewModel.setDatadogEnabled(enabled)
                     }
                 )
 

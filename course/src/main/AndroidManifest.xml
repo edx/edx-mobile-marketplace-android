@@ -1,12 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <application
-        android:configChanges="orientation|screenSize"
-        android:resizeableActivity="true">
+    <application>
         <receiver
             android:name=".presentation.unit.video.YoutubePipActionReceiver"
             android:exported="false" />
-
     </application>
 
 </manifest>

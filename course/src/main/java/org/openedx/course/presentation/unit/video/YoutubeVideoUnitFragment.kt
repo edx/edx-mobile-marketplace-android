@@ -188,6 +188,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         }
 
         binding.connectionError.isVisible = !viewModel.hasInternetConnection
+
         binding.pipBtn?.setOnClickListener {
             enablePipMode()
         }

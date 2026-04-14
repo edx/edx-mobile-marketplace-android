@@ -16,6 +16,7 @@ import org.openedx.app.AnalyticsManager
 import org.openedx.app.AppAnalytics
 import org.openedx.app.AppRouter
 import org.openedx.app.BuildConfig
+import org.openedx.app.analytics.datadog.DatadogAnalytics
 import org.openedx.app.data.storage.PreferencesManager
 import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.room.AppDatabase
@@ -28,6 +29,7 @@ import org.openedx.auth.presentation.sso.FacebookAuthHelper
 import org.openedx.auth.presentation.sso.GoogleAuthHelper
 import org.openedx.auth.presentation.sso.MicrosoftAuthHelper
 import org.openedx.auth.presentation.sso.OAuthHelper
+import org.openedx.core.DatadogConsentManager
 import org.openedx.core.ImageProcessor
 import org.openedx.core.config.Config
 import org.openedx.core.data.model.CourseEnrollmentDetails
@@ -236,7 +238,7 @@ val appModule = module {
     single<WhatsNewAnalytics> { get<AnalyticsManager>() }
     single<IAPAnalytics> { get<AnalyticsManager>() }
     single<NotificationsAnalytics> { get<AnalyticsManager>() }
-
+    single<DatadogConsentManager> { DatadogAnalytics() }
     single { DummyPushManager() }
     single<PushGlobalManager> {
         if (get<Config>().isPushNotificationsEnabled()) get<PushManager>()

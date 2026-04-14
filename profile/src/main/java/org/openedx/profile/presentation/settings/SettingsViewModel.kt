@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.openedx.core.AppUpdateState
 import org.openedx.core.BaseViewModel
+import org.openedx.core.DatadogConsentManager
 import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
@@ -65,7 +66,8 @@ class SettingsViewModel(
     private val router: ProfileRouter,
     private val appNotifier: AppNotifier,
     private val profileNotifier: ProfileNotifier,
-) : BaseViewModel() {
+    private val datadogConsentManager: DatadogConsentManager
+    ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
 
@@ -114,6 +116,7 @@ class SettingsViewModel(
 
     fun setDatadogEnabled(enabled: Boolean) {
         corePreferences.isDatadogEnabled = enabled // persist
+        datadogConsentManager.setTrackingConsent(enabled)
         val currentData = _uiState.value
         if (currentData is SettingsUIState.Data) {
             _uiState.value = currentData.copy(isDatadogEnabled = enabled)

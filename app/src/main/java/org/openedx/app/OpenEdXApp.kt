@@ -1,13 +1,13 @@
 package org.openedx.app
 
 import android.app.Application
+import android.util.Log
 import com.braze.Braze
 import com.braze.configuration.BrazeConfig
 import com.braze.ui.BrazeDeeplinkHandler
 import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
 import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.google.firebase.FirebaseApp
 import io.branch.referral.Branch
@@ -23,6 +23,7 @@ import org.openedx.core.config.Config
 import org.openedx.featuremanagement.di.FeatureModuleProvider
 import org.openedx.notifications.di.NotificationsModuleProvider
 import com.datadog.android.core.configuration.Configuration
+import com.datadog.android.rum.Rum
 import org.openedx.app.data.storage.PreferencesManager
 import kotlin.getValue
 class OpenEdXApp : Application() {
@@ -33,10 +34,7 @@ class OpenEdXApp : Application() {
     override fun onCreate() {
         super.onCreate()
         initializeKoinModules()
-
-        if (corePreferences.isDatadogEnabled) {
-            initializeDatadog()
-        }
+        initializeDatadog()
 
         if (config.getFirebaseConfig().enabled) {
             FirebaseApp.initializeApp(this)
@@ -68,38 +66,35 @@ class OpenEdXApp : Application() {
             }
         }
     }
-    private fun initializeDatadog(){
+    private fun initializeDatadog() {
+        if (BuildConfig.DD_CLIENT_TOKEN.isBlank() || BuildConfig.DD_APPLICATION_ID.isBlank()) return
 
-        if (!corePreferences.isDatadogEnabled) {
-            return
-        }
-        if (BuildConfig.DD_CLIENT_TOKEN.isNotEmpty() && BuildConfig.DD_APPLICATION_ID.isNotEmpty()
-        ) {
+        val configuration = Configuration.Builder(
+            clientToken = BuildConfig.DD_CLIENT_TOKEN,
+            env = BuildConfig.DD_ENV,
+            variant = BuildConfig.BUILD_TYPE
+        )
+            .useSite(DatadogSite.US1)
+            .build()
 
-            val configuration = Configuration.Builder(
-                clientToken = BuildConfig.DD_CLIENT_TOKEN,
-                env = BuildConfig.DD_ENV,
-                variant = BuildConfig.BUILD_TYPE
-            )
-                .useSite(DatadogSite.US1)
-                .build()
+        Datadog.initialize(
+            context = this,
+            configuration = configuration,
+            trackingConsent = TrackingConsent.PENDING
+        )
 
-            Datadog.initialize(
-                context = this,
-                configuration = configuration,
-                trackingConsent = TrackingConsent.GRANTED
-            )
+        val rumConfig = RumConfiguration.Builder(BuildConfig.DD_APPLICATION_ID)
+            .trackUserInteractions()
+            .trackLongTasks()
+            .trackNonFatalAnrs(true)
+            .build()
 
-            val rumConfig = RumConfiguration.Builder(
-                BuildConfig.DD_APPLICATION_ID
-            )
-                .trackUserInteractions()
-                .trackLongTasks()
-                .trackNonFatalAnrs(enabled = true)
-                .build()
+        Rum.enable(rumConfig)
 
-            Rum.enable(rumConfig)
-        }
+         Datadog.setTrackingConsent(
+            if (corePreferences.isDatadogEnabled) TrackingConsent.GRANTED
+            else TrackingConsent.NOT_GRANTED
+        )
     }
     private fun initializeKoinModules() {
         startKoin {

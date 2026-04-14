@@ -19,6 +19,7 @@
         android:layout_margin="16dp"
         android:src="@drawable/ic_full_screen"
         android:background="@android:color/transparent"
+        android:contentDescription="@android:string/cancel"
         android:alpha="0.8"
         app:tint="@null"/>
 

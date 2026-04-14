@@ -42,6 +42,7 @@
                 android:layout_marginTop="30dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_pip"
+                android:contentDescription="@string/picture_in_picture"
                 android:visibility="gone"
                 app:tint="@android:color/white"/>
         </com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView>

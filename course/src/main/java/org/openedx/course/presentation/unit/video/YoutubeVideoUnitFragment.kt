@@ -121,11 +121,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-        parentFragmentManager.setFragmentResultListener(
-            "FULLSCREEN_EXIT",
-            viewLifecycleOwner
-        ) { _, bundle ->
             parentFragmentManager.setFragmentResultListener(
                 "FULLSCREEN_EXIT",
                 viewLifecycleOwner
@@ -142,7 +137,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
                 viewModel.setCurrentVideoTime((resumedTime * 1000).toLong())
             }
-        }
+
 
         updateLayoutForOrientation()
 
@@ -233,29 +228,37 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 youTubePlayer: YouTubePlayer,
                 state: PlayerConstants.PlayerState
             ) {
-                // Ignore state changes while fullscreen fragment is open
+                // Ignore when fullscreen fragment is open
                 if (requireActivity()
                         .supportFragmentManager
                         .findFragmentByTag("FullscreenYoutube") != null
-                ) {
-                    return
-                }
+                ) return
 
-                PipPlayerController.isPlaying =
-                    state == PlayerConstants.PlayerState.PLAYING
+                when (state) {
+                    PlayerConstants.PlayerState.PLAYING -> {
+                        PipPlayerController.isPlaying = true
+                        PipPlayerController.isEnded = false
+                        viewModel.isPlaying = true
+                    }
 
-                viewModel.isPlaying = when (state) {
-                    PlayerConstants.PlayerState.PLAYING -> true
-                    PlayerConstants.PlayerState.PAUSED -> false
+                    PlayerConstants.PlayerState.PAUSED -> {
+                        PipPlayerController.isPlaying = false
+                        viewModel.isPlaying = false
+                    }
+
+                    PlayerConstants.PlayerState.ENDED -> {
+                        PipPlayerController.isPlaying = false
+                        PipPlayerController.isEnded = true
+                        viewModel.isPlaying = false
+
+                        // force PiP action update to show Play (Replay)
+                        updatePipActions()
+                    }
+
                     else -> return
                 }
 
-                viewModel.logPlayPauseEvent(
-                    viewModel.videoUrl,
-                    viewModel.isPlaying,
-                    viewModel.getCurrentVideoTime(),
-                    viewModel.videoDuration
-                )
+                updatePipActions()
             }
 
             override fun onReady(youTubePlayer: YouTubePlayer) {
@@ -459,19 +462,37 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
     @OptIn(UnstableApi::class)
     private fun updatePipActions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && requireActivity().isInPictureInPictureMode) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            requireActivity().isInPictureInPictureMode
+        ) {
 
-            val iconRes = if (PipPlayerController.isPlaying) R.drawable.ic_pause else R.drawable.ic_play
-            val title = if (PipPlayerController.isPlaying) "Pause" else "Play"
+            val showPlay = !PipPlayerController.isPlaying
 
-            val toggleIntent = Intent(requireContext(), YoutubePipActionReceiver::class.java).apply {
+            val iconRes = if (showPlay) {
+                R.drawable.ic_play
+            } else {
+                R.drawable.ic_pause
+            }
+
+            val title = if (PipPlayerController.isEnded) {
+                getString(androidx.media3.ui.R.string.exo_controls_play_description)
+            } else {
+                getString(
+                    if (showPlay)
+                        androidx.media3.ui.R.string.exo_controls_play_description
+                    else
+                        androidx.media3.ui.R.string.exo_controls_pause_description
+                )
+            }
+
+            val intent = Intent(requireContext(), YoutubePipActionReceiver::class.java).apply {
                 action = "PIP_TOGGLE"
             }
 
             val pendingIntent = PendingIntent.getBroadcast(
                 requireContext(),
                 0,
-                toggleIntent,
+                intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
@@ -500,7 +521,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             return
         }
 
-        binding?.rootLayout?.post {
+        if (_binding == null) return
+        binding.rootLayout.post {
             updateLayoutForOrientation()
         }
 
@@ -576,8 +598,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
             constraintSet.constrainWidth(binding.subtitles.id, 0)
             constraintSet.constrainPercentWidth(binding.subtitles.id, 0.35f)
-
-            binding.pipBtn?.visibility = View.VISIBLE
+            binding.pipBtn?.visibility = View.GONE
 
 
         } else {
@@ -645,9 +666,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
 }
 class YoutubePipActionReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context, intent: Intent) {
-
         if (intent.action == "PIP_TOGGLE") {
             if (PipPlayerController.isPlaying) {
                 PipPlayerController.pause()
@@ -655,11 +674,8 @@ class YoutubePipActionReceiver : BroadcastReceiver() {
                 PipPlayerController.play()
             }
         }
-
     }
-
 }
-
 
 
 

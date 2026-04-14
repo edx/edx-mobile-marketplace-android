@@ -114,12 +114,14 @@ class YoutubeVideoFullScreenFragment : Fragment(R.layout.fragment_youtube_video_
                 val defPlayerUiController =
                     DefaultPlayerUiController(binding.youtubePlayerView, youTubePlayer)
                 defPlayerUiController.setFullscreenButtonClickListener {
-                         parentFragmentManager.setFragmentResult(
-                            "FULLSCREEN_EXIT",
-                            Bundle()
+                    parentFragmentManager.setFragmentResult(
+                        "FULLSCREEN_EXIT",
+                        bundleOf(
+                            "time" to viewModel.currentVideoTime,
+                            "isPlaying" to viewModel.isPlaying
                         )
-
-                        parentFragmentManager.popBackStack()
+                    )
+                    parentFragmentManager.popBackStack()
                     }
 
                 binding.youtubePlayerView.setCustomPlayerUi(defPlayerUiController.rootView)

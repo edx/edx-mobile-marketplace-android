@@ -2,6 +2,7 @@ package org.openedx.app
 
 import android.content.Context
 import org.openedx.app.analytics.Analytics
+import org.openedx.app.analytics.BrazeProvider
 import org.openedx.app.analytics.FirebaseAnalytics
 import org.openedx.app.analytics.SegmentAnalytics
 import org.openedx.auth.presentation.AuthAnalytics
@@ -34,6 +35,9 @@ class AnalyticsManager(
         val segmentConfig = config.getSegmentConfig()
         if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank() && config.getFirebaseConfig().isSegmentAnalyticsSource()) {
             addAnalyticsTracker(SegmentAnalytics(context = context, config = config))
+        }
+        if (config.getBrazeConfig().isEnabled) {
+            addAnalyticsTracker(BrazeProvider(context = context))
         }
     }
 

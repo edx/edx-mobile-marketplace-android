@@ -77,8 +77,13 @@ class AppViewModel(
 
         viewModelScope.launch {
             notifier.notifier.collect { event ->
-                if (event is SignInEvent && config.getFirebaseConfig().isCloudMessagingEnabled) {
-                    SyncFirebaseTokenWorker.schedule(context)
+                if (event is SignInEvent) {
+                    if (config.getFirebaseConfig().isCloudMessagingEnabled) {
+                        SyncFirebaseTokenWorker.schedule(context)
+                    }
+                    preferencesManager.user?.let { user ->
+                        setUserId(user)
+                    }
                 } else if (event is LogoutEvent) {
                     handleLogoutEvent(event)
                 }

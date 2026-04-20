@@ -20,7 +20,7 @@ class BrazePushTokenRegistrar(
         if (token.isBlank() || !isBrazePushEnabled()) return
 
         try {
-            Braze.getInstance(context).setRegisteredPushToken(token)
+            Braze.getInstance(context).registeredPushToken = token
             logger.d { "Braze push token registered" }
         } catch (e: Exception) {
             logger.e(throwable = e)

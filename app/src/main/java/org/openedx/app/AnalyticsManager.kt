@@ -5,8 +5,10 @@ import org.openedx.app.analytics.Analytics
 import org.openedx.app.analytics.BrazeProvider
 import org.openedx.app.analytics.FirebaseAnalytics
 import org.openedx.app.analytics.SegmentAnalytics
+import org.openedx.app.system.push.PushTokenRegistrar
 import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.core.config.Config
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.dialog.appreview.AppReviewAnalytics
@@ -21,6 +23,8 @@ import org.openedx.whatsnew.presentation.WhatsNewAnalytics
 class AnalyticsManager(
     context: Context,
     config: Config,
+    preferences: CorePreferences,
+    pushTokenRegistrar: PushTokenRegistrar,
 ) : AppAnalytics, AppReviewAnalytics, AuthAnalytics, CoreAnalytics, CourseAnalytics,
     DashboardAnalytics, DiscoveryAnalytics, DiscussionAnalytics, ProfileAnalytics,
     WhatsNewAnalytics, IAPAnalytics, NotificationsAnalytics {
@@ -37,7 +41,13 @@ class AnalyticsManager(
             addAnalyticsTracker(SegmentAnalytics(context = context, config = config))
         }
         if (config.getBrazeConfig().isEnabled) {
-            addAnalyticsTracker(BrazeProvider(context = context))
+            addAnalyticsTracker(
+                BrazeProvider(
+                    context = context,
+                    preferences = preferences,
+                    pushTokenRegistrar = pushTokenRegistrar,
+                )
+            )
         }
     }
 

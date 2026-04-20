@@ -226,7 +226,7 @@ val appModule = module {
 
     single<BillingProcessor> { BillingProcessor(get(), get(named("IODispatcher"))) }
 
-    single { AnalyticsManager(get(), get()) }
+    single { AnalyticsManager(get(), get(), get(), get()) }
     single<AppAnalytics> { get<AnalyticsManager>() }
     single<AuthAnalytics> { get<AnalyticsManager>() }
     single<AppReviewAnalytics> { get<AnalyticsManager>() }

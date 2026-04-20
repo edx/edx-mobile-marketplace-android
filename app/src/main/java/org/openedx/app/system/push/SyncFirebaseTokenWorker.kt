@@ -18,11 +18,12 @@ class SyncFirebaseTokenWorker(context: Context, params: WorkerParameters) :
 
     private val preferences: CorePreferences by inject()
     private val api: NotificationsApi by inject()
+    private val pushTokenRegistrar: PushTokenRegistrar by inject()
 
     override suspend fun doWork(): Result {
         if (preferences.user != null && preferences.pushToken.isNotEmpty()) {
-
             api.syncFirebaseToken(preferences.pushToken)
+            pushTokenRegistrar.register(preferences.pushToken)
 
             return Result.success()
         }
@@ -33,15 +34,15 @@ class SyncFirebaseTokenWorker(context: Context, params: WorkerParameters) :
         private const val WORKER_TAG = "SyncFirebaseTokenWorker"
 
         fun schedule(context: Context) {
-//            val work = OneTimeWorkRequest
-//                .Builder(SyncFirebaseTokenWorker::class.java)
-//                .addTag(WORKER_TAG)
-//                .build()
-//            WorkManager.getInstance(context).beginUniqueWork(
-//                WORKER_TAG,
-//                ExistingWorkPolicy.REPLACE,
-//                work
-//            ).enqueue()
+            val work = OneTimeWorkRequest
+                .Builder(SyncFirebaseTokenWorker::class.java)
+                .addTag(WORKER_TAG)
+                .build()
+            WorkManager.getInstance(context).beginUniqueWork(
+                WORKER_TAG,
+                ExistingWorkPolicy.REPLACE,
+                work
+            ).enqueue()
         }
     }
 }

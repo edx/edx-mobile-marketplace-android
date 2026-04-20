@@ -21,6 +21,9 @@ import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.room.AppDatabase
 import org.openedx.app.room.DATABASE_NAME
 import org.openedx.app.room.DatabaseManager
+import org.openedx.app.system.push.BrazePushTokenRegistrar
+import org.openedx.app.system.push.NoOpPushTokenRegistrar
+import org.openedx.app.system.push.PushTokenRegistrar
 import org.openedx.auth.presentation.AgreementProvider
 import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.auth.presentation.AuthRouter
@@ -241,6 +244,21 @@ val appModule = module {
     single<PushGlobalManager> {
         if (get<Config>().isPushNotificationsEnabled()) get<PushManager>()
         else get<DummyPushManager>()
+    }
+
+    single { BrazePushTokenRegistrar(get(), get()) }
+    single { NoOpPushTokenRegistrar() }
+    single<PushTokenRegistrar> {
+        val config = get<Config>()
+        if (config.getBrazeConfig().isEnabled &&
+            config.getBrazeConfig().isPushNotificationsEnabled &&
+            config.getFirebaseConfig().enabled &&
+            config.getFirebaseConfig().isCloudMessagingEnabled
+        ) {
+            get<BrazePushTokenRegistrar>()
+        } else {
+            get<NoOpPushTokenRegistrar>()
+        }
     }
 
     factory { AgreementProvider(get(), get()) }

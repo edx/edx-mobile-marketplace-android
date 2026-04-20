@@ -25,6 +25,7 @@ class OpenEdXFirebaseMessagingService : FirebaseMessagingService() {
     private val preferences: CorePreferences by inject()
     private val config: Config by inject()
     private val pushManager: PushGlobalManager by inject()
+    private val pushTokenRegistrar: PushTokenRegistrar by inject()
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
@@ -42,6 +43,7 @@ class OpenEdXFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         preferences.pushToken = token
+        pushTokenRegistrar.register(token)
         if (preferences.user != null) {
             SyncFirebaseTokenWorker.schedule(this)
         }

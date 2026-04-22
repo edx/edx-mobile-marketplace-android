@@ -28,6 +28,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.Validator
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.domain.model.createHonorCodeField
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.presentation.global.WhatsNewGlobalManager
@@ -51,6 +52,7 @@ class SignInViewModel(
     private val oAuthHelper: OAuthHelper,
     private val router: AuthRouter,
     private val whatsNewGlobalManager: WhatsNewGlobalManager,
+    private val appCookieManager: AppCookieManager,
     agreementProvider: AgreementProvider,
     config: Config,
     val courseId: String?,
@@ -106,6 +108,7 @@ class SignInViewModel(
                 _uiState.update { it.copy(loginSuccess = true) }
                 setMetadata(AuthType.PASSWORD)
                 logSignInSuccessEvent(AuthType.PASSWORD)
+                appCookieManager.tryToRefreshSessionCookie()
                 appNotifier.send(SignInEvent())
             } catch (e: Exception) {
                 logger.e(throwable = e)
@@ -185,6 +188,7 @@ class SignInViewModel(
             setMetadata(authType)
             _uiState.update { it.copy(showProgress = false) }
             logSignInSuccessEvent(authType)
+            appCookieManager.tryToRefreshSessionCookie()
             appNotifier.send(SignInEvent())
         }
     }

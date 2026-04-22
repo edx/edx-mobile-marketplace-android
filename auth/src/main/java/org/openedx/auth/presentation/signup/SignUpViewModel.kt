@@ -33,6 +33,7 @@ import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.domain.model.createHonorCodeField
 import org.openedx.core.extension.isInternetError
 import org.openedx.core.extension.isNotNullOrEmpty
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.RecaptchaManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -53,6 +54,7 @@ class SignUpViewModel(
     private val oAuthHelper: OAuthHelper,
     private val config: Config,
     private val router: AuthRouter,
+    private val appCookieManager: AppCookieManager,
     val courseId: String?,
     val infoType: String?,
 ) : BaseViewModel() {
@@ -232,6 +234,7 @@ class SignUpViewModel(
                         isButtonLoading = false
                     )
                 }
+                appCookieManager.tryToRefreshSessionCookie()
                 appNotifier.send(SignInEvent())
             } else {
                 exchangeToken(socialAuth)
@@ -336,6 +339,7 @@ class SignUpViewModel(
             )
             _uiState.update { it.copy(successLogin = true) }
             logger.d { "Social login (${socialAuth.authType.methodName}) success" }
+            appCookieManager.tryToRefreshSessionCookie()
             appNotifier.send(SignInEvent())
         }
     }

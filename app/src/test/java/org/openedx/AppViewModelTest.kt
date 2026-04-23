@@ -32,6 +32,7 @@ import org.openedx.core.config.FirebaseConfig
 import org.openedx.core.data.model.User
 import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.system.PushGlobalManager
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.utils.CrashlyticsHelper
@@ -54,6 +55,7 @@ class AppViewModelTest {
     private val deepLinkRouter = mockk<DeepLinkRouter>()
     private val context = mockk<Context>()
     private val pushManager = mockk<PushGlobalManager>()
+    private val appCookieManager = mockk<AppCookieManager>(relaxed = true)
 
     private val user = User(0, "", "", "")
     private val appThemeMode = AppThemeMode.MATCH_DEVICE
@@ -91,6 +93,7 @@ class AppViewModelTest {
             fileUtil,
             context,
             pushManager,
+            appCookieManager,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -126,6 +129,7 @@ class AppViewModelTest {
             fileUtil,
             context,
             pushManager,
+            appCookieManager,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -163,6 +167,7 @@ class AppViewModelTest {
             fileUtil,
             context,
             pushManager,
+            appCookieManager,
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()

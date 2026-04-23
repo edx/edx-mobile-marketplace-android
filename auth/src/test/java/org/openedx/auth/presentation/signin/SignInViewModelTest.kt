@@ -39,6 +39,7 @@ import org.openedx.core.config.MicrosoftConfig
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.presentation.global.WhatsNewGlobalManager
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.EdxError
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -67,6 +68,7 @@ class SignInViewModelTest {
     private val oAuthHelper = mockk<OAuthHelper>()
     private val router = mockk<AuthRouter>()
     private val whatsNewGlobalManager = mockk<WhatsNewGlobalManager>()
+    private val appCookieManager = mockk<AppCookieManager>(relaxed = true)
 
     private val invalidCredential = "Invalid credentials"
     private val noInternet = "Slow or no internet connection"
@@ -122,6 +124,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -156,6 +159,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -190,6 +194,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -223,6 +228,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -261,6 +267,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -272,7 +279,6 @@ class SignInViewModelTest {
         verify(exactly = 1) { analytics.setUserIdForSession(any()) }
         verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
-        verify(exactly = 1) { appNotifier.notifier }
         val uiState = viewModel.uiState.value
         assertFalse(uiState.showProgress)
         assert(uiState.loginSuccess)
@@ -298,6 +304,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -309,7 +316,6 @@ class SignInViewModelTest {
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
         verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
-        verify(exactly = 1) { appNotifier.notifier }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         val uiState = viewModel.uiState.value
@@ -337,6 +343,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -351,7 +358,6 @@ class SignInViewModelTest {
 
         coVerify(exactly = 1) { interactor.login(any(), any()) }
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
-        verify(exactly = 1) { appNotifier.notifier }
         verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
 
@@ -381,6 +387,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -390,7 +397,6 @@ class SignInViewModelTest {
 
         coVerify(exactly = 1) { interactor.login(any(), any()) }
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
-        verify(exactly = 1) { appNotifier.notifier }
         verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
 

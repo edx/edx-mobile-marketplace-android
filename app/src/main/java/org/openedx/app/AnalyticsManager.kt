@@ -32,7 +32,7 @@ class AnalyticsManager(
             addAnalyticsTracker(FirebaseAnalytics(context = context))
         }
         val segmentConfig = config.getSegmentConfig()
-        if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank() && config.getFirebaseConfig().isSegmentAnalyticsSource()) {
+        if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank()) {
             addAnalyticsTracker(SegmentAnalytics(context = context, config = config))
         }
     }

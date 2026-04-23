@@ -222,6 +222,9 @@ class CourseInfoFragment : Fragment() {
 
                             else -> {}
                         }
+                    },
+                    onRefreshSessionCookie = {
+                        viewModel.refreshSessionCookie()
                     }
                 )
             }
@@ -270,6 +273,7 @@ private fun CourseInfoScreen(
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
     onUriClick: (String, Authority) -> Unit,
+    onRefreshSessionCookie: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -344,7 +348,8 @@ private fun CourseInfoScreen(
                                 onUriClick = onUriClick,
                                 onWebPageLoadError = {
                                     onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
-                                }
+                                },
+                                onRefreshSessionCookie = onRefreshSessionCookie
                             )
                         } else {
                             onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
@@ -381,8 +386,8 @@ private fun CourseInfoWebView(
     onWebPageLoaded: () -> Unit,
     onUriClick: (String, Authority) -> Unit,
     onWebPageLoadError: () -> Unit,
+    onRefreshSessionCookie: () -> Unit,
 ) {
-
     val webView = CatalogWebViewScreen(
         url = contentUrl,
         uriScheme = uriScheme,
@@ -390,7 +395,8 @@ private fun CourseInfoWebView(
         isAllLinksExternal = true,
         onWebPageLoaded = onWebPageLoaded,
         onUriClick = onUriClick,
-        onWebPageLoadError = onWebPageLoadError
+        onWebPageLoadError = onWebPageLoadError,
+        refreshSessionCookie = onRefreshSessionCookie,
     )
 
     val consumeWindowInsets = if (isPreLogin) {
@@ -434,6 +440,7 @@ fun CourseInfoScreenPreview() {
             onBackClick = {},
             onUriClick = { _, _ -> },
             webViewUIState = WebViewUIState.Loading,
+            onRefreshSessionCookie = {},
         )
     }
 }

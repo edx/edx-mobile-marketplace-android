@@ -199,6 +199,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
         )
     }
 
@@ -245,6 +246,7 @@ val screenModule = module {
         CourseInfoViewModel(
             pathId,
             infoType,
+            get(),
             get(),
             get(),
             get(),

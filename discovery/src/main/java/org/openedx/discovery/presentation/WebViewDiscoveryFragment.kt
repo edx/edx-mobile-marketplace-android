@@ -105,6 +105,9 @@ class WebViewDiscoveryFragment : Fragment() {
                     uriScheme = viewModel.uriScheme,
                     userAgent = viewModel.appUserAgent,
                     hasInternetConnection = hasInternetConnection,
+                    onRefreshSessionCookie = {
+                        viewModel.refreshSessionCookie()
+                    },
                     onWebViewUIAction = { action ->
                         when (action) {
                             WebViewUIAction.WEB_PAGE_LOADED -> {
@@ -209,6 +212,7 @@ private fun WebViewDiscoveryScreen(
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
+    onRefreshSessionCookie: () -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -275,22 +279,25 @@ private fun WebViewDiscoveryScreen(
                 ) {
                     if ((uiState is WebViewUIState.Error).not()) {
                         if (hasInternetConnection) {
-                            DiscoveryWebView(
-                                contentUrl = contentUrl,
-                                uriScheme = uriScheme,
-                                userAgent = userAgent,
-                                isPreLogin = isPreLogin,
-                                onWebPageLoaded = {
-                                    if ((uiState is WebViewUIState.Error).not()) {
-                                        onWebViewUIAction(WebViewUIAction.WEB_PAGE_LOADED)
-                                    }
-                                },
-                                onWebPageUpdated = onWebPageUpdated,
-                                onUriClick = onUriClick,
-                                onWebPageLoadError = {
-                                    onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
-                                }
-                            )
+                            if (uiState is WebViewUIState.CookiesReady && uiState is WebViewUIState.Loaded) {
+                                DiscoveryWebView(
+                                    contentUrl = contentUrl,
+                                    uriScheme = uriScheme,
+                                    userAgent = userAgent,
+                                    isPreLogin = isPreLogin,
+                                    onWebPageLoaded = {
+                                        if ((uiState is WebViewUIState.Error).not()) {
+                                            onWebViewUIAction(WebViewUIAction.WEB_PAGE_LOADED)
+                                        }
+                                    },
+                                    onWebPageUpdated = onWebPageUpdated,
+                                    onUriClick = onUriClick,
+                                    onWebPageLoadError = {
+                                        onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
+                                    },
+                                    onRefreshSessionCookie = onRefreshSessionCookie,
+                                )
+                            }
                         } else {
                             onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
                         }
@@ -326,7 +333,8 @@ private fun DiscoveryWebView(
     onWebPageLoaded: () -> Unit,
     onWebPageUpdated: (String) -> Unit,
     onUriClick: (String, WebViewLink.Authority) -> Unit,
-    onWebPageLoadError: () -> Unit
+    onWebPageLoadError: () -> Unit,
+    onRefreshSessionCookie: () -> Unit,
 ) {
     val webView = CatalogWebViewScreen(
         url = contentUrl,
@@ -335,7 +343,8 @@ private fun DiscoveryWebView(
         onWebPageLoaded = onWebPageLoaded,
         onWebPageUpdated = onWebPageUpdated,
         onUriClick = onUriClick,
-        onWebPageLoadError = onWebPageLoadError
+        onWebPageLoadError = onWebPageLoadError,
+        refreshSessionCookie = onRefreshSessionCookie,
     )
 
     val consumeWindowInsets = if (isPreLogin) {

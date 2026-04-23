@@ -16,11 +16,13 @@ open class DefaultWebViewClient(
     val isAllLinksExternal: Boolean,
     val refreshSessionCookie: () -> Unit,
     val onUriClick: (String, WebViewLink.Authority) -> Unit,
+    private val maxRetries: Int = 1,
 ) : WebViewClient() {
 
     private var hostForThisPage: String? = null
     private var isPossibleRedirection = true
-    private var hasRetried = false
+    private var retryCount = 0
+    private val retryUrls = mutableSetOf<String>()
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
@@ -61,12 +63,18 @@ open class DefaultWebViewClient(
         request: WebResourceRequest,
         errorResponse: WebResourceResponse,
     ) {
-        if (request.url.toString() == view.url && !hasRetried) {
+        val requestUrl = request.url.toString()
+        if (requestUrl == view.url && retryCount < maxRetries) {
             when (errorResponse.statusCode) {
                 403, 401, 404 -> {
-                    hasRetried = true
-                    refreshSessionCookie()
-                    webView.loadUrl(request.url.toString())
+                    // Track that we've retried this URL and increment retry count
+                    if (!retryUrls.contains(requestUrl)) {
+                        retryUrls.add(requestUrl)
+                        retryCount++
+                        refreshSessionCookie()
+                        webView.loadUrl(requestUrl)
+                        return
+                    }
                 }
             }
         }

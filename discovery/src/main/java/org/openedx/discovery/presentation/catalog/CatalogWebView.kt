@@ -26,7 +26,7 @@ fun CatalogWebViewScreen(
 ): WebView {
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
-    return remember {
+    val webView = remember {
         WebView(context).apply {
             webViewClient = object : DefaultWebViewClient(
                 context = context,
@@ -34,6 +34,7 @@ fun CatalogWebViewScreen(
                 isAllLinksExternal = isAllLinksExternal,
                 onUriClick = onUriClick,
                 refreshSessionCookie = refreshSessionCookie,
+                maxRetries = 1,
             ) {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     url?.let { onWebPageUpdated(it) }
@@ -126,4 +127,5 @@ fun CatalogWebViewScreen(
             applyDarkModeIfEnabled(isDarkTheme)
         }
     }
+    return webView
 }

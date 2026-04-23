@@ -21,6 +21,7 @@ import org.openedx.core.presentation.CoreAnalyticsKey
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
@@ -48,6 +49,7 @@ class CourseInfoViewModel(
     private val resourceManager: ResourceManager,
     private val analytics: DiscoveryAnalytics,
     corePreferences: CorePreferences,
+    private val appCookieManager: AppCookieManager,
 ) : BaseViewModel() {
     private val logger = Logger(TAG)
 
@@ -222,6 +224,12 @@ class CourseInfoViewModel(
 
     fun onWebPageLoading() {
         _webViewUIState.value = WebViewUIState.Loading
+    }
+
+    fun refreshSessionCookie() {
+        viewModelScope.launch {
+            appCookieManager.tryToRefreshSessionCookie()
+        }
     }
 
     companion object {

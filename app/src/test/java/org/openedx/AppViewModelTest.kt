@@ -5,9 +5,9 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
+import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -182,5 +182,68 @@ class AppViewModelTest {
         verify(exactly = 2) { preferencesManager.user }
         verify(exactly = 1) { databaseManager.clearTables() }
         verify(exactly = 1) { analytics.logoutEvent(true) }
+    }
+
+    @Test
+    fun `onCreate with expired cookie refreshes session cookie`() = runTest {
+        every { analytics.setUserIdForSession(any()) } returns Unit
+        every { notifier.notifier } returns flow { }
+        every { preferencesManager.canResetAppDirectory } returns false
+        every { preferencesManager.pushToken } returns ""
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns true
+        coEvery { appCookieManager.tryToRefreshSessionCookie() } returns Unit
+
+        val viewModel = AppViewModel(
+            config,
+            notifier,
+            databaseManager,
+            preferencesManager,
+            dispatcher,
+            analytics,
+            deepLinkRouter,
+            fileUtil,
+            context,
+            pushManager,
+            appCookieManager,
+        )
+
+        val mockLifeCycleOwner: LifecycleOwner = mockk()
+        val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
+        lifecycleRegistry.addObserver(viewModel)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { appCookieManager.tryToRefreshSessionCookie() }
+    }
+
+    @Test
+    fun `onCreate with fresh cookie does not refresh session cookie`() = runTest {
+        every { analytics.setUserIdForSession(any()) } returns Unit
+        every { notifier.notifier } returns flow { }
+        every { preferencesManager.canResetAppDirectory } returns false
+        every { preferencesManager.pushToken } returns ""
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
+
+        val viewModel = AppViewModel(
+            config,
+            notifier,
+            databaseManager,
+            preferencesManager,
+            dispatcher,
+            analytics,
+            deepLinkRouter,
+            fileUtil,
+            context,
+            pushManager,
+            appCookieManager,
+        )
+
+        val mockLifeCycleOwner: LifecycleOwner = mockk()
+        val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
+        lifecycleRegistry.addObserver(viewModel)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { appCookieManager.tryToRefreshSessionCookie() }
     }
 }

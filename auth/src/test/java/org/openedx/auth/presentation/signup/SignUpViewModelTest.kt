@@ -305,6 +305,7 @@ class SignUpViewModelTest {
         } returns Unit
         every { preferencesManager.user } returns user
         every { analytics.setUserIdForSession(any()) } returns Unit
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns true
         viewModel.getRegistrationFields()
         advanceUntilIdle()
         parametersMap.forEach {
@@ -313,6 +314,7 @@ class SignUpViewModelTest {
         viewModel.register()
         advanceUntilIdle()
         verify(exactly = 1) { analytics.setUserIdForSession(any()) }
+        coVerify(exactly = 1) { appCookieManager.tryToRefreshSessionCookie() }
         coVerify(exactly = 1) { interactor.validateRegistrationFields(any()) }
         coVerify(exactly = 1) { interactor.register(any()) }
         coVerify(exactly = 1) { interactor.login(any(), any()) }
@@ -322,6 +324,48 @@ class SignUpViewModelTest {
         assertFalse(viewModel.uiState.value.validationError)
         assertFalse(viewModel.uiState.value.isButtonLoading)
         assertTrue(viewModel.uiState.value.successLogin)
+    }
+
+    @Test
+    fun `success register with fresh cookie does not refresh session cookie`() = runTest {
+        val viewModel = SignUpViewModel(
+            interactor = interactor,
+            resourceManager = resourceManager,
+            analytics = analytics,
+            preferencesManager = preferencesManager,
+            appNotifier = appNotifier,
+            oAuthHelper = oAuthHelper,
+            agreementProvider = agreementProvider,
+            config = config,
+            router = router,
+            appCookieManager = appCookieManager,
+            courseId = "",
+            infoType = "",
+        )
+
+        coEvery { interactor.validateRegistrationFields(parametersMap) } returns ValidationFields(emptyMap())
+        coEvery { interactor.getRegistrationFields() } returns listOfFields
+        coEvery { interactor.register(parametersMap) } returns Unit
+        coEvery {
+            interactor.login(
+                parametersMap.getValue(ApiConstants.EMAIL),
+                parametersMap.getValue(ApiConstants.PASSWORD)
+            )
+        } returns Unit
+        every { preferencesManager.user } returns user
+        every { analytics.setUserIdForSession(any()) } returns Unit
+        every { analytics.logEvent(any(), any()) } returns Unit
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
+
+        viewModel.getRegistrationFields()
+        advanceUntilIdle()
+        parametersMap.forEach {
+            viewModel.updateField(it.key, it.value)
+        }
+        viewModel.register()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { appCookieManager.tryToRefreshSessionCookie() }
     }
 
     @Test

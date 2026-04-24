@@ -234,7 +234,7 @@ class SignUpViewModel(
                         isButtonLoading = false
                     )
                 }
-                appCookieManager.tryToRefreshSessionCookie()
+                refreshSessionCookieIfNeeded()
                 appNotifier.send(SignInEvent())
             } else {
                 exchangeToken(socialAuth)
@@ -339,8 +339,14 @@ class SignUpViewModel(
             )
             _uiState.update { it.copy(successLogin = true) }
             logger.d { "Social login (${socialAuth.authType.methodName}) success" }
-            appCookieManager.tryToRefreshSessionCookie()
+            refreshSessionCookieIfNeeded()
             appNotifier.send(SignInEvent())
+        }
+    }
+
+    private suspend fun refreshSessionCookieIfNeeded() {
+        if (appCookieManager.isSessionCookieMissingOrExpired()) {
+            appCookieManager.tryToRefreshSessionCookie()
         }
     }
 

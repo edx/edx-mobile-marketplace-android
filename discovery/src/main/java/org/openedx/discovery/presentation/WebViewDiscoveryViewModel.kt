@@ -14,6 +14,7 @@ import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.connection.NetworkConnection
+import org.openedx.core.utils.Logger
 import org.openedx.core.utils.UrlUtils
 
 class WebViewDiscoveryViewModel(
@@ -26,6 +27,8 @@ class WebViewDiscoveryViewModel(
     private val analytics: DiscoveryAnalytics,
     private val appCookieManager: AppCookieManager,
 ) : BaseViewModel() {
+
+    private val logger = Logger("WebViewDiscoveryViewModel")
 
     private val _uiState = MutableStateFlow<WebViewUIState>(WebViewUIState.Loading)
     val uiState: StateFlow<WebViewUIState> = _uiState.asStateFlow()
@@ -62,16 +65,27 @@ class WebViewDiscoveryViewModel(
 
     private fun checkAndRefreshCookies() {
         viewModelScope.launch {
-            if (appCookieManager.isSessionCookieMissingOrExpired()) {
-                appCookieManager.tryToRefreshSessionCookie()
+            try {
+                if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                    appCookieManager.tryToRefreshSessionCookie()
+                }
+            } catch (e: Exception) {
+                logger.e(throwable = e)
+            } finally {
+                _cookiesReady.value = true
             }
-            _cookiesReady.value = true
         }
     }
 
     fun refreshSessionCookie() {
         viewModelScope.launch {
-            appCookieManager.tryToRefreshSessionCookie()
+            try {
+                if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                    appCookieManager.tryToRefreshSessionCookie()
+                }
+            } catch (e: Exception) {
+                logger.e(throwable = e)
+            }
         }
     }
 

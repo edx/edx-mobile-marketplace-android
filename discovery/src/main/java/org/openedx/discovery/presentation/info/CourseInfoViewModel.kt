@@ -74,6 +74,9 @@ class CourseInfoViewModel(
     val showAlert: SharedFlow<Boolean>
         get() = _showAlert.asSharedFlow()
 
+    private val _cookiesReady = MutableStateFlow(false)
+    val cookiesReady: StateFlow<Boolean> = _cookiesReady.asStateFlow()
+
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
 
@@ -228,8 +231,32 @@ class CourseInfoViewModel(
 
     fun refreshSessionCookie() {
         viewModelScope.launch {
-            appCookieManager.tryToRefreshSessionCookie()
+            try {
+                if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                    appCookieManager.tryToRefreshSessionCookie()
+                }
+            } catch (e: Exception) {
+                logger.e(throwable = e)
+            }
         }
+    }
+
+    private fun checkAndRefreshCookies() {
+        viewModelScope.launch {
+            try {
+                if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                    appCookieManager.tryToRefreshSessionCookie()
+                }
+            } catch (e: Exception) {
+                logger.e(throwable = e)
+            } finally {
+                _cookiesReady.value = true
+            }
+        }
+    }
+
+    init {
+        checkAndRefreshCookies()
     }
 
     companion object {

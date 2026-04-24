@@ -108,7 +108,7 @@ class SignInViewModel(
                 _uiState.update { it.copy(loginSuccess = true) }
                 setMetadata(AuthType.PASSWORD)
                 logSignInSuccessEvent(AuthType.PASSWORD)
-                appCookieManager.tryToRefreshSessionCookie()
+                refreshSessionCookieIfNeeded()
                 appNotifier.send(SignInEvent())
             } catch (e: Exception) {
                 logger.e(throwable = e)
@@ -188,8 +188,14 @@ class SignInViewModel(
             setMetadata(authType)
             _uiState.update { it.copy(showProgress = false) }
             logSignInSuccessEvent(authType)
-            appCookieManager.tryToRefreshSessionCookie()
+            refreshSessionCookieIfNeeded()
             appNotifier.send(SignInEvent())
+        }
+    }
+
+    private suspend fun refreshSessionCookieIfNeeded() {
+        if (appCookieManager.isSessionCookieMissingOrExpired()) {
+            appCookieManager.tryToRefreshSessionCookie()
         }
     }
 

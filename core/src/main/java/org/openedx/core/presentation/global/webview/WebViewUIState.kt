@@ -5,7 +5,6 @@ import org.openedx.core.presentation.global.ErrorType
 sealed class WebViewUIState {
     data object Loading : WebViewUIState()
     data object Loaded : WebViewUIState()
-    data object CookiesReady : WebViewUIState()
     data class Error(val errorType: ErrorType) : WebViewUIState()
 }
 

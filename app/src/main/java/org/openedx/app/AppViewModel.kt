@@ -93,7 +93,9 @@ class AppViewModel(
 
     private fun refreshSessionCookie() {
         viewModelScope.launch {
-            appCookieManager.tryToRefreshSessionCookie()
+            if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                appCookieManager.tryToRefreshSessionCookie()
+            }
         }
     }
 

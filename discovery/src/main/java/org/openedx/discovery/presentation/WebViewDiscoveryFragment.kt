@@ -94,12 +94,14 @@ class WebViewDiscoveryFragment : Fragment() {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
                 val uiState by viewModel.uiState.collectAsState()
+                val cookiesReady by viewModel.cookiesReady.collectAsState()
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.hasInternetConnection)
                 }
                 WebViewDiscoveryScreen(
                     windowSize = windowSize,
                     uiState = uiState,
+                    cookiesReady = cookiesReady,
                     isPreLogin = viewModel.isPreLogin,
                     contentUrl = viewModel.discoveryUrl,
                     uriScheme = viewModel.uriScheme,
@@ -201,6 +203,7 @@ class WebViewDiscoveryFragment : Fragment() {
 private fun WebViewDiscoveryScreen(
     windowSize: WindowSize,
     uiState: WebViewUIState,
+    cookiesReady: Boolean,
     isPreLogin: Boolean,
     contentUrl: String,
     uriScheme: String,
@@ -279,7 +282,7 @@ private fun WebViewDiscoveryScreen(
                 ) {
                     if ((uiState is WebViewUIState.Error).not()) {
                         if (hasInternetConnection) {
-                            if (uiState is WebViewUIState.CookiesReady && uiState is WebViewUIState.Loaded) {
+                            if (cookiesReady) {
                                 DiscoveryWebView(
                                     contentUrl = contentUrl,
                                     uriScheme = uriScheme,
@@ -421,6 +424,7 @@ private fun WebViewDiscoveryScreenPreview() {
         WebViewDiscoveryScreen(
             windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
             uiState = WebViewUIState.Error(ErrorType.CONNECTION_ERROR),
+            cookiesReady = true,
             isPreLogin = false,
             contentUrl = "https://www.example.com/",
             uriScheme = "",

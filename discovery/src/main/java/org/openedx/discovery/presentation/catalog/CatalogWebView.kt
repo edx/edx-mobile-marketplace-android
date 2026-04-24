@@ -34,7 +34,6 @@ fun CatalogWebViewScreen(
                 isAllLinksExternal = isAllLinksExternal,
                 onUriClick = onUriClick,
                 refreshSessionCookie = refreshSessionCookie,
-                maxRetries = 1,
             ) {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     url?.let { onWebPageUpdated(it) }

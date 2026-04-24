@@ -29,6 +29,10 @@ class WebViewDiscoveryViewModel(
 
     private val _uiState = MutableStateFlow<WebViewUIState>(WebViewUIState.Loading)
     val uiState: StateFlow<WebViewUIState> = _uiState.asStateFlow()
+
+    private val _cookiesReady = MutableStateFlow(false)
+    val cookiesReady: StateFlow<Boolean> = _cookiesReady.asStateFlow()
+
     val uriScheme: String get() = config.getUriScheme()
 
     private val webViewConfig get() = config.getDiscoveryConfig().webViewConfig
@@ -61,7 +65,7 @@ class WebViewDiscoveryViewModel(
             if (appCookieManager.isSessionCookieMissingOrExpired()) {
                 appCookieManager.tryToRefreshSessionCookie()
             }
-            _uiState.value = WebViewUIState.CookiesReady
+            _cookiesReady.value = true
         }
     }
 

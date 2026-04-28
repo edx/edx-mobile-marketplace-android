@@ -16,6 +16,7 @@ import org.openedx.discussion.presentation.DiscussionAnalytics
 import org.openedx.notifications.presentation.NotificationsAnalytics
 import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.whatsnew.presentation.WhatsNewAnalytics
+import org.openedx.app.analytics.datadog.DatadogAnalytics
 
 class AnalyticsManager(
     context: Context,
@@ -34,6 +35,10 @@ class AnalyticsManager(
         val segmentConfig = config.getSegmentConfig()
         if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank()) {
             addAnalyticsTracker(SegmentAnalytics(context = context, config = config))
+        }
+        val datadogConfig = config.getDatadogConfig()
+        if (datadogConfig.enabled) {
+            addAnalyticsTracker(DatadogAnalytics())
         }
     }
 

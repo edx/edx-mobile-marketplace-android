@@ -43,13 +43,12 @@ val networkingModule = module {
             }
 
             val config = get<Config>()
-            val datadogConfig = config.getDatadogConfig()
             val corePreferences = get<CorePreferences>()
             val isUserEnabled = corePreferences.isDatadogEnabled
-
             if (
-                datadogConfig.enabled &&
-                datadogConfig.clientToken.isNotEmpty() &&
+                BuildConfig.DD_ENABLED &&
+                BuildConfig.DD_CLIENT_TOKEN.isNotEmpty() &&
+                BuildConfig.DD_APPLICATION_ID.isNotEmpty() &&
                 isUserEnabled
             ) {
                 val host = config.getApiHostURL()

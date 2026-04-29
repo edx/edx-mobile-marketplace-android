@@ -36,6 +36,7 @@ import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
+import org.openedx.core.system.notifier.app.DatadogTrackingToggledEvent
 import org.openedx.core.system.notifier.app.EnrolledCourseEvent
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.RequestEnrolledCourseErrorEvent
@@ -117,6 +118,9 @@ class SettingsViewModel(
         val currentData = _uiState.value
         if (currentData is SettingsUIState.Data) {
             _uiState.value = currentData.copy(isDatadogEnabled = enabled)
+        }
+        viewModelScope.launch {
+            appNotifier.send(DatadogTrackingToggledEvent(enabled))
         }
     }
     fun logout() {

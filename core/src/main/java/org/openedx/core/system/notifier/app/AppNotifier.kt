@@ -26,4 +26,10 @@ class AppNotifier {
     suspend fun send(event: RequestEnrolledCourseEvent) = channel.emit(event)
 
     suspend fun send(event: RequestEnrolledCourseErrorEvent) = channel.emit(event)
+
+    suspend fun send(event: DatadogTrackingToggledEvent) = channel.emit(event)
 }
+
+data class DatadogTrackingToggledEvent(
+    val enabled: Boolean,
+) : AppEvent

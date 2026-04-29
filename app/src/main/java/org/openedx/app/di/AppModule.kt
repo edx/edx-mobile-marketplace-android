@@ -16,6 +16,9 @@ import org.openedx.app.AnalyticsManager
 import org.openedx.app.AppAnalytics
 import org.openedx.app.AppRouter
 import org.openedx.app.BuildConfig
+import org.openedx.app.analytics.FirebaseAnalytics
+import org.openedx.app.analytics.SegmentAnalytics
+import org.openedx.app.analytics.datadog.DatadogAnalytics
 import org.openedx.app.data.storage.PreferencesManager
 import org.openedx.app.deeplink.DeepLinkRouter
 import org.openedx.app.room.AppDatabase
@@ -218,12 +221,15 @@ val appModule = module {
 
     single { TranscriptManager(get()) }
     single { CastManager(get()) }
-    single { WhatsNewManager(get(), get(), get(), get()) }
+    single<WhatsNewManager> { WhatsNewManager(get(), get(), get(), get()) }
     single<WhatsNewGlobalManager> { get<WhatsNewManager>() }
 
     single<BillingProcessor> { BillingProcessor(get(), get(named("IODispatcher"))) }
 
-    single { AnalyticsManager(get(), get()) }
+    single<FirebaseAnalytics> { FirebaseAnalytics(get()) }
+    single<SegmentAnalytics> { SegmentAnalytics(get(), get()) }
+    single<DatadogAnalytics> { DatadogAnalytics(androidApplication(), get(), get()) }
+    single<AnalyticsManager> { AnalyticsManager(get(), get(), get(), get()) }
     single<AppAnalytics> { get<AnalyticsManager>() }
     single<AuthAnalytics> { get<AnalyticsManager>() }
     single<AppReviewAnalytics> { get<AnalyticsManager>() }

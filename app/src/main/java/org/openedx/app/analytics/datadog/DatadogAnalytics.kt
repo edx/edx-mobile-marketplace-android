@@ -35,7 +35,9 @@ class DatadogAnalytics(
     }
 
     private fun initializeDatadog(context: Application) {
-        if (BuildConfig.DD_CLIENT_TOKEN.isNotEmpty() && BuildConfig.DD_APPLICATION_ID.isNotEmpty()) {
+        if (BuildConfig.DD_ENABLED
+            && BuildConfig.DD_CLIENT_TOKEN.isNotEmpty()
+            && BuildConfig.DD_APPLICATION_ID.isNotEmpty()) {
             val configuration = Configuration.Builder(
                 clientToken = BuildConfig.DD_CLIENT_TOKEN,
                 env = BuildConfig.DD_ENV,
@@ -72,6 +74,7 @@ class DatadogAnalytics(
     }
 
     private fun observeDatadogToggle() {
+        if (!BuildConfig.DD_ENABLED) return
         appScope.launch {
             appNotifier.notifier.collect { event ->
                 if (event is DatadogTrackingToggledEvent) {
@@ -101,7 +104,7 @@ class DatadogAnalytics(
     }
 
     override fun logUserId(userId: Long) {
-        if (!corePreferences.isDatadogEnabled) return
+        if (!BuildConfig.DD_ENABLED || !corePreferences.isDatadogEnabled) return
         try {
             Datadog.setUserInfo(
                 userId.toString(),
@@ -114,7 +117,7 @@ class DatadogAnalytics(
     }
 
     private fun logDatadogEvent(eventName: String, attributes: Map<String, Any?> = emptyMap()) {
-        if (!corePreferences.isDatadogEnabled) return
+        if (!BuildConfig.DD_ENABLED || !corePreferences.isDatadogEnabled) return
         try {
             GlobalRumMonitor.get().addAction(
                 RumActionType.CUSTOM,

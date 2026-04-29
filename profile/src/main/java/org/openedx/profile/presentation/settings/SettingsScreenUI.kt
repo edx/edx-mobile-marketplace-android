@@ -321,40 +321,42 @@ private fun SettingsSection(
                     text = stringResource(id = R.string.profile_appearance),
                     onClick = onAppearanceSettingsClick
                 )
-                SettingsDivider()
 
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(70.dp)
-                        .padding(horizontal = 20.dp)
-                        .noRippleClickable {
-                            val newValue = !isDatadogEnabled
-                            onDatadogToggleChanged(newValue)
-                        },
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("txt_datadog_tracking"),
-                        text = stringResource(R.string.profile_datadog_tracking),
-                        color = MaterialTheme.appColors.textPrimary,
-                        style = MaterialTheme.appTypography.titleMedium
-                    )
-
-                    Switch(
-                        modifier = Modifier.testTag("sw_datadog_tracking"),
-                        checked = isDatadogEnabled,
-                        onCheckedChange = onDatadogToggleChanged,
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.appColors.primary,
-                            checkedTrackColor = MaterialTheme.appColors.primary,
-                            uncheckedThumbColor = MaterialTheme.appColors.cardViewBorder,
-                            uncheckedTrackColor = MaterialTheme.appColors.cardViewBorder,
+                if (uiState.configuration.isDatadogTrackingEnabled) {
+                    SettingsDivider()
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .padding(horizontal = 20.dp)
+                            .noRippleClickable {
+                                val newValue = !isDatadogEnabled
+                                onDatadogToggleChanged(newValue)
+                            },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("txt_datadog_tracking"),
+                            text = stringResource(R.string.profile_datadog_tracking),
+                            color = MaterialTheme.appColors.textPrimary,
+                            style = MaterialTheme.appTypography.titleMedium
                         )
-                    )
+
+                        Switch(
+                            modifier = Modifier.testTag("sw_datadog_tracking"),
+                            checked = isDatadogEnabled,
+                            onCheckedChange = onDatadogToggleChanged,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.appColors.primary,
+                                checkedTrackColor = MaterialTheme.appColors.primary,
+                                uncheckedThumbColor = MaterialTheme.appColors.cardViewBorder,
+                                uncheckedTrackColor = MaterialTheme.appColors.cardViewBorder,
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -805,6 +807,7 @@ private val mockConfiguration = Configuration(
     versionName = mockAppData.versionName,
     isIAPEnabled = true,
     isPushNotificationsEnabled = true,
+    isDatadogTrackingEnabled = true,
 )
 
 private val mockUiState = SettingsUIState.Data(

@@ -105,7 +105,8 @@ class SettingsViewModel(
             feedbackFormUrl = corePreferences.appConfig.feedbackFormUrl,
             supportEmail = config.getFeedbackEmailAddress(),
             versionName = appData.versionName,
-            isPushNotificationsEnabled = config.isPushNotificationsEnabled()
+            isPushNotificationsEnabled = config.isPushNotificationsEnabled(),
+            isDatadogTrackingEnabled = config.getDatadogConfig().enabled,
         )
 
     init {

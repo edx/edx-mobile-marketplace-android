@@ -10,6 +10,7 @@ import org.openedx.core.domain.model.AgreementUrls
  * @param supportEmail Email address of support
  * @param versionName Version of the application (1.0.0)
  * @param isPushNotificationsEnabled Push Notifications is enabled or not
+ * @param isDatadogTrackingEnabled Datadog tracking is enabled or not
  */
 data class Configuration(
     val isIAPEnabled: Boolean,
@@ -19,4 +20,5 @@ data class Configuration(
     val supportEmail: String,
     val versionName: String,
     val isPushNotificationsEnabled: Boolean,
+    val isDatadogTrackingEnabled: Boolean,
 )

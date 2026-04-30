@@ -6,9 +6,12 @@ data class DatadogConfig(
     @SerializedName("ENABLED")
     val enabled: Boolean = false,
 
-    @SerializedName("CLIENT_TOKEN")
+    @SerializedName(value = "CLIENT_TOKEN", alternate = ["DATADOG_CLIENT_TOKEN"])
     val clientToken: String = "",
 
-    @SerializedName("ENVIRONMENT")
-    val environment: String = ""
+    @SerializedName(value = "ENVIRONMENT", alternate = ["DATADOG_ENVIRONMENT"])
+    val environment: String = "",
+
+    @SerializedName(value = "APPLICATION_ID", alternate = ["DATADOG_APPLICATION_ID"])
+    val applicationId: String = "",
 )

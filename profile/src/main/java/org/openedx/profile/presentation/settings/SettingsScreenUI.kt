@@ -55,7 +55,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import org.koin.androidx.compose.koinViewModel
 import org.openedx.core.domain.model.AgreementUrls
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.presentation.global.AppData
@@ -94,8 +93,8 @@ internal fun SettingsScreen(
     onBackClick: () -> Unit,
     onAction: (SettingsScreenAction) -> Unit,
     onIAPAction: (IAPAction, IAPException?) -> Unit,
+    onDatadogToggleChanged: (Boolean) -> Unit,
 ) {
-    val viewModel: SettingsViewModel = koinViewModel()
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
     val contentWidth by remember(key1 = windowSize) {
@@ -207,9 +206,7 @@ internal fun SettingsScreen(
                                         onPushNotificationsSettingsClick = {
                                             onAction(SettingsScreenAction.PushNotificationsSettingsClick)
                                         },
-                                        onDatadogToggleChanged = { enabled ->
-                                            viewModel.setDatadogEnabled(enabled)
-                                        }
+                                        onDatadogToggleChanged = onDatadogToggleChanged
                                     )
 
                                     Spacer(modifier = Modifier.height(24.dp))
@@ -873,6 +870,7 @@ private fun SettingsScreenPreview() {
             onBackClick = {},
             onAction = {},
             onIAPAction = { _, _ -> },
+            onDatadogToggleChanged = {},
         )
     }
 }

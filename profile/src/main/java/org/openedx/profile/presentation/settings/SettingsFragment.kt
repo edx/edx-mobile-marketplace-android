@@ -155,7 +155,8 @@ class SettingsFragment : Fragment() {
 
                             else -> {}
                         }
-                    }
+                    },
+                    onDatadogToggleChanged = viewModel::setDatadogEnabled
                 )
 
                 LaunchedEffect(logoutSuccess) {

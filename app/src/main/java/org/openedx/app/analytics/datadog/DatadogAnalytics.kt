@@ -15,6 +15,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.openedx.app.BuildConfig
 import org.openedx.app.analytics.Analytics
+import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.DatadogTrackingToggledEvent
@@ -22,6 +23,7 @@ import org.openedx.core.utils.Logger
 
 class DatadogAnalytics(
     context: Application,
+    private val config: Config,
     private val corePreferences: CorePreferences,
     private val appNotifier: AppNotifier,
 ) : Analytics {
@@ -30,17 +32,18 @@ class DatadogAnalytics(
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     init {
-        initializeDatadog(context)
+        if (config.getDatadogConfig().enabled) {
+            initializeDatadog(context)
+        }
         observeDatadogToggle()
     }
 
     private fun initializeDatadog(context: Application) {
-        if (BuildConfig.DD_ENABLED
-            && BuildConfig.DD_CLIENT_TOKEN.isNotEmpty()
-            && BuildConfig.DD_APPLICATION_ID.isNotEmpty()) {
+        val datadogConfig = config.getDatadogConfig()
+        if (datadogConfig.clientToken.isNotEmpty() && datadogConfig.applicationId.isNotEmpty()) {
             val configuration = Configuration.Builder(
-                clientToken = BuildConfig.DD_CLIENT_TOKEN,
-                env = BuildConfig.DD_ENV,
+                clientToken = datadogConfig.clientToken,
+                env = datadogConfig.environment,
                 variant = BuildConfig.BUILD_TYPE
             )
                 .useSite(DatadogSite.US1)
@@ -53,7 +56,7 @@ class DatadogAnalytics(
                 trackingConsent = TrackingConsent.GRANTED
             )
 
-            val rumConfig = RumConfiguration.Builder(BuildConfig.DD_APPLICATION_ID)
+            val rumConfig = RumConfiguration.Builder(datadogConfig.applicationId)
                 .trackUserInteractions()
                 .trackLongTasks()
                 .trackNonFatalAnrs(enabled = true)
@@ -74,7 +77,7 @@ class DatadogAnalytics(
     }
 
     private fun observeDatadogToggle() {
-        if (!BuildConfig.DD_ENABLED) return
+        if (!config.getDatadogConfig().enabled) return
         appScope.launch {
             appNotifier.notifier.collect { event ->
                 if (event is DatadogTrackingToggledEvent) {
@@ -104,7 +107,7 @@ class DatadogAnalytics(
     }
 
     override fun logUserId(userId: Long) {
-        if (!BuildConfig.DD_ENABLED || !corePreferences.isDatadogEnabled) return
+        if (!config.getDatadogConfig().enabled || !corePreferences.isDatadogEnabled) return
         try {
             Datadog.setUserInfo(
                 userId.toString(),
@@ -117,7 +120,7 @@ class DatadogAnalytics(
     }
 
     private fun logDatadogEvent(eventName: String, attributes: Map<String, Any?> = emptyMap()) {
-        if (!BuildConfig.DD_ENABLED || !corePreferences.isDatadogEnabled) return
+        if (!config.getDatadogConfig().enabled || !corePreferences.isDatadogEnabled) return
         try {
             GlobalRumMonitor.get().addAction(
                 RumActionType.CUSTOM,

@@ -228,7 +228,7 @@ val appModule = module {
 
     single<FirebaseAnalytics> { FirebaseAnalytics(get()) }
     single<SegmentAnalytics> { SegmentAnalytics(get(), get()) }
-    single<DatadogAnalytics> { DatadogAnalytics(androidApplication(), get(), get()) }
+    single<DatadogAnalytics> { DatadogAnalytics(androidApplication(), get(), get(), get()) }
     single<AnalyticsManager> { AnalyticsManager(get(), get(), get(), get()) }
     single<AppAnalytics> { get<AnalyticsManager>() }
     single<AuthAnalytics> { get<AnalyticsManager>() }

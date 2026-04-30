@@ -12,16 +12,16 @@ class PipBroadcastReceiverManager(
     private val pipPlayerRepository: PipPlayerRepository,
 ) {
     private var isRegistered = false
-
+    
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
             when (intent?.action) {
                 ACTION_PLAY -> {
-                    pipPlayerRepository.play()
+                    pipPlayerRepository.controller?.play()
                     pipPlayerRepository.updatePlaybackState(isPlaying = true, isEnded = false)
                 }
                 ACTION_PAUSE -> {
-                    pipPlayerRepository.pause()
+                    pipPlayerRepository.controller?.pause()
                     pipPlayerRepository.updatePlaybackState(isPlaying = false)
                 }
                 ACTION_FORWARD -> {
@@ -65,10 +65,11 @@ class PipBroadcastReceiverManager(
         const val ACTION_PAUSE = "pip_pause"
         const val ACTION_FORWARD = "pip_forward"
         const val ACTION_REWIND = "pip_rewind"
-
+        
         const val REQUEST_PLAY = 101
         const val REQUEST_PAUSE = 102
         const val REQUEST_FORWARD = 103
         const val REQUEST_REWIND = 104
     }
 }
+

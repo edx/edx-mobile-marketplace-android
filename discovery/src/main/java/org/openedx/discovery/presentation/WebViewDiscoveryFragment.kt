@@ -52,12 +52,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.os.bundleOf
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
+import org.openedx.core.config.Config
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIAction
@@ -328,6 +332,13 @@ private fun DiscoveryWebView(
     onUriClick: (String, WebViewLink.Authority) -> Unit,
     onWebPageLoadError: () -> Unit
 ) {
+    val config = koinInject<Config>()
+    val corePreferences = koinInject<CorePreferences>()
+    val host = contentUrl.toUri().host
+    val isDatadogWebViewTrackingEnabled = config.getDatadogConfig().enabled &&
+        corePreferences.isDatadogEnabled &&
+        !host.isNullOrEmpty()
+
     val webView = CatalogWebViewScreen(
         url = contentUrl,
         uriScheme = uriScheme,
@@ -335,7 +346,8 @@ private fun DiscoveryWebView(
         onWebPageLoaded = onWebPageLoaded,
         onWebPageUpdated = onWebPageUpdated,
         onUriClick = onUriClick,
-        onWebPageLoadError = onWebPageLoadError
+        onWebPageLoadError = onWebPageLoadError,
+        isDatadogWebViewTrackingEnabled = isDatadogWebViewTrackingEnabled
     )
 
     val consumeWindowInsets = if (isPreLogin) {

@@ -53,7 +53,7 @@ class DatadogAnalytics(
             Datadog.initialize(
                 context = context,
                 configuration = configuration,
-                trackingConsent = TrackingConsent.GRANTED
+                trackingConsent = TrackingConsent.PENDING
             )
 
             val rumConfig = RumConfiguration.Builder(datadogConfig.applicationId)

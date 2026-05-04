@@ -23,13 +23,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -39,17 +39,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
-import androidx.core.os.bundleOf
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.extension.loadUrl
-import org.openedx.core.extension.takeIfNotEmpty
-import org.openedx.core.extension.toastMessage
-import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
-import org.openedx.core.presentation.dialog.alert.InfoDialogFragment
-import org.openedx.core.presentation.global.webview.WebViewUIAction
+import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
+import org.openedx.core.config.Config
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.HandleUIMessage
@@ -318,6 +319,13 @@ private fun ProgramInfoScreen(
                 ) {
                     if ((uiState is ProgramUIState.Error).not()) {
                         if (hasInternetConnection) {
+                            val config = koinInject<Config>()
+                            val corePreferences = koinInject<CorePreferences>()
+                            val host = contentUrl.toUri().host
+                            val isDatadogWebViewTrackingEnabled = config.getDatadogConfig().enabled &&
+                                corePreferences.isDatadogEnabled &&
+                                !host.isNullOrEmpty()
+
                             val webView = CatalogWebViewScreen(
                                 url = contentUrl,
                                 uriScheme = uriScheme,
@@ -330,7 +338,8 @@ private fun ProgramInfoScreen(
                                     }
                                 },
                                 onUriClick = onUriClick,
-                                onWebPageLoadError = { onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR) }
+                                onWebPageLoadError = { onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR) },
+                                isDatadogWebViewTrackingEnabled = isDatadogWebViewTrackingEnabled
                             )
 
                             AndroidView(

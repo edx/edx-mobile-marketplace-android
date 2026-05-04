@@ -10,8 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import com.datadog.android.webview.WebViewTracking
-import org.koin.compose.koinInject
-import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.applyDarkModeIfEnabled
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
 
@@ -26,11 +24,11 @@ fun CatalogWebViewScreen(
     refreshSessionCookie: () -> Unit = {},
     onWebPageUpdated: (String) -> Unit = {},
     onUriClick: (String, linkAuthority) -> Unit,
-    onWebPageLoadError: () -> Unit
+    onWebPageLoadError: () -> Unit,
+    isDatadogWebViewTrackingEnabled: Boolean,
 ): WebView {
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
-    val corePreferences = koinInject<CorePreferences>()
     return remember {
         WebView(context).apply {
             webViewClient = object : DefaultWebViewClient(
@@ -128,7 +126,7 @@ fun CatalogWebViewScreen(
             isHorizontalScrollBarEnabled = false
 
             val host = url.toUri().host
-            if (corePreferences.isDatadogEnabled && !host.isNullOrEmpty()) {
+            if (isDatadogWebViewTrackingEnabled && !host.isNullOrEmpty()) {
                 WebViewTracking.enable(this, listOf(host))
             }
             loadUrl(url)

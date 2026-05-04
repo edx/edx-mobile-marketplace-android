@@ -34,7 +34,7 @@ class AnalyticsManager(
             addAnalyticsTracker(firebaseAnalytics)
         }
         val segmentConfig = config.getSegmentConfig()
-        if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank()) {
+        if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank() && config.getFirebaseConfig().isSegmentAnalyticsSource()) {
             addAnalyticsTracker(segmentAnalytics)
         }
         val datadogConfig = config.getDatadogConfig()

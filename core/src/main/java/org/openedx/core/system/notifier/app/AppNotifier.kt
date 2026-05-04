@@ -30,6 +30,3 @@ class AppNotifier {
     suspend fun send(event: DatadogTrackingToggledEvent) = channel.emit(event)
 }
 
-data class DatadogTrackingToggledEvent(
-    val enabled: Boolean,
-) : AppEvent

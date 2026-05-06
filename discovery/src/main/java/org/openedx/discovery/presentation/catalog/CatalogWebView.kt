@@ -4,10 +4,13 @@ import android.annotation.SuppressLint
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import androidx.core.net.toUri
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import org.koin.compose.koinInject
+import org.openedx.core.config.Config
 import org.openedx.core.extension.applyDarkModeIfEnabled
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
 
@@ -26,6 +29,26 @@ fun CatalogWebViewScreen(
 ): WebView {
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
+    val config = koinInject<Config>()
+
+    // Build trusted hosts from app's own configured URLs.
+    // Navigation to these hosts will never trigger "Leaving the app" dialog.
+    val trustedHosts = remember(config) {
+        buildSet {
+            fun String.toHost() = runCatching { toUri().host }.getOrNull()
+            config.getApiHostURL().toHost()?.let { add(it) }
+            config.getDiscoveryConfig().webViewConfig.baseUrl.toHost()?.let { add(it) }
+            config.getProgramConfig().webViewConfig.programUrl.toHost()?.let { add(it) }
+        }
+    }
+
+    val alwaysExternalHosts = remember(config) {
+        buildSet {
+            fun String.toHost() = runCatching { toUri().host }.getOrNull()
+            config.getEcommerceURL().toHost()?.let { add(it) }
+        }
+    }
+
     return remember {
         WebView(context).apply {
             webViewClient = object : DefaultWebViewClient(
@@ -34,6 +57,8 @@ fun CatalogWebViewScreen(
                 isAllLinksExternal = isAllLinksExternal,
                 onUriClick = onUriClick,
                 refreshSessionCookie = refreshSessionCookie,
+                trustedHosts = trustedHosts,
+                alwaysExternalHosts = alwaysExternalHosts,
             ) {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     url?.let { onWebPageUpdated(it) }

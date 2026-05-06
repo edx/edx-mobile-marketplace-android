@@ -1,6 +1,8 @@
 package org.openedx.core.system
 
 import android.webkit.CookieManager
+import kotlin.coroutines.resume
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Cookie
 import okhttp3.RequestBody
 import org.openedx.core.config.Config
@@ -23,11 +25,21 @@ class AppCookieManager(private val config: Config, private val api: CookiesApi) 
     suspend fun tryToRefreshSessionCookie() {
         try {
             response = api.userCookies()
-            clearWebViewCookie()
             val cookieManager = CookieManager.getInstance()
-            for (cookie in Cookie.parseAll(response!!.raw().request.url, response!!.headers())) {
-                cookieManager.setCookie(config.getApiHostURL(), cookie.toString())
+            cookieManager.setAcceptCookie(true)
+            clearWebViewCookie(cookieManager)
+            val cookieTargets = buildSet {
+                add(config.getApiHostURL())
+                add(config.getDiscoveryConfig().webViewConfig.baseUrl)
+                add(config.getProgramConfig().webViewConfig.programUrl)
             }
+            for (cookie in Cookie.parseAll(response!!.raw().request.url, response!!.headers())) {
+                val cookieValue = cookie.toString()
+                cookieTargets.forEach { target ->
+                    setCookie(cookieManager, target, cookieValue)
+                }
+            }
+            cookieManager.flush()
             authSessionCookieExpiration = System.currentTimeMillis() + FRESHNESS_INTERVAL
         } catch (e: Exception) {
             logger.e(
@@ -40,6 +52,27 @@ class AppCookieManager(private val config: Config, private val api: CookiesApi) 
     fun clearWebViewCookie() {
         CookieManager.getInstance().removeAllCookies(null)
         authSessionCookieExpiration = -1
+    }
+
+    private suspend fun clearWebViewCookie(cookieManager: CookieManager) {
+        suspendCancellableCoroutine { continuation ->
+            cookieManager.removeAllCookies {
+                if (continuation.isActive) {
+                    continuation.resume(Unit)
+                }
+            }
+        }
+        authSessionCookieExpiration = -1
+    }
+
+    private suspend fun setCookie(cookieManager: CookieManager, url: String, cookie: String) {
+        suspendCancellableCoroutine { continuation ->
+            cookieManager.setCookie(url, cookie) {
+                if (continuation.isActive) {
+                    continuation.resume(Unit)
+                }
+            }
+        }
     }
 
     fun isSessionCookieMissingOrExpired(): Boolean {

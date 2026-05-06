@@ -2,11 +2,11 @@ package org.openedx.discovery.presentation.catalog
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.net.Uri
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.net.toUri
 import org.openedx.core.extension.isEmailValid
 import org.openedx.core.utils.EmailUtil
 
@@ -16,31 +16,54 @@ open class DefaultWebViewClient(
     val isAllLinksExternal: Boolean,
     val refreshSessionCookie: () -> Unit,
     val onUriClick: (String, WebViewLink.Authority) -> Unit,
+    val trustedHosts: Set<String> = emptySet(),
+    val alwaysExternalHosts: Set<String> = emptySet(),
 ) : WebViewClient() {
 
     private var hostForThisPage: String? = null
     private var isPossibleRedirection = true
     private var hasRetried = false
+    private var hasPendingUserNavigation = false
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
 
         if (hostForThisPage == null && url != null) {
-            hostForThisPage = Uri.parse(url).host
+            hostForThisPage = url.toUri().host
         }
+        // Reset on every new page so mid-load redirects are never intercepted
+        isPossibleRedirection = true
+        // Also reset pending user navigation when a new page starts
+        hasPendingUserNavigation = false
     }
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val clickUrl = request?.url?.toString() ?: ""
 
-        if (clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl)) && !isPossibleRedirection) {
+        // Mark HTTP/HTTPS clicks as pending ONLY AFTER page finishes loading
+        // This allows intermediate trusted URLs to render before external redirects are blocked
+        if ((clickUrl.startsWith("http://") || clickUrl.startsWith("https://")) && !isPossibleRedirection) {
+            hasPendingUserNavigation = true
+        }
+
+        val shouldOpenExternally = clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl))
+
+        if (isTrustedLogoutUrl(clickUrl)) {
+            hasPendingUserNavigation = false
+            return true
+        }
+
+        if (shouldOpenExternally && (!isPossibleRedirection || hasPendingUserNavigation)) {
+            hasPendingUserNavigation = false
             onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
             return true
         }
 
+
         return if (clickUrl.startsWith("mailto:")) {
             val email = clickUrl.replace("mailto:", "")
             if (email.isEmailValid()) {
+                hasPendingUserNavigation = false
                 EmailUtil.sendEmailIntent(context, email, "", "")
                 true
             } else {
@@ -54,6 +77,7 @@ open class DefaultWebViewClient(
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
         isPossibleRedirection = false
+        hasPendingUserNavigation = false
     }
 
     override fun onReceivedHttpError(
@@ -61,9 +85,10 @@ open class DefaultWebViewClient(
         request: WebResourceRequest,
         errorResponse: WebResourceResponse,
     ) {
+        hasPendingUserNavigation = false
         if (request.url.toString() == view.url && !hasRetried) {
             when (errorResponse.statusCode) {
-                403, 401, 404 -> {
+                403, 401 -> {
                     hasRetried = true
                     refreshSessionCookie()
                     webView.loadUrl(request.url.toString())
@@ -75,15 +100,56 @@ open class DefaultWebViewClient(
 
     private fun isExternalLink(strUrl: String?): Boolean {
         return strUrl?.let { url ->
-            val uri = Uri.parse(url)
+            val uri = url.toUri()
+            val host = uri.host ?: return@let false
             val externalLinkValue = if (uri.isHierarchical) {
                 uri.getQueryParameter(QUERY_PARAM_EXTERNAL_LINK)
             } else {
                 null
             }
-            hostForThisPage != null && hostForThisPage != uri.host ||
+
+            // Explicit external marker must win even for trusted hosts.
+            if (externalLinkValue?.toBoolean() == true) return@let true
+
+            if (isAlwaysExternalHost(host)) return@let true
+
+            // If the URL is on the same registered domain as any trusted host
+            // (covers subdomains like courses.example.com, auth.example.com, etc.)
+            if (isTrustedDomain(host)) return@let false
+
+            (hostForThisPage != null && hostForThisPage != host) ||
                     externalLinkValue?.toBoolean() == true
         } ?: false
+    }
+
+    private fun isTrustedLogoutUrl(strUrl: String?): Boolean {
+        return strUrl?.let { url ->
+            val uri = url.toUri()
+            val host = uri.host ?: return@let false
+            if (isAlwaysExternalHost(host)) return@let false
+            if (!isTrustedDomain(host)) return@let false
+
+            val normalizedPath = uri.path?.trimEnd('/') ?: return@let false
+            normalizedPath.equals("/logout", ignoreCase = true)
+        } ?: false
+    }
+
+    private fun isAlwaysExternalHost(host: String): Boolean {
+        return alwaysExternalHosts.any { externalHost ->
+            host == externalHost || host.endsWith(".$externalHost")
+        }
+    }
+
+    /**
+     * Returns true if [host] belongs to the same registered domain as any entry in [trustedHosts].
+     * e.g. trustedHost="api.example.com" → trusts "courses.example.com", "auth.example.com", etc.
+     */
+    private fun isTrustedDomain(host: String): Boolean {
+        return trustedHosts.any { trustedHost ->
+            // Registered domain = last 2 labels (e.g. "example.com" from "api.example.com")
+            val trustedBase = trustedHost.split(".").takeLast(2).joinToString(".")
+            host == trustedHost || host == trustedBase || host.endsWith(".$trustedBase")
+        }
     }
 
     companion object {

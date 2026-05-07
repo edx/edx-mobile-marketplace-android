@@ -37,18 +37,29 @@ open class DefaultWebViewClient(
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val clickUrl = request?.url?.toString() ?: ""
+
+        // Track user-initiated navigations; used only for the logout special case below.
         if ((clickUrl.startsWith("http://") || clickUrl.startsWith("https://")) && !isPossibleRedirection) {
             hasPendingUserNavigation = true
         }
+        val isUserInitiatedNavigation = !isPossibleRedirection || hasPendingUserNavigation
 
         val shouldOpenExternally = clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl))
 
         if (isTrustedLogoutUrl(clickUrl)) {
+            // Block automatic logout redirects; show the external alert only on a deliberate
+            // user tap (mirrors the existing guard and prevents session-expiry loops).
+            if (isUserInitiatedNavigation) {
+                onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
+            }
             hasPendingUserNavigation = false
             return true
         }
 
-        if (shouldOpenExternally && (!isPossibleRedirection || hasPendingUserNavigation)) {
+        // No isUserInitiatedNavigation gate here – mirrors iOS (capturedLink was removed).
+        // Any navigation to an untrusted host opens externally, including server-side
+        // redirects from CTA flows (e.g. "Start Now" → commerce-coordinator.edx.org).
+        if (shouldOpenExternally) {
             hasPendingUserNavigation = false
             onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
             return true
@@ -105,7 +116,7 @@ open class DefaultWebViewClient(
 
             if (externalLinkValue?.toBoolean() == true) return@let true
 
-            if (isAlwaysExternalHost(host)) return@let true
+            if (isAlwaysExternalUrl(uri)) return@let true
 
              if (isTrustedDomain(host)) return@let false
 
@@ -118,7 +129,7 @@ open class DefaultWebViewClient(
         return strUrl?.let { url ->
             val uri = url.toUri()
             val host = uri.host ?: return@let false
-            if (isAlwaysExternalHost(host)) return@let false
+            if (isAlwaysExternalUrl(uri)) return@let false
             if (!isTrustedDomain(host)) return@let false
 
             val normalizedPath = uri.path?.trimEnd('/') ?: return@let false
@@ -126,20 +137,49 @@ open class DefaultWebViewClient(
         } ?: false
     }
 
+    private fun isAlwaysExternalUrl(uri: android.net.Uri): Boolean {
+        val host = uri.host ?: return false
+        return isAlwaysExternalHost(host) || isKnownExternalPath(uri.path)
+    }
+
     private fun isAlwaysExternalHost(host: String): Boolean {
-        return alwaysExternalHosts.any { externalHost ->
+        return isKnownExternalHost(host) || alwaysExternalHosts.any { externalHost ->
             host == externalHost || host.endsWith(".$externalHost")
         }
     }
 
+    private fun isKnownExternalHost(host: String): Boolean {
+        val normalizedHost = host.lowercase()
+        return normalizedHost.contains("commerce") ||
+                normalizedHost.contains("checkout") ||
+                normalizedHost.contains("payment")
+    }
+
+    private fun isKnownExternalPath(path: String?): Boolean {
+        val normalizedPath = path?.trimEnd('/')?.lowercase() ?: return false
+        return EXTERNAL_PATH_PREFIXES.any { normalizedPath.startsWith(it) }
+    }
+
     private fun isTrustedDomain(host: String): Boolean {
-        return trustedHosts.any { trustedHost ->
-            val trustedBase = trustedHost.split(".").takeLast(2).joinToString(".")
-            host == trustedHost || host == trustedBase || host.endsWith(".$trustedBase")
-        }
+        // Exact host match only – mirrors iOS WebViewTrustedHostsProtocol.
+        //
+        // The previous implementation expanded every configured host to its registered
+        // domain (last two labels), so courses.edx.org → edx.org, making ALL *.edx.org
+        // subdomains trusted. That incorrectly included commerce-coordinator.edx.org,
+        // preventing the "Leaving the app" alert for "Start Now" / "Earn Certificate" CTAs.
+        return trustedHosts.contains(host)
     }
 
     companion object {
         const val QUERY_PARAM_EXTERNAL_LINK = "external_link"
+
+        private val EXTERNAL_PATH_PREFIXES = listOf(
+            "/lms/payment_page_redirect",
+            "/payment_page_redirect",
+            "/course_modes/choose",
+            "/verify_student/start-flow",
+            "/basket",
+            "/checkout",
+        )
     }
 }

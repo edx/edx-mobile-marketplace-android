@@ -203,10 +203,9 @@ class CourseInfoFragment : Fragment() {
                             }
 
                             Authority.ENROLLED_PROGRAM_INFO -> {
-                                viewModel.infoCardClicked(
+                                viewModel.enrolledProgramInfoClicked(
                                     fragmentManager = requireActivity().supportFragmentManager,
                                     pathId = param,
-                                    infoType = type.name
                                 )
                             }
 

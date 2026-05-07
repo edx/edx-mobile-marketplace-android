@@ -165,6 +165,15 @@ class CourseInfoViewModel(
         }
     }
 
+    fun enrolledProgramInfoClicked(fragmentManager: FragmentManager, pathId: String) {
+        if (pathId.isNotEmpty()) {
+            router.navigateToEnrolledProgramInfo(
+                fm = fragmentManager,
+                pathId = pathId,
+            )
+        }
+    }
+
     fun navigateToSignUp(fragmentManager: FragmentManager, courseId: String?, infoType: String) {
         router.navigateToSignUp(fragmentManager, courseId, infoType)
     }

@@ -99,7 +99,6 @@ class IAPViewModel(
     }
 
     init {
-        eventLogger.onCertificatePreviewShown(purchaseFlowData.courseId)
 
         viewModelScope.launch(Dispatchers.IO) {
             iapNotifier.notifier.onEach { event ->
@@ -227,6 +226,10 @@ class IAPViewModel(
 
     fun onContinueToFreeTrackClicked() {
         eventLogger.logContinueToFreeTrackClickedEvent()
+    }
+
+    fun logCertificatePreviewShown() {
+        eventLogger.onCertificatePreviewShown(purchaseFlowData.courseId)
     }
 
     fun logErrorAction(alertType: String, action: String) {

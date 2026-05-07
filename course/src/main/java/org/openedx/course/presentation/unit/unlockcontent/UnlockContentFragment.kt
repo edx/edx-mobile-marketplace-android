@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -81,7 +82,10 @@ class UnlockContentFragment : Fragment() {
                     courseName = iapViewModel.purchaseData.courseName,
                     orgName = viewModel.orgName,
                     orgLogo = iapViewModel.purchaseData.orgLogo,
-                    onUpgradeClick = { viewModel.startPurchaseFlow(requireActivity()) }
+                    onUpgradeClick = { viewModel.startPurchaseFlow(requireActivity()) },
+                    onCertificatePreviewShown = {
+                        iapViewModel.logCertificatePreviewShown()
+                    }
                 )
 
                 when (uiEvent) {
@@ -162,7 +166,14 @@ private fun GradedAssignmentLockedCard(
     orgName: String?,
     orgLogo: String?,
     onUpgradeClick: () -> Unit,
+    onCertificatePreviewShown: () -> Unit = {}
 ) {
+    if (isCertificatePreviewEnabled) {
+        LaunchedEffect(isCertificatePreviewEnabled) {
+            onCertificatePreviewShown()
+        }
+    }
+
     Column(
         modifier = modifier
             .background(MaterialTheme.appColors.background)
@@ -373,6 +384,8 @@ fun GradedAssignmentLockedCardPreview() {
             courseName = "Introduction to CS",
             orgName = "MIT",
             orgLogo = null,
-        ) {}
+            onUpgradeClick = {},
+            onCertificatePreviewShown = {}
+        )
     }
 }

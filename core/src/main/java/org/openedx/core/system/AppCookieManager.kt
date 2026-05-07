@@ -32,6 +32,8 @@ class AppCookieManager(private val config: Config, private val api: CookiesApi) 
                 add(config.getApiHostURL())
                 add(config.getDiscoveryConfig().webViewConfig.baseUrl)
                 add(config.getProgramConfig().webViewConfig.programUrl)
+            }.filter { url ->
+                url.isNotBlank() && isValidCookieUrl(url)
             }
             for (cookie in Cookie.parseAll(response!!.raw().request.url, response!!.headers())) {
                 val cookieValue = cookie.toString()
@@ -72,6 +74,16 @@ class AppCookieManager(private val config: Config, private val api: CookiesApi) 
                     continuation.resume(Unit)
                 }
             }
+        }
+    }
+
+    private fun isValidCookieUrl(url: String): Boolean {
+        return try {
+            val uri = java.net.URI(url)
+            val scheme = uri.scheme?.lowercase() ?: return false
+            (scheme == "http" || scheme == "https") && uri.host != null
+        } catch (e: Exception) {
+            false
         }
     }
 

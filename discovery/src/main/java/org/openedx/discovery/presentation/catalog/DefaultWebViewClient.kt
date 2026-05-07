@@ -32,7 +32,9 @@ open class DefaultWebViewClient(
             hostForThisPage = url.toUri().host
         }
         isPossibleRedirection = true
-        hasPendingUserNavigation = false
+        // Don't reset hasPendingUserNavigation here – it must persist through redirect chains
+        // to preserve the user-gesture signal (e.g., user taps CTA → intermediate page loads
+        // → server redirects to external payment URL). Only reset in onPageFinished.
     }
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {

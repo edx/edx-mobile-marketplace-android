@@ -31,17 +31,12 @@ open class DefaultWebViewClient(
         if (hostForThisPage == null && url != null) {
             hostForThisPage = url.toUri().host
         }
-        // Reset on every new page so mid-load redirects are never intercepted
         isPossibleRedirection = true
-        // Also reset pending user navigation when a new page starts
         hasPendingUserNavigation = false
     }
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val clickUrl = request?.url?.toString() ?: ""
-
-        // Mark HTTP/HTTPS clicks as pending ONLY AFTER page finishes loading
-        // This allows intermediate trusted URLs to render before external redirects are blocked
         if ((clickUrl.startsWith("http://") || clickUrl.startsWith("https://")) && !isPossibleRedirection) {
             hasPendingUserNavigation = true
         }
@@ -108,14 +103,11 @@ open class DefaultWebViewClient(
                 null
             }
 
-            // Explicit external marker must win even for trusted hosts.
             if (externalLinkValue?.toBoolean() == true) return@let true
 
             if (isAlwaysExternalHost(host)) return@let true
 
-            // If the URL is on the same registered domain as any trusted host
-            // (covers subdomains like courses.example.com, auth.example.com, etc.)
-            if (isTrustedDomain(host)) return@let false
+             if (isTrustedDomain(host)) return@let false
 
             (hostForThisPage != null && hostForThisPage != host) ||
                     externalLinkValue?.toBoolean() == true
@@ -140,13 +132,8 @@ open class DefaultWebViewClient(
         }
     }
 
-    /**
-     * Returns true if [host] belongs to the same registered domain as any entry in [trustedHosts].
-     * e.g. trustedHost="api.example.com" → trusts "courses.example.com", "auth.example.com", etc.
-     */
     private fun isTrustedDomain(host: String): Boolean {
         return trustedHosts.any { trustedHost ->
-            // Registered domain = last 2 labels (e.g. "example.com" from "api.example.com")
             val trustedBase = trustedHost.split(".").takeLast(2).joinToString(".")
             host == trustedHost || host == trustedBase || host.endsWith(".$trustedBase")
         }

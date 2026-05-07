@@ -53,7 +53,6 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.UIMessage
-import org.openedx.core.extension.loadUrl
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
 import org.openedx.core.presentation.dialog.alert.InfoDialogFragment
 import org.openedx.core.presentation.global.webview.WebViewUIAction
@@ -188,6 +187,22 @@ class CourseInfoFragment : Fragment() {
 
                             Authority.COURSE_INFO -> {
                                 viewModel.courseInfoClickedEvent(param)
+                                viewModel.infoCardClicked(
+                                    fragmentManager = requireActivity().supportFragmentManager,
+                                    pathId = param,
+                                    infoType = type.name
+                                )
+                            }
+
+                            Authority.ENROLLED_COURSE_INFO -> {
+                                viewModel.onSuccessfulCourseEnrollment(
+                                    fragmentManager = requireActivity().supportFragmentManager,
+                                    courseId = param,
+                                    showTrackSelection = false
+                                )
+                            }
+
+                            Authority.ENROLLED_PROGRAM_INFO -> {
                                 viewModel.infoCardClicked(
                                     fragmentManager = requireActivity().supportFragmentManager,
                                     pathId = param,

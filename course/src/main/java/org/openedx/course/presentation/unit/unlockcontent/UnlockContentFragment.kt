@@ -27,7 +27,6 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -38,7 +37,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.R
@@ -60,6 +58,9 @@ class UnlockContentFragment : Fragment() {
             requireArguments().getString(ARG_COURSE_ID, ""),
         )
     }
+    private val iapViewModel by viewModel<IAPViewModel> {
+        parametersOf(viewModel.purchaseData)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,10 +75,14 @@ class UnlockContentFragment : Fragment() {
 
                 GradedAssignmentLockedCard(
                     uiState = uiState,
-                    viewModel = viewModel
-                ) {
-                    viewModel.startPurchaseFlow(requireActivity())
-                }
+                    isCertificatePreviewEnabled = iapViewModel.isCertificatePreviewEnabled,
+                    appName = iapViewModel.appData.appName,
+                    learnerName = iapViewModel.user?.name,
+                    courseName = iapViewModel.purchaseData.courseName,
+                    orgName = viewModel.orgName,
+                    orgLogo = iapViewModel.purchaseData.orgLogo,
+                    onUpgradeClick = { viewModel.startPurchaseFlow(requireActivity()) }
+                )
 
                 when (uiEvent) {
                     UnlockContentUIAction.FullScreenLoader -> {
@@ -125,9 +130,7 @@ class UnlockContentFragment : Fragment() {
                         viewModel.refreshIAPState()
                     }
 
-                    else -> {
-
-                    }
+                    else -> {}
                 }
             }
         }
@@ -152,14 +155,14 @@ class UnlockContentFragment : Fragment() {
 private fun GradedAssignmentLockedCard(
     modifier: Modifier = Modifier,
     uiState: UnlockContentUIState,
-    viewModel: UnlockContentViewModel,
+    isCertificatePreviewEnabled: Boolean,
+    appName: String,
+    learnerName: String?,
+    courseName: String?,
+    orgName: String?,
+    orgLogo: String?,
     onUpgradeClick: () -> Unit,
 ) {
-    val purchaseData = remember { viewModel.purchaseData }
-
-    val iapViewModel: IAPViewModel = koinViewModel(
-        parameters = { parametersOf(purchaseData) }
-    )
     Column(
         modifier = modifier
             .background(MaterialTheme.appColors.background)
@@ -232,16 +235,14 @@ private fun GradedAssignmentLockedCard(
                     }
                 }
 
-                if (iapViewModel.isCertificatePreviewEnabled) {
+                if (isCertificatePreviewEnabled) {
                     CertificatePreview(
-                        Modifier.weight(0.55f),
-                        iapViewModel.appData.appName,
-                        iapViewModel.user?.name,
-                        iapViewModel.purchaseData.courseName
-                            ?: iapViewModel.purchaseData.courseName.toString(),
-                        viewModel.orgName
-                            ?: viewModel.orgName.toString(),
-                        iapViewModel.purchaseData.orgLogo ?: iapViewModel.purchaseData.orgLogo
+                        modifier = Modifier.weight(0.55f),
+                        appName = appName,
+                        learnerName = learnerName,
+                        courseName = courseName ?: "",
+                        orgName = orgName ?: appName,
+                        orgLogo = orgLogo,
                     )
                 }
             }
@@ -286,18 +287,18 @@ private fun GradedAssignmentLockedCard(
                 val widthModifier = Modifier.fillMaxWidth()
                 ValuePropContent(widthModifier)
                 Spacer(modifier = Modifier.height(10.dp))
-                if (iapViewModel.isCertificatePreviewEnabled) {
+
+                if (isCertificatePreviewEnabled) {
                     CertificatePreview(
-                        widthModifier,
-                        iapViewModel.appData.appName,
-                        iapViewModel.user?.name,
-                        iapViewModel.purchaseData.courseName
-                            ?: iapViewModel.purchaseData.courseName.toString(),
-                        viewModel.orgName
-                            ?: viewModel.orgName.toString(),
-                        iapViewModel.purchaseData.orgLogo ?: iapViewModel.purchaseData.orgLogo
+                        modifier = widthModifier,
+                        appName = appName,
+                        learnerName = learnerName,
+                        courseName = courseName ?: "",
+                        orgName = orgName ?: appName,
+                        orgLogo = orgLogo,
                     )
                 }
+
                 Spacer(modifier = Modifier.height(10.dp))
 
                 when (uiState) {
@@ -319,7 +320,6 @@ private fun GradedAssignmentLockedCard(
                     else -> {}
                 }
             }
-
         }
     }
 }
@@ -335,6 +335,7 @@ fun ValuePropContent(modifier: Modifier) {
         UpgradeBenefit(stringResource(id = R.string.iap_full_access_course))
     }
 }
+
 @Composable
 private fun UpgradeBenefit(text: String) {
     Row(
@@ -366,7 +367,12 @@ fun GradedAssignmentLockedCardPreview() {
     OpenEdXTheme {
         GradedAssignmentLockedCard(
             uiState = UnlockContentUIState.ProductData(formattedPrice = "$9.99"),
-            viewModel = TODO()
+            isCertificatePreviewEnabled = true,
+            appName = "edX",
+            learnerName = "John Doe",
+            courseName = "Introduction to CS",
+            orgName = "MIT",
+            orgLogo = null,
         ) {}
     }
 }

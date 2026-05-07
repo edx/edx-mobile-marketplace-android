@@ -130,12 +130,12 @@ class IAPDialogFragment : DialogFragment() {
                                                 OpenEdXBrandButton(
                                                     text = buttonText,
                                                     onClick = {
-                                                        if (selectedOption == CourseTrack.CERTIFICATE) {
-                                                            iapViewModel.startPurchaseFlow()
-                                                        } else {
-                                                            iapViewModel.eventLogger.logContinueToFreeTrackClickedEvent()
-                                                            onDismiss()
-                                                        }
+                                             if (selectedOption == CourseTrack.CERTIFICATE) {
+                                                iapViewModel.startPurchaseFlow()
+                                            } else {
+                                                iapViewModel.onContinueToFreeTrackClicked()
+                                                onDismiss()
+                                            }
                                                     })
                                             } else {
                                                 OpenEdXBrandButton(
@@ -174,7 +174,7 @@ class IAPDialogFragment : DialogFragment() {
                                 IAPErrorDialog(iapException = iapException, onIAPAction = { iapAction ->
                                     when (iapAction) {
                                         IAPAction.ACTION_RELOAD_PRICE -> {
-                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                            iapViewModel.logErrorAction(
                                                 iapException.requestType.request,
                                                 IAPAction.ACTION_RELOAD_PRICE.action
                                             )
@@ -182,7 +182,7 @@ class IAPDialogFragment : DialogFragment() {
                                         }
 
                                         IAPAction.ACTION_CLOSE -> {
-                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                            iapViewModel.logErrorAction(
                                                 iapException.requestType.request,
                                                 IAPAction.ACTION_CLOSE.action
                                             )
@@ -190,7 +190,7 @@ class IAPDialogFragment : DialogFragment() {
                                         }
 
                                         IAPAction.ACTION_OK -> {
-                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                            iapViewModel.logErrorAction(
                                                 iapException.requestType.request,
                                                 IAPAction.ACTION_OK.action
                                             )
@@ -198,7 +198,7 @@ class IAPDialogFragment : DialogFragment() {
                                         }
 
                                         IAPAction.ACTION_REFRESH -> {
-                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                            iapViewModel.logErrorAction(
                                                 iapException.requestType.request,
                                                 IAPAction.ACTION_REFRESH.action
                                             )
@@ -215,7 +215,7 @@ class IAPDialogFragment : DialogFragment() {
                                         }
 
                                         IAPAction.ACTION_RETRY -> {
-                                            iapViewModel.eventLogger.logIAPErrorActionEvent(
+                                            iapViewModel.logErrorAction(
                                                 iapException.requestType.request,
                                                 IAPAction.ACTION_RETRY.action
                                             )

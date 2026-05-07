@@ -38,7 +38,6 @@ open class DefaultWebViewClient(
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val clickUrl = request?.url?.toString() ?: ""
 
-        // Track user-initiated navigations; used only for the logout special case below.
         if ((clickUrl.startsWith("http://") || clickUrl.startsWith("https://")) && !isPossibleRedirection) {
             hasPendingUserNavigation = true
         }
@@ -47,18 +46,12 @@ open class DefaultWebViewClient(
         val shouldOpenExternally = clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl))
 
         if (isTrustedLogoutUrl(clickUrl)) {
-            // Block automatic logout redirects; show the external alert only on a deliberate
-            // user tap (mirrors the existing guard and prevents session-expiry loops).
             if (isUserInitiatedNavigation) {
                 onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
             }
             hasPendingUserNavigation = false
             return true
         }
-
-        // No isUserInitiatedNavigation gate here – mirrors iOS (capturedLink was removed).
-        // Any navigation to an untrusted host opens externally, including server-side
-        // redirects from CTA flows (e.g. "Start Now" → commerce-coordinator.edx.org).
         if (shouldOpenExternally) {
             hasPendingUserNavigation = false
             onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
@@ -161,13 +154,7 @@ open class DefaultWebViewClient(
     }
 
     private fun isTrustedDomain(host: String): Boolean {
-        // Exact host match only – mirrors iOS WebViewTrustedHostsProtocol.
-        //
-        // The previous implementation expanded every configured host to its registered
-        // domain (last two labels), so courses.edx.org → edx.org, making ALL *.edx.org
-        // subdomains trusted. That incorrectly included commerce-coordinator.edx.org,
-        // preventing the "Leaving the app" alert for "Start Now" / "Earn Certificate" CTAs.
-        return trustedHosts.contains(host)
+            return trustedHosts.contains(host)
     }
 
     companion object {

@@ -29,19 +29,36 @@ class PipInteractor(
     }
 
     /** Handle a PiP remote action. */
-    fun handleAction(action: PipAction) {
-        when (action) {
-            is PipAction.Play -> repository.play()
-            is PipAction.Pause -> repository.pause()
-            is PipAction.SeekForward -> repository.seekForward()
-            is PipAction.SeekBackward -> repository.seekBackward()
-            is PipAction.Replay -> repository.restart()
+fun handleAction(action: PipAction) {
+    when (action) {
+        is PipAction.Play -> {
+            repository.controller?.play()
+            repository.updatePlaybackState(isPlaying = true, isEnded = false)
+        }
+        is PipAction.Pause -> {
+            repository.controller?.pause()
+            repository.updatePlaybackState(isPlaying = false)
+        }
+        is PipAction.SeekForward -> repository.controller?.seekForward()
+        is PipAction.SeekBackward -> repository.controller?.seekBackward()
+        is PipAction.Replay -> {
+            repository.controller?.restart()
+            repository.updatePlaybackState(isPlaying = true, isEnded = false)
         }
     }
+}
 
     /** Check if a player is currently registered. */
     fun hasPlayer(): Boolean = repository.controller != null
 
     /** Get the current player controller (nullable). */
     fun getController(): PlayerController? = repository.controller
+
+    fun exitPipMode() {
+
+    }
+
+    fun enterPipMode() {
+
+    }
 }

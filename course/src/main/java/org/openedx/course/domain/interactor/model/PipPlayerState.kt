@@ -23,4 +23,6 @@ sealed class PipAction {
     data object Pause : PipAction()
     data object SeekForward : PipAction()
     data object SeekBackward : PipAction()
+    data object Replay : PipAction()
+
 }

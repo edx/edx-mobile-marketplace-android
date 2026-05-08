@@ -21,6 +21,7 @@ import org.openedx.core.presentation.CoreAnalyticsKey
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
@@ -47,6 +48,7 @@ class CourseInfoViewModel(
     private val notifier: DiscoveryNotifier,
     private val resourceManager: ResourceManager,
     private val analytics: DiscoveryAnalytics,
+    private val edxCookieManager: AppCookieManager,
     corePreferences: CorePreferences,
 ) : BaseViewModel() {
     private val logger = Logger(TAG)
@@ -78,6 +80,8 @@ class CourseInfoViewModel(
     val uriScheme: String get() = config.getUriScheme()
 
     val appUserAgent get() = appData.appUserAgent
+
+    val cookieManager get() = edxCookieManager
 
     private val webViewConfig get() = config.getDiscoveryConfig().webViewConfig
 
@@ -157,6 +161,15 @@ class CourseInfoViewModel(
                 fm = fragmentManager,
                 courseId = pathId,
                 infoType = infoType
+            )
+        }
+    }
+
+    fun enrolledProgramInfoClicked(fragmentManager: FragmentManager, pathId: String) {
+        if (pathId.isNotEmpty()) {
+            router.navigateToEnrolledProgramInfo(
+                fm = fragmentManager,
+                pathId = pathId,
             )
         }
     }

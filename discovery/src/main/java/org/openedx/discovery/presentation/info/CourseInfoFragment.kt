@@ -31,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.UIMessage
@@ -55,6 +57,7 @@ import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
 import org.openedx.core.presentation.dialog.alert.InfoDialogFragment
 import org.openedx.core.presentation.global.webview.WebViewUIAction
 import org.openedx.core.presentation.global.webview.WebViewUIState
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.HandleUIMessage
@@ -136,6 +139,7 @@ class CourseInfoFragment : Fragment() {
                     uiMessage = uiMessage,
                     uriScheme = viewModel.uriScheme,
                     userAgent = viewModel.appUserAgent,
+                    cookieManager = viewModel.cookieManager,
                     hasInternetConnection = hasInternetConnection,
                     onWebViewUIAction = { action ->
                         when (action) {
@@ -187,6 +191,21 @@ class CourseInfoFragment : Fragment() {
                                     fragmentManager = requireActivity().supportFragmentManager,
                                     pathId = param,
                                     infoType = type.name
+                                )
+                            }
+
+                            Authority.ENROLLED_COURSE_INFO -> {
+                                viewModel.onSuccessfulCourseEnrollment(
+                                    fragmentManager = requireActivity().supportFragmentManager,
+                                    courseId = param,
+                                    showTrackSelection = false
+                                )
+                            }
+
+                            Authority.ENROLLED_PROGRAM_INFO -> {
+                                viewModel.enrolledProgramInfoClicked(
+                                    fragmentManager = requireActivity().supportFragmentManager,
+                                    pathId = param,
                                 )
                             }
 
@@ -264,6 +283,7 @@ private fun CourseInfoScreen(
     uiMessage: UIMessage?,
     uriScheme: String,
     userAgent: String,
+    cookieManager: AppCookieManager? = null,
     hasInternetConnection: Boolean,
     onWebViewUIAction: (WebViewUIAction) -> Unit,
     onRegisterClick: () -> Unit,
@@ -339,6 +359,7 @@ private fun CourseInfoScreen(
                                 contentUrl = (uiState as CourseInfoUIState.CourseInfo).initialUrl,
                                 uriScheme = uriScheme,
                                 userAgent = userAgent,
+                                cookieManager = cookieManager,
                                 isPreLogin = uiState.isPreLogin,
                                 onWebPageLoaded = { onWebViewUIAction(WebViewUIAction.WEB_PAGE_LOADED) },
                                 onUriClick = onUriClick,
@@ -377,18 +398,27 @@ private fun CourseInfoWebView(
     contentUrl: String,
     uriScheme: String,
     userAgent: String,
+    cookieManager: AppCookieManager?,
     isPreLogin: Boolean,
     onWebPageLoaded: () -> Unit,
     onUriClick: (String, Authority) -> Unit,
     onWebPageLoadError: () -> Unit,
 ) {
+    val coroutineScope = rememberCoroutineScope()
 
     val webView = CatalogWebViewScreen(
         url = contentUrl,
         uriScheme = uriScheme,
         userAgent = userAgent,
-        isAllLinksExternal = true,
+        isAllLinksExternal = false,
         onWebPageLoaded = onWebPageLoaded,
+        refreshSessionCookie = {
+            if (cookieManager != null) {
+                coroutineScope.launch {
+                    cookieManager.tryToRefreshSessionCookie()
+                }
+            }
+        },
         onUriClick = onUriClick,
         onWebPageLoadError = onWebPageLoadError
     )
@@ -408,7 +438,7 @@ private fun CourseInfoWebView(
             .background(MaterialTheme.appColors.background),
         factory = {
             webView
-        },
+        }
     )
 }
 

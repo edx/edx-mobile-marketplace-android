@@ -44,7 +44,6 @@ import androidx.fragment.app.Fragment
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.openedx.core.extension.loadUrl
 import org.openedx.core.extension.takeIfNotEmpty
 import org.openedx.core.extension.toastMessage
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
@@ -322,7 +321,7 @@ private fun ProgramInfoScreen(
                                 url = contentUrl,
                                 uriScheme = uriScheme,
                                 userAgent = userAgent,
-                                isAllLinksExternal = true,
+                                isAllLinksExternal = false,
                                 onWebPageLoaded = { onWebViewUIAction(WebViewUIAction.WEB_PAGE_LOADED) },
                                 refreshSessionCookie = {
                                     coroutineScope.launch {
@@ -338,9 +337,6 @@ private fun ProgramInfoScreen(
                                     .background(MaterialTheme.appColors.background),
                                 factory = {
                                     webView
-                                },
-                                update = {
-                                    webView.loadUrl(contentUrl, coroutineScope, cookieManager)
                                 }
                             )
                         } else {

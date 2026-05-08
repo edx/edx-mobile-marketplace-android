@@ -21,7 +21,6 @@ open class DefaultWebViewClient(
 ) : WebViewClient() {
 
     private var hostForThisPage: String? = null
-    private var isPossibleRedirection = true
     private var hasRetried = false
     private var hasPendingUserNavigation = false
 
@@ -31,19 +30,18 @@ open class DefaultWebViewClient(
         if (hostForThisPage == null && url != null) {
             hostForThisPage = url.toUri().host
         }
-        isPossibleRedirection = true
-        // Don't reset hasPendingUserNavigation here – it must persist through redirect chains
-        // to preserve the user-gesture signal (e.g., user taps CTA → intermediate page loads
-        // → server redirects to external payment URL). Only reset in onPageFinished.
     }
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val clickUrl = request?.url?.toString() ?: ""
 
-        if ((clickUrl.startsWith("http://") || clickUrl.startsWith("https://")) && !isPossibleRedirection) {
+        val isHttpNavigation = clickUrl.startsWith("http://") || clickUrl.startsWith("https://")
+        val hasGesture = request?.hasGesture() == true
+
+        if (isHttpNavigation && hasGesture) {
             hasPendingUserNavigation = true
         }
-        val isUserInitiatedNavigation = !isPossibleRedirection || hasPendingUserNavigation
+        val isUserInitiatedNavigation = hasGesture || hasPendingUserNavigation
 
         val shouldOpenExternally = clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl))
 
@@ -54,7 +52,7 @@ open class DefaultWebViewClient(
             hasPendingUserNavigation = false
             return true
         }
-        if (shouldOpenExternally) {
+        if (shouldOpenExternally && isUserInitiatedNavigation) {
             hasPendingUserNavigation = false
             onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
             return true
@@ -77,7 +75,6 @@ open class DefaultWebViewClient(
 
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
-        isPossibleRedirection = false
         hasPendingUserNavigation = false
     }
 
@@ -89,7 +86,7 @@ open class DefaultWebViewClient(
         hasPendingUserNavigation = false
         if (request.url.toString() == view.url && !hasRetried) {
             when (errorResponse.statusCode) {
-                403, 401 -> {
+                403, 401, 404 -> {
                     hasRetried = true
                     refreshSessionCookie()
                     webView.loadUrl(request.url.toString())

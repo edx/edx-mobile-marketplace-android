@@ -9,6 +9,7 @@ import android.webkit.WebViewClient
 import androidx.core.net.toUri
 import org.openedx.core.extension.isEmailValid
 import org.openedx.core.utils.EmailUtil
+import java.util.concurrent.atomic.AtomicBoolean
 
 open class DefaultWebViewClient(
     val context: Context,
@@ -21,8 +22,8 @@ open class DefaultWebViewClient(
 ) : WebViewClient() {
 
     private var hostForThisPage: String? = null
-    private var hasRetried = false
-    private var hasPendingUserNavigation = false
+    private val hasRetried = AtomicBoolean(false)
+    private val hasPendingUserNavigation = AtomicBoolean(false)
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
@@ -39,9 +40,9 @@ open class DefaultWebViewClient(
         val hasGesture = request?.hasGesture() == true
 
         if (isHttpNavigation && hasGesture) {
-            hasPendingUserNavigation = true
+            hasPendingUserNavigation.set(true)
         }
-        val isUserInitiatedNavigation = hasGesture || hasPendingUserNavigation
+        val isUserInitiatedNavigation = hasGesture || hasPendingUserNavigation.get()
 
         val shouldOpenExternally = clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl))
 
@@ -49,11 +50,11 @@ open class DefaultWebViewClient(
             if (isUserInitiatedNavigation) {
                 onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
             }
-            hasPendingUserNavigation = false
+            hasPendingUserNavigation.set(false)
             return true
         }
         if (shouldOpenExternally && isUserInitiatedNavigation) {
-            hasPendingUserNavigation = false
+            hasPendingUserNavigation.set(false)
             onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
             return true
         }
@@ -62,7 +63,7 @@ open class DefaultWebViewClient(
         return if (clickUrl.startsWith("mailto:")) {
             val email = clickUrl.replace("mailto:", "")
             if (email.isEmailValid()) {
-                hasPendingUserNavigation = false
+                hasPendingUserNavigation.set(false)
                 EmailUtil.sendEmailIntent(context, email, "", "")
                 true
             } else {
@@ -75,7 +76,7 @@ open class DefaultWebViewClient(
 
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
-        hasPendingUserNavigation = false
+        hasPendingUserNavigation.set(false)
     }
 
     override fun onReceivedHttpError(
@@ -83,11 +84,11 @@ open class DefaultWebViewClient(
         request: WebResourceRequest,
         errorResponse: WebResourceResponse,
     ) {
-        hasPendingUserNavigation = false
-        if (request.url.toString() == view.url && !hasRetried) {
+        hasPendingUserNavigation.set(false)
+        if (request.url.toString() == view.url && !hasRetried.get()) {
             when (errorResponse.statusCode) {
                 403, 401, 404 -> {
-                    hasRetried = true
+                    hasRetried.set(true)
                     refreshSessionCookie()
                     webView.loadUrl(request.url.toString())
                 }
@@ -112,8 +113,7 @@ open class DefaultWebViewClient(
 
              if (isTrustedDomain(host)) return@let false
 
-            (hostForThisPage != null && hostForThisPage != host) ||
-                    externalLinkValue?.toBoolean() == true
+            hostForThisPage != null && hostForThisPage != host
         } ?: false
     }
 

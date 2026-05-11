@@ -23,7 +23,20 @@
             android:layout_height="match_parent"
             android:background="@android:color/black"
             app:resize_mode="fit"
-            app:surface_type="texture_view" />
+            app:surface_type="texture_view">
+
+            <ImageButton
+                android:id="@+id/pip_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|top"
+                android:layout_marginEnd="30dp"
+                android:layout_marginTop="30dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/picture_in_picture"
+                android:src="@drawable/ic_pip"
+                app:tint="@android:color/white" />
+        </androidx.media3.ui.PlayerView>
 
         <ImageView
             android:id="@+id/doubleSpeedBadge"

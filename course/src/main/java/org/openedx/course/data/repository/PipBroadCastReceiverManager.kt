@@ -20,15 +20,21 @@ class PipBroadcastReceiverManager(
                     pipPlayerRepository.controller?.play()
                     pipPlayerRepository.updatePlaybackState(isPlaying = true, isEnded = false)
                 }
+
                 ACTION_PAUSE -> {
                     pipPlayerRepository.controller?.pause()
                     pipPlayerRepository.updatePlaybackState(isPlaying = false)
                 }
+
                 ACTION_FORWARD -> {
+                    pipPlayerRepository.controller?.seekForward()
                 }
+
                 ACTION_REWIND -> {
+                    pipPlayerRepository.controller?.seekBackward()
                 }
             }
+            pipPlayerRepository.syncFromController()
         }
     }
 
@@ -72,4 +78,3 @@ class PipBroadcastReceiverManager(
         const val REQUEST_REWIND = 104
     }
 }
-

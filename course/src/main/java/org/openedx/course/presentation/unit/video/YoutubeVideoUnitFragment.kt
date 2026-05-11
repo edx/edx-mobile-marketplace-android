@@ -1,10 +1,22 @@
+@file:SuppressLint("UnsafeOptInUsageError")
+@file:androidx.media3.common.util.UnstableApi
+
 package org.openedx.course.presentation.unit.video
 
+import android.annotation.SuppressLint
+import android.app.PictureInPictureParams
+import android.app.PendingIntent
+import android.app.RemoteAction
+import android.content.Intent
+import android.graphics.Rect
+import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.Bundle
+import android.util.Rational
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.OptIn
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -12,6 +24,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.media3.common.util.UnstableApi
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
@@ -36,11 +49,27 @@ import org.openedx.course.databinding.FragmentYoutubeVideoUnitBinding
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
+import org.openedx.course.data.repository.PipBroadcastReceiverManager
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_FORWARD
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_PAUSE
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_PLAY
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_REWIND
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_FORWARD
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_PAUSE
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_PLAY
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_REWIND
+import org.openedx.course.data.repository.player.YouTubePlayerController
+import org.openedx.course.domain.interactor.model.PipPlayerType
+import org.openedx.course.presentation.videos.SharedViewModel
 import kotlin.getValue
 import android.content.pm.ActivityInfo
+import androidx.core.view.isGone
 
 
+@UnstableApi
 class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) {
+
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     private val viewModel by viewModel<VideoUnitViewModel> {
         parametersOf(
@@ -50,6 +79,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     }
     private val router by inject<CourseRouter>()
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
+    private val pipViewModel by viewModel<PipViewModel>()
+    private val pipReceiverManager by inject<PipBroadcastReceiverManager>()
 
     private var _binding: FragmentYoutubeVideoUnitBinding? = null
     private val binding get() = _binding!!
@@ -60,6 +91,19 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     private var blockId = ""
 
     private var isPlayerInitialized = false
+    private var isPipPlayerRegistered = false
+    private var isEnteringPip = false
+
+    private var originalCardMargins: Rect? = null
+    private var originalCardWidth: Int? = null
+    private var originalCardHeight: Int? = null
+    private var originalCardTopToTop: Int? = null
+    private var originalCardTopToBottom: Int? = null
+    private var originalCardBottomToBottom: Int? = null
+    private var originalCardBottomToTop: Int? = null
+    private var originalCardStartToStart: Int? = null
+    private var originalCardEndToEnd: Int? = null
+    private var originalCardCornerRadius: Float? = null
 
     private val youtubeTrackerListener = YouTubePlayerTracker()
 
@@ -96,12 +140,16 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         if (viewModel.isPlaying) {
             _youTubePlayer?.play()
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !requireActivity().isInPictureInPictureMode) {
+            setContainerChromeVisible(true)
+        }
 
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
 
 
     }
 
+    @UnstableApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -153,7 +201,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                         }
                     },
                     onSettingsClick = {
-                        _youTubePlayer?.pause()
                         val dialog =
                             SelectBottomDialogFragment.newInstance(
                                 LocaleUtils.getLanguages(viewModel.transcripts.keys.toList())
@@ -169,6 +216,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         binding.connectionError.isVisible = !viewModel.hasInternetConnection
 
+        binding.pipBtn?.isVisible = true
         binding.pipBtn?.setOnClickListener {
             enablePipMode()
         }
@@ -217,20 +265,21 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
                 when (state) {
                     PlayerConstants.PlayerState.PLAYING -> {
-                        PipPlayerController.isPlaying = true
-                        PipPlayerController.isEnded = false
+                        pipViewModel.updatePlaybackState(isPlaying = true, isEnded = false)
                         viewModel.isPlaying = true
+                        updatePictureInPictureActions(true)
                     }
 
                     PlayerConstants.PlayerState.PAUSED -> {
-                        PipPlayerController.isPlaying = false
+                        pipViewModel.updatePlaybackState(isPlaying = false)
                         viewModel.isPlaying = false
+                        updatePictureInPictureActions(false)
                     }
 
                     PlayerConstants.PlayerState.ENDED -> {
-                        PipPlayerController.isPlaying = false
-                        PipPlayerController.isEnded = true
+                        pipViewModel.updatePlaybackState(isPlaying = false, isEnded = true)
                         viewModel.isPlaying = false
+                        updatePictureInPictureActions(false)
 
                     }
 
@@ -243,7 +292,14 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 super.onReady(youTubePlayer)
 
                 _youTubePlayer = youTubePlayer
-                PipPlayerController.player = youTubePlayer
+
+                if (!isPipPlayerRegistered) {
+                    pipViewModel.registerPlayer(
+                        controller = YouTubePlayerController(youTubePlayer, youtubeTrackerListener),
+                        playerType = PipPlayerType.YOUTUBE,
+                    )
+                    isPipPlayerRegistered = true
+                }
 
 
                 if (_playerUiController == null) {
@@ -315,11 +371,43 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
     override fun onPause() {
         super.onPause()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && (isEnteringPip || requireActivity().isInPictureInPictureMode) && viewModel.isPlaying) {
+            binding.youtubePlayerView.post {
+                _youTubePlayer?.play()
+            }
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        isEnteringPip = false
+        updateUiForPipMode(isInPictureInPictureMode)
+        if (!isInPictureInPictureMode) {
+            setContainerChromeVisible(true)
+            pipViewModel.exitPipMode()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && requireActivity().isInPictureInPictureMode) {
+            return
+        }
+        pipReceiverManager.unregister()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        pipReceiverManager.register()
     }
 
     override fun onDestroyView() {
         isPlayerInitialized = false
+        isEnteringPip = false
+        setContainerChromeVisible(true)
         _youTubePlayer = null
+        pipViewModel.unregisterPlayer()
+        isPipPlayerRegistered = false
         super.onDestroyView()
         _binding = null
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -352,9 +440,163 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         }
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     private fun enablePipMode() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
+        binding.cardView.isVisible = true
+        binding.youtubePlayerView.isVisible = true
+        binding.connectionError.isVisible = false
+        _playerUiController?.rootView?.isGone = true
+        _youTubePlayer?.play()
+        pipViewModel.updatePlaybackState(isPlaying = true, isEnded = false)
+
+        setContainerChromeVisible(false)
+        pipViewModel.enterPipMode()
+        updateUiForPipMode(true)
+        isEnteringPip = true
+
+        // Wait one frame so Android captures the player-focused UI in PiP.
+        binding.cardView.post {
+            val sourceRectHint = getPipSourceRect(binding.youtubePlayerView)
+            val params = PictureInPictureParams.Builder().apply {
+                setAspectRatio(Rational(16, 9))
+                sourceRectHint?.let { setSourceRectHint(it) }
+                setActions(buildPipActions(viewModel.isPlaying))
+            }.build()
+            requireActivity().setPictureInPictureParams(params)
+            val entered = requireActivity().enterPictureInPictureMode(params)
+            if (!entered) {
+                isEnteringPip = false
+                setContainerChromeVisible(true)
+                updateUiForPipMode(false)
+                pipViewModel.exitPipMode()
+                return@post
+            }
+
+            // Some devices pause YouTube playback during PiP transition.
+            _youTubePlayer?.play()
+            pipViewModel.updatePlaybackState(isPlaying = true, isEnded = false)
+        }
+    }
+
+    private fun updateUiForPipMode(isInPip: Boolean) {
+        updatePlayerContainerForPipMode(isInPip)
+        binding.cardView.isVisible = true
+        binding.youtubePlayerView.isVisible = true
+        _playerUiController?.rootView?.isVisible = !isInPip
+        binding.cvVideoTitle?.isGone = isInPip
+        binding.subtitles.isGone = isInPip
+        binding.pipBtn.isGone = isInPip
+        binding.connectionError.isVisible = !isInPip && !viewModel.hasInternetConnection
+    }
+
+
+    private fun getPipSourceRect(anchor: View): Rect? {
+        val rect = Rect()
+        return rect.takeIf { anchor.getGlobalVisibleRect(it) }
+    }
+
+    private fun updatePlayerContainerForPipMode(isInPip: Boolean) {
+        val layoutParams = binding.cardView.layoutParams as? ConstraintLayout.LayoutParams ?: return
+        if (originalCardMargins == null) {
+            originalCardMargins = Rect(
+                layoutParams.leftMargin,
+                layoutParams.topMargin,
+                layoutParams.rightMargin,
+                layoutParams.bottomMargin,
+            )
+        }
+        if (originalCardCornerRadius == null) {
+            originalCardCornerRadius = binding.cardView.radius
+        }
+        if (originalCardWidth == null) {
+            originalCardWidth = layoutParams.width
+            originalCardHeight = layoutParams.height
+            originalCardTopToTop = layoutParams.topToTop
+            originalCardTopToBottom = layoutParams.topToBottom
+            originalCardBottomToBottom = layoutParams.bottomToBottom
+            originalCardBottomToTop = layoutParams.bottomToTop
+            originalCardStartToStart = layoutParams.startToStart
+            originalCardEndToEnd = layoutParams.endToEnd
+        }
+
+        val originalMargins = originalCardMargins ?: return
+        layoutParams.leftMargin = if (isInPip) 0 else originalMargins.left
+        layoutParams.topMargin = if (isInPip) 0 else originalMargins.top
+        layoutParams.rightMargin = if (isInPip) 0 else originalMargins.right
+        layoutParams.bottomMargin = if (isInPip) 0 else originalMargins.bottom
+        layoutParams.width = if (isInPip) ViewGroup.LayoutParams.MATCH_PARENT else (originalCardWidth ?: layoutParams.width)
+        layoutParams.height = if (isInPip) ViewGroup.LayoutParams.MATCH_PARENT else (originalCardHeight ?: layoutParams.height)
+        layoutParams.topToTop = if (isInPip) ConstraintLayout.LayoutParams.PARENT_ID else (originalCardTopToTop ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.topToBottom = if (isInPip) ConstraintLayout.LayoutParams.UNSET else (originalCardTopToBottom ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.bottomToBottom = if (isInPip) ConstraintLayout.LayoutParams.PARENT_ID else (originalCardBottomToBottom ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.bottomToTop = if (isInPip) ConstraintLayout.LayoutParams.UNSET else (originalCardBottomToTop ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.startToStart = if (isInPip) ConstraintLayout.LayoutParams.PARENT_ID else (originalCardStartToStart ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.endToEnd = if (isInPip) ConstraintLayout.LayoutParams.PARENT_ID else (originalCardEndToEnd ?: ConstraintLayout.LayoutParams.UNSET)
+        binding.cardView.layoutParams = layoutParams
+        binding.cardView.radius = if (isInPip) 0f else (originalCardCornerRadius ?: 0f)
+    }
+
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
+    private fun buildPipActions(isPlaying: Boolean): List<RemoteAction> {
+        return listOf(
+            createPipAction(
+                action = ACTION_REWIND,
+                requestCode = REQUEST_REWIND,
+                titleRes = R.string.course_pip_rewind,
+                iconRes = android.R.drawable.ic_media_rew,
+            ),
+            createPipAction(
+                action = if (isPlaying) ACTION_PAUSE else ACTION_PLAY,
+                requestCode = if (isPlaying) REQUEST_PAUSE else REQUEST_PLAY,
+                titleRes = if (isPlaying) R.string.course_pip_pause else R.string.course_pip_play,
+                iconRes = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+            ),
+            createPipAction(
+                action = ACTION_FORWARD,
+                requestCode = REQUEST_FORWARD,
+                titleRes = R.string.course_pip_forward,
+                iconRes = android.R.drawable.ic_media_ff,
+            ),
+        )
+    }
+
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
+    private fun createPipAction(
+        action: String,
+        requestCode: Int,
+        titleRes: Int,
+        iconRes: Int,
+    ): RemoteAction {
+        val pendingIntent = PendingIntent.getBroadcast(
+            requireContext(),
+            requestCode,
+            Intent(action).setPackage(requireContext().packageName),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        return RemoteAction(
+            Icon.createWithResource(requireContext(), iconRes),
+            getString(titleRes),
+            getString(titleRes),
+            pendingIntent,
+        )
+    }
+
+    private fun updatePictureInPictureActions(isPlaying: Boolean) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !requireActivity().isInPictureInPictureMode) return
+        val sourceRectHint = getPipSourceRect(binding.youtubePlayerView)
+        val params = PictureInPictureParams.Builder().apply {
+            setAspectRatio(Rational(16, 9))
+            sourceRectHint?.let { setSourceRectHint(it) }
+            setActions(buildPipActions(isPlaying))
+        }.build()
+        requireActivity().setPictureInPictureParams(params)
+    }
+
+    private fun setContainerChromeVisible(isVisible: Boolean) {
+        sharedViewModel.buttonVisibility.value = isVisible
     }
 
 
@@ -365,6 +607,14 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
 
 }
+
+
+
+
+
+
+
+
 
 
 

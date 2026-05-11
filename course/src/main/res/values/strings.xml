@@ -79,4 +79,8 @@
     <string name="course_error_not_started_title">This course will begin on %s. Come back then to start learning!</string>
     <string name="course_an_error_occurred">An error occurred while loading your course</string>
     <string name="picture_in_picture">Picture-in-picture</string>
+    <string name="course_pip_play">Play</string>
+    <string name="course_pip_pause">Pause</string>
+    <string name="course_pip_rewind">Rewind</string>
+    <string name="course_pip_forward">Forward</string>
 </resources>

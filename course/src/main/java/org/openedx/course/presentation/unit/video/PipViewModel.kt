@@ -24,14 +24,19 @@ class PipViewModel(
     private val _pipEvent = MutableSharedFlow<PipUiEvent>(extraBufferCapacity = 1)
     val pipEvent: SharedFlow<PipUiEvent> = _pipEvent.asSharedFlow()
 
+    private var isPlayerRegistered = false
+
     // --- Player Registration ---
 
     fun registerPlayer(controller: PlayerController, playerType: PipPlayerType) {
         pipInteractor.registerPlayer(controller, playerType)
+        isPlayerRegistered = true
     }
 
     fun unregisterPlayer() {
+        if (!isPlayerRegistered) return
         pipInteractor.unregisterPlayer()
+        isPlayerRegistered = false
     }
 
     // --- State Updates ---
@@ -57,6 +62,7 @@ class PipViewModel(
     // --- PiP Actions ---
 
     fun handleAction(action: PipAction) {
+        if (!pipInteractor.hasPlayer()) return
         pipInteractor.handleAction(action)
     }
 
@@ -64,7 +70,7 @@ class PipViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        pipInteractor.unregisterPlayer()
+        unregisterPlayer()
     }
 }
 

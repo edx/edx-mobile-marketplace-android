@@ -233,10 +233,21 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
 
         sharedViewModel.buttonVisibility.observe(viewLifecycleOwner) { visible ->
             binding.btnBack.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.rightControls?.visibility = if (visible) View.VISIBLE else View.GONE
             binding.subSectionUnitsTitle.visibility = if (visible) View.VISIBLE else View.GONE
             binding.horizontalProgress.visibility = if (visible) View.VISIBLE else View.GONE
             binding.cvNavigationBar.visibility = if (visible) View.VISIBLE else View.GONE
             binding.cvCount.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.topCvNavigationBar?.visibility = if (visible &&
+                resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            ) View.VISIBLE else View.GONE
+            binding.mediaRouteButton.isVisible = visible &&
+                    viewModel.getCurrentBlock().type == BlockType.VIDEO &&
+                    viewModel.getCurrentBlock().studentViewData?.encodedVideos?.hasNonYoutubeVideo == true
+            if (!visible) {
+                binding.subSectionUnitsBg.visibility = View.GONE
+                binding.subSectionUnitsList.visibility = View.GONE
+            }
 
             val containerParams =
                 binding.viewPager.layoutParams as ConstraintLayout.LayoutParams

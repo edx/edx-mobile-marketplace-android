@@ -29,24 +29,27 @@ class PipInteractor(
     }
 
     /** Handle a PiP remote action. */
-fun handleAction(action: PipAction) {
-    when (action) {
-        is PipAction.Play -> {
-            repository.controller?.play()
-            repository.updatePlaybackState(isPlaying = true, isEnded = false)
+    fun handleAction(action: PipAction) {
+        when (action) {
+            is PipAction.Play -> {
+                repository.controller?.play()
+                repository.updatePlaybackState(isPlaying = true, isEnded = false)
+            }
+
+            is PipAction.Pause -> {
+                repository.controller?.pause()
+                repository.updatePlaybackState(isPlaying = false)
+            }
+
+            is PipAction.SeekForward -> repository.controller?.seekForward()
+            is PipAction.SeekBackward -> repository.controller?.seekBackward()
+            is PipAction.Replay -> {
+                repository.controller?.restart()
+                repository.updatePlaybackState(isPlaying = true, isEnded = false)
+            }
         }
-        is PipAction.Pause -> {
-            repository.controller?.pause()
-            repository.updatePlaybackState(isPlaying = false)
-        }
-        is PipAction.SeekForward -> repository.controller?.seekForward()
-        is PipAction.SeekBackward -> repository.controller?.seekBackward()
-        is PipAction.Replay -> {
-            repository.controller?.restart()
-            repository.updatePlaybackState(isPlaying = true, isEnded = false)
-        }
+        repository.syncFromController()
     }
-}
 
     /** Check if a player is currently registered. */
     fun hasPlayer(): Boolean = repository.controller != null
@@ -55,10 +58,12 @@ fun handleAction(action: PipAction) {
     fun getController(): PlayerController? = repository.controller
 
     fun exitPipMode() {
-
+        repository.updatePipMode(false)
+        repository.syncFromController()
     }
 
     fun enterPipMode() {
-
+        repository.updatePipMode(true)
+        repository.syncFromController()
     }
 }

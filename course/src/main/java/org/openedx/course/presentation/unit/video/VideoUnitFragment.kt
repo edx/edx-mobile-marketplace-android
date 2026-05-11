@@ -1,18 +1,26 @@
 package org.openedx.course.presentation.unit.video
 
 import android.app.PictureInPictureParams
+import android.app.PendingIntent
+import android.app.RemoteAction
+import android.content.Intent
+import android.graphics.Rect
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
-import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.os.bundleOf
+import androidx.core.view.isGone
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -44,7 +52,21 @@ import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
 import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
 import org.openedx.course.presentation.videos.SharedViewModel
+import org.openedx.course.data.repository.PipBroadcastReceiverManager
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_FORWARD
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_PAUSE
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_PLAY
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_REWIND
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_FORWARD
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_PAUSE
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_PLAY
+import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_REWIND
+import org.openedx.course.data.repository.player.ExoPlayerController
+import org.openedx.course.domain.interactor.model.PipPlayerType
+import kotlin.math.max
+import kotlin.math.min
 
+@UnstableApi
 class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private var pictureInPictureParamsBuilder: PictureInPictureParams.Builder? = null
     private val sharedViewModel: SharedViewModel by activityViewModels()
@@ -59,12 +81,28 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         )
     }
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
+    private val pipViewModel by viewModel<PipViewModel>()
+    private val pipReceiverManager by inject<PipBroadcastReceiverManager>()
 
     private var windowSize: WindowSize? = null
 
     private var lastPlayState: Boolean? = null
 
     private var isRegistered = false
+    private var isPipPlayerRegistered = false
+    private var isEnteringPip = false
+
+    private var originalCardMargins: Rect? = null
+    private var originalCardCornerRadius: Float? = null
+    private var originalResizeMode: Int? = null
+    private var originalCardWidth: Int? = null
+    private var originalCardHeight: Int? = null
+    private var originalCardTopToTop: Int? = null
+    private var originalCardTopToBottom: Int? = null
+    private var originalCardBottomToBottom: Int? = null
+    private var originalCardBottomToTop: Int? = null
+    private var originalCardStartToStart: Int? = null
+    private var originalCardEndToEnd: Int? = null
 
 
     private var lastVideoAspectRatio: Rational? = null
@@ -87,7 +125,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -138,10 +176,12 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
 
         setupMediaSession()
+        viewModel.exoPlayer?.let { initializePipSystem(it) }
 
         binding.connectionError.isVisible =
             !viewModel.hasInternetConnection && !viewModel.isDownloaded
-        binding.pipBtn?.setOnClickListener {
+        binding.pipBtn.setOnClickListener {
+            enablePipMode()
         }
 
         binding.playerView.resizeMode =
@@ -164,7 +204,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
 
             override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
-
+                if (videoSize.width > 0 && videoSize.height > 0) {
+                    lastVideoAspectRatio = Rational(videoSize.width, videoSize.height)
+                }
             }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -174,6 +216,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     if (lastPlayState == null || lastPlayState != isPlaying) {
                         lastPlayState = isPlaying
                     }
+                    updatePictureInPictureActions(isPlaying)
                 }
             }
 
@@ -224,7 +267,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         enableLongPressDoubleSpeed()
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     private fun updatePlayerType(player: Player?) {
         with(binding.playerView) {
             this.player = null
@@ -242,11 +285,17 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onResume() {
         super.onResume()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !requireActivity().isInPictureInPictureMode) {
+            setContainerChromeVisible(true)
+        }
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onPause() {
         super.onPause()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isEnteringPip) {
+            viewModel.exoPlayer?.playWhenReady = true
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!requireActivity().isInPictureInPictureMode) {
                 requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -257,10 +306,24 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     }
 
     @UnstableApi
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        isEnteringPip = false
+        updateUiForPipMode(isInPictureInPictureMode)
+        if (!isInPictureInPictureMode) {
+            setContainerChromeVisible(true)
+            pipViewModel.exitPipMode()
+        }
+    }
+
+    @UnstableApi
     override fun onDestroy() {
+        setContainerChromeVisible(true)
         if (!requireActivity().isChangingConfigurations) {
             viewModel.releasePlayers()
         }
+        pipViewModel.unregisterPlayer()
+        isPipPlayerRegistered = false
         mediaSession?.release()
         mediaSession = null
         super.onDestroy()
@@ -336,15 +399,20 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onStop() {
         super.onStop()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && requireActivity().isInPictureInPictureMode) {
+            return
+        }
+        pipReceiverManager.unregister()
 
     }
 
     override fun onStart() {
         super.onStart()
+        pipReceiverManager.register()
 
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     private fun setupMediaSession() {
         mediaSession = MediaSession.Builder(requireContext(), viewModel.exoPlayer!!).build()
 
@@ -358,27 +426,208 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 
-    private fun seekBy(millis: Long) {
-        viewModel.exoPlayer?.let {
-            val position = it.currentPosition + millis
-            it.seekTo(position.coerceAtLeast(0))
+    private fun initializePipSystem(player: androidx.media3.exoplayer.ExoPlayer) {
+        if (isPipPlayerRegistered) return
+        pipViewModel.registerPlayer(
+            controller = ExoPlayerController(player),
+            playerType = PipPlayerType.EXOPLAYER,
+        )
+        isPipPlayerRegistered = true
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun buildPipParams(isPlaying: Boolean): PictureInPictureParams {
+        val aspectRatio = getPipAspectRatioForVideo()
+        val sourceRectHint = getPipSourceRect(binding.playerView)
+        return PictureInPictureParams.Builder().apply {
+            setAspectRatio(aspectRatio)
+            sourceRectHint?.let(::setSourceRectHint)
+            setActions(buildPipActions(isPlaying))
+        }.build()
+    }
+
+    @UnstableApi
+    private fun enablePipMode() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+
+        viewModel.exoPlayer?.let { player ->
+            if (!player.isPlaying) {
+                if (player.playbackState == Player.STATE_IDLE) {
+                    player.prepare()
+                }
+                player.playWhenReady = true
+                player.play()
+            }
+            pipViewModel.updatePlaybackState(isPlaying = true, isEnded = false)
+        }
+
+        setContainerChromeVisible(false)
+        pipViewModel.enterPipMode()
+        updateUiForPipMode(true)
+        binding.playerView.hideController()
+        isEnteringPip = true
+
+        // Wait one frame so Android captures the player-focused UI in PiP.
+        binding.cardView.post {
+            val params = buildPipParams(viewModel.exoPlayer?.isPlaying == true)
+            requireActivity().setPictureInPictureParams(params)
+            val entered = requireActivity().enterPictureInPictureMode(params)
+            if (!entered) {
+                isEnteringPip = false
+                setContainerChromeVisible(true)
+                updateUiForPipMode(false)
+                pipViewModel.exitPipMode()
+                return@post
+            }
+
+            // Some devices pause/idle right after entering PiP; force resume.
+            viewModel.exoPlayer?.apply {
+                if (!isPlaying) {
+                    if (playbackState == Player.STATE_IDLE) prepare()
+                    playWhenReady = true
+                    play()
+                }
+            }
         }
     }
 
+    @UnstableApi
+    private fun updateUiForPipMode(isInPip: Boolean) {
+        updatePlayerContainerForPipMode(isInPip)
+        binding.cardView.isVisible = true
+        binding.playerView.isVisible = true
+        binding.cvVideoTitle?.isGone = isInPip
+        binding.subtitles.isGone = isInPip
+        binding.pipBtn.isGone = isInPip
+        binding.connectionError.isVisible = !isInPip && !viewModel.hasInternetConnection && !viewModel.isDownloaded
+        binding.doubleSpeedBadge.isVisible = false
+        binding.playerView.useController = !isInPip
+        binding.playerView.controllerAutoShow = !isInPip
+        if (isInPip) {
+            binding.playerView.hideController()
+        } else {
+            binding.playerView.showController()
+        }
+    }
 
+    private fun getPipSourceRect(anchor: View): Rect? {
+        val rect = Rect()
+        return rect.takeIf { anchor.getGlobalVisibleRect(it) }
+    }
 
+    private fun getPipAspectRatioForVideo(): Rational {
+        val ratio = lastVideoAspectRatio ?: Rational(16, 9)
+        val numerator = ratio.numerator
+        val denominator = ratio.denominator
+        if (numerator <= 0 || denominator <= 0) return Rational(16, 9)
 
+        // Keep PiP landscape-oriented to avoid tiny portrait-like PiP windows.
+        val width = max(numerator, denominator)
+        val height = min(numerator, denominator)
+        return Rational(width, height)
+    }
 
+    private fun updatePlayerContainerForPipMode(isInPip: Boolean) {
+        val layoutParams = binding.cardView.layoutParams as? ConstraintLayout.LayoutParams ?: return
+        if (originalCardMargins == null) {
+            originalCardMargins = Rect(
+                layoutParams.leftMargin,
+                layoutParams.topMargin,
+                layoutParams.rightMargin,
+                layoutParams.bottomMargin,
+            )
+        }
+        if (originalCardCornerRadius == null) {
+            originalCardCornerRadius = binding.cardView.radius
+        }
+        if (originalResizeMode == null) {
+            originalResizeMode = binding.playerView.resizeMode
+        }
+        if (originalCardWidth == null) {
+            originalCardWidth = layoutParams.width
+            originalCardHeight = layoutParams.height
+            originalCardTopToTop = layoutParams.topToTop
+            originalCardTopToBottom = layoutParams.topToBottom
+            originalCardBottomToBottom = layoutParams.bottomToBottom
+            originalCardBottomToTop = layoutParams.bottomToTop
+            originalCardStartToStart = layoutParams.startToStart
+            originalCardEndToEnd = layoutParams.endToEnd
+        }
 
+        val originalMargins = originalCardMargins ?: return
+        layoutParams.leftMargin = if (isInPip) 0 else originalMargins.left
+        layoutParams.topMargin = if (isInPip) 0 else originalMargins.top
+        layoutParams.rightMargin = if (isInPip) 0 else originalMargins.right
+        layoutParams.bottomMargin = if (isInPip) 0 else originalMargins.bottom
+        layoutParams.width = if (isInPip) ViewGroup.LayoutParams.MATCH_PARENT else (originalCardWidth ?: layoutParams.width)
+        layoutParams.height = if (isInPip) ViewGroup.LayoutParams.MATCH_PARENT else (originalCardHeight ?: layoutParams.height)
+        layoutParams.topToTop = if (isInPip) ConstraintLayout.LayoutParams.PARENT_ID else (originalCardTopToTop ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.topToBottom = if (isInPip) ConstraintLayout.LayoutParams.UNSET else (originalCardTopToBottom ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.bottomToBottom = if (isInPip) ConstraintLayout.LayoutParams.PARENT_ID else (originalCardBottomToBottom ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.bottomToTop = if (isInPip) ConstraintLayout.LayoutParams.UNSET else (originalCardBottomToTop ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.startToStart = if (isInPip) ConstraintLayout.LayoutParams.PARENT_ID else (originalCardStartToStart ?: ConstraintLayout.LayoutParams.UNSET)
+        layoutParams.endToEnd = if (isInPip) ConstraintLayout.LayoutParams.PARENT_ID else (originalCardEndToEnd ?: ConstraintLayout.LayoutParams.UNSET)
+        binding.cardView.layoutParams = layoutParams
+        binding.cardView.radius = if (isInPip) 0f else (originalCardCornerRadius ?: 0f)
+        binding.playerView.resizeMode = if (isInPip) {
+            AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+        } else {
+            originalResizeMode ?: AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
+        }
+    }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun buildPipActions(isPlaying: Boolean): List<RemoteAction> {
+        return listOf(
+            createPipAction(
+                action = ACTION_REWIND,
+                requestCode = REQUEST_REWIND,
+                titleRes = R.string.course_pip_rewind,
+                iconRes = android.R.drawable.ic_media_rew,
+            ),
+            createPipAction(
+                action = if (isPlaying) ACTION_PAUSE else ACTION_PLAY,
+                requestCode = if (isPlaying) REQUEST_PAUSE else REQUEST_PLAY,
+                titleRes = if (isPlaying) R.string.course_pip_pause else R.string.course_pip_play,
+                iconRes = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+            ),
+            createPipAction(
+                action = ACTION_FORWARD,
+                requestCode = REQUEST_FORWARD,
+                titleRes = R.string.course_pip_forward,
+                iconRes = android.R.drawable.ic_media_ff,
+            ),
+        )
+    }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createPipAction(
+        action: String,
+        requestCode: Int,
+        titleRes: Int,
+        iconRes: Int,
+    ): RemoteAction {
+        val pendingIntent = PendingIntent.getBroadcast(
+            requireContext(),
+            requestCode,
+            Intent(action).setPackage(requireContext().packageName),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        return RemoteAction(
+            Icon.createWithResource(requireContext(), iconRes),
+            getString(titleRes),
+            getString(titleRes),
+            pendingIntent,
+        )
+    }
+
+    private fun updatePictureInPictureActions(isPlaying: Boolean) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !requireActivity().isInPictureInPictureMode) return
+        requireActivity().setPictureInPictureParams(buildPipParams(isPlaying))
+    }
+
+    private fun setContainerChromeVisible(isVisible: Boolean) {
+        sharedViewModel.buttonVisibility.value = isVisible
+    }
 }
-
-
-
-
-
-
-
-
-

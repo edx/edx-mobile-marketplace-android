@@ -17,6 +17,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -63,6 +64,7 @@ import org.openedx.course.domain.interactor.model.PipPlayerType
 import org.openedx.course.presentation.videos.SharedViewModel
 import kotlin.getValue
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import androidx.core.view.isGone
 
 
@@ -133,6 +135,53 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     ): View {
         _binding = FragmentYoutubeVideoUnitBinding.inflate(inflater, container, false)
         return binding.root
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (isPipUiActive()) {
+            updateUiForPipMode(true)
+            return
+        }
+        val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
+        applyOrientationLayout(isLandscape)
+    }
+
+    /**
+     * Since the Activity uses android:configChanges="orientation|screenSize|...",
+     * it never recreates on rotation — so layout-land qualifiers are NEVER
+     * auto-applied by Android. We must manually re-apply the correct constraints
+     * on every orientation change using ConstraintSet.
+     *
+     * ConstraintSet.clone(context, R.layout.fragment_youtube_video_unit) will
+     * automatically pick the layout-land variant when called from a landscape
+     * configuration, because at the time onConfigurationChanged fires, the
+     * context/resources already reflect the NEW orientation.
+     */
+    private fun applyOrientationLayout(isLandscape: Boolean) {
+        val rootLayout = view?.findViewById<ConstraintLayout>(R.id.rootLayout) ?: return
+
+        // Load the constraint set from the correct qualifier variant
+        // (layout vs layout-land) based on the CURRENT (already-updated) config
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(requireContext(), R.layout.fragment_youtube_video_unit)
+        constraintSet.applyTo(rootLayout)
+
+        if (isLandscape) {
+            // cv_video_title is absent from layout-land; hide it explicitly
+            binding.cvVideoTitle?.visibility = View.GONE
+            // PIP is not available in landscape
+            binding.pipBtn?.visibility = View.GONE
+        } else {
+            binding.cvVideoTitle?.visibility = View.VISIBLE
+            // PIP is available in portrait; show it (actual enable check happens elsewhere)
+            binding.pipBtn?.visibility = View.VISIBLE
+        }
+    }
+
+    private fun isPipUiActive(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            (isEnteringPip || requireActivity().isInPictureInPictureMode)
     }
 
     override fun onResume() {
@@ -216,10 +265,14 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         binding.connectionError.isVisible = !viewModel.hasInternetConnection
 
-        binding.pipBtn?.isVisible = true
         binding.pipBtn?.setOnClickListener {
             enablePipMode()
         }
+
+        // Apply the correct layout constraints for the current orientation
+        // (portrait vs landscape). This covers initial creation in any orientation.
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        applyOrientationLayout(isLandscape)
 
         val options = IFramePlayerOptions.Builder(requireActivity())
             .controls(0)
@@ -383,6 +436,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         isEnteringPip = false
         updateUiForPipMode(isInPictureInPictureMode)
         if (!isInPictureInPictureMode) {
+            val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            applyOrientationLayout(isLandscape)
             setContainerChromeVisible(true)
             pipViewModel.exitPipMode()
         }

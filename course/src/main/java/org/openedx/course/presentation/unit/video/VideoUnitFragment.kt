@@ -20,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.os.bundleOf
 import androidx.core.view.isGone
-import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -53,14 +52,6 @@ import org.openedx.course.presentation.ui.VideoTitle
 import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
 import org.openedx.course.presentation.videos.SharedViewModel
 import org.openedx.course.data.repository.PipBroadcastReceiverManager
-import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_FORWARD
-import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_PAUSE
-import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_PLAY
-import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.ACTION_REWIND
-import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_FORWARD
-import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_PAUSE
-import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_PLAY
-import org.openedx.course.data.repository.PipBroadcastReceiverManager.Companion.REQUEST_REWIND
 import org.openedx.course.data.repository.player.ExoPlayerController
 import org.openedx.course.domain.interactor.model.PipPlayerType
 import kotlin.math.max

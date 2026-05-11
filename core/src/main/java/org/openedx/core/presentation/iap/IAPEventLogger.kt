@@ -204,9 +204,9 @@ class IAPEventLogger(
             ?.let { iapPreferences?.getPreviewCount(it) } ?: 0
         logIAPEvent(IAPAnalyticsEvent.IAP_CERT_PREVIEW_PURCHASED, buildMap {
             put(IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key, "true")
-            put(IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key, previewCount.toString())
+            put(IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key, previewCount)
             put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
-            put(IAPAnalyticsKeys.LMS_USD_PRICE.key, price.toString())
+            put(IAPAnalyticsKeys.LMS_USD_PRICE.key, price)
         })
         courseId?.takeIf { it.isNotEmpty() }?.let {
             iapPreferences?.clearPreviewCount(it)

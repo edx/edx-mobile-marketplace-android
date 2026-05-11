@@ -1,6 +1,7 @@
 package org.openedx.course.presentation.unit.container
 
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.LayoutInflater
@@ -19,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.bundleOf
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
@@ -540,35 +542,66 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
 
         if (_binding == null || !isAdded) return
 
-        val isLandscape =
-            resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        // While in PIP mode the buttonVisibility observer governs visibility —
+        // applying a ConstraintSet here would reset views back to VISIBLE.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            requireActivity().isInPictureInPictureMode
+        ) return
 
-        fun Int.dpToPx(): Int {
-            return (this * resources.displayMetrics.density).toInt()
+        val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
+
+        // ── 1. Re-apply the root ConstraintSet from the correct qualifier variant.
+        //       Deferred with post{} so it never runs inside an in-progress layout
+        //       pass (which would throw "requestLayout() improperly called").
+        binding.root.post {
+            if (_binding == null) return@post
+            try {
+                val rootConstraintSet = ConstraintSet()
+                rootConstraintSet.clone(requireContext(), R.layout.fragment_course_unit_container)
+                rootConstraintSet.applyTo(binding.root)
+            } catch (_: Exception) {
+                // Silently ignore: layout may be detached during transition
+            }
         }
 
-        (binding.mediaRouteButton.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
-            it.marginEnd = if (isLandscape) 40.dpToPx() else 20.dpToPx()
-            it.topMargin = if (isLandscape) 20.dpToPx() else 15.dpToPx()
-
-            binding.mediaRouteButton.layoutParams = it
+        // ── 2. Fix viewPager margins immediately (safe — just LayoutParams, no layout pass).
+        //       viewPager lives inside a nested ConstraintLayout not covered by applyTo(root).
+        //       In landscape it has 48 dp side margins; clear them in portrait.
+        (binding.viewPager.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+            if (isLandscape) {
+                params.marginStart = 48.dpToPx()
+                params.marginEnd   = 48.dpToPx()
+                params.topMargin   = 8.dpToPx()
+            } else {
+                params.marginStart = 0
+                params.marginEnd   = 0
+                params.topMargin   = 0
+            }
+            binding.viewPager.layoutParams = params
         }
-        (binding.topCvNavigationBar?.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
-            it.topMargin = if (isLandscape) 10.dpToPx() else 0.dpToPx()
 
-            binding.topCvNavigationBar?.layoutParams = it
+        // ── 3. Adjust mediaRouteButton / topCvNavigationBar margins per orientation.
+        (binding.mediaRouteButton.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+            params.marginEnd = if (isLandscape) 40.dpToPx() else 20.dpToPx()
+            params.topMargin = if (isLandscape) 20.dpToPx() else 15.dpToPx()
+            binding.mediaRouteButton.layoutParams = params
         }
-
+        (binding.topCvNavigationBar?.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+            params.topMargin = if (isLandscape) 10.dpToPx() else 0.dpToPx()
+            binding.topCvNavigationBar?.layoutParams = params
+        }
 
         if (_binding == null) return
 
+        // ── 4. Toggle nav-bar placement: landscape → top-right, portrait → bottom.
         if (binding.topCvNavigationBar != null) {
             binding.topCvNavigationBar?.visibility =
                 if (isLandscape) View.VISIBLE else View.GONE
             binding.cvNavigationBar?.visibility =
                 if (isLandscape) View.GONE else View.VISIBLE
         } else {
-            // Fallback: ensure at least one navigation bar remains visible
             binding.cvNavigationBar?.visibility = View.VISIBLE
         }
     }

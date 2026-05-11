@@ -275,18 +275,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             return
         }
         val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
-        applyOrientationLayout(isLandscape)
+        view?.post { applyOrientationLayout(isLandscape) }
     }
 
-    /**
-     * Since the Activity uses android:configChanges="orientation|screenSize|...",
-     * it never recreates on rotation — layout-land qualifiers are NEVER auto-applied
-     * by Android after the initial inflate. We must manually re-apply the correct
-     * ConstraintSet on every orientation change.
-     *
-     * ConstraintSet.clone(context, R.layout.fragment_video_unit) will automatically
-     * pick the layout-land variant when the context already reflects the new orientation.
-     */
     private fun applyOrientationLayout(isLandscape: Boolean) {
         val rootLayout = view?.findViewById<ConstraintLayout>(R.id.rootLayout) ?: return
         val constraintSet = ConstraintSet()
@@ -377,6 +368,20 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             (isEnteringPip || requireActivity().isInPictureInPictureMode)
     }
 
+    private fun clearSavedCardState() {
+        originalCardMargins = null
+        originalCardCornerRadius = null
+        originalResizeMode = null
+        originalCardWidth = null
+        originalCardHeight = null
+        originalCardTopToTop = null
+        originalCardTopToBottom = null
+        originalCardBottomToBottom = null
+        originalCardBottomToTop = null
+        originalCardStartToStart = null
+        originalCardEndToEnd = null
+    }
+
     private fun dpToPx(dp: Int): Int {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
@@ -429,6 +434,15 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         isEnteringPip = false
         updateUiForPipMode(isInPictureInPictureMode)
         if (!isInPictureInPictureMode) {
+            // Defer layout restoration until after the PIP exit transition is
+            // complete so we never call ConstraintSet.applyTo() during a live
+            // layout pass (which throws "requestLayout() improperly called").
+            view?.post {
+                clearSavedCardState()
+                val isLandscape =
+                    resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+                applyOrientationLayout(isLandscape)
+            }
             setContainerChromeVisible(true)
             pipViewModel.exitPipMode()
         }
@@ -437,7 +451,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @UnstableApi
     override fun onDestroy() {
         setContainerChromeVisible(true)
-        if (!requireActivity().isChangingConfigurations) {
+        if (isAdded && !requireActivity().isChangingConfigurations) {
             viewModel.releasePlayers()
         }
         pipViewModel.unregisterPlayer()

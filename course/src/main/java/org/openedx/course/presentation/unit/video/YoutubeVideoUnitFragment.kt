@@ -145,14 +145,12 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             return
         }
         val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
-        applyOrientationLayout(isLandscape)
+        view?.post { applyOrientationLayout(isLandscape) }
     }
 
     private fun applyOrientationLayout(isLandscape: Boolean) {
         val rootLayout = view?.findViewById<ConstraintLayout>(R.id.rootLayout) ?: return
 
-        // Load the constraint set from the correct qualifier variant
-        // (layout vs layout-land) based on the CURRENT (already-updated) config
         val constraintSet = ConstraintSet()
         constraintSet.clone(requireContext(), R.layout.fragment_youtube_video_unit)
         constraintSet.applyTo(rootLayout)
@@ -498,8 +496,15 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         isEnteringPip = false
         updateUiForPipMode(isInPictureInPictureMode)
         if (!isInPictureInPictureMode) {
-            val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-            applyOrientationLayout(isLandscape)
+            // Defer layout restoration until after the PIP exit transition is
+            // complete so ConstraintSet.applyTo() is never called during a
+            // live layout pass (which throws "requestLayout() improperly called").
+            view?.post {
+                clearSavedCardState()
+                val isLandscape =
+                    resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+                applyOrientationLayout(isLandscape)
+            }
             setContainerChromeVisible(true)
             pipViewModel.exitPipMode()
         }
@@ -714,6 +719,22 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
     private fun setContainerChromeVisible(isVisible: Boolean) {
         sharedViewModel.buttonVisibility.value = isVisible
+    }
+
+    /** Clears the original card state saved before entering PIP so the next
+     *  orientation layout re-captures fresh values from the correct orientation.
+     */
+    private fun clearSavedCardState() {
+        originalCardMargins = null
+        originalCardCornerRadius = null
+        originalCardWidth = null
+        originalCardHeight = null
+        originalCardTopToTop = null
+        originalCardTopToBottom = null
+        originalCardBottomToBottom = null
+        originalCardBottomToTop = null
+        originalCardStartToStart = null
+        originalCardEndToEnd = null
     }
 
     private fun dpToPx(dp: Int): Int {

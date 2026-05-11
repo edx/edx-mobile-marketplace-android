@@ -65,6 +65,7 @@ import org.openedx.course.presentation.videos.SharedViewModel
 import kotlin.getValue
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.util.TypedValue
 import androidx.core.view.isGone
 
 
@@ -147,17 +148,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         applyOrientationLayout(isLandscape)
     }
 
-    /**
-     * Since the Activity uses android:configChanges="orientation|screenSize|...",
-     * it never recreates on rotation — so layout-land qualifiers are NEVER
-     * auto-applied by Android. We must manually re-apply the correct constraints
-     * on every orientation change using ConstraintSet.
-     *
-     * ConstraintSet.clone(context, R.layout.fragment_youtube_video_unit) will
-     * automatically pick the layout-land variant when called from a landscape
-     * configuration, because at the time onConfigurationChanged fires, the
-     * context/resources already reflect the NEW orientation.
-     */
     private fun applyOrientationLayout(isLandscape: Boolean) {
         val rootLayout = view?.findViewById<ConstraintLayout>(R.id.rootLayout) ?: return
 
@@ -166,6 +156,78 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         val constraintSet = ConstraintSet()
         constraintSet.clone(requireContext(), R.layout.fragment_youtube_video_unit)
         constraintSet.applyTo(rootLayout)
+
+        val cardLayoutParams = binding.cardView.layoutParams as? ConstraintLayout.LayoutParams
+        if (cardLayoutParams != null) {
+            if (isLandscape) {
+                // Keep intended split layout in landscape.
+                cardLayoutParams.width = 0
+                cardLayoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+                cardLayoutParams.leftMargin = 0
+                cardLayoutParams.topMargin = 0
+                cardLayoutParams.rightMargin = 0
+                cardLayoutParams.bottomMargin = 0
+                cardLayoutParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.topToBottom = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.bottomToTop = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.endToEnd = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.dimensionRatio = null
+                cardLayoutParams.matchConstraintDefaultWidth = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT_PERCENT
+                cardLayoutParams.matchConstraintPercentWidth = 0.6f
+            } else {
+                // Hard reset to portrait full-width constrained behavior.
+                cardLayoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+                cardLayoutParams.height = 0
+                cardLayoutParams.leftMargin = dpToPx(24)
+                cardLayoutParams.topMargin = dpToPx(16)
+                cardLayoutParams.rightMargin = dpToPx(24)
+                cardLayoutParams.bottomMargin = 0
+                cardLayoutParams.topToTop = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.topToBottom = R.id.cv_video_title
+                cardLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.bottomToTop = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.dimensionRatio = "16:9"
+                cardLayoutParams.matchConstraintDefaultWidth = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT_SPREAD
+                cardLayoutParams.matchConstraintPercentWidth = 1f
+            }
+            binding.cardView.layoutParams = cardLayoutParams
+        }
+
+        val subtitlesLayoutParams = binding.subtitles.layoutParams as? ConstraintLayout.LayoutParams
+        if (subtitlesLayoutParams != null) {
+            if (isLandscape) {
+                subtitlesLayoutParams.width = 0
+                subtitlesLayoutParams.height = 0
+                subtitlesLayoutParams.leftMargin = dpToPx(20)
+                subtitlesLayoutParams.topMargin = 0
+                subtitlesLayoutParams.rightMargin = dpToPx(20)
+                subtitlesLayoutParams.bottomMargin = dpToPx(16)
+                subtitlesLayoutParams.startToStart = ConstraintLayout.LayoutParams.UNSET
+                subtitlesLayoutParams.startToEnd = R.id.cardView
+                subtitlesLayoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                subtitlesLayoutParams.topToTop = R.id.cardView
+                subtitlesLayoutParams.topToBottom = ConstraintLayout.LayoutParams.UNSET
+                subtitlesLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            } else {
+                subtitlesLayoutParams.width = 0
+                subtitlesLayoutParams.height = 0
+                subtitlesLayoutParams.leftMargin = dpToPx(24)
+                subtitlesLayoutParams.topMargin = dpToPx(8)
+                subtitlesLayoutParams.rightMargin = dpToPx(24)
+                subtitlesLayoutParams.bottomMargin = dpToPx(64)
+                subtitlesLayoutParams.startToEnd = ConstraintLayout.LayoutParams.UNSET
+                subtitlesLayoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                subtitlesLayoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                subtitlesLayoutParams.topToTop = ConstraintLayout.LayoutParams.UNSET
+                subtitlesLayoutParams.topToBottom = R.id.cardView
+                subtitlesLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            }
+            binding.subtitles.layoutParams = subtitlesLayoutParams
+        }
 
         if (isLandscape) {
             // cv_video_title is absent from layout-land; hide it explicitly
@@ -652,6 +714,14 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
     private fun setContainerChromeVisible(isVisible: Boolean) {
         sharedViewModel.buttonVisibility.value = isVisible
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp.toFloat(),
+            resources.displayMetrics,
+        ).toInt()
     }
 
 

@@ -4,16 +4,19 @@ import android.app.PictureInPictureParams
 import android.app.PendingIntent
 import android.app.RemoteAction
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
+import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -255,7 +258,131 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
         }
 
+        // Apply correct constraints for the orientation at fragment creation time.
+        // This is needed when the app is launched directly in landscape – the
+        // activity never recreates on rotation (configChanges handles it), so
+        // layout-land qualifiers are NOT auto-applied after a rotation.
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        applyOrientationLayout(isLandscape)
+
         enableLongPressDoubleSpeed()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (isPipUiActive()) {
+            updateUiForPipMode(true)
+            return
+        }
+        val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
+        applyOrientationLayout(isLandscape)
+    }
+
+    /**
+     * Since the Activity uses android:configChanges="orientation|screenSize|...",
+     * it never recreates on rotation — layout-land qualifiers are NEVER auto-applied
+     * by Android after the initial inflate. We must manually re-apply the correct
+     * ConstraintSet on every orientation change.
+     *
+     * ConstraintSet.clone(context, R.layout.fragment_video_unit) will automatically
+     * pick the layout-land variant when the context already reflects the new orientation.
+     */
+    private fun applyOrientationLayout(isLandscape: Boolean) {
+        val rootLayout = view?.findViewById<ConstraintLayout>(R.id.rootLayout) ?: return
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(requireContext(), R.layout.fragment_video_unit)
+        constraintSet.applyTo(rootLayout)
+
+        val cardLayoutParams = binding.cardView.layoutParams as? ConstraintLayout.LayoutParams
+        if (cardLayoutParams != null) {
+            if (isLandscape) {
+                // Keep intended split layout in landscape.
+                cardLayoutParams.width = 0
+                cardLayoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+                cardLayoutParams.leftMargin = 0
+                cardLayoutParams.topMargin = 0
+                cardLayoutParams.rightMargin = 0
+                cardLayoutParams.bottomMargin = 0
+                cardLayoutParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.topToBottom = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.bottomToTop = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.endToEnd = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.matchConstraintDefaultWidth = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT_PERCENT
+                cardLayoutParams.matchConstraintPercentWidth = 0.6f
+            } else {
+                // Hard reset to portrait full-width constrained behavior.
+                cardLayoutParams.width = 0
+                cardLayoutParams.height = 0
+                cardLayoutParams.leftMargin = dpToPx(24)
+                cardLayoutParams.topMargin = dpToPx(16)
+                cardLayoutParams.rightMargin = dpToPx(24)
+                cardLayoutParams.bottomMargin = 0
+                cardLayoutParams.topToTop = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.topToBottom = R.id.cv_video_title
+                cardLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.bottomToTop = ConstraintLayout.LayoutParams.UNSET
+                cardLayoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                cardLayoutParams.matchConstraintDefaultWidth = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT_SPREAD
+                cardLayoutParams.matchConstraintPercentWidth = 1f
+            }
+            binding.cardView.layoutParams = cardLayoutParams
+        }
+
+        // Ensure subtitles rebind to cardView after rotation in both directions.
+        val subtitlesLayoutParams = binding.subtitles.layoutParams as? ConstraintLayout.LayoutParams
+        if (subtitlesLayoutParams != null) {
+            if (isLandscape) {
+                subtitlesLayoutParams.width = 0
+                subtitlesLayoutParams.height = 0
+                subtitlesLayoutParams.leftMargin = dpToPx(20)
+                subtitlesLayoutParams.topMargin = 0
+                subtitlesLayoutParams.rightMargin = dpToPx(20)
+                subtitlesLayoutParams.bottomMargin = 0
+                subtitlesLayoutParams.startToStart = ConstraintLayout.LayoutParams.UNSET
+                subtitlesLayoutParams.startToEnd = R.id.cardView
+                subtitlesLayoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                subtitlesLayoutParams.topToTop = R.id.cardView
+                subtitlesLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            } else {
+                subtitlesLayoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+                subtitlesLayoutParams.height = 0
+                subtitlesLayoutParams.leftMargin = dpToPx(24)
+                subtitlesLayoutParams.topMargin = dpToPx(28)
+                subtitlesLayoutParams.rightMargin = dpToPx(24)
+                subtitlesLayoutParams.bottomMargin = dpToPx(4)
+                subtitlesLayoutParams.startToEnd = ConstraintLayout.LayoutParams.UNSET
+                subtitlesLayoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                subtitlesLayoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                subtitlesLayoutParams.topToTop = ConstraintLayout.LayoutParams.UNSET
+                subtitlesLayoutParams.topToBottom = R.id.cardView
+                subtitlesLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            }
+            binding.subtitles.layoutParams = subtitlesLayoutParams
+        }
+
+        if (isLandscape) {
+            binding.cvVideoTitle?.visibility = View.GONE
+            binding.pipBtn.visibility = View.GONE
+        } else {
+            binding.cvVideoTitle?.visibility = View.VISIBLE
+            binding.pipBtn.visibility = View.VISIBLE
+        }
+    }
+
+    private fun isPipUiActive(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            (isEnteringPip || requireActivity().isInPictureInPictureMode)
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp.toFloat(),
+            resources.displayMetrics,
+        ).toInt()
     }
 
     @UnstableApi

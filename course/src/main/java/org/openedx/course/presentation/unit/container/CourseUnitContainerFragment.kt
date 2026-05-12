@@ -238,11 +238,12 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             binding.rightControls?.visibility = if (visible) View.VISIBLE else View.GONE
             binding.subSectionUnitsTitle.visibility = if (visible) View.VISIBLE else View.GONE
             binding.horizontalProgress.visibility = if (visible) View.VISIBLE else View.GONE
-            binding.cvNavigationBar.visibility = if (visible) View.VISIBLE else View.GONE
             binding.cvCount.visibility = if (visible) View.VISIBLE else View.GONE
-            binding.topCvNavigationBar?.visibility = if (visible &&
+
+            val isLandscape =
                 resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-            ) View.VISIBLE else View.GONE
+            updateNavigationBarsVisibility(isVisible = visible, isLandscape = isLandscape)
+
             binding.mediaRouteButton.isVisible = visible &&
                     viewModel.getCurrentBlock().type == BlockType.VIDEO &&
                     viewModel.getCurrentBlock().studentViewData?.encodedVideos?.hasNonYoutubeVideo == true
@@ -558,8 +559,9 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         binding.root.post {
             if (_binding == null) return@post
             try {
+                val configContext = requireContext().createConfigurationContext(newConfig)
                 val rootConstraintSet = ConstraintSet()
-                rootConstraintSet.clone(requireContext(), R.layout.fragment_course_unit_container)
+                rootConstraintSet.clone(configContext, R.layout.fragment_course_unit_container)
                 rootConstraintSet.applyTo(binding.root)
             } catch (_: Exception) {
                 // Silently ignore: layout may be detached during transition
@@ -595,16 +597,25 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
 
         if (_binding == null) return
 
-        // ── 4. Toggle nav-bar placement: landscape → top-right, portrait → bottom.
-        if (binding.topCvNavigationBar != null) {
-            binding.topCvNavigationBar?.visibility =
-                if (isLandscape) View.VISIBLE else View.GONE
-            binding.cvNavigationBar?.visibility =
-                if (isLandscape) View.GONE else View.VISIBLE
-        } else {
-            binding.cvNavigationBar?.visibility = View.VISIBLE
-        }
+        updateNavigationBarsVisibility(
+            isVisible = sharedViewModel.buttonVisibility.value != false,
+            isLandscape = isLandscape,
+        )
     }
 
-}
+    private fun updateNavigationBarsVisibility(isVisible: Boolean, isLandscape: Boolean) {
+        if (!isVisible) {
+            binding.cvNavigationBar.visibility = View.GONE
+            binding.topCvNavigationBar?.visibility = View.GONE
+            return
+        }
 
+        if (isLandscape) {
+            binding.cvNavigationBar.visibility = View.GONE
+            binding.topCvNavigationBar?.visibility = View.VISIBLE
+        } else {
+            binding.cvNavigationBar.visibility = View.VISIBLE
+            binding.topCvNavigationBar?.visibility = View.GONE
+        }
+    }
+}

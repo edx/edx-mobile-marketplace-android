@@ -1,9 +1,5 @@
-@file:SuppressLint("UnsafeOptInUsageError")
-@file:androidx.media3.common.util.UnstableApi
-
 package org.openedx.course.presentation.unit.video
 
-import android.annotation.SuppressLint
 import android.app.AppOpsManager
 import android.app.PictureInPictureParams
 import android.app.PendingIntent
@@ -52,7 +48,6 @@ import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
 import org.openedx.course.databinding.FragmentYoutubeVideoUnitBinding
-import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
 import org.openedx.course.data.repository.PipBroadcastReceiverManager
@@ -83,7 +78,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             requireArguments().getString(ARG_BLOCK_ID, "")
         )
     }
-    private val router by inject<CourseRouter>()
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
     private val pipViewModel by viewModel<PipViewModel>()
     private val pipReceiverManager by inject<PipBroadcastReceiverManager>()
@@ -233,12 +227,10 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         if (isLandscape) {
             // cv_video_title is absent from layout-land; hide it explicitly
             binding.cvVideoTitle?.visibility = View.GONE
-            // PIP is not available in landscape
-            binding.pipBtn?.visibility = View.GONE
+            binding.pipBtn.visibility = View.GONE
         } else {
             binding.cvVideoTitle?.visibility = View.VISIBLE
-            // PIP is available in portrait; show it (actual enable check happens elsewhere)
-            binding.pipBtn?.visibility = View.VISIBLE
+            binding.pipBtn.visibility = View.VISIBLE
         }
         updatePipButtonState(isLandscape)
     }
@@ -362,13 +354,11 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         binding.connectionError.isVisible = !viewModel.hasInternetConnection
 
-        binding.pipBtn?.setOnClickListener {
+        binding.pipBtn.setOnClickListener {
             enablePipMode()
         }
 
-        // Apply the correct layout constraints for the current orientation
-        // (portrait vs landscape). This covers initial creation in any orientation.
-        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+          val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         applyOrientationLayout(isLandscape)
 
         val options = IFramePlayerOptions.Builder(requireActivity())
@@ -407,7 +397,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 youTubePlayer: YouTubePlayer,
                 state: PlayerConstants.PlayerState
             ) {
-                // Ignore when fullscreen fragment is open
                 if (requireActivity()
                         .supportFragmentManager
                         .findFragmentByTag("FullscreenYoutube") != null
@@ -456,7 +445,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                     _playerUiController = DefaultPlayerUiController(binding.youtubePlayerView, youTubePlayer)
                 }
 
-                //  Attach custom UI
                 val controller = _playerUiController ?: return
                 controller.rootView.visibility = View.VISIBLE
                 binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
@@ -467,7 +455,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
                     val videoId = viewModel.videoUrl.substringAfter("watch?v=")
 
-                    // Pause main player exactly once
                     FullscreenYoutubeFragment.newInstance(
                         videoId = videoId,
                         startTime = currentTime
@@ -500,11 +487,9 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             ) {
                 super.onError(youTubePlayer, error)
 
-                //  HIDE ALL YouTube fallback UI when internet drops
                 _playerUiController?.rootView?.visibility = View.GONE
                 binding.youtubePlayerView.visibility = View.INVISIBLE
 
-                //  Show your offline UI
                 binding.connectionError.isVisible = true
 
             }
@@ -533,9 +518,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         isEnteringPip = false
         updateUiForPipMode(isInPictureInPictureMode)
         if (!isInPictureInPictureMode) {
-            // Defer layout restoration until after the PIP exit transition is
-            // complete so ConstraintSet.applyTo() is never called during a
-            // live layout pass (which throws "requestLayout() improperly called").
             view?.post {
                 clearSavedCardState()
                 val isLandscape =
@@ -616,7 +598,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         updateUiForPipMode(true)
         isEnteringPip = true
 
-        // Wait one frame so Android captures the player-focused UI in PiP.
         binding.cardView.post {
             val sourceRectHint = getPipSourceRect(binding.youtubePlayerView)
             val params = PictureInPictureParams.Builder().apply {
@@ -634,7 +615,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 return@post
             }
 
-            // Some devices pause YouTube playback during PiP transition.
             _youTubePlayer?.play()
             pipViewModel.updatePlaybackState(isPlaying = true, isEnded = false)
         }
@@ -759,9 +739,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         sharedViewModel.buttonVisibility.value = isVisible
     }
 
-    /** Clears the original card state saved before entering PIP so the next
-     *  orientation layout re-captures fresh values from the correct orientation.
-     */
     private fun clearSavedCardState() {
         originalCardMargins = null
         originalCardCornerRadius = null
@@ -782,14 +759,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             resources.displayMetrics,
         ).toInt()
     }
-
-
-
-
-
-
-
-
 }
 
 

@@ -85,7 +85,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     private var lastPlayState: Boolean? = null
 
-    private var isRegistered = false
     private var isPipPlayerRegistered = false
     private var isEnteringPip = false
 

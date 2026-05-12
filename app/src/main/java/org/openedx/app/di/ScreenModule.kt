@@ -32,9 +32,13 @@ import org.openedx.course.presentation.unit.html.HtmlUnitViewModel
 import org.openedx.course.presentation.unit.unlockcontent.UnlockContentViewModel
 import org.openedx.course.presentation.unit.video.BaseVideoViewModel
 import org.openedx.course.presentation.unit.video.EncodedVideoUnitViewModel
+import org.openedx.course.presentation.unit.video.PipViewModel
 import org.openedx.course.presentation.unit.video.VideoUnitViewModel
 import org.openedx.course.presentation.unit.video.VideoViewModel
 import org.openedx.course.presentation.videos.CourseVideoViewModel
+import org.openedx.course.data.repository.PipPlayerRepository
+import org.openedx.course.data.repository.PipBroadcastReceiverManager
+import org.openedx.course.domain.interactor.PipInteractor
 import org.openedx.course.settings.download.DownloadQueueViewModel
 import org.openedx.courses.presentation.AllEnrolledCoursesViewModel
 import org.openedx.courses.presentation.DashboardGalleryViewModel
@@ -392,6 +396,17 @@ val screenModule = module {
             courseAnalytics = get(),
         )
     }
+
+    // PiP Architecture - Data Layer
+    single { PipPlayerRepository() }
+    factory { PipBroadcastReceiverManager(get(), get()) }
+
+    // PiP Architecture - Domain Layer
+    factory { PipInteractor(get()) }
+
+    // PiP Architecture - Presentation Layer
+    viewModel { PipViewModel(get()) }
+
     viewModel { (courseId: String, courseTitle: String, enrollmentMode: String) ->
         CourseDatesViewModel(
             courseId,

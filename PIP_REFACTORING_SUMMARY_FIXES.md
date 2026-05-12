@@ -1,6 +1,6 @@
 # PiP Refactoring Summary — Fixes Audit
 
-**Date:** 12 May 2026  
+**Date:** 13 May 2026  
 **Branch:** `sandeepd/Learner-10967`  
 **Repository:** `edx/edx-mobile-marketplace-android`  
 **Source Document:** `PIP_REFACTORING_SUMMARY.md` (v1.0 Executive Summary)
@@ -70,7 +70,7 @@ DATA                                DATA
 | # | File | Changes | Status |
 |---|------|---------|--------|
 | 1 | VideoUnitFragment.kt | `pipViewModel`, `pipReceiverManager`, lifecycle hooks, `pipState` observer, `isPipPermissionGranted`, `onResume` re-check | ✅ |
-| 2 | YoutubeVideoUnitFragment.kt | Same as above + `onStart`/`onStop`, `onDestroyView` cleanup | ✅ |
+| 2 | YoutubeVideoUnitFragment.kt | Same as above + `ytController`, `onStart`/`onStop`, `onDestroyView` cleanup | ✅ |
 | 3 | ScreenModule.kt | 4 DI entries: `single`, `factory`×2, `viewModel` | ✅ |
 
 ## 2 Old Files Deleted — Both Done
@@ -120,6 +120,7 @@ DATA                                DATA
 |----------|--------|
 | `PlayerController` interface | `play`, `pause`, `seekForward`, `seekBackward`, `restart`, `isPlaying`, `isEnded`, etc. |
 | ExoPlayer implements it | `ExoPlayerController` wraps `Player` |
+| YouTube implements it | `YouTubePlayerController` wraps `YouTubePlayer` with manual state tracking |
 | Type-safe operations | All operations go through interface |
 
 ---
@@ -183,12 +184,12 @@ DATA                                DATA
 
 ## Bugs Found & Fixed During Implementation
 
-| # | Bug                                      | Root Cause | Fix |
-|---|------------------------------------------|-----------|-----|
-| 1 | `PlayerType` enum collision              | New enum collided with existing one in same package | Renamed to `PipPlayerType` |
+| # | Bug | Root Cause | Fix |
+|---|-----|-----------|-----|
+| 1 | `PlayerType` enum collision | New enum collided with existing one in same package | Renamed to `PipPlayerType` |
 | 2 | `Cannot create instance of PipViewModel` | `activityViewModels()` bypasses Koin DI | Changed to Koin `viewModel(ownerProducer = ...)` |
-| 3 | PiP buttons not working (Exo Player)     | `onStart()`/`onStop()` missing — receiver never registered | Added lifecycle methods |
-| 4 | PiP buttons not refreshing after tap     | No state observer to trigger `updatePipActions()` | Added `pipState` flow observer |
+| 3 | PiP buttons not working (YouTube) | `onStart()`/`onStop()` missing — receiver never registered | Added lifecycle methods |
+| 4 | PiP buttons not refreshing after tap | No state observer to trigger `updatePipActions()` | Added `pipState` flow observer |
 
 ---
 
@@ -210,4 +211,4 @@ DATA                                DATA
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** 12 May 2026
+**Last Updated:** 13 May 2026

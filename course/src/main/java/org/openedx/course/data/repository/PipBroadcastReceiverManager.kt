@@ -66,7 +66,7 @@ class PipBroadcastReceiverManager(
 
     /**
      * Unregister the broadcast receiver. Safe to call multiple times.
-     *  Should be called in Fragment.onStop() when NOT in PiP mode.
+     * Should be called in Fragment.onStop() when NOT in PiP mode.
      */
     fun unregister() {
         if (!isRegistered) return

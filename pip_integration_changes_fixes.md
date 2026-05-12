@@ -1,6 +1,6 @@
 # PiP Integration Changes — Fixes Audit Summary
 
-**Date:** 12 May 2026  
+**Date:** 13 May 2026  
 **Branch:** `sandeepd/Learner-10967`  
 **Repository:** `edx/edx-mobile-marketplace-android`  
 **Source Document:** `pip_integration_changes.md`
@@ -78,20 +78,20 @@ The `pip_integration_changes.md` document proposed a specific integration patter
 
 ---
 
-## VideoUnitFragment.kt — Proposed vs Actual
+## YoutubeVideoUnitFragment.kt — Proposed vs Actual
 
 ### Same Pattern as VideoUnitFragment ✅
 
-| Aspect | Proposed | Actual                                                                                        | Status |
-|--------|----------|-----------------------------------------------------------------------------------------------|--------|
-| Properties | `pipViewModel`, `pipReceiverManager` | Same + `PlayerController?`                                                                    | ✅ Enhanced |
-| Player Registration | `PlayerController(player)` + `pipViewModel.pipInteractor.registerPlayer(...)` | `PlayerController(player)` + `pipViewModel.registerPlayer(ytController, PipPlayerType.EXO)`   | ✅ Simpler |
-| State Updates | `player.setOnStateChangeListener { ... }` | `onStateChange()` callback updates `ytController` + `pipViewModel.updatePlaybackState()`      | ✅ Equivalent |
-| Lifecycle: `onStart()` | Not mentioned | `pipReceiverManager.register()`                                                               | ✅ Added (was missing in proposal!) |
-| Lifecycle: `onStop()` | Not mentioned | `pipReceiverManager.unregister()` (if not in PiP)                                             | ✅ Added (was missing in proposal!) |
+| Aspect | Proposed | Actual | Status |
+|--------|----------|--------|--------|
+| Properties | `pipViewModel`, `pipReceiverManager` | Same + `ytController: YouTubePlayerController?` | ✅ Enhanced |
+| Player Registration | `YouTubePlayerController(player)` + `pipViewModel.pipInteractor.registerPlayer(...)` | `YouTubePlayerController(player)` + `pipViewModel.registerPlayer(ytController, PipPlayerType.YOUTUBE)` | ✅ Simpler |
+| State Updates | `player.setOnStateChangeListener { ... }` | `onStateChange()` callback updates `ytController` + `pipViewModel.updatePlaybackState()` | ✅ Equivalent |
+| Lifecycle: `onStart()` | Not mentioned | `pipReceiverManager.register()` | ✅ Added (was missing in proposal!) |
+| Lifecycle: `onStop()` | Not mentioned | `pipReceiverManager.unregister()` (if not in PiP) | ✅ Added (was missing in proposal!) |
 | Lifecycle: `onDestroyView()` | Not mentioned | `pipReceiverManager.unregister()` + `ytController = null` + `pipViewModel.unregisterPlayer()` | ✅ Added (was missing in proposal!) |
-| Permission Check | Not mentioned | `isPipPermissionGranted()` + `showPipDisabledMessage()`                                       | ✅ Added (improvement over proposal) |
-| `onResume()` Permission Re-check | Not mentioned | `binding.pipBtn?.isVisible = ... isPipPermissionGranted()`                                    | ✅ Added (improvement over proposal) |
+| Permission Check | Not mentioned | `isPipPermissionGranted()` + `showPipDisabledMessage()` | ✅ Added (improvement over proposal) |
+| `onResume()` Permission Re-check | Not mentioned | `binding.pipBtn?.isVisible = ... isPipPermissionGranted()` | ✅ Added (improvement over proposal) |
 
 ---
 
@@ -123,6 +123,22 @@ The `pip_integration_changes.md` document proposed a specific integration patter
 - [x] `isPipPermissionGranted()` check (bonus — not in original proposal)
 - [x] `onResume()` permission re-check (bonus)
 
+### For YoutubeVideoUnitFragment:
+- [x] Add imports
+- [x] Add `pipViewModel` property (Koin activity-scoped)
+- [x] Add `pipReceiverManager` property (Koin injected)
+- [x] Add `ytController` property
+- [x] Add `pipState` observer in `onViewCreated`
+- [x] Add `pipReceiverManager.register()` in `onStart`
+- [x] Add `pipReceiverManager.unregister()` in `onStop`
+- [x] Add cleanup in `onDestroyView`
+- [x] Register `YouTubePlayerController` in `onReady`
+- [x] PiP button click wired to `enablePipMode()`
+- [x] `updatePipActions()` for PiP remote actions
+- [x] `isPipPermissionGranted()` check (bonus)
+- [x] `showPipDisabledMessage()` (bonus)
+- [x] `onResume()` permission re-check (bonus)
+
 ### DI Module:
 - [x] Add 4 entries to `ScreenModule.kt`
 
@@ -151,6 +167,7 @@ The `pip_integration_changes.md` document proposed a specific integration patter
 | State observer | Separate `setupPipObservers()` method | Inline `pipState.onEach { }.launchIn()` | Simpler — one-liner instead of separate method |
 | Player type enum | `PlayerType` | `PipPlayerType` | Renamed to avoid collision with existing `PlayerType` in same package |
 | Permission check | Not proposed | `isPipPermissionGranted()` in both fragments | Added as improvement — guards against disabled PiP |
+| YouTube lifecycle | `onStart`/`onStop` not specified | Explicitly added `onStart`/`onStop`/`onDestroyView` | Critical fix — receiver must be registered for PiP buttons to work |
 
 ---
 
@@ -200,4 +217,4 @@ The `pip_integration_changes.md` document proposed a specific integration patter
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** 12 May 2026
+**Last Updated:** 13 May 2026

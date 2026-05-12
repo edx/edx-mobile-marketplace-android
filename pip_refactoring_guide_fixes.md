@@ -1,6 +1,6 @@
 # PiP Refactoring Guide — Fixes Audit Summary
 
-**Date:** 12 May 2026  
+**Date:** 13 May 2026  
 **Branch:** `sandeepd/Learner-10967`  
 **Repository:** `edx/edx-mobile-marketplace-android`  
 **Source Document:** `pip_refactoring_guide.md` (v1.1 — Reuse Existing Fragments)
@@ -26,6 +26,7 @@
 |----------|--------|--------|
 | `PlayerController` interface | ✅ Interface with `play`, `pause`, `seekForward`, `seekBackward`, `restart`, `isPlaying`, `isEnded`, `currentPosition`, `duration`, `release` | ✅ Match (richer API) |
 | `ExoPlayerController` implementation | ✅ Wraps `Player`, handles `STATE_ENDED` → `restart()` | ✅ Match |
+| `YouTubePlayerController` implementation | ✅ Wraps `YouTubePlayer`, manual state tracking via `updateState()`/`updateTime()` | ✅ Match |
 
 ### PipPlayerState.kt
 | Proposed | Actual | Status |
@@ -101,6 +102,19 @@
 | *(Not proposed)* `onResume()` permission re-check | ✅ Added — instant PiP icon toggle | ✅ Bonus |
 | *(Not proposed)* `showPipDisabledMessage()` | ✅ Added — Toast for disabled permission | ✅ Bonus |
 
+### YoutubeVideoUnitFragment.kt (MODIFIED)
+
+| Proposed Change | Actual | Status |
+|----------------|--------|--------|
+| Same pattern as VideoUnitFragment | ✅ Identical DI pattern, lifecycle hooks, observer | ✅ Match |
+| `YouTubePlayerController` registration | ✅ Created in `onReady()`, registered with `pipViewModel` | ✅ Match |
+| YouTube state listener | ✅ `onStateChange()` updates `ytController` + `pipViewModel.updatePlaybackState()` | ✅ Match |
+| `onCurrentSecond()` time tracking | ✅ Calls `ytController?.updateTime()` | ✅ Match |
+| *(Not proposed)* `onStart()` / `onStop()` | ✅ Added — receiver registration | ✅ Critical fix |
+| *(Not proposed)* `onDestroyView()` cleanup | ✅ `pipReceiverManager.unregister()` + `ytController = null` + `pipViewModel.unregisterPlayer()` | ✅ Critical fix |
+| *(Not proposed)* `isPipPermissionGranted()` | ✅ Added | ✅ Bonus |
+| *(Not proposed)* `onResume()` permission re-check | ✅ Added | ✅ Bonus |
+
 ---
 
 ## TIER 4: DEPENDENCY INJECTION — Audit
@@ -138,6 +152,8 @@
 ### Phase 2: Integrate into Existing Fragments (Week 2) ✅ COMPLETE
 - [x] Add PiP imports and properties to `VideoUnitFragment`
 - [x] Add PiP methods to `VideoUnitFragment`
+- [x] Add PiP imports and properties to `YoutubeVideoUnitFragment`
+- [x] Add PiP methods to `YoutubeVideoUnitFragment`
 - [x] Integrate player registration calls in both fragments
 - [x] Wire up PiP button click handlers
 
@@ -241,4 +257,4 @@ Tests:                                       Tests:
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** 12 May 2026
+**Last Updated:** 13 May 2026

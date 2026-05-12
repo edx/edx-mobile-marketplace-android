@@ -1,6 +1,6 @@
 # PiP Implementation - Audit & Fixes Summary
 
-**Date:** 12 May 2026  
+**Date:** 13 May 2026  
 **Branch:** `sandeepd/Learner-10967`  
 **Repository:** `edx/edx-mobile-marketplace-android`  
 **Status:** ✅ Fully aligned with Architecture Summary
@@ -27,6 +27,7 @@
 |------|-------------------|--------|
 | **ScreenModule.kt** | `single { PipPlayerRepository() }`, `factory { PipBroadcastReceiverManager }`, `factory { PipInteractor }`, `viewModel { PipViewModel }` | ✅ 4 DI entries |
 | **VideoUnitFragment.kt** | `pipViewModel`, `pipReceiverManager`, `pipState` observer, `registerPlayer`, `enterPipMode`/`exitPipMode`, `onStart`/`onStop` lifecycle | ✅ All hooks |
+| **YoutubeVideoUnitFragment.kt** | Same as above + `ytController`, `onStart`/`onStop`, `onDestroyView` cleanup | ✅ All hooks |
 
 ### ✅ 2 Old Files Deleted
 
@@ -42,7 +43,7 @@
 | Activity-scoped ViewModel | `by viewModel(ownerProducer = { requireActivity() })` | ✅ |
 | Koin DI everywhere | No direct instantiation, all `by inject()` / `by viewModel()` | ✅ |
 | Unified BroadcastReceiver | `pipReceiverManager.register()` in `onStart()`, `.unregister()` in `onStop()` — both fragments | ✅ |
-| Player abstraction | `ExoPlayerController` + implementing `PlayerController` interface | ✅ |
+| Player abstraction | `ExoPlayerController` + `YouTubePlayerController` implementing `PlayerController` interface | ✅ |
 | StateFlow-based state | `pipViewModel.pipState` observed in both fragments | ✅ |
 | No global singletons | Zero violations found | ✅ |
 
@@ -77,9 +78,9 @@
 
 ---
 
-### Bug 3: PiP Play/Pause Buttons Not Working (Exo Player)
+### Bug 3: PiP Play/Pause Buttons Not Working (YouTube)
 
-**Symptom:** Tapping play/pause buttons in PiP window had no effect for Exo Player videos. ExoPlayer PiP buttons  didn't refresh properly after tapping.  
+**Symptom:** Tapping play/pause buttons in PiP window had no effect for YouTube videos. ExoPlayer PiP buttons also didn't refresh properly after tapping.  
 **Root Cause:** Two issues:
 1. **`YoutubeVideoUnitFragment`** was missing `onStart()` / `onStop()` lifecycle methods, so `pipReceiverManager.register()` was never called — the BroadcastReceiver was never registered, meaning PiP button intents were never received.
 2. **Both fragments** lacked a `pipState` flow observer, so after the BroadcastReceiver handled a play/pause action and updated the repository state, the PiP action buttons were not refreshed to reflect the new state (e.g., switching from play → pause icon).
@@ -123,6 +124,15 @@ PRESENTATION LAYER
 │   └── updatePipActions() / showReplayAction()
 │
 ├── YoutubeVideoUnitFragment.kt (MODIFIED)
+│   ├── pipViewModel: PipViewModel (activity-scoped via Koin)
+│   ├── pipReceiverManager: PipBroadcastReceiverManager (injected via Koin)
+│   ├── ytController: YouTubePlayerController
+│   ├── pipState observer (onViewCreated)
+│   ├── onStart() → register receiver
+│   ├── onStop() → unregister receiver (if not in PiP)
+│   ├── onDestroyView() → unregister receiver + player, null controller
+│   ├── onPictureInPictureModeChanged() → enter/exit PiP
+│   └── updatePipActions()
 │
 └── PipViewModel.kt (NEW)
     ├── pipState: StateFlow<PipPlayerState>
@@ -158,7 +168,8 @@ DATA LAYER
 └── PlayerController.kt (NEW)
     ├── PlayerController interface (play, pause, seek, restart, isPlaying, isEnded, etc.)
     ├── ExoPlayerController (wraps Media3 Player)
-    
+    └── YouTubePlayerController (wraps YouTubePlayer with manual state tracking)
+
 DI REGISTRATION (ScreenModule.kt)
 ├── single { PipPlayerRepository() }
 ├── factory { PipBroadcastReceiverManager(get(), get()) }
@@ -225,5 +236,5 @@ PipBroadcastReceiverManager
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** 12 May 2026  
+**Last Updated:** 13 May 2026  
 **Author:** Automated Audit

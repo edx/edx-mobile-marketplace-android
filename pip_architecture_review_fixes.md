@@ -1,6 +1,6 @@
 # PiP Architecture Review — Fixes Audit Summary
 
-**Date:** 12 May 2026  
+**Date:** 13 May 2026  
 **Branch:** `sandeepd/Learner-10967`  
 **Repository:** `edx/edx-mobile-marketplace-android`  
 **Source Document:** `pip_architecture_review.md` (15 violations)
@@ -56,7 +56,7 @@
 **Evidence:**
 - `PipBroadcastReceiverManager` uses `ContextCompat.registerReceiver()` with `RECEIVER_EXPORTED`
 - Both fragments: `onStart()` calls `pipReceiverManager.register()`, `onStop()` calls `pipReceiverManager.unregister()`
-- `onDestroyView()` in Exo Player fragment calls `pipReceiverManager.unregister()` as safety cleanup
+- `onDestroyView()` in YouTube fragment calls `pipReceiverManager.unregister()` as safety cleanup
 
 ---
 
@@ -79,6 +79,7 @@
 | Before | After |
 |--------|-------|
 | ExoPlayer: dynamic via `onVideoSizeChanged()` | ExoPlayer: unchanged (already good) ✅ |
+| YouTube: hard-coded `Rational(16, 9)` everywhere | YouTube: still hard-coded `Rational(16, 9)` ⚠️ |
 
 **Why partially:** YouTube Player SDK does not expose video dimensions, so dynamic aspect ratio isn't possible. The 16:9 fallback is the correct approach for YouTube content.
 
@@ -93,10 +94,12 @@
 | Before | After |
 |--------|-------|
 | `PipPlayerController.player` reference never cleared | `pipViewModel.unregisterPlayer()` in `onDestroy`/`onDestroyView` |
+| YouTube: no cleanup in `onDestroyView` | `ytController = null` + `pipViewModel.unregisterPlayer()` |
 | Dangling references during PiP | `PipPlayerRepository.unregisterPlayer()` nulls `_controller` |
 
 **Evidence:**
 - `VideoUnitFragment.onDestroy()`: calls `pipViewModel.unregisterPlayer()`
+- `YoutubeVideoUnitFragment.onDestroyView()`: sets `ytController = null`, calls `pipViewModel.unregisterPlayer()`
 - `PipPlayerRepository.unregisterPlayer()`: sets `_controller = null`, resets state to default
 
 ---
@@ -137,13 +140,13 @@
 **Severity:** 🟡 MODERATE  
 **Status:** ✅ **MOSTLY FIXED**
 
-| Edge Case                                         | Before | After |
-|---------------------------------------------------|--------|-------|
-| Player null when updating PiP actions             | ExoPlayer: `?: return` (good) | Unchanged ✅ |
-| Exo Player: no null safety in PipPlayerController | `PipPlayerController.isPlaying` without null check | `pipViewModel.pipState.value` — no null risk ✅ |
-| Rapid PiP mode toggles                            | No handling | `PipPlayerRepository` state is atomic via `StateFlow` ✅ |
-| Player release during PiP                         | No handling | `unregisterPlayer()` nulls controller safely ✅ |
-| `pictureInPictureParamsBuilder` not initialized   | No validation | ExoPlayer still uses `!!` on builder ⚠️ |
+| Edge Case | Before | After |
+|-----------|--------|-------|
+| Player null when updating PiP actions | ExoPlayer: `?: return` (good) | Unchanged ✅ |
+| YouTube: no null safety in PipPlayerController | `PipPlayerController.isPlaying` without null check | `pipViewModel.pipState.value` — no null risk ✅ |
+| Rapid PiP mode toggles | No handling | `PipPlayerRepository` state is atomic via `StateFlow` ✅ |
+| Player release during PiP | No handling | `unregisterPlayer()` nulls controller safely ✅ |
+| `pictureInPictureParamsBuilder` not initialized | No validation | ExoPlayer still uses `!!` on builder ⚠️ |
 
 ---
 
@@ -166,8 +169,9 @@
 | Before | After |
 |--------|-------|
 | ExoPlayer: `FLAG_IMMUTABLE` only | Both: `FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT` |
+| YouTube: `FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE` | Consistent across both fragments |
 
-**Evidence:** Exo Player fragment now use `PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT` consistently.
+**Evidence:** Both fragments now use `PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT` consistently.
 
 ---
 
@@ -183,6 +187,7 @@
 
 **Evidence:**
 - `PlayerController` interface: `play()`, `pause()`, `seekForward()`, `seekBackward()`, `restart()`, `isPlaying()`, `isEnded()`
+- `ExoPlayerController` and `YouTubePlayerController` both implement it
 - `PipAction` sealed class for type-safe action handling
 
 ---
@@ -280,4 +285,4 @@
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** 12 May 2026
+**Last Updated:** 13 May 2026

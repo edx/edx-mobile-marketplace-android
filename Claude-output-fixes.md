@@ -1,6 +1,6 @@
 # Claude Output — Fixes Audit Summary
 
-**Date:** 21 April 2026  
+**Date:** 13 May 2026  
 **Branch:** `sandeepd/Learner-10967`  
 **Repository:** `edx/edx-mobile-marketplace-android`  
 **Source Document:** `Claude-output.md` (original AI-generated implementation plan)
@@ -12,6 +12,7 @@
 | Proposed | Actual | Status |
 |----------|--------|--------|
 | Add PiP methods directly to `VideoUnitFragment.kt` | ✅ Modified in-place | ✅ |
+| Add PiP methods directly to `YoutubeVideoUnitFragment.kt` | ✅ Modified in-place | ✅ |
 | No new fragment classes | ✅ Zero new fragment subclasses | ✅ |
 | Single code location per player | ✅ All PiP logic in existing fragments | ✅ |
 | Simpler inheritance hierarchy | ✅ No `PipVideoUnitFragment extends VideoUnitFragment` | ✅ |
@@ -32,7 +33,7 @@
 
 ---
 
-## 2 Files to Modify — All Done
+## 3 Files to Modify — All Done
 
 ### VideoUnitFragment.kt
 
@@ -43,6 +44,11 @@
 | Modify 4 lifecycle methods | `onViewCreated`, `onStart`, `onStop`, `onDestroy` + bonus `onResume` | ✅ Enhanced |
 | Add 7 new methods | Reused existing methods (`enablePipMode`, `updatePipActions`, `showReplayAction`, `restoreNormalUI`) + `isPipPermissionGranted`, `showPipDisabledMessage` | ✅ Leaner |
 
+### YoutubeVideoUnitFragment.kt
+
+| Proposed Change | Actual | Status |
+|----------------|--------|--------|
+| Identical changes to VideoUnitFragment | ✅ Same pattern + `ytController` + `onDestroyView` cleanup | ✅ Enhanced |
 
 ### ScreenModule.kt
 
@@ -101,12 +107,12 @@
 
 ## Bugs Found During Implementation (Not in Original Plan)
 
-| # | Bug                                      | Impact | Fix |
-|---|------------------------------------------|--------|-----|
-| 1 | `PlayerType` enum name collision         | Build failure | Renamed to `PipPlayerType` |
+| # | Bug | Impact | Fix |
+|---|-----|--------|-----|
+| 1 | `PlayerType` enum name collision | Build failure | Renamed to `PipPlayerType` |
 | 2 | `Cannot create instance of PipViewModel` | Runtime crash | Koin `viewModel(ownerProducer = ...)` instead of `activityViewModels()` |
-| 3 | PiP buttons not working (Exoplayer)      | PiP controls non-functional | Added missing `onStart()`/`onStop()` lifecycle methods |
-| 4 | PiP buttons not refreshing after tap     | Stale play/pause icon | Added `pipState` flow observer |
+| 3 | PiP buttons not working (YouTube) | PiP controls non-functional | Added missing `onStart()`/`onStop()` lifecycle methods |
+| 4 | PiP buttons not refreshing after tap | Stale play/pause icon | Added `pipState` flow observer |
 
 ---
 
@@ -127,4 +133,4 @@
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** 12 May 2026
+**Last Updated:** 13 May 2026

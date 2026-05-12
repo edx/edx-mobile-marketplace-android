@@ -116,6 +116,10 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
+        binding.pipBtn?.isVisible =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireContext().isPipPermissionGranted()
+
         updateLayoutForOrientation()
         binding.cvVideoTitle?.setContent {
             OpenEdXTheme {
@@ -296,6 +300,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onResume() {
         super.onResume()
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        binding.pipBtn?.isVisible =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireContext().isPipPermissionGranted()
     }
 
     override fun onPause() {
@@ -376,6 +383,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     private fun enablePipMode() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        if (!requireContext().isPipPermissionGranted()) {
+            showPipDisabledMessage()
+            return
+        }
+
         binding.subtitles.isVisible = false
         binding.cvVideoTitle?.isVisible = false
         binding.pipBtn?.isVisible = false
@@ -474,30 +486,22 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
 
         } else {
-//            binding.subtitles.visibility = View.VISIBLE
-//            binding.pipBtn?.visibility = View.VISIBLE
-//            binding.playerView.useController = true
-//            sharedViewModel.buttonVisibility.value = true
-//            binding.cvVideoTitle!!.visibility = View.GONE
-//
-//            // Clear everything and reset
-//            clearAllMarginsAndConstraints()
-//
-//            binding.cardView.radius = resources.getDimension(R.dimen.subtitle_margin_top)
-//
-//            (binding.playerView.layoutParams as FrameLayout.LayoutParams).apply {
-//                width = FrameLayout.LayoutParams.MATCH_PARENT
-//                height = FrameLayout.LayoutParams.MATCH_PARENT
-//            }
-//
-//            binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
-//
-//            binding.rootLayout?.post {
-//                updateLayoutForOrientation()
-//            }
             pipViewModel.exitPipMode()
             restoreNormalUI()
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun Context.isPipPermissionGranted(): Boolean {
+        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+
+        val mode = appOps.checkOpNoThrow(
+            AppOpsManager.OPSTR_PICTURE_IN_PICTURE,
+            android.os.Process.myUid(),
+            packageName
+        )
+
+        return mode == AppOpsManager.MODE_ALLOWED
     }
 
 

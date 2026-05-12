@@ -1,6 +1,6 @@
 # PiP Implementation Checklist — Fixes & Final Audit
 
-**Date:** 12 May 2026  
+**Date:** 13 May 2026  
 **Branch:** `sandeepd/Learner-10967`  
 **Repository:** `edx/edx-mobile-marketplace-android`  
 **Status:** 90% Complete (code done, build/test verification pending)
@@ -27,7 +27,7 @@
 |------|-------------------|--------|
 | **ScreenModule.kt** | `single { PipPlayerRepository() }`, `factory { PipBroadcastReceiverManager }`, `factory { PipInteractor }`, `viewModel { PipViewModel }` | ✅ 4 DI entries |
 | **VideoUnitFragment.kt** | `pipViewModel`, `pipReceiverManager`, `pipState` observer, `registerPlayer`, `enterPipMode`/`exitPipMode`, `onStart`/`onStop` lifecycle, `isPipPermissionGranted`, `onResume` permission re-check | ✅ All hooks |
-| **YoutubeVideoUnitFragment.kt** | Same as above + `onStart`/`onStop`, `onDestroyView` cleanup, `onResume` | ✅ All hooks |
+| **YoutubeVideoUnitFragment.kt** | Same as above + `ytController`, `onStart`/`onStop`, `onDestroyView` cleanup, `isPipPermissionGranted`, `onResume` permission re-check | ✅ All hooks |
 
 ---
 
@@ -47,7 +47,7 @@
 | Activity-scoped ViewModel | `by viewModel(ownerProducer = { requireActivity() })` | ✅ |
 | Koin DI everywhere | No direct instantiation, all `by inject()` / `by viewModel()` | ✅ |
 | Unified BroadcastReceiver | `pipReceiverManager.register()` in `onStart()`, `.unregister()` in `onStop()` — both fragments | ✅ |
-| Player abstraction | `ExoPlayerController` implementing `PlayerController` interface | ✅ |
+| Player abstraction | `ExoPlayerController` + `YouTubePlayerController` implementing `PlayerController` interface | ✅ |
 | StateFlow-based state | `pipViewModel.pipState` observed in both fragments | ✅ |
 | No global singletons | Zero violations found in `.kt` source files | ✅ |
 
@@ -136,8 +136,12 @@
 
 4. **Modify YoutubeVideoUnitFragment:**
    - [x] Add imports
+   - [x] Add properties (pipViewModel, pipReceiverManager, ytController)
    - [x] Add onStart/onStop lifecycle methods
    - [x] Add onDestroyView cleanup
+   - [x] Add pipState observer
+   - [x] Add isPipPermissionGranted + onResume re-check
+   - [x] Add showPipDisabledMessage
 
 5. **Test:**
    - [x] Create PipViewModelTest
@@ -182,12 +186,12 @@
 
 ## BUGS FOUND & FIXED
 
-| # | Bug                                             | Root Cause | Fix |
-|---|-------------------------------------------------|-----------|-----|
-| 1 | `PlayerType` enum name collision                | New `PlayerType` collided with existing `PlayerType` in same package | Renamed to `PipPlayerType` across 6 files |
-| 2 | `Cannot create instance of PipViewModel`        | `by activityViewModels()` bypasses Koin DI | Changed to `by viewModel(ownerProducer = { requireActivity() })` |
-| 3 | PiP play/pause buttons not working (Exo Player) | `onStart()`/`onStop()` missing — BroadcastReceiver never registered | Added lifecycle methods + pipState observer |
-| 4 | PiP buttons not refreshing after tap            | No state observer to trigger `updatePipActions()` | Added `pipViewModel.pipState` flow observer in both fragments |
+| # | Bug | Root Cause | Fix |
+|---|-----|-----------|-----|
+| 1 | `PlayerType` enum name collision | New `PlayerType` collided with existing `PlayerType` in same package | Renamed to `PipPlayerType` across 6 files |
+| 2 | `Cannot create instance of PipViewModel` | `by activityViewModels()` bypasses Koin DI | Changed to `by viewModel(ownerProducer = { requireActivity() })` |
+| 3 | PiP play/pause buttons not working (YouTube) | `onStart()`/`onStop()` missing — BroadcastReceiver never registered | Added lifecycle methods + pipState observer |
+| 4 | PiP buttons not refreshing after tap | No state observer to trigger `updatePipActions()` | Added `pipViewModel.pipState` flow observer in both fragments |
 
 ---
 
@@ -218,4 +222,4 @@
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** 12 May 2026
+**Last Updated:** 13 May 2026

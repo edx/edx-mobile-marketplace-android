@@ -1,14 +1,17 @@
 package org.openedx.course.presentation.unit.video
 
+import android.app.AppOpsManager
 import android.app.PictureInPictureParams
 import android.app.PendingIntent
 import android.app.RemoteAction
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
+import android.os.Process
 import android.util.Rational
 import android.util.TypedValue
 import android.view.View
@@ -111,7 +114,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             ) ?: emptyMap()
         }
         viewModel.downloadSubtitles()
-        //init PictureInPictureParams, requires Android O and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             pictureInPictureParamsBuilder = PictureInPictureParams.Builder()
         }
@@ -258,10 +260,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
         }
 
-        // Apply correct constraints for the orientation at fragment creation time.
-        // This is needed when the app is launched directly in landscape – the
-        // activity never recreates on rotation (configChanges handles it), so
-        // layout-land qualifiers are NOT auto-applied after a rotation.
         val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         applyOrientationLayout(isLandscape)
 
@@ -322,7 +320,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.cardView.layoutParams = cardLayoutParams
         }
 
-        // Ensure subtitles rebind to cardView after rotation in both directions.
         val subtitlesLayoutParams = binding.subtitles.layoutParams as? ConstraintLayout.LayoutParams
         if (subtitlesLayoutParams != null) {
             if (isLandscape) {
@@ -361,11 +358,41 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.cvVideoTitle?.visibility = View.VISIBLE
             binding.pipBtn.visibility = View.VISIBLE
         }
+        updatePipButtonState(isLandscape)
     }
 
     private fun isPipUiActive(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             (isEnteringPip || requireActivity().isInPictureInPictureMode)
+    }
+
+    private fun updatePipButtonState(isLandscape: Boolean) {
+        if (isLandscape) {
+            binding.pipBtn.visibility = View.GONE
+            return
+        }
+
+        binding.pipBtn.visibility = if (isPipPermissionAllowed()) {
+            View.VISIBLE
+        } else {
+            View.INVISIBLE
+        }
+    }
+
+    private fun isPipPermissionAllowed(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        val hostActivity = activity ?: return false
+        if (!hostActivity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+            return false
+        }
+
+        val appOps = hostActivity.getSystemService(AppOpsManager::class.java) ?: return true
+        val mode = appOps.checkOpNoThrow(
+            AppOpsManager.OPSTR_PICTURE_IN_PICTURE,
+            Process.myUid(),
+            hostActivity.packageName,
+        )
+        return mode == AppOpsManager.MODE_ALLOWED || mode == AppOpsManager.MODE_DEFAULT
     }
 
     private fun clearSavedCardState() {
@@ -411,6 +438,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !requireActivity().isInPictureInPictureMode) {
             setContainerChromeVisible(true)
         }
+        updatePipButtonState(
+            isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+        )
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
@@ -434,9 +464,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         isEnteringPip = false
         updateUiForPipMode(isInPictureInPictureMode)
         if (!isInPictureInPictureMode) {
-            // Defer layout restoration until after the PIP exit transition is
-            // complete so we never call ConstraintSet.applyTo() during a live
-            // layout pass (which throws "requestLayout() improperly called").
             view?.post {
                 clearSavedCardState()
                 val isLandscape =
@@ -581,6 +608,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @UnstableApi
     private fun enablePipMode() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        if (!isPipPermissionAllowed()) return
 
         viewModel.exoPlayer?.let { player ->
             if (!player.isPlaying) {

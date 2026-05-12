@@ -4,14 +4,19 @@
 package org.openedx.course.presentation.unit.video
 
 import android.annotation.SuppressLint
+import android.app.AppOpsManager
 import android.app.PictureInPictureParams
 import android.app.PendingIntent
 import android.app.RemoteAction
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
+import android.os.Process
 import android.util.Rational
 import android.view.LayoutInflater
 import android.view.View
@@ -63,8 +68,6 @@ import org.openedx.course.data.repository.player.YouTubePlayerController
 import org.openedx.course.domain.interactor.model.PipPlayerType
 import org.openedx.course.presentation.videos.SharedViewModel
 import kotlin.getValue
-import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import android.util.TypedValue
 import androidx.core.view.isGone
 
@@ -237,12 +240,42 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             // PIP is available in portrait; show it (actual enable check happens elsewhere)
             binding.pipBtn?.visibility = View.VISIBLE
         }
+        updatePipButtonState(isLandscape)
     }
 
-    private fun isPipUiActive(): Boolean {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-            (isEnteringPip || requireActivity().isInPictureInPictureMode)
+    private fun updatePipButtonState(isLandscape: Boolean) {
+        if (isLandscape) {
+            binding.pipBtn.visibility = View.GONE
+            return
+        }
+
+        binding.pipBtn.visibility = if (isPipPermissionAllowed()) {
+            View.VISIBLE
+        } else {
+            View.INVISIBLE
+        }
     }
+
+    private fun isPipPermissionAllowed(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        val hostActivity = activity ?: return false
+        if (!hostActivity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+            return false
+        }
+
+        val appOps = hostActivity.getSystemService(AppOpsManager::class.java) ?: return true
+        val mode = appOps.checkOpNoThrow(
+            AppOpsManager.OPSTR_PICTURE_IN_PICTURE,
+            Process.myUid(),
+            hostActivity.packageName,
+        )
+        return mode == AppOpsManager.MODE_ALLOWED || mode == AppOpsManager.MODE_DEFAULT
+    }
+
+     private fun isPipUiActive(): Boolean {
+         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+             (isEnteringPip || requireActivity().isInPictureInPictureMode)
+     }
 
     override fun onResume() {
         super.onResume()
@@ -252,6 +285,10 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !requireActivity().isInPictureInPictureMode) {
             setContainerChromeVisible(true)
         }
+
+        updatePipButtonState(
+            isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+        )
 
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
 
@@ -565,6 +602,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     @UnstableApi
     private fun enablePipMode() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        if (!isPipPermissionAllowed()) return
 
         binding.cardView.isVisible = true
         binding.youtubePlayerView.isVisible = true
@@ -753,6 +791,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
 
 }
+
+
 
 
 

@@ -9,10 +9,19 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.course.data.repository.player.PlayerController
 import org.openedx.course.domain.interactor.PipInteractor
-import org.openedx.course.domain.interactor.model.PipAction
-import org.openedx.course.domain.interactor.model.PipPlayerState
-import org.openedx.course.domain.interactor.model.PipPlayerType
+import org.openedx.course.domain.model.PipAction
+import org.openedx.course.domain.model.PipPlayerState
+import org.openedx.course.domain.model.PipPlayerType
 
+/**
+ * Activity-scoped ViewModel for PiP state management.
+ *
+ * Shared by VideoUnitFragment and YoutubeVideoUnitFragment via
+ * `by activityViewModels()`. Survives configuration changes
+ * and is automatically cleaned up when the activity is destroyed.
+ *
+ * Registered in ScreenModule via Koin.
+ */
 class PipViewModel(
     private val pipInteractor: PipInteractor,
 ) : BaseViewModel() {
@@ -24,19 +33,14 @@ class PipViewModel(
     private val _pipEvent = MutableSharedFlow<PipUiEvent>(extraBufferCapacity = 1)
     val pipEvent: SharedFlow<PipUiEvent> = _pipEvent.asSharedFlow()
 
-    private var isPlayerRegistered = false
-
     // --- Player Registration ---
 
     fun registerPlayer(controller: PlayerController, playerType: PipPlayerType) {
         pipInteractor.registerPlayer(controller, playerType)
-        isPlayerRegistered = true
     }
 
     fun unregisterPlayer() {
-        if (!isPlayerRegistered) return
         pipInteractor.unregisterPlayer()
-        isPlayerRegistered = false
     }
 
     // --- State Updates ---
@@ -62,7 +66,6 @@ class PipViewModel(
     // --- PiP Actions ---
 
     fun handleAction(action: PipAction) {
-        if (!pipInteractor.hasPlayer()) return
         pipInteractor.handleAction(action)
     }
 
@@ -70,10 +73,9 @@ class PipViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        unregisterPlayer()
+        pipInteractor.unregisterPlayer()
     }
 }
-
 
 /**
  * One-time UI events emitted by PipViewModel.

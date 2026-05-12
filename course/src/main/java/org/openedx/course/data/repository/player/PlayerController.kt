@@ -1,10 +1,14 @@
 package org.openedx.course.data.repository.player
 
 import androidx.media3.common.Player
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.YouTubePlayerTracker
 
+/**
+ * Abstraction for player controls - allows unified PiP control
+ * for both ExoPlayer and YouTube player types.
+ *
+ * All PiP actions route through this interface so both players
+ * are controlled with identical code paths.
+ */
 interface PlayerController {
     fun play()
     fun pause()
@@ -18,12 +22,19 @@ interface PlayerController {
     fun release()
 }
 
+/**
+ * ExoPlayer implementation of [PlayerController].
+ */
 class ExoPlayerController(
     private val player: Player
 ) : PlayerController {
 
     override fun play() {
-        player.play()
+        if (player.playbackState == Player.STATE_ENDED) {
+            restart()
+        } else {
+            player.play()
+        }
     }
 
     override fun pause() {
@@ -31,11 +42,13 @@ class ExoPlayerController(
     }
 
     override fun seekForward(millis: Long) {
-        player.seekTo(player.currentPosition + millis)
+        val position = (player.currentPosition + millis).coerceAtMost(player.duration)
+        player.seekTo(position)
     }
 
     override fun seekBackward(millis: Long) {
-        player.seekTo((player.currentPosition - millis).coerceAtLeast(0L))
+        val position = (player.currentPosition - millis).coerceAtLeast(0)
+        player.seekTo(position)
     }
 
     override fun restart() {
@@ -44,71 +57,85 @@ class ExoPlayerController(
     }
 
     override fun isPlaying(): Boolean {
-        return player.isPlaying
+        return player.playWhenReady && player.playbackState == Player.STATE_READY
     }
 
     override fun isEnded(): Boolean {
         return player.playbackState == Player.STATE_ENDED
     }
 
-    override fun currentPosition(): Long {
-        return player.currentPosition
-    }
+    override fun currentPosition(): Long = player.currentPosition
 
-    override fun duration(): Long {
-        return player.duration
-    }
+    override fun duration(): Long = player.duration
 
     override fun release() {
-        player.release()
+        // ExoPlayer lifecycle managed by EncodedVideoUnitViewModel, not here
     }
 }
 
+/**
+ * YouTube Player implementation of [PlayerController].
+ */
 class YouTubePlayerController(
-    private val player: YouTubePlayer,
-    private val tracker: YouTubePlayerTracker,
+    private val player: com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 ) : PlayerController {
 
+    private var _isPlaying: Boolean = false
+    private var _isEnded: Boolean = false
+    private var _currentSeconds: Float = 0f
+    private var _duration: Float = 0f
+
+    fun updateState(isPlaying: Boolean, isEnded: Boolean) {
+        _isPlaying = isPlaying
+        _isEnded = isEnded
+    }
+
+    fun updateTime(currentSeconds: Float, duration: Float) {
+        _currentSeconds = currentSeconds
+        _duration = duration
+    }
+
     override fun play() {
-        player.play()
+        if (_isEnded) {
+            restart()
+        } else {
+            player.play()
+        }
+        _isPlaying = true
+        _isEnded = false
     }
 
     override fun pause() {
         player.pause()
+        _isPlaying = false
     }
 
     override fun seekForward(millis: Long) {
-        val nextSeconds = tracker.currentSecond + (millis / 1000f)
-        player.seekTo(nextSeconds.coerceAtMost(tracker.videoDuration))
+        val newPos = (_currentSeconds + millis / 1000f).coerceAtMost(_duration)
+        player.seekTo(newPos)
     }
 
     override fun seekBackward(millis: Long) {
-        val prevSeconds = tracker.currentSecond - (millis / 1000f)
-        player.seekTo(prevSeconds.coerceAtLeast(0f))
+        val newPos = (_currentSeconds - millis / 1000f).coerceAtLeast(0f)
+        player.seekTo(newPos)
     }
 
     override fun restart() {
         player.seekTo(0f)
         player.play()
+        _isPlaying = true
+        _isEnded = false
     }
 
-    override fun isPlaying(): Boolean {
-        return tracker.state == PlayerConstants.PlayerState.PLAYING
-    }
+    override fun isPlaying(): Boolean = _isPlaying
 
-    override fun isEnded(): Boolean {
-        return tracker.state == PlayerConstants.PlayerState.ENDED
-    }
+    override fun isEnded(): Boolean = _isEnded
 
-    override fun currentPosition(): Long {
-        return (tracker.currentSecond * 1000L).toLong().coerceAtLeast(0L)
-    }
+    override fun currentPosition(): Long = (_currentSeconds * 1000).toLong()
 
-    override fun duration(): Long {
-        return (tracker.videoDuration * 1000L).toLong().coerceAtLeast(0L)
-    }
+    override fun duration(): Long = (_duration * 1000).toLong()
 
     override fun release() {
-        // YouTubePlayer lifecycle is owned by YouTubePlayerView.
+        // YouTube player lifecycle managed by YouTubePlayerView, not here
     }
 }

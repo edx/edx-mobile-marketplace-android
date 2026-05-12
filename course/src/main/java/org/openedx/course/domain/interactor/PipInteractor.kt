@@ -3,10 +3,18 @@ package org.openedx.course.domain.interactor
 import kotlinx.coroutines.flow.StateFlow
 import org.openedx.course.data.repository.PipPlayerRepository
 import org.openedx.course.data.repository.player.PlayerController
-import org.openedx.course.domain.interactor.model.PipAction
-import org.openedx.course.domain.interactor.model.PipPlayerState
-import org.openedx.course.domain.interactor.model.PipPlayerType
+import org.openedx.course.domain.model.PipAction
+import org.openedx.course.domain.model.PipPlayerState
+import org.openedx.course.domain.model.PipPlayerType
 
+/**
+ * Business logic orchestrator for PiP feature.
+ *
+ * Pure Kotlin (no Android dependencies). Routes actions to the repository
+ * and exposes state as a Flow for the ViewModel to observe.
+ *
+ * Injected via Koin as a factory (new instance per use).
+ */
 class PipInteractor(
     private val repository: PipPlayerRepository
 ) {
@@ -28,27 +36,25 @@ class PipInteractor(
         repository.updatePlaybackState(isPlaying, isEnded)
     }
 
+    /** Mark PiP mode entered. */
+    fun enterPipMode() {
+        repository.enterPipMode()
+    }
+
+    /** Mark PiP mode exited. */
+    fun exitPipMode() {
+        repository.exitPipMode()
+    }
+
     /** Handle a PiP remote action. */
     fun handleAction(action: PipAction) {
         when (action) {
-            is PipAction.Play -> {
-                repository.controller?.play()
-                repository.updatePlaybackState(isPlaying = true, isEnded = false)
-            }
-
-            is PipAction.Pause -> {
-                repository.controller?.pause()
-                repository.updatePlaybackState(isPlaying = false)
-            }
-
-            is PipAction.SeekForward -> repository.controller?.seekForward()
-            is PipAction.SeekBackward -> repository.controller?.seekBackward()
-            is PipAction.Replay -> {
-                repository.controller?.restart()
-                repository.updatePlaybackState(isPlaying = true, isEnded = false)
-            }
+            is PipAction.Play -> repository.play()
+            is PipAction.Pause -> repository.pause()
+            is PipAction.SeekForward -> repository.seekForward()
+            is PipAction.SeekBackward -> repository.seekBackward()
+            is PipAction.Replay -> repository.restart()
         }
-        repository.syncFromController()
     }
 
     /** Check if a player is currently registered. */
@@ -56,14 +62,4 @@ class PipInteractor(
 
     /** Get the current player controller (nullable). */
     fun getController(): PlayerController? = repository.controller
-
-    fun exitPipMode() {
-        repository.updatePipMode(false)
-        repository.syncFromController()
-    }
-
-    fun enterPipMode() {
-        repository.updatePipMode(true)
-        repository.syncFromController()
-    }
 }

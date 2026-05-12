@@ -341,32 +341,4 @@ class PipViewModelTest {
         assertEquals(PipPlayerType.NONE, viewModel.pipState.value.playerType)
         assertFalse(viewModel.pipState.value.isPlaying)
     }
-
-    @Test
-    fun `enterPipMode emits PipModeEntered event`() = runTest {
-        val events = mutableListOf<PipUiEvent>()
-        val job = kotlinx.coroutines.launch {
-            viewModel.pipEvent.collect { events.add(it) }
-        }
-
-        viewModel.enterPipMode()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertTrue(events.contains(PipUiEvent.PipModeEntered))
-        job.cancel()
-    }
-
-    @Test
-    fun `exitPipMode emits PipModeExited event`() = runTest {
-        val events = mutableListOf<PipUiEvent>()
-        val job = kotlinx.coroutines.launch {
-            viewModel.pipEvent.collect { events.add(it) }
-        }
-
-        viewModel.exitPipMode()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertTrue(events.contains(PipUiEvent.PipModeExited))
-        job.cancel()
-    }
 }

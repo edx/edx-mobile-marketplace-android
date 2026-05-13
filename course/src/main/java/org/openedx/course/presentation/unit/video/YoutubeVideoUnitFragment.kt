@@ -451,7 +451,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
 
     @OptIn(UnstableApi::class)
-    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
         if (isInPictureInPictureMode) {
             pipViewModel.enterPipMode()
@@ -462,23 +462,27 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             binding.pipBtn?.isVisible = false
             sharedViewModel.buttonVisibility.value = false
             binding.cvVideoTitle?.visibility = View.GONE
-            // Clear all margins for PiP
+
+            binding.rootLayout.background = null
+            // DO NOT call setBackgroundColor on cardView — it breaks CardView's internal background
+            binding.cardView.radius = 0f
+
             clearAllMarginsAndConstraints()
 
-            binding.cardView.radius = 0f
-            resetConstraintsForPip()
-            val params = binding.cardView.layoutParams
-            params.width = ViewGroup.LayoutParams.MATCH_PARENT
-            params.height = ViewGroup.LayoutParams.WRAP_CONTENT
-            binding.cardView.layoutParams = params
+            val cardParams = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
+            cardParams.width = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+            cardParams.height = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+            cardParams.dimensionRatio = null
+            cardParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            cardParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            cardParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            cardParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            binding.cardView.layoutParams = cardParams
 
-            // Maintain fixed 16:9 ratio
-            binding.cardView.post {
-                val ratio = ConstraintSet()
-                ratio.clone(constraintContainer)
-                ratio.setDimensionRatio(binding.cardView.id, "16:9")
-                ratio.applyTo(constraintContainer)
-            }
+            val playerParams = binding.youtubePlayerView.layoutParams as FrameLayout.LayoutParams
+            playerParams.width = FrameLayout.LayoutParams.MATCH_PARENT
+            playerParams.height = FrameLayout.LayoutParams.MATCH_PARENT
+            binding.youtubePlayerView.layoutParams = playerParams
 
         } else {
             pipViewModel.exitPipMode()
@@ -491,20 +495,26 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             sharedViewModel.buttonVisibility.value = true
             binding.cvVideoTitle?.visibility = View.GONE
 
-            // Clear everything and reset
+            binding.rootLayout.background = null
+
             clearAllMarginsAndConstraints()
 
+            // Safely restore CardView radius
             binding.cardView.radius = resources.getDimension(R.dimen.card_corner_radius)
+            binding.cardView.requestLayout()
+            binding.cardView.invalidate()
 
-            (binding.youtubePlayerView.layoutParams as FrameLayout.LayoutParams).apply {
-                width = FrameLayout.LayoutParams.MATCH_PARENT
-                height = FrameLayout.LayoutParams.MATCH_PARENT
-            }
+            val playerParams = binding.youtubePlayerView.layoutParams as FrameLayout.LayoutParams
+            playerParams.width = FrameLayout.LayoutParams.MATCH_PARENT
+            playerParams.height = FrameLayout.LayoutParams.MATCH_PARENT
+            binding.youtubePlayerView.layoutParams = playerParams
 
             _playerUiController?.let { controller ->
                 controller.rootView.visibility = View.VISIBLE
                 binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
             }
+
+            updateLayoutForOrientation()
             binding.rootLayout.post {
                 updateLayoutForOrientation()
             }

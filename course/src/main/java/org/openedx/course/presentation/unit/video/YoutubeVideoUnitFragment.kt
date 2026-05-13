@@ -98,6 +98,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     private var _playerUiController: DefaultPlayerUiController? = null
     private var ignoringNextOrientation = false
 
+    private val constraintContainer: ConstraintLayout
+        get() = binding.rootLayout
 
 
 
@@ -459,7 +461,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             binding.subtitles.isVisible = false
             binding.pipBtn?.isVisible = false
             sharedViewModel.buttonVisibility.value = false
-            binding.cvVideoTitle!!.visibility = View.GONE
+            binding.cvVideoTitle?.visibility = View.GONE
             // Clear all margins for PiP
             clearAllMarginsAndConstraints()
 
@@ -473,9 +475,9 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             // Maintain fixed 16:9 ratio
             binding.cardView.post {
                 val ratio = ConstraintSet()
-                ratio.clone(binding.rootLayout as ConstraintLayout)
+                ratio.clone(constraintContainer)
                 ratio.setDimensionRatio(binding.cardView.id, "16:9")
-                ratio.applyTo(binding.rootLayout as ConstraintLayout)
+                ratio.applyTo(constraintContainer)
             }
 
         } else {
@@ -487,7 +489,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             binding.subtitles.visibility = View.VISIBLE
             binding.pipBtn?.visibility = View.VISIBLE
             sharedViewModel.buttonVisibility.value = true
-            binding.cvVideoTitle!!.visibility = View.GONE
+            binding.cvVideoTitle?.visibility = View.GONE
 
             // Clear everything and reset
             clearAllMarginsAndConstraints()
@@ -619,7 +621,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         binding.cvVideoTitle?.visibility = if (isLandscape) View.GONE else View.VISIBLE
         val constraintSet = ConstraintSet()
-        constraintSet.clone(binding.rootLayout as ConstraintLayout)
+        constraintSet.clone(constraintContainer)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             requireActivity().isInPictureInPictureMode
@@ -686,7 +688,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
     private fun resetConstraintsForPip() {
         val set = ConstraintSet()
-        set.clone(binding.rootLayout as ConstraintLayout)
+        set.clone(constraintContainer)
 
         // Completely clear constraints on cardView
         set.clear(binding.cardView.id)
@@ -714,7 +716,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         // Remove dimension ratio used in landscape mode
         set.setDimensionRatio(binding.cardView.id, null)
 
-        set.applyTo(binding.rootLayout as ConstraintLayout)
+        set.applyTo(constraintContainer)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

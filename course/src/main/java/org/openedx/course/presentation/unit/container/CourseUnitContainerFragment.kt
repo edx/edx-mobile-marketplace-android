@@ -185,7 +185,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             componentId = ""
         }
 
-        binding.cvNavigationBar?.setContent {
+        binding.cvNavigationBar.setContent {
             NavigationBar()
         }
         binding.topCvNavigationBar?.setContent {
@@ -554,11 +554,11 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         if (binding.topCvNavigationBar != null) {
             binding.topCvNavigationBar?.visibility =
                 if (isLandscape) View.VISIBLE else View.GONE
-            binding.cvNavigationBar?.visibility =
+            binding.cvNavigationBar.visibility =
                 if (isLandscape) View.GONE else View.VISIBLE
         } else {
             // Fallback: ensure at least one navigation bar remains visible
-            binding.cvNavigationBar?.visibility = View.VISIBLE
+            binding.cvNavigationBar.visibility = View.VISIBLE
         }
     }
 

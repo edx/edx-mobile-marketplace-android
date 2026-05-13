@@ -519,7 +519,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
 
         binding.cardView.radius =
-            resources.getDimension(R.dimen.subtitle_margin_top)
+            resources.getDimension(R.dimen.video_corner_radius)
 
         clearAllMarginsAndConstraints()
 

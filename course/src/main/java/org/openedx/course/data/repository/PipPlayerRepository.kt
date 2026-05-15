@@ -17,7 +17,7 @@ import org.openedx.course.domain.model.PipPlayerType
  *
  * Injected via Koin as a singleton (one per app).
  */
-class PIPPlayerRepository {
+class PipPlayerRepository {
 
     private val _state = MutableStateFlow(PipPlayerState())
     val state: StateFlow<PipPlayerState> = _state.asStateFlow()

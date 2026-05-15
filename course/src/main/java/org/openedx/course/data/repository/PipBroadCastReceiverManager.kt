@@ -17,7 +17,7 @@ import androidx.core.content.ContextCompat
  */
 class PipBroadcastReceiverManager(
     private val context: Context,
-    private val pipPlayerRepository: PIPPlayerRepository,
+    private val pipPlayerRepository: PipPlayerRepository,
 ) {
     private var isRegistered = false
 

@@ -49,6 +49,7 @@ import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
+import org.openedx.course.data.repository.PipBroadcastReceiverManager
 import org.openedx.course.data.repository.player.ExoPlayerController
 import org.openedx.course.databinding.FragmentVideoUnitBinding
 import org.openedx.course.domain.model.PipPlayerType
@@ -79,6 +80,10 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
 
     private var windowSize: WindowSize? = null
+
+    private val constraintContainer: ConstraintLayout
+        get() = binding.rootLayout as ConstraintLayout
+
 
     private var lastVideoAspectRatio: Rational? = null
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -394,17 +399,15 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView.useController = false
 
-        val rootLayout = binding.rootLayout
-        if (rootLayout is ConstraintLayout) {
-            val cs = ConstraintSet()
-            cs.clone(rootLayout)
-            // Clear any existing ratio on the card
-            cs.setDimensionRatio(binding.cardView.id, null) // If your ConstraintSet version doesn’t accept null, set "0:0"
-            // Make the card follow content
-            cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
-            cs.constrainHeight(binding.cardView.id, ConstraintSet.WRAP_CONTENT)
-            cs.applyTo(rootLayout)
-        }
+        val cs = ConstraintSet()
+        cs.clone(constraintContainer)
+        // Clear any existing ratio on the card
+        cs.setDimensionRatio(binding.cardView.id, null) // If your ConstraintSet version doesn’t accept null, set "0:0"
+        // Make the card follow content
+        cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
+        cs.constrainHeight(binding.cardView.id, ConstraintSet.WRAP_CONTENT)
+        cs.applyTo(constraintContainer)
+
         resetConstraintsForPip()
 
         // Prefer the actual video aspect if known
@@ -559,9 +562,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         val isLandscape =
             resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
-        val constraintLayout = binding.rootLayout
         val constraintSet = androidx.constraintlayout.widget.ConstraintSet()
-        constraintSet.clone(constraintLayout as ConstraintLayout)
+        constraintSet.clone(constraintContainer)
 
         val playerHeight = resources.getDimensionPixelSize(R.dimen.player_height)
         val playerMarginH = resources.getDimensionPixelSize(R.dimen.video_margin_horizontal)
@@ -707,7 +709,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.pipBtn?.visibility = View.VISIBLE
         }
 
-        constraintSet.applyTo(constraintLayout)
+        constraintSet.applyTo(constraintContainer)
 
         binding.rootLayout?.post {
             binding.rootLayout?.requestLayout()
@@ -840,7 +842,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     private fun resetConstraintsForPip() {
         val set = ConstraintSet()
-        set.clone(binding.rootLayout as ConstraintLayout)
+        set.clone(constraintContainer)
 
         // Completely clear constraints on cardView
         set.clear(binding.cardView.id)
@@ -868,7 +870,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         // Remove dimension ratio used in landscape mode
         set.setDimensionRatio(binding.cardView.id, null)
 
-        set.applyTo(binding.rootLayout as ConstraintLayout)
+        set.applyTo(constraintContainer)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -916,11 +918,3 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
 
 }
-
-
-
-
-
-
-
-

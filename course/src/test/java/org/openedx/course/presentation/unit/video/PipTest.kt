@@ -15,7 +15,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.openedx.course.data.repository.PIPPlayerRepository
+import org.openedx.course.data.repository.PipPlayerRepository
 import org.openedx.course.data.repository.player.PlayerController
 import org.openedx.course.domain.interactor.PipInteractor
 import org.openedx.course.domain.model.PipAction
@@ -28,11 +28,11 @@ import org.openedx.course.domain.model.PipPlayerType
 @OptIn(ExperimentalCoroutinesApi::class)
 class PipPlayerRepositoryTest {
 
-    private lateinit var repository: PIPPlayerRepository
+    private lateinit var repository: PipPlayerRepository
 
     @Before
     fun setup() {
-        repository = PIPPlayerRepository()
+        repository = PipPlayerRepository()
     }
 
     @Test
@@ -148,12 +148,12 @@ class PipPlayerRepositoryTest {
 @OptIn(ExperimentalCoroutinesApi::class)
 class PipInteractorTest {
 
-    private lateinit var repository: PIPPlayerRepository
+    private lateinit var repository: PipPlayerRepository
     private lateinit var interactor: PipInteractor
 
     @Before
     fun setup() {
-        repository = PIPPlayerRepository()
+        repository = PipPlayerRepository()
         interactor = PipInteractor(repository)
     }
 
@@ -259,14 +259,14 @@ class PipViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var repository: PIPPlayerRepository
+    private lateinit var repository: PipPlayerRepository
     private lateinit var interactor: PipInteractor
     private lateinit var viewModel: PipViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        repository = PIPPlayerRepository()
+        repository = PipPlayerRepository()
         interactor = PipInteractor(repository)
         viewModel = PipViewModel(interactor)
     }

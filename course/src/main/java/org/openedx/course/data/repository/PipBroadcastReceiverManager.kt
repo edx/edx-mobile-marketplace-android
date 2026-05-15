@@ -7,45 +7,37 @@ import android.content.IntentFilter
 import android.os.Build
 import androidx.core.content.ContextCompat
 
-/**
- * Manages the lifecycle of a BroadcastReceiver for PiP remote actions.
- *
- * Handles registration/unregistration tied to fragment lifecycle (onStart/onStop).
- * Works identically for both ExoPlayer and YouTube player types.
- *
- * Injected via Koin; one instance per video fragment.
- */
 class PipBroadcastReceiverManager(
     private val context: Context,
     private val pipPlayerRepository: PipPlayerRepository,
 ) {
     private var isRegistered = false
-
+    
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
             when (intent?.action) {
                 ACTION_PLAY -> {
-                    pipPlayerRepository.play()
+                    pipPlayerRepository.controller?.play()
                     pipPlayerRepository.updatePlaybackState(isPlaying = true, isEnded = false)
                 }
+
                 ACTION_PAUSE -> {
-                    pipPlayerRepository.pause()
+                    pipPlayerRepository.controller?.pause()
                     pipPlayerRepository.updatePlaybackState(isPlaying = false)
                 }
+
                 ACTION_FORWARD -> {
-                    pipPlayerRepository.seekForward()
+                    pipPlayerRepository.controller?.seekForward()
                 }
+
                 ACTION_REWIND -> {
-                    pipPlayerRepository.seekBackward()
+                    pipPlayerRepository.controller?.seekBackward()
                 }
             }
+            pipPlayerRepository.syncFromController()
         }
     }
 
-    /**
-     * Register the broadcast receiver. Safe to call multiple times.
-     * Should be called in Fragment.onStart().
-     */
     fun register() {
         if (isRegistered) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -64,10 +56,6 @@ class PipBroadcastReceiverManager(
         }
     }
 
-    /**
-     * Unregister the broadcast receiver. Safe to call multiple times.
-     * Should be called in Fragment.onStop() when NOT in PiP mode.
-     */
     fun unregister() {
         if (!isRegistered) return
         try {
@@ -83,7 +71,7 @@ class PipBroadcastReceiverManager(
         const val ACTION_PAUSE = "pip_pause"
         const val ACTION_FORWARD = "pip_forward"
         const val ACTION_REWIND = "pip_rewind"
-
+        
         const val REQUEST_PLAY = 101
         const val REQUEST_PAUSE = 102
         const val REQUEST_FORWARD = 103

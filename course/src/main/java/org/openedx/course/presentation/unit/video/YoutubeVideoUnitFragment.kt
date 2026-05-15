@@ -638,7 +638,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         if (isLandscape) {
 
             // LANDSCAPE — SPLIT VIEW (video left, subtitles right)
-            constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH)
+            constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 8)
             constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0)
             constraintSet.connect(binding.cardView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0)
 
@@ -647,7 +647,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             constraintSet.constrainHeight(binding.cardView.id, playerHeight)
             constraintSet.setDimensionRatio(binding.cardView.id, "20:9")
 
-            constraintSet.connect(binding.subtitles.id, ConstraintSet.START, binding.cardView.id, ConstraintSet.END, 0)
+            constraintSet.connect(binding.subtitles.id, ConstraintSet.START, binding.cardView.id, ConstraintSet.END, 16)
             constraintSet.connect(binding.subtitles.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, subtitleMarginH)
             constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, subtitleMarginH)
             constraintSet.connect(binding.subtitles.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, subtitleMarginH)

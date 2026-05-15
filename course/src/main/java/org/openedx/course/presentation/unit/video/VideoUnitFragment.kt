@@ -519,7 +519,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
 
         binding.cardView.radius =
-            resources.getDimension(R.dimen.subtitle_margin_top)
+            resources.getDimension(R.dimen.video_corner_radius)
 
         clearAllMarginsAndConstraints()
 
@@ -582,14 +582,14 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 ConstraintSet.START,
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.START,
-                playerMarginH  // Only horizontal margin
+                8  // Reduced left margin
             )
             constraintSet.connect(
                 binding.cardView.id,
                 ConstraintSet.TOP,
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.TOP,
-                0  // NO TOP MARGIN
+                0
             )
             constraintSet.connect(
                 binding.cardView.id,
@@ -600,7 +600,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             )
 
             constraintSet.constrainWidth(binding.cardView.id, 0)
-            constraintSet.constrainPercentWidth(binding.cardView.id, 0.65f)
+            constraintSet.constrainPercentWidth(binding.cardView.id, 0.60f)
             constraintSet.constrainHeight(binding.cardView.id, playerHeight)
             constraintSet.setDimensionRatio(binding.cardView.id, "20:9")
 
@@ -610,7 +610,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 ConstraintSet.START,
                 binding.cardView.id,
                 ConstraintSet.END,
-                0
+                16  // Add gap between video and subtitles
             )
             constraintSet.connect(
                 binding.subtitles.id,
@@ -918,3 +918,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
 
 }
+
+
+
+
+
+
+
+

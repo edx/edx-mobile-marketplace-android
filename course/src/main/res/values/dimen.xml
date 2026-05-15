@@ -21,6 +21,7 @@
     <dimen name="landscape_video_margin_left">16dp</dimen>
     <dimen name="landscape_player_height">250dp</dimen>
     <dimen name="landscape_video_vertical_margin">20dp</dimen>
+    <dimen name="video_corner_radius">24dp</dimen>
 
 
 </resources>

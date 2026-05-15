@@ -36,7 +36,7 @@ import org.openedx.course.presentation.unit.video.PipViewModel
 import org.openedx.course.presentation.unit.video.VideoUnitViewModel
 import org.openedx.course.presentation.unit.video.VideoViewModel
 import org.openedx.course.presentation.videos.CourseVideoViewModel
-import org.openedx.course.data.repository.PipPlayerRepository
+import org.openedx.course.data.repository.PIPPlayerRepository
 import org.openedx.course.data.repository.PipBroadcastReceiverManager
 import org.openedx.course.domain.interactor.PipInteractor
 import org.openedx.course.settings.download.DownloadQueueViewModel
@@ -398,7 +398,7 @@ val screenModule = module {
     }
 
     // PiP Architecture - Data Layer
-    single { PipPlayerRepository() }
+    single { PIPPlayerRepository() }
     factory { PipBroadcastReceiverManager(get(), get()) }
 
     // PiP Architecture - Domain Layer

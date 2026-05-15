@@ -7,7 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -16,7 +15,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.openedx.course.data.repository.PipPlayerRepository
+import org.openedx.course.data.repository.PIPPlayerRepository
 import org.openedx.course.data.repository.player.PlayerController
 import org.openedx.course.domain.interactor.PipInteractor
 import org.openedx.course.domain.model.PipAction
@@ -29,11 +28,11 @@ import org.openedx.course.domain.model.PipPlayerType
 @OptIn(ExperimentalCoroutinesApi::class)
 class PipPlayerRepositoryTest {
 
-    private lateinit var repository: PipPlayerRepository
+    private lateinit var repository: PIPPlayerRepository
 
     @Before
     fun setup() {
-        repository = PipPlayerRepository()
+        repository = PIPPlayerRepository()
     }
 
     @Test
@@ -149,12 +148,12 @@ class PipPlayerRepositoryTest {
 @OptIn(ExperimentalCoroutinesApi::class)
 class PipInteractorTest {
 
-    private lateinit var repository: PipPlayerRepository
+    private lateinit var repository: PIPPlayerRepository
     private lateinit var interactor: PipInteractor
 
     @Before
     fun setup() {
-        repository = PipPlayerRepository()
+        repository = PIPPlayerRepository()
         interactor = PipInteractor(repository)
     }
 
@@ -260,14 +259,14 @@ class PipViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var repository: PipPlayerRepository
+    private lateinit var repository: PIPPlayerRepository
     private lateinit var interactor: PipInteractor
     private lateinit var viewModel: PipViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        repository = PipPlayerRepository()
+        repository = PIPPlayerRepository()
         interactor = PipInteractor(repository)
         viewModel = PipViewModel(interactor)
     }

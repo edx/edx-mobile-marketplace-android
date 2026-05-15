@@ -1,7 +1,7 @@
 package org.openedx.course.domain.interactor
 
 import kotlinx.coroutines.flow.StateFlow
-import org.openedx.course.data.repository.PipPlayerRepository
+import org.openedx.course.data.repository.PIPPlayerRepository
 import org.openedx.course.data.repository.player.PlayerController
 import org.openedx.course.domain.model.PipAction
 import org.openedx.course.domain.model.PipPlayerState
@@ -16,7 +16,7 @@ import org.openedx.course.domain.model.PipPlayerType
  * Injected via Koin as a factory (new instance per use).
  */
 class PipInteractor(
-    private val repository: PipPlayerRepository
+    private val repository: PIPPlayerRepository
 ) {
     /** Observable PiP state. */
     val pipState: StateFlow<PipPlayerState> = repository.state

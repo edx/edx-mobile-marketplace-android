@@ -1,7 +1,7 @@
 # PiP Integration Changes — Fixes Audit Summary
 
-**Date:** 13 May 2026  
-**Branch:** `sandeepd/Learner-10967`  
+**Date:** 14 May 2026  
+**Branch:** `sandeepd/Learner-11101`  
 **Repository:** `edx/edx-mobile-marketplace-android`  
 **Source Document:** `pip_integration_changes.md`
 
@@ -216,5 +216,5 @@ The `pip_integration_changes.md` document proposed a specific integration patter
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 13 May 2026
+**Document Version:** 1.1  
+**Last Updated:** 14 May 2026

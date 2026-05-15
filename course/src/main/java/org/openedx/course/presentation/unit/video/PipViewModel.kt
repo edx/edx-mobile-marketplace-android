@@ -13,15 +13,7 @@ import org.openedx.course.domain.model.PipAction
 import org.openedx.course.domain.model.PipPlayerState
 import org.openedx.course.domain.model.PipPlayerType
 
-/**
- * Activity-scoped ViewModel for PiP state management.
- *
- * Shared by VideoUnitFragment and YoutubeVideoUnitFragment via
- * `by activityViewModels()`. Survives configuration changes
- * and is automatically cleaned up when the activity is destroyed.
- *
- * Registered in ScreenModule via Koin.
- */
+
 class PipViewModel(
     private val pipInteractor: PipInteractor,
 ) : BaseViewModel() {

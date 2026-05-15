@@ -49,7 +49,6 @@ import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
-import org.openedx.course.data.repository.PipBroadcastReceiverManager
 import org.openedx.course.data.repository.player.ExoPlayerController
 import org.openedx.course.databinding.FragmentVideoUnitBinding
 import org.openedx.course.domain.model.PipPlayerType

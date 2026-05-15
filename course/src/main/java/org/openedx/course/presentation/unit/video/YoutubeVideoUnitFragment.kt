@@ -40,7 +40,6 @@ import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
-import org.openedx.course.data.repository.PipBroadcastReceiverManager
 import org.openedx.course.data.repository.player.YouTubePlayerController
 import org.openedx.course.databinding.FragmentYoutubeVideoUnitBinding
 import org.openedx.course.domain.model.PipPlayerType

@@ -87,7 +87,8 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            get()
+            get(),
+           get()
         )
     }
     viewModel { MainViewModel(get(), get(), get(), get(), get()) }
@@ -118,6 +119,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
             courseId,
             infoType,
         )
@@ -125,6 +127,7 @@ val screenModule = module {
 
     viewModel { (courseId: String?, infoType: String?) ->
         SignUpViewModel(
+            get(),
             get(),
             get(),
             get(),
@@ -196,6 +199,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
         )
     }
 
@@ -242,6 +246,7 @@ val screenModule = module {
         CourseInfoViewModel(
             pathId,
             infoType,
+            get(),
             get(),
             get(),
             get(),

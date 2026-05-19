@@ -22,7 +22,7 @@ object AnalyticsUtils {
         }.toBundle()
     }
 
-    fun formatFirebaseAnalyticsDataForSegment(properties: Properties): Properties {
+    fun formatFirebaseAnalyticsDataForSegment(properties: Map<String, Any?>): Properties {
         return buildJsonObject {
             for ((key, value) in properties) {
                 put(

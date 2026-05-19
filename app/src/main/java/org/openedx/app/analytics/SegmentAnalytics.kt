@@ -64,12 +64,18 @@ class SegmentAnalytics(context: Context, config: Config) : Analytics {
 
     override fun logScreenEvent(screenName: String, params: Map<String, Any?>) {
         logger.d { "Segment Analytics log Screen Event: $screenName + $params" }
-        tracker.screen(screenName, params)
+        tracker.screen(
+            AnalyticsUtils.makeFirebaseAnalyticsKey(screenName),
+            AnalyticsUtils.formatFirebaseAnalyticsDataForSegment(params)
+        )
     }
 
     override fun logEvent(eventName: String, params: Map<String, Any?>) {
         logger.d { "Segment Analytics log Event $eventName: $params" }
-        tracker.track(eventName, params)
+        tracker.track(
+            AnalyticsUtils.makeFirebaseAnalyticsKey(eventName),
+            AnalyticsUtils.formatFirebaseAnalyticsDataForSegment(params)
+        )
     }
 
     override fun logUserId(userId: Long) {

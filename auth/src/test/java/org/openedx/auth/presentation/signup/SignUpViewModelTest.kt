@@ -46,6 +46,7 @@ import org.openedx.core.domain.model.AgreementUrls
 import org.openedx.core.domain.model.RegistrationField
 import org.openedx.core.domain.model.RegistrationFieldType
 import org.openedx.core.system.ResourceManager
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.utils.CrashlyticsHelper
 import org.openedx.core.utils.Logger
@@ -67,6 +68,7 @@ class SignUpViewModelTest {
     private val agreementProvider = mockk<AgreementProvider>()
     private val oAuthHelper = mockk<OAuthHelper>()
     private val router = mockk<AuthRouter>()
+    private val appCookieManager = mockk<AppCookieManager>(relaxed = true)
 
     //region parameters
 
@@ -151,6 +153,7 @@ class SignUpViewModelTest {
             agreementProvider = agreementProvider,
             config = config,
             router = router,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -176,7 +179,6 @@ class SignUpViewModelTest {
         coVerify(exactly = 0) { interactor.register(any()) }
         coVerify(exactly = 0) { interactor.login(any(), any()) }
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
-        verify(exactly = 1) { appNotifier.notifier }
 
         assertEquals(true, viewModel.uiState.value.validationError)
         assertFalse(viewModel.uiState.value.successLogin)
@@ -195,6 +197,7 @@ class SignUpViewModelTest {
             agreementProvider = agreementProvider,
             config = config,
             router = router,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -225,7 +228,6 @@ class SignUpViewModelTest {
         coVerify(exactly = 1) { interactor.validateRegistrationFields(any()) }
         coVerify(exactly = 0) { interactor.register(any()) }
         coVerify(exactly = 0) { interactor.login(any(), any()) }
-        verify(exactly = 1) { appNotifier.notifier }
 
         assertFalse(viewModel.uiState.value.validationError)
         assertFalse(viewModel.uiState.value.successLogin)
@@ -245,6 +247,7 @@ class SignUpViewModelTest {
             agreementProvider = agreementProvider,
             config = config,
             router = router,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -264,7 +267,6 @@ class SignUpViewModelTest {
         coVerify(exactly = 1) { interactor.validateRegistrationFields(any()) }
         coVerify(exactly = 0) { interactor.register(any()) }
         coVerify(exactly = 0) { interactor.login(any(), any()) }
-        verify(exactly = 1) { appNotifier.notifier }
 
         assertFalse(viewModel.uiState.value.validationError)
         assertFalse(viewModel.uiState.value.successLogin)
@@ -284,6 +286,7 @@ class SignUpViewModelTest {
             agreementProvider = agreementProvider,
             config = config,
             router = router,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -302,6 +305,7 @@ class SignUpViewModelTest {
         } returns Unit
         every { preferencesManager.user } returns user
         every { analytics.setUserIdForSession(any()) } returns Unit
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns true
         viewModel.getRegistrationFields()
         advanceUntilIdle()
         parametersMap.forEach {
@@ -310,16 +314,58 @@ class SignUpViewModelTest {
         viewModel.register()
         advanceUntilIdle()
         verify(exactly = 1) { analytics.setUserIdForSession(any()) }
+        coVerify(exactly = 1) { appCookieManager.tryToRefreshSessionCookie() }
         coVerify(exactly = 1) { interactor.validateRegistrationFields(any()) }
         coVerify(exactly = 1) { interactor.register(any()) }
         coVerify(exactly = 1) { interactor.login(any(), any()) }
         verify(exactly = 3) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
-        verify(exactly = 1) { appNotifier.notifier }
 
         assertFalse(viewModel.uiState.value.validationError)
         assertFalse(viewModel.uiState.value.isButtonLoading)
         assertTrue(viewModel.uiState.value.successLogin)
+    }
+
+    @Test
+    fun `success register with fresh cookie does not refresh session cookie`() = runTest {
+        val viewModel = SignUpViewModel(
+            interactor = interactor,
+            resourceManager = resourceManager,
+            analytics = analytics,
+            preferencesManager = preferencesManager,
+            appNotifier = appNotifier,
+            oAuthHelper = oAuthHelper,
+            agreementProvider = agreementProvider,
+            config = config,
+            router = router,
+            appCookieManager = appCookieManager,
+            courseId = "",
+            infoType = "",
+        )
+
+        coEvery { interactor.validateRegistrationFields(parametersMap) } returns ValidationFields(emptyMap())
+        coEvery { interactor.getRegistrationFields() } returns listOfFields
+        coEvery { interactor.register(parametersMap) } returns Unit
+        coEvery {
+            interactor.login(
+                parametersMap.getValue(ApiConstants.EMAIL),
+                parametersMap.getValue(ApiConstants.PASSWORD)
+            )
+        } returns Unit
+        every { preferencesManager.user } returns user
+        every { analytics.setUserIdForSession(any()) } returns Unit
+        every { analytics.logEvent(any(), any()) } returns Unit
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
+
+        viewModel.getRegistrationFields()
+        advanceUntilIdle()
+        parametersMap.forEach {
+            viewModel.updateField(it.key, it.value)
+        }
+        viewModel.register()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { appCookieManager.tryToRefreshSessionCookie() }
     }
 
     @Test
@@ -334,6 +380,7 @@ class SignUpViewModelTest {
             agreementProvider = agreementProvider,
             config = config,
             router = router,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -343,7 +390,6 @@ class SignUpViewModelTest {
         viewModel.getRegistrationFields()
         advanceUntilIdle()
         coVerify(exactly = 2) { interactor.getRegistrationFields() }
-        verify(exactly = 1) { appNotifier.notifier }
 
         assertFalse(viewModel.uiState.value.isLoading)
         assertEquals(noInternet, (deferred.await() as? UIMessage.SnackBarMessage)?.message)
@@ -361,6 +407,7 @@ class SignUpViewModelTest {
             agreementProvider = agreementProvider,
             config = config,
             router = router,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -370,7 +417,6 @@ class SignUpViewModelTest {
         viewModel.getRegistrationFields()
         advanceUntilIdle()
         coVerify(exactly = 2) { interactor.getRegistrationFields() }
-        verify(exactly = 1) { appNotifier.notifier }
 
         assertFalse(viewModel.uiState.value.isLoading)
         assertEquals(somethingWrong, (deferred.await() as? UIMessage.SnackBarMessage)?.message)
@@ -388,6 +434,7 @@ class SignUpViewModelTest {
             agreementProvider = agreementProvider,
             config = config,
             router = router,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -395,7 +442,6 @@ class SignUpViewModelTest {
         viewModel.getRegistrationFields()
         advanceUntilIdle()
         coVerify(exactly = 2) { interactor.getRegistrationFields() }
-        verify(exactly = 1) { appNotifier.notifier }
 
         //val fields = viewModel.uiState.value as? SignUpUIState.Fields
 

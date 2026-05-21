@@ -39,6 +39,7 @@ import org.openedx.core.config.MicrosoftConfig
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.presentation.global.WhatsNewGlobalManager
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.EdxError
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -67,6 +68,7 @@ class SignInViewModelTest {
     private val oAuthHelper = mockk<OAuthHelper>()
     private val router = mockk<AuthRouter>()
     private val whatsNewGlobalManager = mockk<WhatsNewGlobalManager>()
+    private val appCookieManager = mockk<AppCookieManager>(relaxed = true)
 
     private val invalidCredential = "Invalid credentials"
     private val noInternet = "Slow or no internet connection"
@@ -122,6 +124,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -156,6 +159,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -190,6 +194,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -223,6 +228,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -248,6 +254,7 @@ class SignInViewModelTest {
         every { analytics.setUserIdForSession(any()) } returns Unit
         every { preferencesManager.lastSignInType = AuthType.PASSWORD.name } returns Unit
         every { analytics.logEvent(any(), any()) } returns Unit
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns true
         coEvery { appNotifier.send(any<SignInEvent>()) } returns Unit
         val viewModel = SignInViewModel(
             interactor = interactor,
@@ -261,6 +268,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -269,14 +277,49 @@ class SignInViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { interactor.login(any(), any()) }
+        coVerify(exactly = 1) { appCookieManager.tryToRefreshSessionCookie() }
         verify(exactly = 1) { analytics.setUserIdForSession(any()) }
         verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
-        verify(exactly = 1) { appNotifier.notifier }
         val uiState = viewModel.uiState.value
         assertFalse(uiState.showProgress)
         assert(uiState.loginSuccess)
         assertEquals(null, viewModel.uiMessage.value)
+    }
+
+    @Test
+    fun `login success with fresh cookie does not refresh session cookie`() = runTest {
+        every { validator.isEmailOrUserNameValid(any()) } returns true
+        every { validator.isPasswordValid(any()) } returns true
+        every { preferencesManager.user } returns user
+        every { analytics.setUserIdForSession(any()) } returns Unit
+        every { preferencesManager.lastSignInType = AuthType.PASSWORD.name } returns Unit
+        every { analytics.logEvent(any(), any()) } returns Unit
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
+        coEvery { appNotifier.send(any<SignInEvent>()) } returns Unit
+
+        val viewModel = SignInViewModel(
+            interactor = interactor,
+            resourceManager = resourceManager,
+            preferencesManager = preferencesManager,
+            validator = validator,
+            analytics = analytics,
+            appNotifier = appNotifier,
+            oAuthHelper = oAuthHelper,
+            agreementProvider = agreementProvider,
+            config = config,
+            router = router,
+            whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
+            courseId = "",
+            infoType = "",
+        )
+
+        coEvery { interactor.login("acc@test.org", "edx") } returns Unit
+        viewModel.login("acc@test.org", "edx")
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { appCookieManager.tryToRefreshSessionCookie() }
     }
 
     @Test
@@ -298,6 +341,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -309,7 +353,6 @@ class SignInViewModelTest {
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
         verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
-        verify(exactly = 1) { appNotifier.notifier }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         val uiState = viewModel.uiState.value
@@ -337,6 +380,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -351,7 +395,6 @@ class SignInViewModelTest {
 
         coVerify(exactly = 1) { interactor.login(any(), any()) }
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
-        verify(exactly = 1) { appNotifier.notifier }
         verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
 
@@ -381,6 +424,7 @@ class SignInViewModelTest {
             config = config,
             router = router,
             whatsNewGlobalManager = whatsNewGlobalManager,
+            appCookieManager = appCookieManager,
             courseId = "",
             infoType = "",
         )
@@ -390,7 +434,6 @@ class SignInViewModelTest {
 
         coVerify(exactly = 1) { interactor.login(any(), any()) }
         verify(exactly = 0) { analytics.setUserIdForSession(any()) }
-        verify(exactly = 1) { appNotifier.notifier }
         verify(exactly = 2) { analytics.logEvent(any(), any()) }
         verify(exactly = 1) { analytics.logScreenEvent(any(), any()) }
 

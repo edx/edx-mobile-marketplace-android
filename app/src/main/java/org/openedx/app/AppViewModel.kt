@@ -21,6 +21,7 @@ import org.openedx.core.config.Config
 import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.PushGlobalManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.LogoutEvent
@@ -42,7 +43,8 @@ class AppViewModel(
     private val fileUtil: FileUtil,
     private val context: Context,
     private val pushManager: PushGlobalManager,
-) : BaseViewModel() {
+    private val appCookieManager: AppCookieManager,
+    ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
 
@@ -82,6 +84,17 @@ class AppViewModel(
                 } else if (event is LogoutEvent) {
                     handleLogoutEvent(event)
                 }
+            }
+        }
+        if (user != null) {
+            refreshSessionCookie()
+        }
+    }
+
+    private fun refreshSessionCookie() {
+        viewModelScope.launch {
+            if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                appCookieManager.tryToRefreshSessionCookie()
             }
         }
     }

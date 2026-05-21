@@ -29,7 +29,7 @@ fun CatalogWebViewScreen(
 ): WebView {
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
-    return remember {
+    val webView = remember {
         WebView(context).apply {
             webViewClient = object : DefaultWebViewClient(
                 context = context,
@@ -133,4 +133,5 @@ fun CatalogWebViewScreen(
             applyDarkModeIfEnabled(isDarkTheme)
         }
     }
+    return webView
 }

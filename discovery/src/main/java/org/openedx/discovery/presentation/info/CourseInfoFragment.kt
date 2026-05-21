@@ -99,6 +99,7 @@ class CourseInfoFragment : Fragment() {
                 val showAlert by viewModel.showAlert.collectAsState(initial = false)
                 val uiState by viewModel.uiState.collectAsState()
                 val webViewState by viewModel.webViewState.collectAsState()
+                val cookiesReady by viewModel.cookiesReady.collectAsState()
                 val windowSize = rememberWindowSize()
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.hasInternetConnection)
@@ -137,6 +138,7 @@ class CourseInfoFragment : Fragment() {
                     windowSize = windowSize,
                     uiState = uiState,
                     webViewUIState = webViewState,
+                    cookiesReady = cookiesReady,
                     uiMessage = uiMessage,
                     uriScheme = viewModel.uriScheme,
                     userAgent = viewModel.appUserAgent,
@@ -226,6 +228,9 @@ class CourseInfoFragment : Fragment() {
 
                             else -> {}
                         }
+                    },
+                    onRefreshSessionCookie = {
+                        viewModel.refreshSessionCookie()
                     }
                 )
             }
@@ -265,6 +270,7 @@ private fun CourseInfoScreen(
     windowSize: WindowSize,
     uiState: CourseInfoUIState,
     webViewUIState: WebViewUIState,
+    cookiesReady: Boolean,
     uiMessage: UIMessage?,
     uriScheme: String,
     userAgent: String,
@@ -274,6 +280,7 @@ private fun CourseInfoScreen(
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
     onUriClick: (String, Authority) -> Unit,
+    onRefreshSessionCookie: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -339,17 +346,20 @@ private fun CourseInfoScreen(
                 ) {
                     if ((webViewUIState is WebViewUIState.Error).not()) {
                         if (hasInternetConnection) {
-                            CourseInfoWebView(
-                                contentUrl = (uiState as CourseInfoUIState.CourseInfo).initialUrl,
-                                uriScheme = uriScheme,
-                                userAgent = userAgent,
-                                isPreLogin = uiState.isPreLogin,
-                                onWebPageLoaded = { onWebViewUIAction(WebViewUIAction.WEB_PAGE_LOADED) },
-                                onUriClick = onUriClick,
-                                onWebPageLoadError = {
-                                    onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
-                                }
-                            )
+                            if (cookiesReady) {
+                                CourseInfoWebView(
+                                    contentUrl = (uiState as CourseInfoUIState.CourseInfo).initialUrl,
+                                    uriScheme = uriScheme,
+                                    userAgent = userAgent,
+                                    isPreLogin = uiState.isPreLogin,
+                                    onWebPageLoaded = { onWebViewUIAction(WebViewUIAction.WEB_PAGE_LOADED) },
+                                    onUriClick = onUriClick,
+                                    onWebPageLoadError = {
+                                        onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
+                                    },
+                                    onRefreshSessionCookie = onRefreshSessionCookie
+                                )
+                            }
                         } else {
                             onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
                         }
@@ -385,6 +395,7 @@ private fun CourseInfoWebView(
     onWebPageLoaded: () -> Unit,
     onUriClick: (String, Authority) -> Unit,
     onWebPageLoadError: () -> Unit,
+    onRefreshSessionCookie: () -> Unit,
 ) {
     val config = koinInject<Config>()
     val corePreferences = koinInject<CorePreferences>()
@@ -392,7 +403,6 @@ private fun CourseInfoWebView(
     val isDatadogWebViewTrackingEnabled = config.getDatadogConfig().enabled &&
         corePreferences.isDatadogEnabled &&
         !host.isNullOrEmpty()
-
     val webView = CatalogWebViewScreen(
         url = contentUrl,
         uriScheme = uriScheme,
@@ -401,6 +411,7 @@ private fun CourseInfoWebView(
         onWebPageLoaded = onWebPageLoaded,
         onUriClick = onUriClick,
         onWebPageLoadError = onWebPageLoadError,
+        refreshSessionCookie = onRefreshSessionCookie,
         isDatadogWebViewTrackingEnabled = isDatadogWebViewTrackingEnabled
     )
 
@@ -445,6 +456,8 @@ fun CourseInfoScreenPreview() {
             onBackClick = {},
             onUriClick = { _, _ -> },
             webViewUIState = WebViewUIState.Loading,
+            cookiesReady = true,
+            onRefreshSessionCookie = {},
         )
     }
 }

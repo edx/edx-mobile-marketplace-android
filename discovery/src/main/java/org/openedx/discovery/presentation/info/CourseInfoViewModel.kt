@@ -21,6 +21,7 @@ import org.openedx.core.presentation.CoreAnalyticsKey
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDashboardUpdate
@@ -48,6 +49,7 @@ class CourseInfoViewModel(
     private val resourceManager: ResourceManager,
     private val analytics: DiscoveryAnalytics,
     corePreferences: CorePreferences,
+    private val appCookieManager: AppCookieManager,
 ) : BaseViewModel() {
     private val logger = Logger(TAG)
 
@@ -71,6 +73,9 @@ class CourseInfoViewModel(
     private val _showAlert = MutableSharedFlow<Boolean>()
     val showAlert: SharedFlow<Boolean>
         get() = _showAlert.asSharedFlow()
+
+    private val _cookiesReady = MutableStateFlow(false)
+    val cookiesReady: StateFlow<Boolean> = _cookiesReady.asStateFlow()
 
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
@@ -222,6 +227,36 @@ class CourseInfoViewModel(
 
     fun onWebPageLoading() {
         _webViewUIState.value = WebViewUIState.Loading
+    }
+
+    fun refreshSessionCookie() {
+        viewModelScope.launch {
+            try {
+                if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                    appCookieManager.tryToRefreshSessionCookie()
+                }
+            } catch (e: Exception) {
+                logger.e(throwable = e)
+            }
+        }
+    }
+
+    private fun checkAndRefreshCookies() {
+        viewModelScope.launch {
+            try {
+                if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                    appCookieManager.tryToRefreshSessionCookie()
+                }
+            } catch (e: Exception) {
+                logger.e(throwable = e)
+            } finally {
+                _cookiesReady.value = true
+            }
+        }
+    }
+
+    init {
+        checkAndRefreshCookies()
     }
 
     companion object {

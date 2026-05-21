@@ -1,16 +1,20 @@
 package org.openedx.discovery.presentation
 
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
+import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.connection.NetworkConnection
+import org.openedx.core.utils.Logger
 import org.openedx.core.utils.UrlUtils
 
 class WebViewDiscoveryViewModel(
@@ -21,10 +25,17 @@ class WebViewDiscoveryViewModel(
     private val corePreferences: CorePreferences,
     private val router: DiscoveryRouter,
     private val analytics: DiscoveryAnalytics,
+    private val appCookieManager: AppCookieManager,
 ) : BaseViewModel() {
+
+    private val logger = Logger("WebViewDiscoveryViewModel")
 
     private val _uiState = MutableStateFlow<WebViewUIState>(WebViewUIState.Loading)
     val uiState: StateFlow<WebViewUIState> = _uiState.asStateFlow()
+
+    private val _cookiesReady = MutableStateFlow(false)
+    val cookiesReady: StateFlow<Boolean> = _cookiesReady.asStateFlow()
+
     val uriScheme: String get() = config.getUriScheme()
 
     private val webViewConfig get() = config.getDiscoveryConfig().webViewConfig
@@ -47,6 +58,36 @@ class WebViewDiscoveryViewModel(
 
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
+
+    init {
+        checkAndRefreshCookies()
+    }
+
+    private fun checkAndRefreshCookies() {
+        viewModelScope.launch {
+            try {
+                if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                    appCookieManager.tryToRefreshSessionCookie()
+                }
+            } catch (e: Exception) {
+                logger.e(throwable = e)
+            } finally {
+                _cookiesReady.value = true
+            }
+        }
+    }
+
+    fun refreshSessionCookie() {
+        viewModelScope.launch {
+            try {
+                if (appCookieManager.isSessionCookieMissingOrExpired()) {
+                    appCookieManager.tryToRefreshSessionCookie()
+                }
+            } catch (e: Exception) {
+                logger.e(throwable = e)
+            }
+        }
+    }
 
     fun onWebPageLoading() {
         _uiState.value = WebViewUIState.Loading

@@ -36,6 +36,7 @@ import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.AppUpgradeEvent
+import org.openedx.core.system.notifier.app.DatadogTrackingToggledEvent
 import org.openedx.core.system.notifier.app.EnrolledCourseEvent
 import org.openedx.core.system.notifier.app.LogoutEvent
 import org.openedx.core.system.notifier.app.RequestEnrolledCourseErrorEvent
@@ -70,7 +71,10 @@ class SettingsViewModel(
     private val logger = Logger(TAG)
 
     private val _uiState: MutableStateFlow<SettingsUIState> =
-        MutableStateFlow(SettingsUIState.Data(configuration))
+        MutableStateFlow(SettingsUIState.Data(
+            configuration,
+            isDatadogEnabled = corePreferences.isDatadogEnabled
+        ))
     internal val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
 
     private val _iapUiState: MutableStateFlow<IAPUIState?> = MutableStateFlow(null)
@@ -101,7 +105,8 @@ class SettingsViewModel(
             feedbackFormUrl = corePreferences.appConfig.feedbackFormUrl,
             supportEmail = config.getFeedbackEmailAddress(),
             versionName = appData.versionName,
-            isPushNotificationsEnabled = config.isPushNotificationsEnabled()
+            isPushNotificationsEnabled = config.isPushNotificationsEnabled(),
+            isDatadogTrackingEnabled = config.getDatadogConfig().enabled,
         )
 
     init {
@@ -109,6 +114,16 @@ class SettingsViewModel(
         collectProfileEvent()
     }
 
+    fun setDatadogEnabled(enabled: Boolean) {
+        corePreferences.isDatadogEnabled = enabled // persist
+        val currentData = _uiState.value
+        if (currentData is SettingsUIState.Data) {
+            _uiState.value = currentData.copy(isDatadogEnabled = enabled)
+        }
+        viewModelScope.launch {
+            appNotifier.send(DatadogTrackingToggledEvent(enabled))
+        }
+    }
     fun logout() {
         logProfileEvent(ProfileAnalyticsEvent.LOGOUT_CLICKED)
         viewModelScope.launch {

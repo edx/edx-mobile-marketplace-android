@@ -28,6 +28,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -68,6 +70,7 @@ import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
+import org.openedx.core.ui.noRippleClickable
 import org.openedx.core.ui.settingsHeaderBackground
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -90,6 +93,7 @@ internal fun SettingsScreen(
     onBackClick: () -> Unit,
     onAction: (SettingsScreenAction) -> Unit,
     onIAPAction: (IAPAction, IAPException?) -> Unit,
+    onDatadogToggleChanged: (Boolean) -> Unit,
 ) {
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -201,7 +205,8 @@ internal fun SettingsScreen(
                                         },
                                         onPushNotificationsSettingsClick = {
                                             onAction(SettingsScreenAction.PushNotificationsSettingsClick)
-                                        }
+                                        },
+                                        onDatadogToggleChanged = onDatadogToggleChanged
                                     )
 
                                     Spacer(modifier = Modifier.height(24.dp))
@@ -272,8 +277,10 @@ private fun SettingsSection(
     onVideoSettingsClick: () -> Unit,
     onAppearanceSettingsClick: () -> Unit,
     onCalendarSettingsClick: () -> Unit,
+    onDatadogToggleChanged: (Boolean) -> Unit,
     onPushNotificationsSettingsClick: () -> Unit,
 ) {
+    val isDatadogEnabled = uiState.isDatadogEnabled
     Column {
         Text(
             modifier = Modifier.testTag("txt_settings"),
@@ -311,6 +318,43 @@ private fun SettingsSection(
                     text = stringResource(id = R.string.profile_appearance),
                     onClick = onAppearanceSettingsClick
                 )
+
+                if (uiState.configuration.isDatadogTrackingEnabled) {
+                    SettingsDivider()
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .padding(horizontal = 20.dp)
+                            .noRippleClickable {
+                                val newValue = !isDatadogEnabled
+                                onDatadogToggleChanged(newValue)
+                            },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("txt_datadog_tracking"),
+                            text = stringResource(R.string.profile_datadog_tracking),
+                            color = MaterialTheme.appColors.textPrimary,
+                            style = MaterialTheme.appTypography.titleMedium
+                        )
+
+                        Switch(
+                            modifier = Modifier.testTag("sw_datadog_tracking"),
+                            checked = isDatadogEnabled,
+                            onCheckedChange = onDatadogToggleChanged,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.appColors.primary,
+                                checkedTrackColor = MaterialTheme.appColors.primary,
+                                uncheckedThumbColor = MaterialTheme.appColors.cardViewBorder,
+                                uncheckedTrackColor = MaterialTheme.appColors.cardViewBorder,
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -760,10 +804,12 @@ private val mockConfiguration = Configuration(
     versionName = mockAppData.versionName,
     isIAPEnabled = true,
     isPushNotificationsEnabled = true,
+    isDatadogTrackingEnabled = true,
 )
 
 private val mockUiState = SettingsUIState.Data(
-    configuration = mockConfiguration
+    configuration = mockConfiguration,
+    isDatadogEnabled = false
 )
 
 
@@ -824,6 +870,7 @@ private fun SettingsScreenPreview() {
             onBackClick = {},
             onAction = {},
             onIAPAction = { _, _ -> },
+            onDatadogToggleChanged = {},
         )
     }
 }

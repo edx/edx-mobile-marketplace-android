@@ -67,6 +67,10 @@ import org.openedx.discovery.presentation.DiscoveryAnalyticsScreen
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority
 import org.openedx.core.R as coreR
+import androidx.core.net.toUri
+import org.koin.compose.koinInject
+import org.openedx.core.config.Config
+import org.openedx.core.data.storage.CorePreferences
 
 class ProgramFragment : Fragment() {
 
@@ -318,6 +322,13 @@ private fun ProgramInfoScreen(
                 ) {
                     if ((uiState is ProgramUIState.Error).not()) {
                         if (hasInternetConnection) {
+                            val config = koinInject<Config>()
+                            val corePreferences = koinInject<CorePreferences>()
+                            val host = contentUrl.toUri().host
+                            val isDatadogWebViewTrackingEnabled = config.getDatadogConfig().enabled &&
+                                corePreferences.isDatadogEnabled &&
+                                !host.isNullOrEmpty()
+
                             val webView = CatalogWebViewScreen(
                                 url = contentUrl,
                                 uriScheme = uriScheme,
@@ -330,7 +341,8 @@ private fun ProgramInfoScreen(
                                     }
                                 },
                                 onUriClick = onUriClick,
-                                onWebPageLoadError = { onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR) }
+                                onWebPageLoadError = { onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR) },
+                                isDatadogWebViewTrackingEnabled = isDatadogWebViewTrackingEnabled
                             )
 
                             AndroidView(

@@ -1,9 +1,9 @@
 package org.openedx.app
 
-import android.content.Context
 import org.openedx.app.analytics.Analytics
 import org.openedx.app.analytics.FirebaseAnalytics
 import org.openedx.app.analytics.SegmentAnalytics
+import org.openedx.app.analytics.datadog.DatadogAnalytics
 import org.openedx.auth.presentation.AuthAnalytics
 import org.openedx.core.config.Config
 import org.openedx.core.presentation.CoreAnalytics
@@ -18,8 +18,10 @@ import org.openedx.profile.presentation.ProfileAnalytics
 import org.openedx.whatsnew.presentation.WhatsNewAnalytics
 
 class AnalyticsManager(
-    context: Context,
     config: Config,
+    firebaseAnalytics: FirebaseAnalytics,
+    segmentAnalytics: SegmentAnalytics,
+    datadogAnalytics: DatadogAnalytics,
 ) : AppAnalytics, AppReviewAnalytics, AuthAnalytics, CoreAnalytics, CourseAnalytics,
     DashboardAnalytics, DiscoveryAnalytics, DiscussionAnalytics, ProfileAnalytics,
     WhatsNewAnalytics, IAPAnalytics, NotificationsAnalytics {
@@ -29,11 +31,15 @@ class AnalyticsManager(
     init {
         // Initialise all the analytics libraries here
         if (config.getFirebaseConfig().isFirebaseAnalyticsSource()) {
-            addAnalyticsTracker(FirebaseAnalytics(context = context))
+            addAnalyticsTracker(firebaseAnalytics)
         }
         val segmentConfig = config.getSegmentConfig()
-        if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank()) {
-            addAnalyticsTracker(SegmentAnalytics(context = context, config = config))
+        if (segmentConfig.enabled && segmentConfig.segmentWriteKey.isNotBlank() && config.getFirebaseConfig().isSegmentAnalyticsSource()) {
+            addAnalyticsTracker(segmentAnalytics)
+        }
+        val datadogConfig = config.getDatadogConfig()
+        if (datadogConfig.enabled) {
+            addAnalyticsTracker(datadogAnalytics)
         }
     }
 

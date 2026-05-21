@@ -7,6 +7,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import org.openedx.core.domain.model.AgreementUrls
 import java.io.InputStreamReader
+import kotlin.jvm.java
 
 class Config(context: Context) {
 
@@ -17,6 +18,7 @@ class Config(context: Context) {
     } catch (_: Exception) {
         JsonObject()
     }
+
 
     fun getAppId(): String {
         return getString(APPLICATION_ID, "")
@@ -62,6 +64,10 @@ class Config(context: Context) {
 
     fun getFirebaseConfig(): FirebaseConfig {
         return getObjectOrNewInstance(FIREBASE, FirebaseConfig::class.java)
+    }
+
+    fun getDatadogConfig(): DatadogConfig {
+        return getObjectOrNewInstance(DATADOG, DatadogConfig::class.java)
     }
 
     fun getSegmentConfig(): SegmentConfig {
@@ -193,6 +199,7 @@ class Config(context: Context) {
         private const val OPTIMIZELY = "OPTIMIZELY"
         private const val VIDEO_PLAYER = "VIDEO_PLAYER"
         private const val RECAPTCHA = "RECAPTCHA"
+        private const val DATADOG = "DATADOG"
     }
 
     enum class ViewType {

@@ -1,5 +1,8 @@
 package org.openedx.app.di
 
+import com.datadog.android.okhttp.DatadogEventListener
+import com.datadog.android.okhttp.DatadogInterceptor
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.qualifier.named
@@ -9,7 +12,6 @@ import org.openedx.app.data.networking.HandleErrorInterceptor
 import org.openedx.app.data.networking.HeadersInterceptor
 import org.openedx.app.data.networking.OauthRefreshTokenAuthenticator
 import org.openedx.auth.data.api.AuthApi
-import org.openedx.core.BuildConfig
 import org.openedx.core.config.Config
 import org.openedx.core.data.api.CookiesApi
 import org.openedx.core.data.api.CourseApi
@@ -21,6 +23,8 @@ import org.openedx.profile.data.api.ProfileApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import org.openedx.app.BuildConfig
+import org.openedx.core.data.storage.CorePreferences
 
 val networkingModule = module {
 
@@ -32,7 +36,35 @@ val networkingModule = module {
             readTimeout(60, TimeUnit.SECONDS)
             addInterceptor(HeadersInterceptor(get(), get(), get()))
             if (BuildConfig.DEBUG) {
-                addNetworkInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+                addNetworkInterceptor(
+                    HttpLoggingInterceptor()
+                        .setLevel(HttpLoggingInterceptor.Level.BODY)
+                )
+            }
+
+            val config = get<Config>()
+            val datadogConfig = config.getDatadogConfig()
+            val corePreferences = get<CorePreferences>()
+            val isUserEnabled = corePreferences.isDatadogEnabled
+
+            if (datadogConfig.enabled
+                && datadogConfig.clientToken.isNotEmpty()
+                && isUserEnabled) {
+                val host = config.getApiHostURL()
+                    .takeIf { it.isNotBlank() }
+                    ?.toHttpUrlOrNull()
+                    ?.host
+
+                if (!host.isNullOrEmpty()) {
+                    val tracedHosts = listOf(host)
+
+                    addInterceptor(
+                        DatadogInterceptor.Builder(tracedHosts).build()
+                    )
+                    eventListenerFactory(
+                        DatadogEventListener.Factory()
+                    )
+                }
             }
             addInterceptor(HandleErrorInterceptor(get()))
             addInterceptor(AppUpgradeInterceptor(get()))

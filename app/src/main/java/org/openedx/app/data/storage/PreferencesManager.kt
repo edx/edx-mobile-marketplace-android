@@ -238,6 +238,10 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
                 ?: NotificationsPrimerConfiguration()
         }
 
+    override var isDatadogEnabled: Boolean
+        set(value) = saveBoolean(KEY_DATADOG_ENABLED, value)
+        get() = getBoolean(KEY_DATADOG_ENABLED, defValue = true) // default: enabled
+
     companion object {
         private const val ACCESS_TOKEN = "access_token"
         private const val REFRESH_TOKEN = "refresh_token"
@@ -259,5 +263,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val NOTIFICATIONS_PRIMER_CONFIGURATION = "notifications_primer_configuration"
         private const val PLS_BANNER_SHOWN = "pls_banner_shown"
         private const val APP_THEME_MODE = "app_theme_mode"
+        private const val KEY_DATADOG_ENABLED = "datadog_enabled"
     }
 }

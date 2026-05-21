@@ -8,6 +8,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
+import com.datadog.android.webview.WebViewTracking
 import org.openedx.core.extension.applyDarkModeIfEnabled
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
 
@@ -22,7 +24,8 @@ fun CatalogWebViewScreen(
     refreshSessionCookie: () -> Unit = {},
     onWebPageUpdated: (String) -> Unit = {},
     onUriClick: (String, linkAuthority) -> Unit,
-    onWebPageLoadError: () -> Unit
+    onWebPageLoadError: () -> Unit,
+    isDatadogWebViewTrackingEnabled: Boolean,
 ): WebView {
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
@@ -122,6 +125,10 @@ fun CatalogWebViewScreen(
             isVerticalScrollBarEnabled = false
             isHorizontalScrollBarEnabled = false
 
+            val host = url.toUri().host
+            if (isDatadogWebViewTrackingEnabled && !host.isNullOrEmpty()) {
+                WebViewTracking.enable(this, listOf(host))
+            }
             loadUrl(url)
             applyDarkModeIfEnabled(isDarkTheme)
         }

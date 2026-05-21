@@ -17,14 +17,13 @@ import org.openedx.app.di.screenModule
 import org.openedx.core.config.Config
 import org.openedx.featuremanagement.di.FeatureModuleProvider
 import org.openedx.notifications.di.NotificationsModuleProvider
-
+import kotlin.getValue
 class OpenEdXApp : Application() {
 
     private val config by inject<Config>()
 
     override fun onCreate() {
         super.onCreate()
-
         initializeKoinModules()
 
         if (config.getFirebaseConfig().enabled) {
@@ -57,7 +56,6 @@ class OpenEdXApp : Application() {
             }
         }
     }
-
     private fun initializeKoinModules() {
         startKoin {
             androidContext(this@OpenEdXApp)

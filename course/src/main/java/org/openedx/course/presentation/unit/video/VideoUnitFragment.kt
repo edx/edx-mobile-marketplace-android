@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Rational
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -20,6 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.ComposeView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.bundleOf
@@ -62,6 +64,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private var pictureInPictureParamsBuilder: PictureInPictureParams.Builder? = null
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private var mediaSession: MediaSession? = null
+
+    // Dynamically created video title ComposeView
+    private var cvVideoTitle: ComposeView? = null
 
     // NEW: PiP ViewModel (Activity-scoped, shared across video fragments)
     private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
@@ -120,16 +125,26 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
-        binding.pipBtn?.isVisible =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireContext().isPipPermissionGranted()
+        binding.pipBtn.isVisible = true
 
         updateLayoutForOrientation()
-        binding.cvVideoTitle?.setContent {
-            OpenEdXTheme {
-                VideoTitle(text = viewModel.title)
+
+        // Create cvVideoTitle dynamically and add to the ConstraintLayout
+        cvVideoTitle = ComposeView(requireContext()).apply {
+            id = View.generateViewId()
+            layoutParams = ConstraintLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            setContent {
+                OpenEdXTheme {
+                    VideoTitle(text = viewModel.title)
+                }
             }
         }
+        constraintContainer.addView(cvVideoTitle)
+        // Apply initial orientation constraints now that the view exists
+        updateLayoutForOrientation()
 
         binding.connectionError.setContent {
             OpenEdXTheme {
@@ -152,13 +167,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     showSubtitleLanguage = viewModel.transcripts.size > 1,
                     currentIndex = currentIndex,
                     onTranscriptClick = {
-                        binding.playerView.player?.apply {
+                        binding.playerView?.player?.apply {
                             seekTo(it.start.mseconds.toLong())
                             play()
                         }
                     },
                     onSettingsClick = {
-                        binding.playerView.player?.pause()
+                        binding.playerView?.player?.pause()
                         val dialog = SelectBottomDialogFragment.newInstance(
                             LocaleUtils.getLanguages(viewModel.transcripts.keys.toList())
                         )
@@ -175,13 +190,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
         binding.connectionError.isVisible =
             !viewModel.hasInternetConnection && !viewModel.isDownloaded
-        binding.pipBtn?.setOnClickListener {
+        binding.pipBtn.setOnClickListener {
             enablePipMode()
 
         }
 
-        binding.playerView.resizeMode =
-            AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
+        binding.playerView?.resizeMode =
+            AspectRatioFrameLayout.RESIZE_MODE_FILL
 
         // Register ExoPlayer with PiP system
         viewModel.exoPlayer?.let { player ->
@@ -288,12 +303,12 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     private fun updatePlayerType(player: Player?) {
         with(binding.playerView) {
-            this.player = null
-            this.player = player
-            this.setShowNextButton(false)
-            this.setShowPreviousButton(false)
-            this.controllerHideOnTouch = false
-            this.setFullscreenButtonClickListener {
+            this?.player = null
+            this?.player = player
+            this?.setShowNextButton(false)
+            this?.setShowPreviousButton(false)
+            this?.controllerHideOnTouch = false
+            this?.setFullscreenButtonClickListener {
                 if (viewModel.enterFullscreen()) {
                     VideoFullScreenFragment.newInstance()
                         .show(childFragmentManager, VideoFullScreenFragment.TAG)                }
@@ -304,9 +319,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onResume() {
         super.onResume()
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        binding.pipBtn?.isVisible =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireContext().isPipPermissionGranted()
     }
 
     override fun onPause() {
@@ -334,22 +346,22 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @UnstableApi
     private fun showVideoControllerIndefinitely(show: Boolean) {
         if (show) {
-            binding.playerView.controllerAutoShow = false
-            binding.playerView.controllerShowTimeoutMs = 0
-            binding.playerView.controllerHideOnTouch = true
+            binding.playerView?.controllerAutoShow = false
+            binding.playerView?.controllerShowTimeoutMs = 0
+            binding.playerView?.controllerHideOnTouch = true
         } else {
-            binding.playerView.controllerAutoShow = true
-            binding.playerView.controllerShowTimeoutMs = 1000
-            binding.playerView.controllerHideOnTouch = false
+            binding.playerView?.controllerAutoShow = true
+            binding.playerView?.controllerShowTimeoutMs = 1000
+            binding.playerView?.controllerHideOnTouch = false
         }
-        binding.playerView.showController()
+        binding.playerView?.showController()
     }
 
     private fun enableLongPressDoubleSpeed() {
-        binding.playerView.enableLongPressDoubleSpeed(
+        binding.playerView?.enableLongPressDoubleSpeed(
             player = viewModel.exoPlayer!!,
             scope = viewLifecycleOwner.lifecycleScope,
-            onBadgeVisibilityChange = { binding.doubleSpeedBadge.isVisible = it },
+            onBadgeVisibilityChange = { binding.doubleSpeedBadge?.isVisible = it },
         )
     }
 
@@ -393,11 +405,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
 
         binding.subtitles.isVisible = false
-        binding.cvVideoTitle?.isVisible = false
-        binding.pipBtn?.isVisible = false
+        cvVideoTitle?.isVisible = false
+        binding.pipBtn.isVisible = false
         sharedViewModel.buttonVisibility.value = false
-        binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-        binding.playerView.useController = false
+        binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        binding.playerView?.useController = false
 
         val cs = ConstraintSet()
         cs.clone(constraintContainer)
@@ -443,7 +455,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
 
         // Only stop if truly backgrounded without PiP
-        binding.playerView.player?.let { player ->
+        binding.playerView?.player?.let { player ->
             if (player.isPlaying) player.pause()
         }
     }
@@ -461,22 +473,22 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         if (isInPictureInPictureMode) {
             pipViewModel.enterPipMode()
             binding.subtitles.isVisible = false
-            binding.pipBtn?.isVisible = false
-            binding.playerView.useController = false
+            binding.pipBtn.isVisible = false
+            binding.playerView?.useController = false
             sharedViewModel.buttonVisibility.value = false
-            binding.cvVideoTitle?.visibility = View.GONE
+            cvVideoTitle?.visibility = View.GONE
             // Clear all margins for PiP
             clearAllMarginsAndConstraints()
 
             binding.cardView.radius = 0f
             updatePipActions()
 
-            (binding.playerView.layoutParams as FrameLayout.LayoutParams).apply {
+            (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
                 width = FrameLayout.LayoutParams.MATCH_PARENT
                 height = FrameLayout.LayoutParams.WRAP_CONTENT
             }
 
-            binding.playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
 
             resetConstraintsForPip()
 
@@ -509,14 +521,21 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     @OptIn(UnstableApi::class)
     private fun restoreNormalUI() {
-        binding.subtitles.isVisible = true
-        binding.pipBtn?.isVisible = true
-        binding.playerView.useController = true
-        binding.cvVideoTitle?.visibility = View.VISIBLE
-        sharedViewModel.buttonVisibility.value = true
+        // Reset PlayerView layout params back to MATCH_PARENT x MATCH_PARENT
+        // (they were changed to WRAP_CONTENT during PiP entry)
+        (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
+            width = FrameLayout.LayoutParams.MATCH_PARENT
+            height = FrameLayout.LayoutParams.MATCH_PARENT
+        }
+        binding.playerView?.requestLayout()
 
-        binding.playerView.resizeMode =
-            AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
+        binding.subtitles.isVisible = true
+        binding.pipBtn.isVisible = true
+        binding.playerView?.useController = true
+        binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        binding.playerView?.showController()
+        cvVideoTitle?.visibility = View.VISIBLE
+        sharedViewModel.buttonVisibility.value = true
 
         binding.cardView.radius =
             resources.getDimension(R.dimen.video_corner_radius)
@@ -549,12 +568,16 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.rootLayout?.requestLayout()
     }
 
+    @OptIn(UnstableApi::class)
     private fun updateLayoutForOrientation() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             requireActivity().isInPictureInPictureMode
         ) {
             return
         }
+
+        // cvVideoTitle is created dynamically; skip until it's available
+        val titleView = cvVideoTitle ?: return
 
         // Clear everything first
         clearAllMarginsAndConstraints()
@@ -574,8 +597,26 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         // Completely reset constraints
         constraintSet.clear(binding.cardView.id)
         constraintSet.clear(binding.subtitles.id)
+        constraintSet.clear(titleView.id)
 
         if (isLandscape) {
+            // TITLE: hidden in landscape
+            constraintSet.setVisibility(titleView.id, ConstraintSet.GONE)
+            constraintSet.connect(
+                titleView.id, ConstraintSet.TOP,
+                ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0
+            )
+            constraintSet.connect(
+                titleView.id, ConstraintSet.START,
+                ConstraintSet.PARENT_ID, ConstraintSet.START, 0
+            )
+            constraintSet.connect(
+                titleView.id, ConstraintSet.END,
+                ConstraintSet.PARENT_ID, ConstraintSet.END, 0
+            )
+            constraintSet.constrainWidth(titleView.id, 0)
+            constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
+
             // VIDEO LEFT - NO TOP MARGIN IN LANDSCAPE
             constraintSet.connect(
                 binding.cardView.id,
@@ -603,14 +644,15 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             constraintSet.constrainPercentWidth(binding.cardView.id, 0.60f)
             constraintSet.constrainHeight(binding.cardView.id, playerHeight)
             constraintSet.setDimensionRatio(binding.cardView.id, "20:9")
-
+            binding.playerView?.resizeMode =
+                AspectRatioFrameLayout.RESIZE_MODE_FILL
             // SUBTITLES RIGHT
             constraintSet.connect(
                 binding.subtitles.id,
                 ConstraintSet.START,
                 binding.cardView.id,
                 ConstraintSet.END,
-                16  // Add gap between video and subtitles
+                70  // Add gap between video and subtitles
             )
             constraintSet.connect(
                 binding.subtitles.id,
@@ -631,46 +673,51 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 ConstraintSet.BOTTOM,
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.BOTTOM,
-                subtitleMarginH
+                80
             )
 
             constraintSet.constrainWidth(binding.subtitles.id, 0)
             constraintSet.constrainPercentWidth(binding.subtitles.id, 0.35f)
 
-            constraintSet.setVisibility(binding.cvVideoTitle!!.id, ConstraintSet.GONE)
-            binding.pipBtn?.visibility = View.GONE
+            binding.pipBtn.visibility = View.GONE
 
         } else {
             // PORTRAIT
-            binding.cvVideoTitle?.visibility = View.VISIBLE
-            val playerMarginTop = resources.getDimensionPixelSize(R.dimen.portrait_video_margin_top)
 
-            // VIDEO CARD
+            // TITLE: visible above cardView
+            constraintSet.setVisibility(titleView.id, ConstraintSet.VISIBLE)
             constraintSet.connect(
-                binding.cardView.id,
-                ConstraintSet.TOP,
-                ConstraintSet.PARENT_ID,
-                ConstraintSet.TOP,
-                playerMarginTop
+                titleView.id, ConstraintSet.TOP,
+                ConstraintSet.PARENT_ID, ConstraintSet.TOP, 16
             )
             constraintSet.connect(
-                binding.cardView.id,
-                ConstraintSet.START,
-                ConstraintSet.PARENT_ID,
-                ConstraintSet.START,
-                playerMarginH
+                titleView.id, ConstraintSet.START,
+                ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH
             )
             constraintSet.connect(
-                binding.cardView.id,
-                ConstraintSet.END,
-                ConstraintSet.PARENT_ID,
-                ConstraintSet.END,
-                playerMarginH
+                titleView.id, ConstraintSet.END,
+                ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH
             )
+            constraintSet.constrainWidth(titleView.id, 0)
+            constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
 
-            constraintSet.constrainHeight(binding.cardView.id, playerHeight)
+            // CARDVIEW below title — fixed height so controls are never clipped
+            constraintSet.connect(
+                binding.cardView.id, ConstraintSet.TOP,
+                titleView.id, ConstraintSet.BOTTOM, 16
+            )
+            constraintSet.connect(
+                binding.cardView.id, ConstraintSet.START,
+                ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH
+            )
+            constraintSet.connect(
+                binding.cardView.id, ConstraintSet.END,
+                ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH
+            )
             constraintSet.constrainWidth(binding.cardView.id, 0)
-            constraintSet.setDimensionRatio(binding.cardView.id, "16:9")
+            constraintSet.constrainHeight(binding.cardView.id, playerHeight)
+            constraintSet.setDimensionRatio(binding.cardView.id, null)
+            binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
 
             // SUBTITLES
             constraintSet.connect(
@@ -705,51 +752,25 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             constraintSet.constrainWidth(binding.subtitles.id, 0)
             constraintSet.constrainHeight(binding.subtitles.id, 0)
 
-            constraintSet.setVisibility(binding.cvVideoTitle!!.id, ConstraintSet.VISIBLE)
-            binding.pipBtn?.visibility = View.VISIBLE
+            binding.pipBtn.visibility = View.VISIBLE
         }
 
         constraintSet.applyTo(constraintContainer)
 
-        binding.rootLayout?.post {
-            binding.rootLayout?.requestLayout()
+        binding.rootLayout.post {
+            binding.rootLayout.requestLayout()
         }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        binding.rootLayout?.postDelayed({
+        binding.rootLayout.postDelayed({
             updateLayoutForOrientation()
         }, 100)
 
     }
 
 
-    @OptIn(UnstableApi::class)
-    private fun rebindPlayerView() {
-        val player = binding.playerView.player ?: return
-
-        // 1. Detach player
-        binding.playerView.player = null
-
-        binding.playerView.post {
-            binding.playerView.apply {
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                requestLayout()
-            }
-
-            // 3. Re-attach player
-            binding.playerView.player = player
-            val params = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
-            params.marginStart = 68
-            params.marginEnd = 68
-            params.topMargin = 16
-            binding.cardView.layoutParams = params
-            binding.cardView.radius =40f
-        }
-
-
-    }
 
 
     @OptIn(UnstableApi::class)

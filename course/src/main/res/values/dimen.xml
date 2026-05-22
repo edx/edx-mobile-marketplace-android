@@ -22,6 +22,13 @@
     <dimen name="landscape_player_height">250dp</dimen>
     <dimen name="landscape_video_vertical_margin">20dp</dimen>
     <dimen name="video_corner_radius">24dp</dimen>
+    <dimen name="landscape_subtitle_margin_bottom">24dp</dimen>
+
+
+    <!-- Video title margins (portrait) -->
+    <dimen name="video_title_margin_top">8dp</dimen>
+    <dimen name="video_title_margin_horizontal">24dp</dimen>
+    <dimen name="video_title_to_video_margin">8dp</dimen>
 
 
 </resources>

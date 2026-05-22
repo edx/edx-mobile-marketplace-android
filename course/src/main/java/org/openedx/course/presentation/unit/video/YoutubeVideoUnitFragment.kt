@@ -130,9 +130,16 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             _youTubePlayer?.play()
         }
 
-        binding.pipBtn?.isVisible =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireContext().isPipPermissionGranted()
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        if(isLandscape) {
+            binding.pipBtn?.isVisible = false
+
+        }
+        else{
+            binding.pipBtn?.isVisible = true
+        }
+
 
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
     }
@@ -219,9 +226,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         binding.connectionError.isVisible = !viewModel.hasInternetConnection
 
-        binding.pipBtn?.isVisible =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireContext().isPipPermissionGranted()
+        binding.pipBtn?.isVisible = true
 
         binding.pipBtn?.setOnClickListener {
             enablePipMode()
@@ -356,10 +361,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
                 //  HIDE ALL YouTube fallback UI when internet drops
                 _playerUiController?.rootView?.visibility = View.GONE
-                binding.youtubePlayerView.visibility = View.INVISIBLE
-
-                //  Show your offline UI
-                binding.connectionError.isVisible = true
+                binding.youtubePlayerView.visibility = View.VISIBLE
 
             }
 
@@ -459,7 +461,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             binding.subtitles.isVisible = false
             binding.pipBtn?.isVisible = false
             sharedViewModel.buttonVisibility.value = false
-            binding.cvVideoTitle!!.visibility = View.GONE
+            binding.cvVideoTitle?.visibility = View.GONE
             // Clear all margins for PiP
             clearAllMarginsAndConstraints()
 
@@ -485,9 +487,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
             }
             binding.subtitles.visibility = View.VISIBLE
-            binding.pipBtn?.visibility = View.VISIBLE
             sharedViewModel.buttonVisibility.value = true
-            binding.cvVideoTitle!!.visibility = View.GONE
+            // Let updateLayoutForOrientation() restore cvVideoTitle and pipBtn correctly
 
             // Clear everything and reset
             clearAllMarginsAndConstraints()
@@ -631,6 +632,9 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         val subtitleMarginBottom = resources.getDimensionPixelSize(R.dimen.subtitle_margin_bottom)
         val subtitleMarginTop = resources.getDimensionPixelSize(R.dimen.subtitle_margin_top)
         val playerMarginTop = resources.getDimensionPixelSize(R.dimen.portrait_video_margin_top)
+        val titleMarginTop = resources.getDimensionPixelSize(R.dimen.video_title_margin_top)
+        val titleMarginH = resources.getDimensionPixelSize(R.dimen.video_title_margin_horizontal)
+        val titleToVideoMargin = resources.getDimensionPixelSize(R.dimen.video_title_to_video_margin)
 
         constraintSet.clear(binding.cardView.id)
         constraintSet.clear(binding.subtitles.id)
@@ -647,10 +651,10 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             constraintSet.constrainHeight(binding.cardView.id, playerHeight)
             constraintSet.setDimensionRatio(binding.cardView.id, "20:9")
 
-            constraintSet.connect(binding.subtitles.id, ConstraintSet.START, binding.cardView.id, ConstraintSet.END, 16)
+            constraintSet.connect(binding.subtitles.id, ConstraintSet.START, binding.cardView.id, ConstraintSet.END, 70)
             constraintSet.connect(binding.subtitles.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, subtitleMarginH)
             constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, subtitleMarginH)
-            constraintSet.connect(binding.subtitles.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, subtitleMarginH)
+            constraintSet.connect(binding.subtitles.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 80)
 
             constraintSet.constrainWidth(binding.subtitles.id, 0)
             constraintSet.constrainPercentWidth(binding.subtitles.id, 0.35f)
@@ -659,8 +663,19 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         } else {
 
-            // PORTRAIT — VIDEO TOP, SUBTITLES BELOW
-            constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, playerMarginTop)
+            // PORTRAIT — Re-apply cvVideoTitle constraints (top + horizontal margins) so they are
+            // correct even when arriving from landscape where the title was GONE.
+            binding.cvVideoTitle?.let { titleView ->
+                constraintSet.clear(titleView.id)
+                constraintSet.connect(titleView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, titleMarginTop)
+                constraintSet.connect(titleView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, titleMarginH)
+                constraintSet.connect(titleView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, titleMarginH)
+                constraintSet.constrainWidth(titleView.id, 0)
+                constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
+            }
+
+            // PORTRAIT — VIDEO BELOW TITLE, SUBTITLES BELOW VIDEO
+            constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, binding.cvVideoTitle!!.id, ConstraintSet.BOTTOM, titleToVideoMargin)
             constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH)
             constraintSet.connect(binding.cardView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH)
 
@@ -737,4 +752,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     }
 
 }
+
+
 

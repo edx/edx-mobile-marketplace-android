@@ -619,7 +619,8 @@ private fun ResumeCoursePreview() {
 private val mockAssignmentProgress = AssignmentProgress(
     assignmentType = "Home",
     numPointsEarned = 1f,
-    numPointsPossible = 3f
+    numPointsPossible = 3f,
+    shortLabel = "HM1"
 )
 private val mockChapterBlock = Block(
     id = "id",

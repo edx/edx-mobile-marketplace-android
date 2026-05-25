@@ -8,6 +8,7 @@ import org.openedx.core.domain.model.CourseEnrollmentDetailsSource
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.course.data.repository.CourseRepository
 
+@Suppress("TooManyFunctions")
 class CourseInteractor(
     private val repository: CourseRepository
 ) {
@@ -89,4 +90,8 @@ class CourseInteractor(
     suspend fun removeDownloadModel(id: String) = repository.removeDownloadModel(id)
 
     fun getDownloadModels() = repository.getDownloadModels()
+    fun getCourseProgress(courseId: String, isRefresh: Boolean, getOnlyCacheIfExist: Boolean) =
+        repository.getCourseProgress(courseId, isRefresh, getOnlyCacheIfExist)
+
+    suspend fun getVideoProgress(blockId: String) = repository.getVideoProgress(blockId)
 }

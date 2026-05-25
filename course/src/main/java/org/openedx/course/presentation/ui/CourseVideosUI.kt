@@ -654,7 +654,10 @@ private fun CourseVideosScreenPreview() {
                     remainingSize = 0,
                     allCount = 1,
                     allSize = 0
-                )
+                ),
+                mapOf(),
+                videoPreview = mapOf(),
+                videoProgress = mapOf()
             ),
             courseTitle = "",
             onExpandClick = { },
@@ -709,7 +712,10 @@ private fun CourseVideosScreenTabletPreview() {
                     remainingSize = 0,
                     allCount = 0,
                     allSize = 0
-                )
+                ),
+                mapOf(),
+                videoPreview = mapOf(),
+                videoProgress = mapOf()
             ),
             courseTitle = "",
             onExpandClick = { },
@@ -726,7 +732,8 @@ private fun CourseVideosScreenTabletPreview() {
 private val mockAssignmentProgress = AssignmentProgress(
     assignmentType = "Home",
     numPointsEarned = 1f,
-    numPointsPossible = 3f
+    numPointsPossible = 3f,
+    shortLabel = "HM1"
 )
 
 private val mockChapterBlock = Block(

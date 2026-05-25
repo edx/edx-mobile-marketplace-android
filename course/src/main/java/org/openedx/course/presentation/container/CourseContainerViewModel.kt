@@ -73,6 +73,7 @@ import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.RefreshDates
 import org.openedx.core.system.notifier.RefreshDiscussions
+import org.openedx.core.system.notifier.RefreshProgress
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
@@ -666,6 +667,12 @@ class CourseContainerViewModel(
                 }
             }
 
+            CourseContainerTab.PROGRESS -> {
+                viewModelScope.launch {
+                    courseNotifier.send(RefreshProgress)
+                }
+            }
+
             else -> {
                 _refreshing.value = false
             }
@@ -717,6 +724,8 @@ class CourseContainerViewModel(
     fun courseContainerTabClickedEvent(index: Int) {
         when (getTabByIndex(index)) {
             CourseContainerTab.HOME -> courseTabClickedEvent()
+            CourseContainerTab.CONTENT -> contentTabClickedEvent()
+            CourseContainerTab.PROGRESS -> progressTabClickedEvent()
             CourseContainerTab.VIDEOS -> videoTabClickedEvent()
             CourseContainerTab.DISCUSSIONS -> discussionTabClickedEvent()
             CourseContainerTab.DATES -> datesTabClickedEvent()
@@ -852,6 +861,10 @@ class CourseContainerViewModel(
         logCourseContainerEvent(CourseAnalyticsEvent.HOME_TAB)
     }
 
+    private fun contentTabClickedEvent() {
+        logCourseContainerEvent(CourseAnalyticsEvent.CONTENT_TAB)
+    }
+
     private fun videoTabClickedEvent() {
         logCourseContainerEvent(CourseAnalyticsEvent.VIDEOS_TAB)
     }
@@ -867,7 +880,9 @@ class CourseContainerViewModel(
     private fun moreTabClickedEvent() {
         logCourseContainerEvent(CourseAnalyticsEvent.MORE_TAB)
     }
-
+    private fun progressTabClickedEvent() {
+        logCourseContainerEvent(CourseAnalyticsEvent.PROGRESS_TAB)
+    }
     private fun logCourseContainerEvent(event: CourseAnalyticsEvent) {
         courseAnalytics.logScreenEvent(
             screenName = event.eventName,

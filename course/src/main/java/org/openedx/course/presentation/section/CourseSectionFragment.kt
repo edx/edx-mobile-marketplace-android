@@ -481,6 +481,6 @@ private val mockBlock = Block(
     completion = 0.0,
     containsGatedContent = false,
     authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
-    assignmentProgress = AssignmentProgress("", 1f, 2f),
+    assignmentProgress = AssignmentProgress("", 1f, 2f,"HM1"),
     due = Date()
 )

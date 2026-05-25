@@ -270,7 +270,10 @@ class IAPDialogFragment : DialogFragment() {
                                     learnerName = iapViewModel.user?.name,
                                     orgName = iapViewModel.purchaseData.orgName
                                         ?: iapViewModel.appData.appName,
-                                    orgLogo = iapViewModel.purchaseData.orgLogo
+                                    orgLogo = iapViewModel.purchaseData.orgLogo,
+                                    onCertificatePreviewShown = {
+                                        iapViewModel.logCertificatePreviewShown()
+                                    },
                                 )
                             }
                         } else {

@@ -43,6 +43,7 @@ import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDone
@@ -648,14 +649,13 @@ fun CourseSection(
             }
         )
         courseSubSections?.forEach { subSectionBlock ->
-            AnimatedVisibility(
-                visible = courseSectionsState == true
-            ) {
                 CourseSubSectionItem(
                     block = subSectionBlock,
-                    onClick = onSubSectionClick
+                    onClick = onSubSectionClick,
+                    showDueDate = true,
+                    useRelativeDates = true
                 )
-            }
+
         }
     }
 }
@@ -678,7 +678,7 @@ fun CourseExpandableChapterCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        CardArrow(degrees = arrowDegrees)
+       // CardArrow(degrees = arrowDegrees)
         if (block.isCompleted()) {
             val completedIconPainter = painterResource(R.drawable.course_ic_task_alt)
             val completedIconColor = MaterialTheme.appColors.successGreen
@@ -742,7 +742,7 @@ fun CourseExpandableChapterCard(
                         )
                     } else if (downloadedState == DownloadedState.WAITING) {
                         Icon(
-                            painter = painterResource(id = R.drawable.course_download_waiting),
+                            painter = painterResource(id = coreR.drawable.course_download_waiting),
                             contentDescription = stringResource(id = R.string.course_accessibility_stop_downloading_course_section),
                             tint = MaterialTheme.appColors.error
                         )
@@ -766,6 +766,8 @@ fun CourseExpandableChapterCard(
 fun CourseSubSectionItem(
     modifier: Modifier = Modifier,
     block: Block,
+    useRelativeDates: Boolean,
+    showDueDate: Boolean,
     onClick: (Block) -> Unit,
 ) {
     val context = LocalContext.current
@@ -830,6 +832,94 @@ fun CourseSubSectionItem(
         }
     }
 }
+/*
+* @Composable
+fun CourseSubSectionItem(
+    modifier: Modifier = Modifier,
+    block: Block,
+    useRelativeDates: Boolean,
+    showDueDate: Boolean,
+    onClick: (Block) -> Unit,
+) {
+    val context = LocalContext.current
+    val icon = if (block.isCompleted()) {
+        painterResource(R.drawable.course_ic_task_alt)
+    } else {
+        painterResource(coreR.drawable.ic_core_chapter_icon)
+    }
+    val iconColor = if (block.isCompleted()) {
+       MaterialTheme.appColors.successGreen
+    } else {
+        MaterialTheme.appColors.onSurface
+    }
+    val due by rememberSaveable {
+        mutableStateOf(
+            block.due?.let { TimeUtils.formatToString(context, it, useRelativeDates) }
+        )
+    }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick(block) }
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            androidx.compose.material3.Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = iconColor
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            androidx.compose.material3.Text(
+                modifier = Modifier.weight(1f),
+                text = block.displayName,
+                style = MaterialTheme.appTypography.titleSmall,
+                color = MaterialTheme.appColors.textPrimary,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            if (due != null || showDueDate) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    tint = MaterialTheme.appColors.onSurface,
+                    contentDescription = null
+                )
+            }
+        }
+        val strings = listOf(
+            block.assignmentProgress?.assignmentType,
+            due?.let {
+                stringResource(
+                    id = coreR.string.core_date_format_assignment_due,
+                    it
+                )
+            },
+            block.assignmentProgress?.numPointsPossible?.let {
+                if (it > 0) {
+                    block.assignmentProgress?.toPointString(" ")
+                } else {
+                    null
+                }
+            }
+        )
+        val assignmentString = strings
+            .filter { !it.isNullOrEmpty() }
+            .joinToString(" - ")
+
+        if (assignmentString.isNotEmpty() && showDueDate) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = assignmentString,
+                style = MaterialTheme.appTypography.bodySmall,
+                color = MaterialTheme.appColors.textPrimary
+            )
+        }
+    }
+}*/
 
 @Composable
 fun CourseUnitToolbar(
@@ -1430,7 +1520,10 @@ private fun CourseSubSectionItemPreview() {
     OpenEdXTheme {
         CourseSubSectionItem(
             block = mockChapterBlock,
-            onClick = {}
+            onClick = {},
+            modifier = Modifier ,
+            useRelativeDates = true,
+            showDueDate = true
         )
     }
 }
@@ -1465,6 +1558,6 @@ private val mockChapterBlock = Block(
     completion = 1.0,
     containsGatedContent = false,
     authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
-    assignmentProgress = AssignmentProgress("", 1f, 2f),
+    assignmentProgress = AssignmentProgress("", 1f, 2f,"HM1"),
     due = Date()
 )

@@ -195,6 +195,11 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
             saveString(LAST_SIGN_IN_TYPE, AuthType.valueOf(value).name)
         }
         get() = getString(LAST_SIGN_IN_TYPE, AuthType.PASSWORD.name)
+    override var isRelativeDatesEnabled: Boolean
+        set(value) {
+            saveBoolean(IS_RELATIVE_DATES_ENABLED, value)
+        }
+        get() = getBoolean(IS_RELATIVE_DATES_ENABLED, true)
 
     override fun setCalendarSyncEventsDialogShown(courseName: String) {
         saveBoolean(courseName.replaceSpace("_"), true)
@@ -264,5 +269,7 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val PLS_BANNER_SHOWN = "pls_banner_shown"
         private const val APP_THEME_MODE = "app_theme_mode"
         private const val KEY_DATADOG_ENABLED = "datadog_enabled"
+
+        private const val IS_RELATIVE_DATES_ENABLED = "is_relative_dates_enabled"
     }
 }

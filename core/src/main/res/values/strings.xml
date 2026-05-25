@@ -264,5 +264,21 @@
     <string name="iap_certificate_professor_text">Professor</string>
     <string name="iap_certificate_universityx_text">UniversityX</string>
     <string name="preview_watermark">PREVIEW</string>
+    <string name="core_no_assignments">No assignments available for this course.</string>
+    <string name="course_return_to_course_home">Return to Course Home</string>
+    <string name="course_progress_no_assignments">This course does not contain graded assignments.</string>
+    <string name="core_next">Next</string>
+    <string name="core_previous">Previous</string>
+    <string name="core_date_format_due_in_days">Due in %1$d days</string>
+    <string name="core_date_format_assignment_due">Due %1$s</string>
+    <string name="course_review_grading_policy">Review Course Grading Policy</string>
+    <string name="course_completed_of">%1$s/%2$s Completed</string>\
+    <string name="course_complete_points">Complete - %1$s points</string>
+    <string name="course_past_due">Past Due - %1$s points</string>
+    <string name="course_in_progress">- %1$s points</string>
+    <string name="course_of_grade">%1$s %% of Grade</string>
+    <string name="course_accessibility_assignment_completed">Assignment completed</string>
+    <string name="course_accessibility_assignment_due_date_past">Assignment due date past</string>
+    <string name="core_no_progress">This course does not contain exams or graded assignments.</string>
 
 </resources>

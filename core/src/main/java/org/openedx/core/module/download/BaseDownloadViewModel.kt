@@ -1,6 +1,5 @@
 package org.openedx.core.module.download
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -31,7 +30,7 @@ abstract class BaseDownloadViewModel(
     private val analytics: CoreAnalytics,
 ) : BaseViewModel() {
 
-    private val allBlocks = hashMapOf<String, Block>()
+    val allBlocks = hashMapOf<String, Block>()
 
     private val downloadableChildrenMap = hashMapOf<String, List<String>>()
     private val downloadModelsStatus = hashMapOf<String, DownloadedState>()
@@ -58,7 +57,7 @@ abstract class BaseDownloadViewModel(
         _downloadModelsStatusFlow.emit(downloadModelsStatus)
     }
 
-    private suspend fun getDownloadModelList(): List<DownloadModel> {
+    protected suspend fun getDownloadModelList(): List<DownloadModel> {
         return downloadDao.readAllData().first().map { it.mapToDomain() }
     }
 
@@ -212,7 +211,11 @@ abstract class BaseDownloadViewModel(
             workerController.removeModels(downloadableChildren)
         }
     }
-
+    fun removeBlockDownloadModel(blockId: String) {
+        viewModelScope.launch {
+            workerController.removeModel(blockId)
+        }
+    }
     fun removeAllDownloadModels() {
         viewModelScope.launch {
             val downloadableChildren = downloadableChildrenMap.values.flatten()

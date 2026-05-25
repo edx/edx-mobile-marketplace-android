@@ -33,6 +33,7 @@ open class VideoUnitViewModel(
     private val logger = Logger(TAG)
 
     var videoUrl = ""
+    var duration = 0L
     var videoDuration = 0L
     var transcripts = emptyMap<String, String>()
     var isPlaying = true
@@ -65,6 +66,7 @@ open class VideoUnitViewModel(
             notifier.notifier.collect {
                 if (it is CourseVideoPositionChanged && videoUrl == it.videoUrl) {
                     _currentVideoTime.value = it.videoTime
+                    saveVideoProgress()
                     videoDuration = it.videoDuration
                     isPlaying = it.isPlaying
                 } else if (it is CourseSubtitleLanguageChanged) {
@@ -75,7 +77,10 @@ open class VideoUnitViewModel(
             }
         }
     }
-
+    override fun onPause(owner: LifecycleOwner) {
+        saveVideoProgress()
+        super.onPause(owner)
+    }
     fun downloadSubtitles() {
         viewModelScope.launch(Dispatchers.IO) {
             val transcriptUrl = getTranscriptUrl()
@@ -136,7 +141,16 @@ open class VideoUnitViewModel(
             }
         }
     }
-
+    private fun saveVideoProgress() {
+        viewModelScope.launch {
+            courseRepository.saveVideoProgress(
+                blockId,
+                videoUrl,
+                _currentVideoTime.value ?: 0L,
+                duration
+            )
+        }
+    }
     fun getCurrentVideoTime() = currentVideoTime.value ?: 0
 
     companion object {

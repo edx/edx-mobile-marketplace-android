@@ -5,6 +5,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -32,10 +38,17 @@ import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,6 +61,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
@@ -56,6 +73,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
@@ -86,6 +104,7 @@ import org.openedx.core.presentation.settings.calendarsync.CalendarSyncDialogTyp
 import org.openedx.core.ui.CheckmarkView
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.IAPErrorDialog
+import org.openedx.core.ui.IconText
 import org.openedx.core.ui.OfflineModeDialog
 import org.openedx.core.ui.OpenEdXBrandButton
 import org.openedx.core.ui.OpenEdXOutlineBrandButton
@@ -110,6 +129,8 @@ import org.openedx.course.presentation.dates.CourseDatesScreen
 import org.openedx.course.presentation.handouts.HandoutsScreen
 import org.openedx.course.presentation.handouts.HandoutsType
 import org.openedx.course.presentation.outline.CourseOutlineScreen
+import org.openedx.course.presentation.home.CourseHomeScreen
+import org.openedx.course.presentation.progress.CourseProgressScreen
 import org.openedx.course.presentation.ui.CourseVideosScreen
 import org.openedx.course.presentation.ui.DatesShiftedSnackBar
 import org.openedx.discussion.presentation.topics.DiscussionTopicsScreen
@@ -206,9 +227,12 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 
     private fun initCourseView() {
         binding.composeCollapsingLayout.setContent {
+            val isNavigationEnabled by viewModel.isNavigationEnabled.collectAsState()
             CourseDashboard(
                 viewModel = viewModel,
+                isNavigationEnabled = isNavigationEnabled,
                 isResumed = isResumed,
+                openTab = requireArguments().getString(ARG_OPEN_TAB, CourseContainerTab.HOME.name),
                 fragmentActivity = requireActivity(),
                 onRefresh = { page ->
                     onRefresh(page)
@@ -337,10 +361,34 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
 @Composable
 fun CourseDashboard(
     viewModel: CourseContainerViewModel,
+    isNavigationEnabled: Boolean,
     isResumed: Boolean,
+    openTab: String,
     fragmentActivity: FragmentActivity,
     onRefresh: (page: Int) -> Unit,
 ) {
+    val requiredTab = when (openTab.uppercase()) {
+        CourseContainerTab.HOME.name -> CourseContainerTab.HOME
+        CourseContainerTab.DATES.name -> CourseContainerTab.DATES
+        CourseContainerTab.VIDEOS.name -> CourseContainerTab.VIDEOS
+        CourseContainerTab.PROGRESS.name -> CourseContainerTab.PROGRESS
+        CourseContainerTab.DISCUSSIONS.name -> CourseContainerTab.DISCUSSIONS
+        CourseContainerTab.MORE.name -> CourseContainerTab.MORE
+        else -> CourseContainerTab.HOME
+    }
+    val pagerState = rememberPagerState(
+        initialPage = CourseContainerTab.entries.indexOf(requiredTab),
+        pageCount = { CourseContainerTab.entries.size }
+    )
+    val contentTabPagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { CourseContentTab.entries.size }
+    )
+    val homePagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { CourseHomePagerTab.entries.size }
+    )
+    var selectedContentTab by remember { mutableStateOf(CourseContentTab.ALL) }
     OpenEdXTheme {
         val windowSize = rememberWindowSize()
         val scope = rememberCoroutineScope()
@@ -350,8 +398,21 @@ fun CourseDashboard(
             modifier = Modifier
                 .fillMaxSize()
                 .navigationBarsPadding(),
-            scaffoldState = scaffoldState,
-            backgroundColor = MaterialTheme.appColors.background
+            backgroundColor = MaterialTheme.appColors.background,
+            bottomBar = {
+                val currentPage = CourseContainerTab.entries[pagerState.currentPage]
+                Box {
+                    if (currentPage == CourseContainerTab.CONTENT &&
+                        selectedContentTab == CourseContentTab.ASSIGNMENTS
+                    ) {
+                        AssignmentsBottomBar(scope = scope, pagerState = pagerState)
+                    }else {
+                    AnimatedVisibility(visible = currentPage == CourseContainerTab.HOME) {
+                        HomeNavigationRow(homePagerState = homePagerState)
+                    }
+                        }
+                }
+            }
         ) { paddingValues ->
             val dataReady = viewModel.dataReady.observeAsState()
             val isNavigationEnabled by viewModel.isNavigationEnabled.collectAsState()
@@ -359,11 +420,6 @@ fun CourseDashboard(
             val courseImage by viewModel.courseImage.collectAsState()
             val uiMessage by viewModel.uiMessage.collectAsState(null)
             val courseContainerTabs by viewModel.courseContainerTabs.collectAsState()
-
-            val pagerState = rememberPagerState(
-                initialPage = viewModel.getOpenTabIndex(),
-                pageCount = { courseContainerTabs.size }
-            )
             val canShowTrackSelection by viewModel.canShowTrackSelection.collectAsState()
             val accessStatus = viewModel.courseAccessStatus.observeAsState()
             val canShowValuePropButton by viewModel.canShowValuePropButton.collectAsState()
@@ -383,6 +439,9 @@ fun CourseDashboard(
                 }
             }
             HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
+            LaunchedEffect(pagerState.currentPage) {
+                tabState.animateScrollToItem(pagerState.currentPage)
+            }
 
             if (dataReady.value.isTrue() && canShowTrackSelection &&
                 viewModel.courseDetails.isNotNull()
@@ -498,9 +557,14 @@ fun CourseDashboard(
                                             viewModel = viewModel,
                                             courseContainerTabs = courseContainerTabs,
                                             pagerState = pagerState,
+                                            contentTabPagerState = contentTabPagerState,
+                                            homePagerState = homePagerState,
                                             isNavigationEnabled = isNavigationEnabled,
                                             isResumed = isResumed,
                                             fragmentManager = fragmentManager,
+                                            onContentTabSelected = { tab ->
+                                                selectedContentTab = tab
+                                            }
                                         )
                                     }
 
@@ -566,18 +630,50 @@ private fun DashboardPager(
     viewModel: CourseContainerViewModel,
     courseContainerTabs: List<CourseContainerTab>,
     pagerState: PagerState,
+    contentTabPagerState: PagerState,
+    homePagerState: PagerState,
     isNavigationEnabled: Boolean,
     isResumed: Boolean,
     fragmentManager: FragmentManager,
+    onContentTabSelected: (CourseContentTab) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
     HorizontalPager(
         state = pagerState,
         userScrollEnabled = isNavigationEnabled,
         beyondViewportPageCount = CourseContainerTab.entries.size
     ) { page ->
-        when (viewModel.getTabByIndex(page)) {
+        when (CourseContainerTab.entries[page]) {
             CourseContainerTab.HOME -> {
-                CourseOutlineScreen(
+
+                CourseHomeScreen(
+                    windowSize = windowSize,
+                    viewModel = koinViewModel(
+                        parameters = { parametersOf(viewModel.courseId, viewModel.courseName) }
+                    ),
+                    fragmentManager = fragmentManager,
+                    homePagerState = homePagerState,
+                    onNavigateToContent = { contentTab ->
+                        scope.launch {
+                            // First scroll to CONTENT tab
+                            pagerState.scrollToPage(
+                                CourseContainerTab.entries.indexOf(CourseContainerTab.CONTENT)
+                            )
+                            // Then scroll to the specified content tab
+                            contentTabPagerState.scrollToPage(
+                                CourseContentTab.entries.indexOf(contentTab)
+                            )
+                        }
+                    },
+                    onNavigateToProgress = {
+                        scope.launch {
+                            pagerState.scrollToPage(
+                                CourseContainerTab.entries.indexOf(CourseContainerTab.PROGRESS)
+                            )
+                        }
+                    }
+                )
+                /*CourseOutlineScreen(
                     windowSize = windowSize,
                     viewModel = koinViewModel(
                         parameters = { parametersOf(viewModel.courseId, viewModel.courseName) }
@@ -586,7 +682,7 @@ private fun DashboardPager(
                     onResetDatesClick = {
                         viewModel.onRefresh(CourseContainerTab.DATES)
                     }
-                )
+                )*/
             }
 
             CourseContainerTab.VIDEOS -> {
@@ -629,6 +725,13 @@ private fun DashboardPager(
                 )
             }
 
+            CourseContainerTab.PROGRESS -> {
+                CourseProgressScreen(
+                    windowSize = windowSize,
+                    viewModel = koinViewModel(parameters = { parametersOf(viewModel.courseId) }),
+                )
+            }
+
             CourseContainerTab.MORE -> {
                 HandoutsScreen(
                     windowSize = windowSize,
@@ -646,6 +749,28 @@ private fun DashboardPager(
                             HandoutsType.Announcements
                         )
                     })
+            }
+            CourseContainerTab.CONTENT -> {
+                ContentTabScreen(
+                    viewModel = koinViewModel(
+                        parameters = { parametersOf(viewModel.courseId, viewModel.courseName) }
+                    ),
+                    windowSize = windowSize,
+                    fragmentManager = fragmentManager,
+                    courseId = viewModel.courseId,
+                    courseName = viewModel.courseName,
+                    pagerState = contentTabPagerState,
+                    onTabSelected = onContentTabSelected,
+                    onNavigateToHome = {
+                        scope.launch {
+                            pagerState.scrollToPage(
+                                CourseContainerTab.entries.indexOf(
+                                    CourseContainerTab.HOME
+                                )
+                            )
+                        }
+                    }
+                )
             }
         }
     }
@@ -985,3 +1110,187 @@ private fun scrollToTab(
         pagerState.animateScrollToPage(pageIndex)
     }
 }
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HomeNavigationRow(homePagerState: PagerState) {
+    val homeCoroutineScope = rememberCoroutineScope()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.appColors.background),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val isPreviousPageEnabled = homePagerState.currentPage > 0
+        IconButton(
+            modifier = Modifier.size(60.dp),
+            enabled = homePagerState.currentPage > 0,
+            onClick = {
+                homeCoroutineScope.launch {
+                    homePagerState.animateScrollToPage(homePagerState.currentPage - 1)
+                }
+            }
+        ) {
+            Icon(
+                modifier = Modifier.size(12.dp),
+                imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
+                contentDescription = stringResource(CoreR.string.core_previous),
+                tint = if (isPreviousPageEnabled) {
+                    MaterialTheme.appColors.textDark
+                } else {
+                    MaterialTheme.appColors.textFieldHint
+                }
+            )
+        }
+        PageIndicator(
+            modifier = Modifier.padding(vertical = 16.dp),
+            numberOfPages = CourseHomePagerTab.entries.size,
+            selectedPage = homePagerState.currentPage,
+            defaultRadius = 8.dp,
+            space = 8.dp,
+            selectedLength = 24.dp,
+        )
+        Log.d("TAG", "HomeNavigationRow: "+homePagerState.currentPage)
+        val isNextPageEnabled = homePagerState.currentPage < CourseHomePagerTab.entries.size - 1
+        IconButton(
+            modifier = Modifier.size(60.dp),
+            enabled = isNextPageEnabled,
+            onClick = {
+                homeCoroutineScope.launch {
+                    homePagerState.animateScrollToPage(homePagerState.currentPage + 1)
+                }
+            }
+        ) {
+            Icon(
+                modifier = Modifier.size(12.dp),
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                contentDescription = stringResource(CoreR.string.core_next),
+                tint = if (isNextPageEnabled) {
+                    MaterialTheme.appColors.textDark
+                } else {
+                    MaterialTheme.appColors.textFieldHint
+                }
+            )
+        }
+    }
+}
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun AssignmentsBottomBar(
+    scope: CoroutineScope,
+    pagerState: PagerState
+) {
+    Column(
+        modifier = Modifier.background(MaterialTheme.appColors.background),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HorizontalDivider(modifier = Modifier.fillMaxWidth())
+        TextButton(
+            onClick = {
+                scrollToProgress(scope, pagerState)
+            }
+        ) {
+            IconText(
+                text = stringResource(CoreR.string.course_review_grading_policy),
+                painter = painterResource(id = CoreR.drawable.core_ic_mountains),
+                color = MaterialTheme.appColors.primary,
+                textStyle = MaterialTheme.appTypography.labelLarge
+            )
+        }
+    }
+}
+@OptIn(ExperimentalFoundationApi::class)
+private fun scrollToProgress(scope: CoroutineScope, pagerState: PagerState) {
+    scope.launch {
+        pagerState.scrollToPage(CourseContainerTab.entries.indexOf(CourseContainerTab.PROGRESS))
+    }
+}
+@Composable
+fun PageIndicator(
+    numberOfPages: Int,
+    modifier: Modifier = Modifier,
+    selectedPage: Int = 0,
+    selectedColor: Color = MaterialTheme.appColors.info,
+    previousUnselectedColor: Color = MaterialTheme.appColors.cardViewBorder,
+    nextUnselectedColor: Color = MaterialTheme.appColors.textFieldBorder,
+    defaultRadius: Dp = 20.dp,
+    selectedLength: Dp = 60.dp,
+    space: Dp = 30.dp,
+    animationDurationInMillis: Int = 300,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(space),
+        modifier = modifier,
+    ) {
+        for (i in 0 until numberOfPages) {
+            val isSelected = i == selectedPage
+            val unselectedColor =
+                if (i < selectedPage) previousUnselectedColor else nextUnselectedColor
+            PageIndicatorView(
+                isSelected = isSelected,
+                selectedColor = selectedColor,
+                defaultColor = unselectedColor,
+                defaultRadius = defaultRadius,
+                selectedLength = selectedLength,
+                animationDurationInMillis = animationDurationInMillis,
+            )
+        }
+    }
+}
+@Composable
+fun PageIndicatorView(
+    isSelected: Boolean,
+    selectedColor: Color,
+    defaultColor: Color,
+    defaultRadius: Dp,
+    selectedLength: Dp,
+    animationDurationInMillis: Int,
+    modifier: Modifier = Modifier,
+) {
+    val color: Color by animateColorAsState(
+        targetValue = if (isSelected) {
+            selectedColor
+        } else {
+            defaultColor
+        },
+        animationSpec = tween(
+            durationMillis = animationDurationInMillis,
+        ),
+        label = ""
+    )
+    val width: Dp by animateDpAsState(
+        targetValue = if (isSelected) {
+            selectedLength
+        } else {
+            defaultRadius
+        },
+        animationSpec = tween(
+            durationMillis = animationDurationInMillis,
+        ),
+        label = ""
+    )
+
+    Canvas(
+        modifier = modifier
+            .size(
+                width = width,
+                height = defaultRadius,
+            ),
+    ) {
+        drawRoundRect(
+            color = color,
+            topLeft = Offset.Zero,
+            size = Size(
+                width = width.toPx(),
+                height = defaultRadius.toPx(),
+            ),
+            cornerRadius = CornerRadius(
+                x = defaultRadius.toPx(),
+                y = defaultRadius.toPx(),
+            ),
+        )
+    }
+}
+
+

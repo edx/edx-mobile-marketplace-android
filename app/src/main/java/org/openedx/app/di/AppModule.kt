@@ -38,6 +38,8 @@ import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.data.model.CourseStructureModel
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
+import org.openedx.core.domain.helper.VideoPreviewHelper
+import org.openedx.core.module.DownloadWorker
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.TranscriptManager
 import org.openedx.core.module.billing.BillingProcessor
@@ -208,6 +210,7 @@ val appModule = module {
     single {
         DownloadWorkerController(get(), get(), get())
     }
+    single { DownloadWorker(get(), get()) }
 
     single {
         val resourceManager = get<ResourceManager>()
@@ -248,12 +251,12 @@ val appModule = module {
         if (get<Config>().isPushNotificationsEnabled()) get<PushManager>()
         else get<DummyPushManager>()
     }
-
     factory { AgreementProvider(get(), get()) }
     factory { FacebookAuthHelper() }
     factory { GoogleAuthHelper(get(), get()) }
     factory { MicrosoftAuthHelper() }
     factory { OAuthHelper(get(), get(), get()) }
+    factory { VideoPreviewHelper(get(), get()) }
 
     factory { FileUtil(get()) }
 

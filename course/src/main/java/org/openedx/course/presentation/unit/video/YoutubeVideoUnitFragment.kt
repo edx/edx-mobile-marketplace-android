@@ -44,7 +44,6 @@ import org.openedx.course.data.repository.PipBroadcastReceiverManager
 import org.openedx.course.data.repository.player.YouTubePlayerController
 import org.openedx.course.databinding.FragmentYoutubeVideoUnitBinding
 import org.openedx.course.domain.model.PipPlayerType
-import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
 import kotlin.getValue
@@ -70,16 +69,12 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             requireArguments().getString(ARG_BLOCK_ID, "")
         )
     }
-    private val router by inject<CourseRouter>()
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
 
-    // NEW: PiP ViewModel (Activity-scoped, shared across video fragments)
     private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
 
-    // NEW: PiP BroadcastReceiver manager (injected via Koin)
     private val pipReceiverManager: PipBroadcastReceiverManager by inject()
 
-    // NEW: YouTube PlayerController for PiP
     private var ytController: YouTubePlayerController? = null
 
     private var _binding: FragmentYoutubeVideoUnitBinding? = null
@@ -147,7 +142,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Observe PiP state changes to refresh PiP remote actions (play/pause/replay)
         pipViewModel.pipState
             .onEach {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
@@ -269,7 +263,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 youTubePlayer: YouTubePlayer,
                 state: PlayerConstants.PlayerState
             ) {
-                // Ignore when fullscreen fragment is open
                 if (requireActivity()
                         .supportFragmentManager
                         .findFragmentByTag("FullscreenYoutube") != null
@@ -306,7 +299,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
                 _youTubePlayer = youTubePlayer
 
-                // Register with PiP system via ViewModel
                 ytController = YouTubePlayerController(youTubePlayer)
                 pipViewModel.registerPlayer(ytController!!, PipPlayerType.YOUTUBE)
 
@@ -315,7 +307,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                     _playerUiController = DefaultPlayerUiController(binding.youtubePlayerView, youTubePlayer)
                 }
 
-                //  Attach custom UI
                 val controller = _playerUiController ?: return
                 controller.rootView.visibility = View.VISIBLE
                 binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
@@ -326,7 +317,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
                     val videoId = viewModel.videoUrl.substringAfter("watch?v=")
 
-                    // Pause main player exactly once
                     FullscreenYoutubeFragment.newInstance(
                         videoId = videoId,
                         startTime = currentTime
@@ -359,7 +349,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             ) {
                 super.onError(youTubePlayer, error)
 
-                //  HIDE ALL YouTube fallback UI when internet drops
                 _playerUiController?.rootView?.visibility = View.GONE
                 binding.youtubePlayerView.visibility = View.VISIBLE
 
@@ -443,7 +432,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         requireActivity().enterPictureInPictureMode(pipParams)
         resetConstraintsForPip()
-        // small delay to ensure PiP entered before setting actions
         binding.youtubePlayerView.post {
             updatePipActions()
         }
@@ -462,7 +450,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             binding.pipBtn?.isVisible = false
             sharedViewModel.buttonVisibility.value = false
             binding.cvVideoTitle?.visibility = View.GONE
-            // Clear all margins for PiP
             clearAllMarginsAndConstraints()
 
             binding.cardView.radius = 0f
@@ -472,7 +459,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             params.height = ViewGroup.LayoutParams.WRAP_CONTENT
             binding.cardView.layoutParams = params
 
-            // Maintain fixed 16:9 ratio
             binding.cardView.post {
                 val ratio = ConstraintSet()
                 ratio.clone(binding.rootLayout as ConstraintLayout)
@@ -488,9 +474,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             }
             binding.subtitles.visibility = View.VISIBLE
             sharedViewModel.buttonVisibility.value = true
-            // Let updateLayoutForOrientation() restore cvVideoTitle and pipBtn correctly
 
-            // Clear everything and reset
             clearAllMarginsAndConstraints()
 
             binding.cardView.radius = resources.getDimension(R.dimen.card_corner_radius)
@@ -589,7 +573,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
 
     private fun clearAllMarginsAndConstraints() {
-        // Clear layout params margins
         val cardParams = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
         cardParams.marginStart = 0
         cardParams.marginEnd = 0
@@ -604,7 +587,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         subtitleParams.bottomMargin = 0
         binding.subtitles.layoutParams = subtitleParams
 
-        // Force layout update
         binding.cardView.requestLayout()
         binding.subtitles.requestLayout()
         binding.rootLayout.requestLayout()
@@ -631,7 +613,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         val subtitleMarginH = resources.getDimensionPixelSize(R.dimen.subtitle_margin_horizontal)
         val subtitleMarginBottom = resources.getDimensionPixelSize(R.dimen.subtitle_margin_bottom)
         val subtitleMarginTop = resources.getDimensionPixelSize(R.dimen.subtitle_margin_top)
-        val playerMarginTop = resources.getDimensionPixelSize(R.dimen.portrait_video_margin_top)
         val titleMarginTop = resources.getDimensionPixelSize(R.dimen.video_title_margin_top)
         val titleMarginH = resources.getDimensionPixelSize(R.dimen.video_title_margin_horizontal)
         val titleToVideoMargin = resources.getDimensionPixelSize(R.dimen.video_title_to_video_margin)
@@ -641,7 +622,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         if (isLandscape) {
 
-            // LANDSCAPE — SPLIT VIEW (video left, subtitles right)
             constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 8)
             constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0)
             constraintSet.connect(binding.cardView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0)
@@ -663,8 +643,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         } else {
 
-            // PORTRAIT — Re-apply cvVideoTitle constraints (top + horizontal margins) so they are
-            // correct even when arriving from landscape where the title was GONE.
             binding.cvVideoTitle?.let { titleView ->
                 constraintSet.clear(titleView.id)
                 constraintSet.connect(titleView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, titleMarginTop)
@@ -674,7 +652,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
             }
 
-            // PORTRAIT — VIDEO BELOW TITLE, SUBTITLES BELOW VIDEO
             constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, binding.cvVideoTitle!!.id, ConstraintSet.BOTTOM, titleToVideoMargin)
             constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH)
             constraintSet.connect(binding.cardView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH)
@@ -703,7 +680,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         val set = ConstraintSet()
         set.clone(binding.rootLayout as ConstraintLayout)
 
-        // Completely clear constraints on cardView
         set.clear(binding.cardView.id)
         set.connect(
             binding.cardView.id, ConstraintSet.TOP,
@@ -722,11 +698,9 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0
         )
 
-        // Force MATCH_CONSTRAINT for PiP
         set.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
         set.constrainHeight(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
 
-        // Remove dimension ratio used in landscape mode
         set.setDimensionRatio(binding.cardView.id, null)
 
         set.applyTo(binding.rootLayout as ConstraintLayout)

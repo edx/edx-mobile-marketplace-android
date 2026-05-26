@@ -65,13 +65,10 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private var mediaSession: MediaSession? = null
 
-    // Dynamically created video title ComposeView
     private var cvVideoTitle: ComposeView? = null
 
-    // NEW: PiP ViewModel (Activity-scoped, shared across video fragments)
     private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
 
-    // NEW: PiP BroadcastReceiver manager (injected via Koin)
     private val pipReceiverManager: PipBroadcastReceiverManager by inject()
 
     val binding by viewBinding(FragmentVideoUnitBinding::bind)
@@ -102,7 +99,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             ) ?: emptyMap()
         }
         viewModel.downloadSubtitles()
-        //init PictureInPictureParams, requires Android O and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             pictureInPictureParamsBuilder = PictureInPictureParams.Builder()
         }
@@ -114,7 +110,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Observe PiP state changes to refresh PiP remote actions (play/pause/replay)
         pipViewModel.pipState
             .onEach {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
@@ -129,7 +124,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
         updateLayoutForOrientation()
 
-        // Create cvVideoTitle dynamically and add to the ConstraintLayout
         cvVideoTitle = ComposeView(requireContext()).apply {
             id = View.generateViewId()
             layoutParams = ConstraintLayout.LayoutParams(
@@ -143,7 +137,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
         }
         constraintContainer.addView(cvVideoTitle)
-        // Apply initial orientation constraints now that the view exists
         updateLayoutForOrientation()
 
         binding.connectionError.setContent {
@@ -198,7 +191,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.playerView?.resizeMode =
             AspectRatioFrameLayout.RESIZE_MODE_FILL
 
-        // Register ExoPlayer with PiP system
         viewModel.exoPlayer?.let { player ->
             val controller = ExoPlayerController(player)
             pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
@@ -234,7 +226,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     lastVideoAspectRatio = aspect
                     pictureInPictureParamsBuilder?.setAspectRatio(aspect)
 
-                    // If you are already in PiP, push the updated params
                     if (requireActivity().isInPictureInPictureMode) {
                         requireActivity().setPictureInPictureParams(
                             pictureInPictureParamsBuilder!!.build()
@@ -258,7 +249,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                     requireActivity().isInPictureInPictureMode
                 ) {
-                    // Retry playback when internet is back
                     retryPlayback()
                 }
             }
@@ -413,16 +403,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
         val cs = ConstraintSet()
         cs.clone(constraintContainer)
-        // Clear any existing ratio on the card
         cs.setDimensionRatio(binding.cardView.id, null) // If your ConstraintSet version doesn’t accept null, set "0:0"
-        // Make the card follow content
         cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
         cs.constrainHeight(binding.cardView.id, ConstraintSet.WRAP_CONTENT)
         cs.applyTo(constraintContainer)
 
         resetConstraintsForPip()
 
-        // Prefer the actual video aspect if known
         lastVideoAspectRatio?.let { pictureInPictureParamsBuilder?.setAspectRatio(it) }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -447,14 +434,12 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             pipReceiverManager.unregister()
         }
 
-        // Do NOT stop when in PiP
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
             requireActivity().isInPictureInPictureMode
         ) {
             return
         }
 
-        // Only stop if truly backgrounded without PiP
         binding.playerView?.player?.let { player ->
             if (player.isPlaying) player.pause()
         }
@@ -477,7 +462,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.playerView?.useController = false
             sharedViewModel.buttonVisibility.value = false
             cvVideoTitle?.visibility = View.GONE
-            // Clear all margins for PiP
             clearAllMarginsAndConstraints()
 
             binding.cardView.radius = 0f
@@ -521,8 +505,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     @OptIn(UnstableApi::class)
     private fun restoreNormalUI() {
-        // Reset PlayerView layout params back to MATCH_PARENT x MATCH_PARENT
-        // (they were changed to WRAP_CONTENT during PiP entry)
         (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
             width = FrameLayout.LayoutParams.MATCH_PARENT
             height = FrameLayout.LayoutParams.MATCH_PARENT
@@ -547,7 +529,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
     private fun clearAllMarginsAndConstraints() {
-        // Clear layout params margins
         val cardParams = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
         cardParams.marginStart = 0
         cardParams.marginEnd = 0
@@ -562,7 +543,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         subtitleParams.bottomMargin = 0
         binding.subtitles.layoutParams = subtitleParams
 
-        // Force layout update
         binding.cardView.requestLayout()
         binding.subtitles.requestLayout()
         binding.rootLayout?.requestLayout()
@@ -576,10 +556,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             return
         }
 
-        // cvVideoTitle is created dynamically; skip until it's available
         val titleView = cvVideoTitle ?: return
 
-        // Clear everything first
         clearAllMarginsAndConstraints()
 
         val isLandscape =
@@ -594,13 +572,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         val subtitleMarginBottom = resources.getDimensionPixelSize(R.dimen.subtitle_margin_bottom)
         val subtitleMarginTop = resources.getDimensionPixelSize(R.dimen.subtitle_margin_top)
 
-        // Completely reset constraints
         constraintSet.clear(binding.cardView.id)
         constraintSet.clear(binding.subtitles.id)
         constraintSet.clear(titleView.id)
 
         if (isLandscape) {
-            // TITLE: hidden in landscape
             constraintSet.setVisibility(titleView.id, ConstraintSet.GONE)
             constraintSet.connect(
                 titleView.id, ConstraintSet.TOP,
@@ -617,7 +593,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             constraintSet.constrainWidth(titleView.id, 0)
             constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
 
-            // VIDEO LEFT - NO TOP MARGIN IN LANDSCAPE
             constraintSet.connect(
                 binding.cardView.id,
                 ConstraintSet.START,
@@ -646,7 +621,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             constraintSet.setDimensionRatio(binding.cardView.id, "20:9")
             binding.playerView?.resizeMode =
                 AspectRatioFrameLayout.RESIZE_MODE_FILL
-            // SUBTITLES RIGHT
             constraintSet.connect(
                 binding.subtitles.id,
                 ConstraintSet.START,
@@ -682,9 +656,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.pipBtn.visibility = View.GONE
 
         } else {
-            // PORTRAIT
-
-            // TITLE: visible above cardView
             constraintSet.setVisibility(titleView.id, ConstraintSet.VISIBLE)
             constraintSet.connect(
                 titleView.id, ConstraintSet.TOP,
@@ -701,7 +672,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             constraintSet.constrainWidth(titleView.id, 0)
             constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
 
-            // CARDVIEW below title — fixed height so controls are never clipped
             constraintSet.connect(
                 binding.cardView.id, ConstraintSet.TOP,
                 titleView.id, ConstraintSet.BOTTOM, 16
@@ -719,7 +689,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             constraintSet.setDimensionRatio(binding.cardView.id, null)
             binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
 
-            // SUBTITLES
             constraintSet.connect(
                 binding.subtitles.id,
                 ConstraintSet.TOP,
@@ -865,7 +834,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         val set = ConstraintSet()
         set.clone(constraintContainer)
 
-        // Completely clear constraints on cardView
         set.clear(binding.cardView.id)
         set.connect(
             binding.cardView.id, ConstraintSet.TOP,
@@ -884,23 +852,14 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0
         )
 
-        // Force MATCH_CONSTRAINT for PiP
         set.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
         set.constrainHeight(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
 
-        // Remove dimension ratio used in landscape mode
         set.setDimensionRatio(binding.cardView.id, null)
 
         set.applyTo(constraintContainer)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun clearPipActions() {
-        pictureInPictureParamsBuilder?.setActions(emptyList())
-        requireActivity().setPictureInPictureParams(
-            pictureInPictureParamsBuilder!!.build()
-        )
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showReplayAction() {

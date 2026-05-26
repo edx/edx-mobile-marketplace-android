@@ -1,5 +1,4 @@
 <resources>
-    <!-- Normal height for PlayerView in portrait -->
     <dimen name="player_height">200dp</dimen>
     <dimen name="video_margin_horizontal">24dp</dimen>
     <dimen name="portrait_video_margin_top">40dp</dimen>
@@ -12,8 +11,6 @@
     <dimen name="subtitle_margin_left">60dp</dimen>
     <dimen name="subtitle_margin_right">20dp</dimen>
     <dimen name="video_margin_top">16dp</dimen>
-
-    <!-- Add these to res/values/dimen.xml -->
     <dimen name="card_corner_radius">16dp</dimen>
     <dimen name="landscape_video_margin_top">16dp</dimen>
     <dimen name="landscape_video_margin_right">8dp</dimen>
@@ -23,9 +20,6 @@
     <dimen name="landscape_video_vertical_margin">20dp</dimen>
     <dimen name="video_corner_radius">24dp</dimen>
     <dimen name="landscape_subtitle_margin_bottom">24dp</dimen>
-
-
-    <!-- Video title margins (portrait) -->
     <dimen name="video_title_margin_top">8dp</dimen>
     <dimen name="video_title_margin_horizontal">24dp</dimen>
     <dimen name="video_title_to_video_margin">8dp</dimen>

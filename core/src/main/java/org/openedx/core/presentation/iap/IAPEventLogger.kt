@@ -19,43 +19,62 @@ class IAPEventLogger(
     private val analytics: IAPAnalytics,
     var isSilentIAPFlow: Boolean? = null,
     var purchaseFlowData: PurchaseFlowData? = null,
-    private val iapPreferences: IAPPreferences? = null,
+    private val iapPreferences: IAPPreferences? = null
 ) {
-    fun upgradeNowClickedEvent() {
-        logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED)
+    fun upgradeNowClickedEvent(showCertificatePreview: Boolean = false) {
+        val courseId = purchaseFlowData?.courseId
+        val attemptsToPurchase = incrementAndGetAttempts(courseId)
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key] = attemptsToPurchase
+        if (showCertificatePreview) {
+            params[IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key] = "true"
+        }
+        params[IAPAnalyticsKeys.COURSE_ID.key] = courseId
+        logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED, params)
     }
 
-    fun upgradeSuccessEvent() {
+    fun upgradeSuccessEvent(clearAttempts: Boolean = true) {
         val elapsedTime = TimeUtils.getCurrentTime() - (purchaseFlowData?.flowStartTime ?: 0L)
-        logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_SUCCESS, buildMap {
-            put(IAPAnalyticsKeys.ELAPSED_TIME.key, elapsedTime)
-        })
+        val courseId = purchaseFlowData?.courseId
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ELAPSED_TIME.key] = elapsedTime
+        params[IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key] = getAttempts(courseId)
+        logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_SUCCESS, params)
+        if (clearAttempts) {
+            clearAttempts(courseId)
+        }
     }
 
     private fun purchaseErrorEvent(error: String) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_ERROR, buildMap {
-            put(IAPAnalyticsKeys.ERROR.key, error)
-        })
+        val courseId = purchaseFlowData?.courseId
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ERROR.key] = error
+        params[IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key] = getAttempts(courseId)
+        logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_ERROR, params)
     }
 
     private fun canceledByUserEvent() {
-        logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_CANCELED)
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key] = getAttempts(purchaseFlowData?.courseId)
+        logIAPEvent(IAPAnalyticsEvent.IAP_PAYMENT_CANCELED, params)
     }
 
     private fun courseUpgradeErrorEvent(error: String) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_ERROR, buildMap {
-            put(IAPAnalyticsKeys.ERROR.key, error)
-        })
+        val courseId = purchaseFlowData?.courseId
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ERROR.key] = error
+        params[IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key] = getAttempts(courseId)
+        logIAPEvent(IAPAnalyticsEvent.IAP_COURSE_UPGRADE_ERROR, params)
     }
 
     private fun priceLoadErrorEvent(error: String) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_PRICE_LOAD_ERROR, buildMap {
-            put(IAPAnalyticsKeys.ERROR.key, error)
-        })
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ERROR.key] = error
+        logIAPEvent(IAPAnalyticsEvent.IAP_PRICE_LOAD_ERROR, params)
     }
 
     fun logExceptionEvent(iapException: IAPException) {
-        val feedbackErrorMessage: String = iapException.getFormattedErrorMessage()
+        val feedbackErrorMessage = iapException.getFormattedErrorMessage()
         when (iapException.requestType) {
             IAPRequestType.PAYMENT_SDK_CODE -> {
                 if (BillingClient.BillingResponseCode.USER_CANCELED == iapException.httpErrorCode) {
@@ -66,8 +85,7 @@ class IAPEventLogger(
             }
 
             IAPRequestType.PRICE_CODE,
-            IAPRequestType.NO_SKU_CODE,
-                -> {
+            IAPRequestType.NO_SKU_CODE -> {
                 priceLoadErrorEvent(feedbackErrorMessage)
             }
 
@@ -78,10 +96,10 @@ class IAPEventLogger(
     }
 
     fun logIAPErrorActionEvent(alertType: String, action: String) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, buildMap {
-            put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, alertType)
-            put(IAPAnalyticsKeys.ERROR_ACTION.key, action)
-        })
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ERROR_ALERT_TYPE.key] = alertType
+        params[IAPAnalyticsKeys.ERROR_ACTION.key] = action
+        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, params)
     }
 
     fun logRestorePurchasesClickedEvent() {
@@ -93,41 +111,34 @@ class IAPEventLogger(
     }
 
     fun logGetHelpEvent() {
-        logIAPEvent(
-            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
-            params = buildMap {
-                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
-                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_GET_HELP.action)
-            })
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ERROR_ALERT_TYPE.key] = IAPAction.ACTION_UNFULFILLED.action
+        params[IAPAnalyticsKeys.ERROR_ACTION.key] = IAPAction.ACTION_GET_HELP.action
+        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, params)
     }
 
     fun logIAPCancelEvent() {
-        logIAPEvent(
-            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
-            params = buildMap {
-                put(IAPAnalyticsKeys.ERROR_ALERT_TYPE.key, IAPAction.ACTION_UNFULFILLED.action)
-                put(IAPAnalyticsKeys.ERROR_ACTION.key, IAPAction.ACTION_CLOSE.action)
-            })
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ERROR_ALERT_TYPE.key] = IAPAction.ACTION_UNFULFILLED.action
+        params[IAPAnalyticsKeys.ERROR_ACTION.key] = IAPAction.ACTION_CLOSE.action
+        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, params)
     }
 
     fun onRestorePurchaseCancel() {
-        logIAPEvent(
-            event = IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION,
-            params = buildMap {
-                put(IAPAnalyticsKeys.ACTION.key, IAPAction.ACTION_CLOSE.action)
-            })
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.ACTION.key] = IAPAction.ACTION_CLOSE.action
+        logIAPEvent(IAPAnalyticsEvent.IAP_ERROR_ALERT_ACTION, params)
     }
 
     fun loadIAPScreenEvent() {
-        val event =
-            if (purchaseFlowData?.screenName == IAPFlowSource.TRACK_SELECTION.screen)
-                IAPAnalyticsEvent.IAP_TRACK_SELECTION_VIEWED
-            else
-                IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED
-        val params = buildMap {
-            put(IAPAnalyticsKeys.NAME.key, event.biValue)
-            putAll(getIAPEventParams())
+        val event = if (purchaseFlowData?.screenName == IAPFlowSource.TRACK_SELECTION.screen) {
+            IAPAnalyticsEvent.IAP_TRACK_SELECTION_VIEWED
+        } else {
+            IAPAnalyticsEvent.IAP_VALUE_PROP_VIEWED
         }
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.NAME.key] = event.biValue
+        params.putAll(getIAPEventParams())
         analytics.logScreenEvent(screenName = event.eventName, params = params)
     }
 
@@ -135,96 +146,96 @@ class IAPEventLogger(
         logIAPEvent(IAPAnalyticsEvent.IAP_CONTINUE_WITH_FREE_TRACK_CLICKED)
     }
 
-    private fun getIAPEventParams(): Map<String, Any?> {
-        if (purchaseFlowData.isNull() || purchaseFlowData?.courseId.isNullOrEmpty()) return emptyMap()
-
-        return buildMap {
-            purchaseFlowData?.apply {
-                put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
-                put(
-                    IAPAnalyticsKeys.PACING.key,
-                    if (isSelfPaced.isTrue()) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
-                )
-                productInfo?.lmsUSDPrice?.nonZero()?.let { lmsUSDPrice ->
-                    put(IAPAnalyticsKeys.LMS_USD_PRICE.key, lmsUSDPrice)
-                }
-                price.nonZero()?.let { localizedPrice ->
-                    put(IAPAnalyticsKeys.LOCALIZED_PRICE.key, localizedPrice)
-                }
-                currencyCode.takeIfNotEmpty()?.let { currencyCode ->
-                    put(IAPAnalyticsKeys.CURRENCY_CODE.key, currencyCode)
-                }
-                componentId?.takeIfNotEmpty()?.let { componentId ->
-                    put(IAPAnalyticsKeys.COMPONENT_ID.key, componentId)
-                }
-                iapFlow?.let { iapFlow ->
-                    put(IAPAnalyticsKeys.IAP_FLOW_TYPE.key, iapFlow.value)
-                }
-                put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
-                screenName?.takeIfNotEmpty()?.let { screenName ->
-                    put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
-                }
-            }
-        }
-    }
-
-    private fun getUnfulfilledIAPEventParams(): Map<String, Any?> {
-        if (isSilentIAPFlow.isNull()) return emptyMap()
-
-        return buildMap {
-            put(IAPAnalyticsKeys.CATEGORY.key, IAPAnalyticsKeys.IN_APP_PURCHASES.key)
-            purchaseFlowData?.screenName?.takeIfNotEmpty()?.let { screenName ->
-                put(IAPAnalyticsKeys.SCREEN_NAME.key, screenName)
-            }
-            put(
-                IAPAnalyticsKeys.IAP_FLOW_TYPE.key,
-                if (isSilentIAPFlow.isTrue()) IAPFlow.SILENT.value else IAPFlow.RESTORE.value
-            )
-        }
-    }
     fun onCertificatePreviewShown(courseId: String?) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_CERT_PREVIEW_SHOWN, buildMap {
-            put(IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key, "true")
-            put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
-        })
-        courseId?.takeIf { it.isNotEmpty() }?.let {
-            iapPreferences?.incrementPreviewCount(it)
-        }
-    }
-
-    fun onUpgradeButtonTapped(courseId: String?) {
-        logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED, buildMap {
-            put(IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key, "true")
-            put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
-        })
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key] = "true"
+        params[IAPAnalyticsKeys.COURSE_ID.key] = courseId
+        logIAPEvent(IAPAnalyticsEvent.IAP_CERT_PREVIEW_SHOWN, params)
     }
 
     fun onCertificatePreviewPurchased(courseId: String?, price: Double) {
-        val previewCount = courseId?.takeIf { it.isNotEmpty() }
-            ?.let { iapPreferences?.getPreviewCount(it) } ?: 0
-        logIAPEvent(IAPAnalyticsEvent.IAP_CERT_PREVIEW_PURCHASED, buildMap {
-            put(IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key, "true")
-            put(IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key, previewCount) //(not set, "")
-            put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
-            put(IAPAnalyticsKeys.LMS_USD_PRICE.key, price)
-        })
-        courseId?.takeIf { it.isNotEmpty() }?.let {
-            iapPreferences?.clearPreviewCount(it)
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key] = "true"
+        params[IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key] = getAttempts(courseId)
+        params[IAPAnalyticsKeys.COURSE_ID.key] = courseId
+        params[IAPAnalyticsKeys.LMS_USD_PRICE.key] = price
+        logIAPEvent(IAPAnalyticsEvent.IAP_CERT_PREVIEW_PURCHASED, params)
+        clearAttempts(courseId)
+    }
+
+    private fun incrementAndGetAttempts(courseId: String?): Int {
+        if (courseId.isNullOrEmpty()) return 0
+        return iapPreferences?.incrementPreviewCount(courseId) ?: 0
+    }
+
+    private fun getAttempts(courseId: String?): Int {
+        if (courseId.isNullOrEmpty()) return 0
+        return iapPreferences?.getPreviewCount(courseId) ?: 0
+    }
+
+    private fun clearAttempts(courseId: String?) {
+        if (courseId.isNullOrEmpty()) return
+        iapPreferences?.clearPreviewCount(courseId)
+    }
+
+    private fun getIAPEventParams(): Map<String, Any?> {
+        if (purchaseFlowData.isNull() || purchaseFlowData?.courseId.isNullOrEmpty()) {
+            return emptyMap()
         }
+
+        val params = mutableMapOf<String, Any?>()
+        purchaseFlowData?.apply {
+            params[IAPAnalyticsKeys.COURSE_ID.key] = courseId
+            params[IAPAnalyticsKeys.PACING.key] =
+                if (isSelfPaced.isTrue()) IAPAnalyticsKeys.SELF.key else IAPAnalyticsKeys.INSTRUCTOR.key
+            productInfo?.lmsUSDPrice?.nonZero()?.let { lmsUSDPrice ->
+                params[IAPAnalyticsKeys.LMS_USD_PRICE.key] = lmsUSDPrice
+            }
+            price.nonZero()?.let { localizedPrice ->
+                params[IAPAnalyticsKeys.LOCALIZED_PRICE.key] = localizedPrice
+            }
+            currencyCode.takeIfNotEmpty()?.let { code ->
+                params[IAPAnalyticsKeys.CURRENCY_CODE.key] = code
+            }
+            componentId?.takeIfNotEmpty()?.let { component ->
+                params[IAPAnalyticsKeys.COMPONENT_ID.key] = component
+            }
+            iapFlow?.let { flow ->
+                params[IAPAnalyticsKeys.IAP_FLOW_TYPE.key] = flow.value
+            }
+            params[IAPAnalyticsKeys.CATEGORY.key] = IAPAnalyticsKeys.IN_APP_PURCHASES.key
+            screenName?.takeIfNotEmpty()?.let { screen ->
+                params[IAPAnalyticsKeys.SCREEN_NAME.key] = screen
+            }
+        }
+        return params
+    }
+
+    private fun getUnfulfilledIAPEventParams(): Map<String, Any?> {
+        if (isSilentIAPFlow.isNull()) {
+            return emptyMap()
+        }
+
+        val params = mutableMapOf<String, Any?>()
+        params[IAPAnalyticsKeys.CATEGORY.key] = IAPAnalyticsKeys.IN_APP_PURCHASES.key
+        purchaseFlowData?.screenName?.takeIfNotEmpty()?.let { screen ->
+            params[IAPAnalyticsKeys.SCREEN_NAME.key] = screen
+        }
+        params[IAPAnalyticsKeys.IAP_FLOW_TYPE.key] =
+            if (isSilentIAPFlow.isTrue()) IAPFlow.SILENT.value else IAPFlow.RESTORE.value
+        return params
     }
 
     private fun logIAPEvent(
         event: IAPAnalyticsEvent,
-        params: Map<String, Any?> = mutableMapOf(),
+        params: Map<String, Any?> = emptyMap()
     ) {
-        analytics.logEvent(
-            event = event.eventName,
-            params = buildMap {
-                put(IAPAnalyticsKeys.NAME.key, event.biValue)
-                putAll(params)
-                putAll(getIAPEventParams())
-                putAll(getUnfulfilledIAPEventParams())
-            }
-        )
+        val mergedParams = mutableMapOf<String, Any?>()
+        mergedParams[IAPAnalyticsKeys.NAME.key] = event.biValue
+        mergedParams.putAll(params)
+        mergedParams.putAll(getIAPEventParams())
+        mergedParams.putAll(getUnfulfilledIAPEventParams())
+
+        analytics.logEvent(event.eventName, mergedParams)
     }
 }

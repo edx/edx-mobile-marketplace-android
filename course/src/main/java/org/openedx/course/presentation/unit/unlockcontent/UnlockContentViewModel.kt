@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
+import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
@@ -39,6 +40,7 @@ class UnlockContentViewModel(
     private val iapInteractor: IAPInteractor,
     private val resourceManager: ResourceManager,
     analytics: IAPAnalytics,
+    iapPreferences: IAPPreferences,
 ) : BaseViewModel() {
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
@@ -89,7 +91,11 @@ class UnlockContentViewModel(
         productInfo = null,
     )
 
-    private val eventLogger = IAPEventLogger(analytics = analytics, purchaseFlowData = purchaseData)
+    private val eventLogger = IAPEventLogger(
+        analytics = analytics,
+        purchaseFlowData = purchaseData,
+        iapPreferences = iapPreferences,
+    )
 
     init {
         viewModelScope.launch(Dispatchers.IO) {

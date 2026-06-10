@@ -33,6 +33,7 @@ import org.openedx.core.SingleEventLiveData
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.CourseAccessError
 import org.openedx.core.domain.model.CourseEnrollmentDetails
@@ -109,6 +110,7 @@ class CourseContainerViewModel(
     private val imageProcessor: ImageProcessor,
     val courseRouter: CourseRouter,
     iapAnalytics: IAPAnalytics,
+    iapPreferences: IAPPreferences,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -146,7 +148,11 @@ class CourseContainerViewModel(
 
     val purchaseFlowData: PurchaseFlowData = PurchaseFlowData()
 
-    val eventLogger = IAPEventLogger(analytics = iapAnalytics, purchaseFlowData = purchaseFlowData)
+    val eventLogger = IAPEventLogger(
+        analytics = iapAnalytics,
+        purchaseFlowData = purchaseFlowData,
+        iapPreferences = iapPreferences,
+    )
 
     private var _canShowValuePropButton = MutableStateFlow(false)
     val canShowValuePropButton: StateFlow<Boolean>

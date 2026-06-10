@@ -186,10 +186,7 @@ class IAPViewModel(
     }
 
     fun startPurchaseFlow() {
-        eventLogger.upgradeNowClickedEvent()
-        if (isCertificatePreviewEnabled) {
-            eventLogger.onUpgradeButtonTapped(purchaseFlowData.courseId)
-        }
+        eventLogger.upgradeNowClickedEvent(showCertificatePreview = isCertificatePreviewEnabled)
         _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
         purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
         val courseName = purchaseFlowData.courseName
@@ -266,7 +263,7 @@ class IAPViewModel(
                     }
                 }.onSuccess {
                     if (eventLogger.isSilentIAPFlow.isNull()) {
-                        eventLogger.upgradeSuccessEvent()
+                        eventLogger.upgradeSuccessEvent(clearAttempts = !isCertificatePreviewEnabled)
                         if (isCertificatePreviewEnabled) {
                             eventLogger.onCertificatePreviewPurchased(
                                 purchaseFlowData.courseId,

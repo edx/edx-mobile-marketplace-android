@@ -18,11 +18,15 @@ class FirebaseAnalytics(context: Context) : Analytics {
     }
 
     override fun logEvent(eventName: String, params: Map<String, Any?>) {
+        val firebaseEventName = AnalyticsUtils.makeFirebaseAnalyticsKey(eventName)
         tracker.logEvent(
-            AnalyticsUtils.makeFirebaseAnalyticsKey(eventName),
+            firebaseEventName,
             AnalyticsUtils.formatFirebaseAnalyticsData(params)
         )
-        logger.d { "Firebase Analytics log Event $eventName: $params" }
+        logger.d {
+            "Firebase Analytics log Event original=$eventName, firebase=$firebaseEventName, " +
+                "attempts_to_purchase=${params["attempts_to_purchase"] ?: "not_set"}, params=$params"
+        }
     }
 
     override fun logUserId(userId: Long) {

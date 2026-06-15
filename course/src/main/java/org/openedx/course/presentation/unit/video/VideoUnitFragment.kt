@@ -36,7 +36,6 @@ import androidx.media3.session.MediaSession
 import androidx.media3.ui.AspectRatioFrameLayout
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -60,7 +59,7 @@ import org.openedx.course.presentation.ui.VideoTitle
 import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
 import org.openedx.course.presentation.videos.SharedViewModel
 
-class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
+class VideoUnitFragment : Fragment(R.layout.fragment_video_unit), AutoEnterPipHandler {
     private var pictureInPictureParamsBuilder: PictureInPictureParams.Builder? = null
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private var mediaSession: MediaSession? = null
@@ -88,6 +87,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
 
     private var lastVideoAspectRatio: Rational? = null
+    private var isPipTransitionPending = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         windowSize = computeWindowSizeClasses()
@@ -105,7 +106,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     @OptIn(UnstableApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -184,7 +184,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.connectionError.isVisible =
             !viewModel.hasInternetConnection && !viewModel.isDownloaded
         binding.pipBtn.setOnClickListener {
-            enablePipMode()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                enterPipModeInternal(showPermissionDisabledMessage = true)
+            }
 
         }
 
@@ -204,14 +206,15 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 ) {
                     when (playbackState) {
                         Player.STATE_READY -> {
-                            if (!viewModel.exoPlayer!!.isPlaying) {
-                                viewModel.exoPlayer?.play()
-                            }
                             updatePipActions()
                         }
                         Player.STATE_ENDED -> {
                             pipViewModel.updatePlaybackState(isPlaying = false, isEnded = true)
                             showReplayAction()
+                        }
+                        Player.STATE_BUFFERING,
+                        Player.STATE_IDLE -> {
+                            // Keep current playback/focus decision; do not auto-resume in PiP.
                         }
                     }
                 }
@@ -244,12 +247,23 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
             }
 
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireActivity().isInPictureInPictureMode &&
+                    reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS
+                ) {
+                    pipViewModel.updatePlaybackState(isPlaying = false)
+                    updatePipActions()
+                }
+            }
+
 
             override fun onPlayerError(error: PlaybackException) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                     requireActivity().isInPictureInPictureMode
                 ) {
-                    retryPlayback()
+                    // Avoid force-retrying while another app may own audio focus.
+                    updatePipActions()
                 }
             }
 
@@ -276,16 +290,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }.launchIn(viewLifecycleOwner.lifecycleScope)
 
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.state.collect {
-                if (viewModel.hasInternetConnection &&
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireActivity().isInPictureInPictureMode
-                ) {
-                    retryPlayback()
-                }
-            }
-        }
 
         enableLongPressDoubleSpeed()
     }
@@ -325,6 +329,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @UnstableApi
     override fun onDestroy() {
         if (!requireActivity().isChangingConfigurations) {
+            viewModel.setKeepPlaybackForPip(false)
             viewModel.releasePlayers()
             pipViewModel.unregisterPlayer()
         }
@@ -385,14 +390,20 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
+    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class)
-    private fun enablePipMode() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+    private fun enterPipModeInternal(showPermissionDisabledMessage: Boolean = false): Boolean {
+        if (!canEnterPip()) return false
+
         if (!requireContext().isPipPermissionGranted()) {
-            showPipDisabledMessage()
-            return
+            if (showPermissionDisabledMessage) {
+                showPipDisabledMessage()
+            }
+            return false
         }
+
+        isPipTransitionPending = true
+        viewModel.setKeepPlaybackForPip(true)
 
         binding.subtitles.isVisible = false
         cvVideoTitle?.isVisible = false
@@ -418,9 +429,25 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
         updatePipActions()
         pictureInPictureParamsBuilder?.build()?.let {
-            requireActivity().enterPictureInPictureMode(it)
+            val enteredPip = requireActivity().enterPictureInPictureMode(it)
+            if (!enteredPip) {
+                isPipTransitionPending = false
+                viewModel.setKeepPlaybackForPip(false)
+            }
+            return enteredPip
         }
 
+        isPipTransitionPending = false
+        viewModel.setKeepPlaybackForPip(false)
+        return false
+    }
+
+    override fun enterPipOnUserLeave(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            enterPipModeInternal()
+        } else {
+            false
+        }
     }
 
 
@@ -429,13 +456,14 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         super.onStop()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-            !requireActivity().isInPictureInPictureMode
+            !requireActivity().isInPictureInPictureMode &&
+            !isPipTransitionPending
         ) {
             pipReceiverManager.unregister()
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
-            requireActivity().isInPictureInPictureMode
+            (requireActivity().isInPictureInPictureMode || isPipTransitionPending)
         ) {
             return
         }
@@ -456,6 +484,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
         if (isInPictureInPictureMode) {
+            isPipTransitionPending = false
             pipViewModel.enterPipMode()
             binding.subtitles.isVisible = false
             binding.pipBtn.isVisible = false
@@ -484,6 +513,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
 
         } else {
+            isPipTransitionPending = false
+            viewModel.setKeepPlaybackForPip(false)
             pipViewModel.exitPipMode()
             restoreNormalUI()
         }
@@ -546,6 +577,18 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.cardView.requestLayout()
         binding.subtitles.requestLayout()
         binding.rootLayout?.requestLayout()
+    }
+
+    private fun canEnterPip(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !isAdded) return false
+        if (requireActivity().isInPictureInPictureMode || isPipTransitionPending) return false
+        if (viewModel.state.value.activePlayerType == PlayerType.CHROME_CAST) return false
+
+        val player = viewModel.exoPlayer ?: return false
+        val isPlayingOrReady = player.isPlaying ||
+            (player.playWhenReady && player.playbackState == Player.STATE_READY)
+
+        return isPlayingOrReady && player.playbackState != Player.STATE_ENDED
     }
 
     @OptIn(UnstableApi::class)
@@ -747,14 +790,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         mediaSession = MediaSession.Builder(requireContext(), viewModel.exoPlayer!!).build()
 
     }
-    private fun retryPlayback() {
-        val player = viewModel.exoPlayer ?: return
-
-        player.apply {
-            prepare()   // re-buffer stream
-            playWhenReady = true
-        }
-    }
 
     private fun seekBy(millis: Long) {
         viewModel.exoPlayer?.let {
@@ -895,6 +930,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             Toast.LENGTH_LONG
         ).show()
     }
+
 
 
 }

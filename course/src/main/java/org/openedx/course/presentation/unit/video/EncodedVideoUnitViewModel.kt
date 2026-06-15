@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.media3.cast.CastPlayer
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -91,6 +92,7 @@ class EncodedVideoUnitViewModel(
     private var currentWindow = 0
     private var playbackPosition = 0L
     private var wasFullscreen = false
+    private var keepPlaybackForPip = false
 
     init {
         transcriptObject.asFlow().distinctUntilChanged().mapNotNull {
@@ -190,7 +192,10 @@ class EncodedVideoUnitViewModel(
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
-        exoPlayer?.playWhenReady = playWhenReady
+        // Do not force playWhenReady while PiP playback is externally managed.
+        if (!keepPlaybackForPip) {
+            exoPlayer?.playWhenReady = playWhenReady
+        }
         castManager.attachCastPlayer { state ->
             when (state) {
                 CastState.CONNECTED -> {
@@ -247,8 +252,14 @@ class EncodedVideoUnitViewModel(
             playbackPosition = player.currentPosition
             currentWindow = player.currentMediaItemIndex
             playWhenReady = player.playWhenReady
-            player.pause()
+            if (!keepPlaybackForPip) {
+                player.pause()
+            }
         }
+    }
+
+    fun setKeepPlaybackForPip(keepPlaybackForPip: Boolean) {
+        this.keepPlaybackForPip = keepPlaybackForPip
     }
 
     private fun initPlayer() {
@@ -264,6 +275,14 @@ class EncodedVideoUnitViewModel(
             DefaultBandwidthMeter.getSingletonInstance(context),
             DefaultAnalyticsCollector(Clock.DEFAULT),
         ).build().apply {
+            // Respect Android audio focus so playback pauses/ducks when another media app starts.
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .build(),
+                true
+            )
             setPlaybackSpeed(preferencesManager.videoSettings.videoPlaybackSpeed.speedValue)
 
             // Build and set the media source once

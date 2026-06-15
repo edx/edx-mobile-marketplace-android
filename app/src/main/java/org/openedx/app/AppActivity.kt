@@ -29,6 +29,7 @@ import org.openedx.core.presentation.global.WindowSizeHolder
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.utils.Logger
+import org.openedx.course.presentation.unit.video.AutoEnterPipHandler
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.whatsnew.WhatsNewManager
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
@@ -195,6 +196,11 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         }
     }
 
+    override fun onUserLeaveHint() {
+        findAutoEnterPipHandler(supportFragmentManager.fragments)?.enterPipOnUserLeave()
+        super.onUserLeaveHint()
+    }
+
     private fun addFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .add(R.id.container, fragment)
@@ -219,6 +225,19 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
             else -> WindowType.Expanded
         }
         _windowSize = WindowSize(widthWindowSize, heightWindowSize)
+    }
+
+    private fun findAutoEnterPipHandler(fragments: List<Fragment>): AutoEnterPipHandler? {
+        fragments.asReversed().forEach { fragment ->
+            if (!fragment.isAdded || fragment.isHidden || fragment.view == null) return@forEach
+
+            findAutoEnterPipHandler(fragment.childFragmentManager.fragments)?.let { return it }
+
+            if (fragment is AutoEnterPipHandler && fragment.isVisible) {
+                return fragment
+            }
+        }
+        return null
     }
 
     private fun isUsingNightModeResources(): Boolean {

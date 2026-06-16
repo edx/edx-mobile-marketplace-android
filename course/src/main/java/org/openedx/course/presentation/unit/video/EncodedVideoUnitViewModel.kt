@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.media3.cast.CastPlayer
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -91,6 +92,8 @@ class EncodedVideoUnitViewModel(
     private var currentWindow = 0
     private var playbackPosition = 0L
     private var wasFullscreen = false
+
+    private var resumeAfterFocusGain = false
 
     init {
         transcriptObject.asFlow().distinctUntilChanged().mapNotNull {
@@ -178,6 +181,18 @@ class EncodedVideoUnitViewModel(
                 ?.language ?: ""
             _state.update { it.copy(selectedLanguage = selectedLanguage) }
         }
+
+        override fun onEvents(
+            player: Player,
+            events: Player.Events
+        ) {
+            if (events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED)) {
+
+                if (!player.playWhenReady && player.playbackState == Player.STATE_READY) {
+                    resumeAfterFocusGain = true
+                }
+            }
+        }
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -237,7 +252,6 @@ class EncodedVideoUnitViewModel(
         if (state.value.activePlayerType != PlayerType.CHROME_CAST) {
             exoPlayer?.removeListener(exoPlayerListener)
         }
-//        exoPlayer?.pause()
         stopUpdatingVideoTime()
     }
 
@@ -264,6 +278,12 @@ class EncodedVideoUnitViewModel(
             DefaultBandwidthMeter.getSingletonInstance(context),
             DefaultAnalyticsCollector(Clock.DEFAULT),
         ).build().apply {
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                .build()
+
+            setAudioAttributes(audioAttributes, true)
             setPlaybackSpeed(preferencesManager.videoSettings.videoPlaybackSpeed.speedValue)
 
             // Build and set the media source once

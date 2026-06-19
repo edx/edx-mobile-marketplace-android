@@ -44,6 +44,7 @@ import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.download.FileDownloader
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.presentation.IAPAnalytics
+import org.openedx.core.presentation.WebViewTrackingAnalytics
 import org.openedx.core.presentation.dialog.appreview.AppReviewAnalytics
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.global.AppData
@@ -229,6 +230,7 @@ val appModule = module {
     single<FirebaseAnalytics> { FirebaseAnalytics(get()) }
     single<SegmentAnalytics> { SegmentAnalytics(get(), get()) }
     single<DatadogAnalytics> { DatadogAnalytics(androidApplication(), get(), get(), get()) }
+    single<WebViewTrackingAnalytics> { get<DatadogAnalytics>() }
     single<AnalyticsManager> { AnalyticsManager(get(), get(), get(), get()) }
     single<AppAnalytics> { get<AnalyticsManager>() }
     single<AuthAnalytics> { get<AnalyticsManager>() }

@@ -32,6 +32,7 @@ import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.presentation.course.CourseViewMode
+import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.Logger
@@ -54,6 +55,7 @@ class CourseUnitContainerViewModelTest {
     private val analytics = mockk<CourseAnalytics>()
     private val corePreferences = mockk<CorePreferences>()
     private val iapNotifier = mockk<IAPNotifier>()
+    private val networkConnection = mockk<NetworkConnection>()
 
     private val assignmentProgress = AssignmentProgress(
         assignmentType = "Homework",
@@ -209,7 +211,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
 
         coEvery { interactor.getCourseStructure(any()) } throws UnknownHostException()
@@ -236,7 +239,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
 
         coEvery { interactor.getCourseStructure(any()) } throws UnknownHostException()
@@ -263,7 +267,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
 
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
@@ -292,7 +297,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -319,7 +325,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -348,7 +355,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -377,7 +385,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -406,7 +415,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure
@@ -435,7 +445,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
         coEvery { interactor.getCourseStructure("") } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos("") } returns courseStructure
@@ -464,7 +475,8 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
-                iapNotifier,
+                networkConnection,
+                iapNotifier
             )
         coEvery { interactor.getCourseStructure(any()) } returns courseStructure
         coEvery { interactor.getCourseStructureForVideos(any()) } returns courseStructure

@@ -24,6 +24,7 @@ import org.openedx.core.extension.indexOfFirstFromIndex
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.presentation.course.CourseViewMode
+import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseSectionChanged
@@ -43,6 +44,7 @@ class CourseUnitContainerViewModel(
     private val notifier: CourseNotifier,
     private val analytics: CourseAnalytics,
     private val corePreferences: CorePreferences,
+    private val networkConnection: NetworkConnection,
     iapNotifier: IAPNotifier,
 ) : BaseViewModel() {
 
@@ -54,6 +56,8 @@ class CourseUnitContainerViewModel(
 
     val isCourseUnitProgressEnabled get() = config.getCourseUIConfig().isCourseUnitProgressEnabled
     val isIAPEnabled = corePreferences.appConfig.iapConfig.isEnabled
+    val hasNetworkConnection: Boolean
+        get() = networkConnection.isOnline()
 
     private var currentIndex = 0
     private var currentVerticalIndex = 0

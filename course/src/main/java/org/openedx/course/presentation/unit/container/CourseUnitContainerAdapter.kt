@@ -25,7 +25,7 @@ class CourseUnitContainerAdapter(
     private fun unitBlockFragment(block: Block): Fragment {
         return when {
             (block.isPaidContent()) -> {
-                if (viewModel.isIAPEnabled) {
+                if (viewModel.isIAPEnabled && viewModel.hasNetworkConnection) {
                     UnlockContentFragment.newInstance(viewModel.courseId, block.id)
                 } else {
                     NotSupportedUnitFragment.newInstance(

@@ -7,6 +7,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import org.openedx.core.domain.model.AgreementUrls
 import java.io.InputStreamReader
+import kotlin.jvm.java
 
 class Config(context: Context) {
 

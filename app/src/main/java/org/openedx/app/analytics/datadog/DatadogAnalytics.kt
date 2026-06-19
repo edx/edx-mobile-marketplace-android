@@ -11,7 +11,6 @@ import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.webview.WebViewTracking
 import com.datadog.android.core.configuration.Configuration
 import androidx.core.net.toUri
-import androidx.privacysandbox.tools.core.model.Type
 import com.datadog.android.event.EventMapper
 import com.datadog.android.rum.model.ResourceEvent
 import kotlinx.coroutines.CoroutineScope

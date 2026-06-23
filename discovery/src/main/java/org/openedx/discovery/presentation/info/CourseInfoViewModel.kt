@@ -48,6 +48,7 @@ class CourseInfoViewModel(
     private val notifier: DiscoveryNotifier,
     private val resourceManager: ResourceManager,
     private val analytics: DiscoveryAnalytics,
+    private val edxCookieManager: AppCookieManager,
     corePreferences: CorePreferences,
     private val appCookieManager: AppCookieManager,
 ) : BaseViewModel() {
@@ -83,6 +84,8 @@ class CourseInfoViewModel(
     val uriScheme: String get() = config.getUriScheme()
 
     val appUserAgent get() = appData.appUserAgent
+
+    val cookieManager get() = edxCookieManager
 
     private val webViewConfig get() = config.getDiscoveryConfig().webViewConfig
 
@@ -162,6 +165,15 @@ class CourseInfoViewModel(
                 fm = fragmentManager,
                 courseId = pathId,
                 infoType = infoType
+            )
+        }
+    }
+
+    fun enrolledProgramInfoClicked(fragmentManager: FragmentManager, pathId: String) {
+        if (pathId.isNotEmpty()) {
+            router.navigateToEnrolledProgramInfo(
+                fm = fragmentManager,
+                pathId = pathId,
             )
         }
     }

@@ -62,10 +62,16 @@ import org.openedx.core.presentation.dialog.alert.InfoDialogFragment
 import org.openedx.core.presentation.global.webview.WebViewUIAction
 import org.openedx.core.presentation.global.webview.WebViewUIState
 import org.openedx.core.system.AppCookieManager
+import org.openedx.core.presentation.iap.IAPAction
+import org.openedx.core.presentation.iap.IAPLoaderType
+import org.openedx.core.presentation.iap.IAPRequestType
+import org.openedx.core.presentation.iap.IAPUIState
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.HandleUIMessage
+import org.openedx.core.ui.IAPErrorDialog
 import org.openedx.core.ui.Toolbar
+import org.openedx.core.ui.UnlockingAccessView
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
@@ -96,6 +102,7 @@ class CourseInfoFragment : Fragment() {
         savedInstanceState: Bundle?
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        val fragmentActivity = requireActivity()
         setContent {
             OpenEdXTheme {
                 val uiMessage by viewModel.uiMessage.collectAsState(initial = null)
@@ -103,9 +110,30 @@ class CourseInfoFragment : Fragment() {
                 val uiState by viewModel.uiState.collectAsState()
                 val webViewState by viewModel.webViewState.collectAsState()
                 val cookiesReady by viewModel.cookiesReady.collectAsState()
+                val iapState by viewModel.iapState.collectAsState()
                 val windowSize = rememberWindowSize()
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.hasInternetConnection)
+                }
+
+                // Auto-start purchase once price is loaded (no certificate-preview dialog)
+                LaunchedEffect(iapState) {
+                    when {
+                        iapState is IAPUIState.ProductData && viewModel.shouldAutoStartPurchase -> {
+                            viewModel.startPurchaseFlow(fragmentActivity)
+                        }
+                        iapState is IAPUIState.CourseDataUpdated -> {
+                            viewModel.purchaseFlowData.courseId?.let { courseId ->
+                                viewModel.onSuccessfulCourseEnrollment(
+                                    fragmentManager = fragmentActivity.supportFragmentManager,
+                                    courseId = courseId,
+                                    showTrackSelection = false
+                                )
+                            }
+                            viewModel.clearIAPState()
+                        }
+                        else -> {}
+                    }
                 }
 
                 LaunchedEffect(showAlert) {
@@ -244,6 +272,9 @@ class CourseInfoFragment : Fragment() {
                                     viewModel.enrollInACourse(courseId = param)
                                 }
                             }
+                            Authority.EARN_CERTIFICATE -> {
+                                viewModel.setupAndLoadPurchase(param)
+                            }
 
                             else -> {}
                         }
@@ -252,6 +283,69 @@ class CourseInfoFragment : Fragment() {
                         viewModel.refreshSessionCookie()
                     }
                 )
+
+                // IAP overlays ─────────────────────────────────────────────────
+                if (iapState is IAPUIState.Loading &&
+                    (iapState as IAPUIState.Loading).loaderType == IAPLoaderType.FULL_SCREEN
+                ) {
+                    UnlockingAccessView()
+                }
+
+                if (iapState is IAPUIState.Error) {
+                    val iapException = (iapState as IAPUIState.Error).iapException
+                    IAPErrorDialog(iapException = iapException) { iapAction ->
+                        when (iapAction) {
+                            IAPAction.ACTION_RELOAD_PRICE -> {
+                                viewModel.eventLogger.logIAPErrorActionEvent(
+                                    iapException.requestType.request,
+                                    IAPAction.ACTION_RELOAD_PRICE.action
+                                )
+                                viewModel.loadPrice()
+                            }
+                            IAPAction.ACTION_CLOSE -> {
+                                viewModel.eventLogger.logIAPErrorActionEvent(
+                                    iapException.requestType.request,
+                                    IAPAction.ACTION_CLOSE.action
+                                )
+                                viewModel.clearIAPState()
+                            }
+                            IAPAction.ACTION_OK -> {
+                                viewModel.eventLogger.logIAPErrorActionEvent(
+                                    iapException.requestType.request,
+                                    IAPAction.ACTION_OK.action
+                                )
+                                viewModel.clearIAPState()
+                            }
+                            IAPAction.ACTION_REFRESH -> {
+                                viewModel.eventLogger.logIAPErrorActionEvent(
+                                    iapException.requestType.request,
+                                    IAPAction.ACTION_REFRESH.action
+                                )
+                                viewModel.refreshCourse()
+                            }
+                            IAPAction.ACTION_GET_HELP -> {
+                                viewModel.showFeedbackScreen(
+                                    context,
+                                    iapException.requestType.request,
+                                    iapException.getFormattedErrorMessage()
+                                )
+                                viewModel.clearIAPState()
+                            }
+                            IAPAction.ACTION_RETRY -> {
+                                viewModel.eventLogger.logIAPErrorActionEvent(
+                                    iapException.requestType.request,
+                                    IAPAction.ACTION_RETRY.action
+                                )
+                                if (iapException.requestType == IAPRequestType.CONSUME_CODE) {
+                                    viewModel.retryToConsumeOrder()
+                                } else if (iapException.requestType == IAPRequestType.CREATE_ORDER_CODE) {
+                                    viewModel.retryCreateOrder()
+                                }
+                            }
+                            else -> {}
+                        }
+                    }
+                }
             }
         }
     }

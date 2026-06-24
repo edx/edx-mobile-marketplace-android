@@ -13,6 +13,7 @@ class WebViewLink(
     enum class Authority(val key: String) {
         COURSE_INFO("course_info"),
         PROGRAM_INFO("program_info"),
+        EARN_CERTIFICATE("earn_certificate"),
         ENROLL("enroll"),
         ENROLLED_PROGRAM_INFO("enrolled_program_info"),
         ENROLLED_COURSE_INFO("enrolled_course_info"),
@@ -23,8 +24,12 @@ class WebViewLink(
     object Param {
         const val PATH_ID = "path_id"
         const val COURSE_ID = "course_id"
+        const val PROGRAM_ID = "program_id"
         const val EMAIL_OPT = "email_opt_in"
         const val PROGRAMS = "programs"
+        const val STORE_SKU = "store_sku"
+        const val PRICE = "price"
+        const val TITLE = "title"
     }
 
     companion object {

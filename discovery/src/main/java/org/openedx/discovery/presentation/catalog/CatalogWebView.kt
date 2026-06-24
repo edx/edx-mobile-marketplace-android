@@ -4,14 +4,13 @@ import android.annotation.SuppressLint
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
-import androidx.core.net.toUri
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import org.koin.compose.koinInject
 import org.openedx.core.config.Config
-import androidx.core.net.toUri
 import com.datadog.android.webview.WebViewTracking
 import org.openedx.core.extension.applyDarkModeIfEnabled
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
@@ -23,6 +22,7 @@ fun CatalogWebViewScreen(
     uriScheme: String,
     userAgent: String,
     isAllLinksExternal: Boolean = false,
+    enableProgramPurchaseInterception: Boolean = false,
     onWebPageLoaded: () -> Unit,
     refreshSessionCookie: () -> Unit = {},
     onWebPageUpdated: (String) -> Unit = {},
@@ -58,6 +58,7 @@ fun CatalogWebViewScreen(
                 context = context,
                 webView = this@apply,
                 isAllLinksExternal = isAllLinksExternal,
+                enableProgramPurchaseInterception = enableProgramPurchaseInterception,
                 onUriClick = onUriClick,
                 refreshSessionCookie = refreshSessionCookie,
                 trustedHosts = trustedHosts,
@@ -91,6 +92,12 @@ fun CatalogWebViewScreen(
                     request: WebResourceRequest?
                 ): Boolean {
                     val clickUrl = request?.url?.toString() ?: ""
+
+                    if (isProgramPurchaseWebUrl(clickUrl)) {
+                        onUriClick(clickUrl, linkAuthority.EARN_CERTIFICATE)
+                        return true
+                    }
+
                     if (handleRecognizedLink(clickUrl)) {
                         return true
                     }
@@ -105,15 +112,38 @@ fun CatalogWebViewScreen(
                         linkAuthority.COURSE_INFO,
                         linkAuthority.PROGRAM_INFO,
                         linkAuthority.ENROLLED_PROGRAM_INFO -> {
-                            val pathId = link.params[WebViewLink.Param.PATH_ID] ?: ""
-                            onUriClick(pathId, link.authority)
+                            if (isAllLinksExternal) {
+                                onUriClick(clickUrl, link.authority)
+                            } else {
+                                val pathId = link.params[WebViewLink.Param.PATH_ID] ?: ""
+                                onUriClick(pathId, link.authority)
+                            }
                             true
                         }
 
                         linkAuthority.ENROLL,
                         linkAuthority.ENROLLED_COURSE_INFO -> {
+                            val isProgramPurchase =
+                                link.authority == linkAuthority.ENROLL &&
+                                    (
+                                        link.params[WebViewLink.Param.PROGRAMS].equals("true", ignoreCase = true) ||
+                                            !link.params[WebViewLink.Param.PROGRAM_ID].isNullOrBlank() ||
+                                            !link.params[WebViewLink.Param.STORE_SKU].isNullOrBlank() ||
+                                            !link.params[WebViewLink.Param.PRICE].isNullOrBlank()
+                                        )
+
+                            if (isProgramPurchase) {
+                                onUriClick(clickUrl, linkAuthority.EARN_CERTIFICATE)
+                                return true
+                            }
+
                             val courseId = link.params[WebViewLink.Param.COURSE_ID] ?: ""
                             onUriClick(courseId, link.authority)
+                            true
+                        }
+
+                        linkAuthority.EARN_CERTIFICATE -> {
+                            onUriClick(clickUrl, link.authority)
                             true
                         }
 
@@ -124,6 +154,21 @@ fun CatalogWebViewScreen(
 
                         else -> false
                     }
+                }
+
+                private fun isProgramPurchaseWebUrl(clickUrl: String): Boolean {
+                    if (clickUrl.isBlank()) return false
+                    val lower = clickUrl.lowercase()
+                    return lower.contains("authn.edx.org/login") ||
+                        lower.contains("authn.edx.org/register") ||
+                        lower.contains("commerce-coordinator.edx.org") ||
+                        lower.contains("payment_page_redirect") ||
+                        lower.contains("checkout") ||
+                        lower.contains("course_modes/choose") ||
+                        lower.contains("verify_student/start-flow") ||
+                        lower.contains("upgrade") ||
+                        lower.contains("basket") ||
+                        lower.contains("earn_certificate")
                 }
 
                 override fun onReceivedError(

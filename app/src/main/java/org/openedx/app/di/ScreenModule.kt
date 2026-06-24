@@ -246,16 +246,19 @@ val screenModule = module {
         CourseInfoViewModel(
             pathId,
             infoType,
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
+            get(), // AppData
+            get(), // Config
+            get(), // NetworkConnection
+            get(), // DiscoveryRouter
+            get(), // DiscoveryInteractor
+            get(), // DiscoveryNotifier
+            get(), // ResourceManager
+            get(), // DiscoveryAnalytics
+            get(), // AppCookieManager (edxCookieManager)
+            get(), // CorePreferences
+            get(), // AppCookieManager (appCookieManager)
+            get(), // IAPInteractor
+            get(), // IAPAnalytics
         )
     }
     viewModel { (courseId: String) ->

@@ -15,6 +15,7 @@ open class DefaultWebViewClient(
     val context: Context,
     val webView: WebView,
     val isAllLinksExternal: Boolean,
+    val enableProgramPurchaseInterception: Boolean = false,
     val refreshSessionCookie: () -> Unit,
     val onUriClick: (String, WebViewLink.Authority) -> Unit,
     val trustedHosts: Set<String> = emptySet(),
@@ -35,6 +36,18 @@ open class DefaultWebViewClient(
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val clickUrl = request?.url?.toString() ?: ""
+
+        if (enableProgramPurchaseInterception && isProgramPurchaseUrl(clickUrl)) {
+            hasPendingUserNavigation.set(false)
+            onUriClick(clickUrl, WebViewLink.Authority.EARN_CERTIFICATE)
+            return true
+        }
+
+        if (isAllLinksExternal && isProgramPurchaseUrl(clickUrl)) {
+            hasPendingUserNavigation.set(false)
+            onUriClick(clickUrl, WebViewLink.Authority.EARN_CERTIFICATE)
+            return true
+        }
 
         val isHttpNavigation = clickUrl.startsWith("http://") || clickUrl.startsWith("https://")
         val hasGesture = request?.hasGesture() == true
@@ -155,6 +168,22 @@ open class DefaultWebViewClient(
     private fun isTrustedDomain(host: String): Boolean {
             return trustedHosts.contains(host)
     }
+
+    private fun isProgramPurchaseUrl(url: String): Boolean {
+        if (url.isBlank()) return false
+        val lower = url.lowercase()
+        return lower.contains("authn.edx.org/login") ||
+            lower.contains("authn.edx.org/register") ||
+            lower.contains("commerce-coordinator.edx.org") ||
+            lower.contains("payment_page_redirect") ||
+            lower.contains("checkout") ||
+            lower.contains("course_modes/choose") ||
+            lower.contains("verify_student/start-flow") ||
+            lower.contains("upgrade") ||
+            lower.contains("basket") ||
+            lower.contains("earn_certificate")
+    }
+
 
     companion object {
         const val QUERY_PARAM_EXTERNAL_LINK = "external_link"

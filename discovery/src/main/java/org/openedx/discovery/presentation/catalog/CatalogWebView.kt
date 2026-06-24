@@ -58,7 +58,6 @@ fun CatalogWebViewScreen(
                 context = context,
                 webView = this@apply,
                 isAllLinksExternal = isAllLinksExternal,
-                enableProgramPurchaseInterception = enableProgramPurchaseInterception,
                 onUriClick = onUriClick,
                 refreshSessionCookie = refreshSessionCookie,
                 trustedHosts = trustedHosts,

@@ -17,4 +17,14 @@ interface InAppPurchasesApi {
         @Field("payment_processor") paymentProcessor: String,
         @Field("purchase_token") purchaseToken: String,
     ): Response<CreateOrderResponse>
+
+    @FormUrlEncoded
+    @POST("iap/create-program-order/")
+    suspend fun createProgramOrder(
+        @Field("program_uuid") programUuid: String,
+        @Field("currency_code") currencyCode: String,
+        @Field("price") price: Double,
+        @Field("payment_processor") paymentProcessor: String,
+        @Field("purchase_token") purchaseToken: String,
+    ): Response<CreateOrderResponse>
 }

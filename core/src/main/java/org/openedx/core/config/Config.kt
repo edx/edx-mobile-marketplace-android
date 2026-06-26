@@ -136,6 +136,10 @@ class Config(context: Context) {
         return getObjectOrNewInstance(RECAPTCHA, RecaptchaConfig::class.java)
     }
 
+    fun getProgramPurchaseConfig(): ProgramPurchaseConfig {
+        return getObjectOrNewInstance(PROGRAM_PURCHASE, ProgramPurchaseConfig::class.java)
+    }
+
     private fun getString(key: String, defaultValue: String = ""): String {
         val element = getObject(key)
         return if (element != null) {
@@ -200,6 +204,7 @@ class Config(context: Context) {
         private const val VIDEO_PLAYER = "VIDEO_PLAYER"
         private const val RECAPTCHA = "RECAPTCHA"
         private const val DATADOG = "DATADOG"
+        private const val PROGRAM_PURCHASE = "PROGRAM_PURCHASE"
     }
 
     enum class ViewType {

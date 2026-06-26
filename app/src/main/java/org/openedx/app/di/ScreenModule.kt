@@ -14,6 +14,7 @@ import org.openedx.auth.presentation.signin.SignInViewModel
 import org.openedx.auth.presentation.signup.SignUpViewModel
 import org.openedx.core.Validator
 import org.openedx.core.data.repository.iap.IAPRepository
+import org.openedx.core.data.repository.iap.ProgramPurchaseRepository
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.presentation.dialog.selectorbottomsheet.SelectDialogViewModel
@@ -43,6 +44,8 @@ import org.openedx.dashboard.domain.interactor.DashboardInteractor
 import org.openedx.dashboard.presentation.DashboardListViewModel
 import org.openedx.discovery.data.repository.DiscoveryRepository
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
+import org.openedx.discovery.domain.interactor.ProgramIAPInteractor
+import org.openedx.discovery.domain.interactor.ProgramPurchaseConfigInteractor
 import org.openedx.discovery.presentation.NativeDiscoveryViewModel
 import org.openedx.discovery.presentation.WebViewDiscoveryViewModel
 import org.openedx.discovery.presentation.detail.CourseDetailsViewModel
@@ -242,23 +245,28 @@ val screenModule = module {
 
     single { CourseRepository(get(), get(), get(), get(), get()) }
     factory { CourseInteractor(get()) }
+    
+    factory { ProgramPurchaseConfigInteractor(get()) }
+    factory { ProgramIAPInteractor(get(), get(), get(), get(), get()) }
+
     viewModel { (pathId: String, infoType: String) ->
         CourseInfoViewModel(
             pathId,
             infoType,
-            get(), // AppData
-            get(), // Config
-            get(), // NetworkConnection
-            get(), // DiscoveryRouter
-            get(), // DiscoveryInteractor
-            get(), // DiscoveryNotifier
-            get(), // ResourceManager
-            get(), // DiscoveryAnalytics
-            get(), // AppCookieManager (edxCookieManager)
-            get(), // CorePreferences
-            get(), // AppCookieManager (appCookieManager)
-            get(), // IAPInteractor
-            get(), // IAPAnalytics
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
         )
     }
     viewModel { (courseId: String) ->
@@ -515,6 +523,7 @@ val screenModule = module {
     }
 
     single { IAPRepository(get()) }
+    single { ProgramPurchaseRepository(get()) }
     factory { IAPInteractor(get(), get(), get(), get(), get(), get()) }
     viewModel { (purchaseFlowData: PurchaseFlowData) ->
         IAPViewModel(
@@ -547,6 +556,6 @@ val screenModule = module {
         UnlockContentViewModel(blockId, courseId, get(), get(), get(), get())
     }
 
-    viewModel { ProgramViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { ProgramViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
 }

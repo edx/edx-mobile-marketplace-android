@@ -1,7 +1,6 @@
 package org.openedx.discovery.presentation.info
 
 import android.content.Context
-import android.net.Uri
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
@@ -22,9 +21,6 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.interactor.IAPInteractor
-import org.openedx.core.domain.model.iap.IAPFlow
-import org.openedx.core.domain.model.iap.IAPFlowSource
-import org.openedx.core.domain.model.iap.ProductInfo
 import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isInternetError
@@ -51,6 +47,7 @@ import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
 import org.openedx.discovery.R
 import org.openedx.discovery.domain.interactor.DiscoveryInteractor
+import org.openedx.discovery.domain.interactor.ProgramIAPInteractor
 import org.openedx.discovery.presentation.DiscoveryAnalytics
 import org.openedx.discovery.presentation.DiscoveryAnalyticsEvent
 import org.openedx.discovery.presentation.DiscoveryAnalyticsKey
@@ -75,6 +72,7 @@ class CourseInfoViewModel(
     private val appCookieManager: AppCookieManager,
     private val iapInteractor: IAPInteractor,
     iapAnalytics: IAPAnalytics,
+    private val programIAPInteractor: ProgramIAPInteractor,
 ) : BaseViewModel() {
     private val logger = Logger(TAG)
 
@@ -248,49 +246,30 @@ class CourseInfoViewModel(
     // ── IAP purchase flow ─────────────────────────────────────────────────────
 
     /**
-     * Parses the [rawLink] URL (earn_certificate link), populates [purchaseFlowData],
-     * and triggers a price load.  The fragment should call [startPurchaseFlow] once
-     * [iapState] transitions to [IAPUIState.ProductData] and [shouldAutoStartPurchase]
-     * is true.
+     * Parses the [rawLink] URL (earn_certificate link) via [ProgramIAPInteractor],
+     * populates [purchaseFlowData], and triggers a price load.
      */
     fun setupAndLoadPurchase(rawLink: String) {
-        val uri = runCatching {
-            Uri.parse(rawLink.replace("+", "%2B"))
-        }.getOrNull()
+        logger.d({ "setupAndLoadPurchase: rawLink = $rawLink" })
 
-        val courseId = uri?.getQueryParameter(WebViewLink.Param.COURSE_ID)
-            ?.takeIf { it.isNotBlank() }
-            ?: uri?.getQueryParameter(WebViewLink.Param.PATH_ID)
-                ?.takeIf { it.isNotBlank() }
-            ?: rawLink.takeIf { it.isNotBlank() && !it.contains("://") }
+        try {
+            val programPurchaseData = programIAPInteractor.parsePurchaseLink(rawLink, pathId)
 
-        val storeSku = uri?.getQueryParameter(WebViewLink.Param.STORE_SKU)
-            ?.takeIf { it.isNotBlank() }
-            ?: uri?.getQueryParameter("sku").orEmpty()
+            purchaseFlowData.apply {
+                this.courseId = programPurchaseData.courseId
+                this.courseName = programPurchaseData.courseName
+                this.iapFlow = programPurchaseData.iapFlow
+                this.screenName = programPurchaseData.screenName
+                this.productInfo = programPurchaseData.productInfo
+            }
 
-        val price = uri?.getQueryParameter(WebViewLink.Param.PRICE)?.toDoubleOrNull() ?: 0.0
-        val title = uri?.getQueryParameter(WebViewLink.Param.TITLE)?.takeIf { it.isNotBlank() }
+            shouldAutoStartPurchase = true
+            loadPrice()
 
-        if (courseId.isNullOrBlank() || storeSku.isBlank()) {
-            updateErrorState(
-                IAPException(
-                    requestType = IAPRequestType.NO_SKU_CODE,
-                    httpErrorCode = IAPRequestType.NO_SKU_CODE.hashCode(),
-                    errorMessage = ""
-                )
-            )
-            return
+        } catch (e: Exception) {
+            logger.e(throwable = e)
+            updateErrorState(e)
         }
-
-        purchaseFlowData.apply {
-            this.courseId = courseId
-            this.courseName = title
-            this.iapFlow = IAPFlow.USER_INITIATED
-            this.screenName = IAPFlowSource.COURSE_ENROLLMENT.screen
-            this.productInfo = ProductInfo(storeSku = storeSku, lmsUSDPrice = price)
-        }
-        shouldAutoStartPurchase = true
-        loadPrice()
     }
 
     fun loadPrice() {
@@ -349,6 +328,8 @@ class CourseInfoViewModel(
     }
 
     private fun purchaseItem(activity: FragmentActivity) {
+        logger.d({ "👉 purchaseItem CALLED" })
+
         viewModelScope.launch(Dispatchers.IO) {
             takeIf { purchaseFlowData.productInfo != null }?.apply {
                 iapInteractor.purchaseItem(

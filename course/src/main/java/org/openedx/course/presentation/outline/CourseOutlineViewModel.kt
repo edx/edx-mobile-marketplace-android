@@ -3,6 +3,7 @@ package org.openedx.course.presentation.outline
 import android.content.Context
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -99,6 +100,9 @@ class CourseOutlineViewModel(
     private val courseSubSections = mutableMapOf<String, MutableList<Block>>()
     private val subSectionsDownloadsCount = mutableMapOf<String, Int>()
     val courseSubSectionUnit = mutableMapOf<String, Block?>()
+
+    private val _notifyEvent = MutableSharedFlow<Pair<String, String>>()
+    val notifyEvent = _notifyEvent.asSharedFlow()
 
     init {
         viewModelScope.launch {
@@ -468,6 +472,53 @@ class CourseOutlineViewModel(
             }
         )
     }
+
+    fun startProgressNotifications(context: Context) {
+        viewModelScope.launch {
+
+            while (true) {
+
+                val state = _uiState.value
+
+                if (state is CourseOutlineUIState.CourseData) {
+
+                    val course = state.courseStructure
+                    val progress = course.progress
+
+                    if (progress != null) {
+
+                        val milestone =
+                            CourseProgressNotificationManager.getProgressMilestone(progress.value)
+
+                        if (milestone != null &&
+                            CourseProgressNotificationManager.shouldNotify(
+                                context,
+                                course.id,
+                                milestone
+                            )
+                        ) {
+
+                            _notifyEvent.emit(
+                                course.name to CourseProgressNotificationManager.getProgressMessage(
+                                    milestone,
+                                    course.name
+                                )
+                            )
+
+                            CourseProgressNotificationManager.saveMilestone(
+                                context,
+                                course.id,
+                                milestone
+                            )
+                        }
+                    }
+                }
+
+                delay(30_000)
+            }
+        }
+    }
+
 
     companion object {
         private const val TAG = "CourseOutlineViewModel"

@@ -44,6 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentManager
+import kotlinx.coroutines.delay
 import org.openedx.core.BlockType
 import org.openedx.core.NoContentScreenType
 import org.openedx.core.UIMessage
@@ -92,12 +93,24 @@ fun CourseOutlineScreen(
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val canShowPLSBanner by viewModel.canShowPLSBanner.collectAsState()
     val context = LocalContext.current
-
+    LaunchedEffect(Unit) {
+        viewModel.startProgressNotifications(context)
+    }
+    LaunchedEffect(Unit) {
+        viewModel.notifyEvent.collect { (title, message) ->
+            NotificationHelper.showNotification(
+                context,
+                title,
+                message
+            )
+        }
+    }
     LaunchedEffect(resumeBlockId) {
         if (resumeBlockId.isNotEmpty()) {
             viewModel.openBlock(fragmentManager, resumeBlockId)
         }
     }
+
 
     CourseOutlineUI(
         windowSize = windowSize,
@@ -189,6 +202,33 @@ private fun CourseOutlineUI(
     onPLSBannerDismiss: (String) -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
+
+    val context = LocalContext.current
+
+    if (uiState is CourseOutlineUIState.CourseData) {
+
+        val progress = uiState.courseStructure.progress
+
+        if (uiState is CourseOutlineUIState.CourseData) {
+
+            if (uiState is CourseOutlineUIState.CourseData) {
+
+                LaunchedEffect(Unit) {
+                    while (true) {
+                        if (progress != null) {
+
+                            NotificationHelper.showNotification(
+                                context = context,
+                                title = uiState.courseStructure.name,
+                                message = "Current progress: ${(progress.value * 100).toInt()}%"
+                            )
+                        }
+
+                        delay(1 * 60 * 1000L)                     }
+                }
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier
@@ -373,6 +413,7 @@ private fun CourseOutlineUI(
                         CourseOutlineUIState.Loading -> {
                             CircularProgress()
                         }
+
                     }
                 }
             }
@@ -533,7 +574,23 @@ fun getUnitBlockIcon(block: Block): Int {
         BlockType.DISCUSSION -> R.drawable.ic_course_discussion
         else -> R.drawable.ic_course_block
     }
+
 }
+
+private fun getProgressMilestone(progress: Float): Int? {
+    val percentage = (progress * 100).toInt()
+
+    return when {
+        percentage >= 100 -> 100
+        percentage >= 75 -> 75
+        percentage >= 50 -> 50
+        percentage >= 25 -> 25
+        percentage > 0 -> 0
+        else -> null
+    }
+}
+
+
 
 @Preview(uiMode = UI_MODE_NIGHT_NO)
 @Preview(uiMode = UI_MODE_NIGHT_YES)

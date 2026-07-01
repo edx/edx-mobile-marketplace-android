@@ -293,6 +293,7 @@ private fun CourseVideosUI(
                                                 onItemClick = onExpandClick,
                                                 courseSectionsState = courseSectionsState,
                                                 courseSubSections = courseSubSections,
+                                                isExpandable = true,
                                                 downloadedStateMap = uiState.downloadedState,
                                                 onSubSectionClick = onSubSectionClick,
                                                 onDownloadClick = onDownloadClick
@@ -657,7 +658,8 @@ private fun CourseVideosScreenPreview() {
                 ),
                 mapOf(),
                 videoPreview = mapOf(),
-                videoProgress = mapOf()
+                videoProgress = mapOf(),
+                isCompletedSectionsShown = false
             ),
             courseTitle = "",
             onExpandClick = { },
@@ -715,7 +717,8 @@ private fun CourseVideosScreenTabletPreview() {
                 ),
                 mapOf(),
                 videoPreview = mapOf(),
-                videoProgress = mapOf()
+                videoProgress = mapOf(),
+                isCompletedSectionsShown = true
             ),
             courseTitle = "",
             onExpandClick = { },

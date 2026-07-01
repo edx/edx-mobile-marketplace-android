@@ -130,6 +130,7 @@ import org.openedx.course.presentation.handouts.HandoutsScreen
 import org.openedx.course.presentation.handouts.HandoutsType
 import org.openedx.course.presentation.outline.CourseOutlineScreen
 import org.openedx.course.presentation.home.CourseHomeScreen
+import org.openedx.course.presentation.offline.CourseOfflineScreen
 import org.openedx.course.presentation.progress.CourseProgressScreen
 import org.openedx.course.presentation.ui.CourseVideosScreen
 import org.openedx.course.presentation.ui.DatesShiftedSnackBar
@@ -370,7 +371,8 @@ fun CourseDashboard(
     val requiredTab = when (openTab.uppercase()) {
         CourseContainerTab.HOME.name -> CourseContainerTab.HOME
         CourseContainerTab.DATES.name -> CourseContainerTab.DATES
-        CourseContainerTab.VIDEOS.name -> CourseContainerTab.VIDEOS
+        //CourseContainerTab.VIDEOS.name -> CourseContainerTab.VIDEOS
+        CourseContainerTab.OFFLINE.name -> CourseContainerTab.OFFLINE
         CourseContainerTab.PROGRESS.name -> CourseContainerTab.PROGRESS
         CourseContainerTab.DISCUSSIONS.name -> CourseContainerTab.DISCUSSIONS
         CourseContainerTab.MORE.name -> CourseContainerTab.MORE
@@ -685,7 +687,7 @@ private fun DashboardPager(
                 )*/
             }
 
-            CourseContainerTab.VIDEOS -> {
+           /* CourseContainerTab.VIDEOS -> {
                 CourseVideosScreen(
                     windowSize = windowSize,
                     viewModel = koinViewModel(
@@ -693,7 +695,7 @@ private fun DashboardPager(
                     ),
                     fragmentManager = fragmentManager
                 )
-            }
+            }*/
 
             CourseContainerTab.DATES -> {
                 CourseDatesScreen(
@@ -712,6 +714,16 @@ private fun DashboardPager(
                     updateCourseStructure = {
                         viewModel.updateData()
                     }
+                )
+            }
+
+            CourseContainerTab.OFFLINE -> {
+                CourseOfflineScreen(
+                    windowSize = windowSize,
+                    viewModel = koinViewModel(
+                        parameters = { parametersOf(viewModel.courseId, viewModel.courseName) }
+                    ),
+                    fragmentManager = fragmentManager,
                 )
             }
 

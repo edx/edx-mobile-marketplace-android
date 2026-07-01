@@ -250,7 +250,8 @@ object CoreMocks {
         progress = TODO(),
         transcriptUrls = TODO(),
         transcriptPaths = TODO(),
-        transcriptDownloadedStatus = TODO()
+        transcriptDownloadedStatus = TODO(),
+        courseId = ""
     )
 
     val mockVideoBlock = Block(

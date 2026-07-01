@@ -235,6 +235,7 @@ private fun DownloadQueueScreenPreview() {
                         transcriptUrls = emptyMap(),
                         transcriptPaths = emptyMap(),
                         transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED,
+                        courseId = ""
                     ),
                     DownloadModel(
                         id = "",
@@ -248,6 +249,7 @@ private fun DownloadQueueScreenPreview() {
                         transcriptUrls = emptyMap(),
                         transcriptPaths = emptyMap(),
                         transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED,
+                        courseId = ""
                     )
                 ),
                 currentProgressId = "",

@@ -356,6 +356,7 @@ private fun CourseOutlineUI(
                                                 onItemClick = onExpandClick,
                                                 courseSectionsState = courseSectionsState,
                                                 courseSubSections = courseSubSections,
+                                                isExpandable = true,
                                                 downloadedStateMap = uiState.downloadedState,
                                                 onSubSectionClick = onSubSectionClick,
                                                 onDownloadClick = onDownloadClick

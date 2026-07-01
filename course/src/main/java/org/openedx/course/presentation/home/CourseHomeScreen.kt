@@ -416,7 +416,7 @@ fun <T> CourseHomePager(
         state = pagerState,
         contentPadding = PaddingValues(horizontal = 16.dp),
         pageSpacing = 8.dp,
-        beyondBoundsPageCount = pages.size,
+        beyondViewportPageCount = pages.size,
         verticalAlignment = Alignment.Top
     ) { page ->
         pageContent(pages[page])

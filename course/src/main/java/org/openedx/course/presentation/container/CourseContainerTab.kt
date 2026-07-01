@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.TextSnippet
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Moving
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -21,8 +22,9 @@ enum class CourseContainerTab(
     HOME(R.string.course_container_nav_home, Icons.Default.Home),
     CONTENT(R.string.course_container_nav_content, Icons.AutoMirrored.Filled.List),
     PROGRESS(R.string.course_container_nav_progress, Icons.Default.Moving),
-    VIDEOS(R.string.course_container_nav_videos, Icons.Rounded.PlayCircleFilled),
+   // VIDEOS(R.string.course_container_nav_videos, Icons.Rounded.PlayCircleFilled),
     DATES(R.string.course_container_nav_dates, Icons.Outlined.CalendarMonth),
+    OFFLINE(R.string.course_container_nav_downloads, Icons.Filled.CloudDownload),
     DISCUSSIONS(R.string.course_container_nav_discussions, Icons.AutoMirrored.Filled.Chat),
     MORE(R.string.course_container_nav_more, Icons.AutoMirrored.Filled.TextSnippet)
 }

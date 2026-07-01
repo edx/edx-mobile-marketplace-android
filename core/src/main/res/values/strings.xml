@@ -280,5 +280,34 @@
     <string name="course_accessibility_assignment_completed">Assignment completed</string>
     <string name="course_accessibility_assignment_due_date_past">Assignment due date past</string>
     <string name="core_no_progress">This course does not contain exams or graded assignments.</string>
+    <string name="core_download_all">Download all</string>
+    <string name="core_cancel_course_download">Cancel Course Download</string>
+    <string name="core_edit">Edit</string>
+    <string name="core_largest_downloads">Largest Downloads</string>
+    <string name="core_remove_all_downloads">Remove all downloads</string>
+    <string name="core_downloaded">Downloaded</string>
+    <string name="core_ready_to_download">Ready to Download</string>
+    <string name="core_downloading">Downloading</string>
+    <string name="core_you_can_download_course_content_offline">You can download course content offline to learn on the go, without requiring an active internet connection or using mobile data.</string>
+    <string name="core_0mb">0MB</string>
+    <string name="core_available_to_download">Available to download</string>
+    <string name="core_no_available_to_download_offline">None of this course’s content is currently available to download offline.</string>
+    <string name="core_used_free_storage">%1$s used, %2$s free</string>
+    <string name="core_device_storage_full">Device Storage Full</string>
+    <string name="core_download_device_storage_full_dialog_description">Your device does not have enough free space to download this content. Please free up some space and try again.</string>
+    <string name="core_download_no_internet_dialog_description">Downloading this content requires an active internet connection. Please connect to the internet and try again.</string>
+    <string name="core_download_wifi_required_dialog_description">Downloading this content requires an active WiFi connection. Please connect to a WiFi network and try again.</string>
+    <string name="core_download_failed_dialog_description">Unfortunately, this content failed to download. Please try again later or report this issue.</string>
+    <string name="core_wifi_required">Wi-Fi Required</string>
+    <string name="core_download_failed">Download Failed</string>
+    <string name="core_close">Close</string>
+    <string name="course_confirm_download">Confirm Download</string>
+    <string name="core_download_confirm_dialog_description">Downloading this %1$s of content will save available blocks offline.</string>
+    <string name="core_download_on_cellural">Download on Cellular?</string>
+    <string name="core_download_on_cellural_dialog_description">Downloading this content will use %1$s of cellular data.</string>
+    <string name="core_download_remove_offline_content">Remove Offline Content?</string>
+    <string name="core_download_remove_dialog_description">Removing this content will free up %1$s.</string>
+    <string name="core_remove">Remove</string>
+    <string name="core_download">Download</string>
 
 </resources>

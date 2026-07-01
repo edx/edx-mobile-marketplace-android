@@ -593,6 +593,7 @@ fun CourseSection(
     onItemClick: (Block) -> Unit,
     courseSectionsState: Boolean?,
     courseSubSections: List<Block>?,
+    isExpandable: Boolean = true,
     downloadedStateMap: Map<String, DownloadedState>,
     onSubSectionClick: (Block) -> Unit,
     onDownloadClick: (blocksIds: List<String>) -> Unit,
@@ -638,6 +639,7 @@ fun CourseSection(
         CourseExpandableChapterCard(
             block = block,
             arrowDegrees = arrowRotation,
+            isExpandable = isExpandable,
             downloadedState = downloadedState,
             onDownloadClick = {
                 if (downloadedState == DownloadedState.DOWNLOADED) {
@@ -649,12 +651,16 @@ fun CourseSection(
             }
         )
         courseSubSections?.forEach { subSectionBlock ->
+            AnimatedVisibility(
+                visible = courseSectionsState == true
+            ) {
                 CourseSubSectionItem(
                     block = subSectionBlock,
                     onClick = onSubSectionClick,
                     showDueDate = true,
                     useRelativeDates = true
                 )
+            }
 
         }
     }
@@ -665,6 +671,7 @@ fun CourseExpandableChapterCard(
     modifier: Modifier = Modifier,
     block: Block,
     arrowDegrees: Float = 0f,
+    isExpandable: Boolean = true,
     downloadedState: DownloadedState?,
     onDownloadClick: () -> Unit,
 ) {
@@ -678,7 +685,10 @@ fun CourseExpandableChapterCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-       // CardArrow(degrees = arrowDegrees)
+        if (isExpandable) {
+            CardArrow(degrees = arrowDegrees)
+        }
+
         if (block.isCompleted()) {
             val completedIconPainter = painterResource(R.drawable.course_ic_task_alt)
             val completedIconColor = MaterialTheme.appColors.successGreen
@@ -780,8 +790,7 @@ fun CourseSubSectionItem(
     val due by rememberSaveable {
         mutableStateOf(block.due?.let { TimeUtils.getAssignmentFormattedDate(context, it) })
     }
-    val isAssignmentEnable =
-        !block.isCompleted() && block.assignmentProgress != null && !due.isNullOrEmpty()
+    val isAssignmentEnable = !block.isCompleted() && block.assignmentProgress != null && !due.isNullOrEmpty()
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -1468,7 +1477,8 @@ private fun OfflineQueueCardPreview() {
                     progress = 0f,
                     transcriptUrls = emptyMap(),
                     transcriptPaths = emptyMap(),
-                    transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED
+                    transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED,
+                    courseId = ""
                 ),
                 progressValue = 10,
                 progressSize = 30,

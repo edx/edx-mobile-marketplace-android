@@ -111,8 +111,9 @@ fun CourseCompletionHomePagerCardContent(
                 onItemClick = {
                     onSubSectionClick(subsection)
                 },
-                courseSectionsState = false,
+                courseSectionsState = true,
                 courseSubSections =  listOf(subsection),
+                isExpandable = false,
                 downloadedStateMap = uiState.downloadedState,
                 onSubSectionClick = onSubSectionClick,
                 onDownloadClick = onDownloadClick,

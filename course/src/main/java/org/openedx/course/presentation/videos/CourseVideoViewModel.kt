@@ -173,6 +173,9 @@ class CourseVideoViewModel(
                         }
                         block.id to progress
                     }
+                    val isCompletedSectionsShown =
+                        (_uiState.value as? CourseVideosUIState.CourseData)?.isCompletedSectionsShown
+                            ?: false
                     _uiState.value =
                         CourseVideosUIState.CourseData(
                             courseStructure = courseStructure,
@@ -185,6 +188,7 @@ class CourseVideoViewModel(
                             videoPreview = (_uiState.value as? CourseVideosUIState.CourseData)?.videoPreview
                                 ?: emptyMap(),
                             videoProgress = videoProgress,
+                            isCompletedSectionsShown = isCompletedSectionsShown,
                         )
                 }
                 courseNotifier.send(CourseLoading(false))
@@ -339,7 +343,7 @@ class CourseVideoViewModel(
     fun onCompletedSectionVisibilityChange() {
         if (_uiState.value is CourseVideosUIState.CourseData) {
             val state = _uiState.value as CourseVideosUIState.CourseData
-            //_uiState.value = state.copy(isCompletedSectionsShown = !state.isCompletedSectionsShown)
+            _uiState.value = state.copy(isCompletedSectionsShown = !state.isCompletedSectionsShown)
 
             analytics.logEvent(
                 CourseAnalyticsEvent.VIDEO_SHOW_COMPLETED.eventName,

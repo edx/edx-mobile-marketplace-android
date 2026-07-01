@@ -3,6 +3,7 @@ package org.openedx.core.module.db
 data class DownloadModel(
     val id: String,
     val title: String,
+    val courseId: String,
     val size: Long,
     val path: String,
     val url: String,
@@ -33,5 +34,5 @@ enum class TranscriptsDownloadedState {
 }
 
 enum class FileType {
-    VIDEO, UNKNOWN
+    VIDEO, X_BLOCK
 }

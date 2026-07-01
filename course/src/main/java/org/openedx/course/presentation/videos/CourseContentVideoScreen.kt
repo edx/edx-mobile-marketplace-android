@@ -197,7 +197,7 @@ private fun CourseVideosUI(
                                                     end = 24.dp,
                                                 ),
                                             progress = progress,
-                                            isCompletedShown = true,
+                                            isCompletedShown = uiState.isCompletedSectionsShown,
                                             onVisibilityChanged = if (hasCompletedSection) {
                                                 { onCompletedSectionVisibilityChange() }
                                             } else {
@@ -230,7 +230,7 @@ private fun CourseVideosUI(
 
                                             val shouldShowSection =
                                                 sectionVideos.any { !it.isCompleted() } ||
-                                                        true
+                                                        uiState.isCompletedSectionsShown
                                             if (shouldShowSection) {
                                                 item {
                                                     CourseVideoSection(

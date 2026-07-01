@@ -298,6 +298,7 @@ private fun CourseContentAllUI(
                                                 onItemClick = onExpandClick,
                                                 downloadedStateMap = uiState.downloadedState,
                                                 onSubSectionClick = onSubSectionClick,
+                                                isExpandable = true,
                                                 onDownloadClick = onDownloadClick,
                                                 block = section,
                                                 courseSectionsState = courseSectionsState,

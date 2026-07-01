@@ -28,6 +28,7 @@ import org.openedx.course.presentation.container.CourseContainerViewModel
 import org.openedx.course.presentation.dates.CourseDatesViewModel
 import org.openedx.course.presentation.handouts.HandoutsViewModel
 import org.openedx.course.presentation.home.CourseHomeViewModel
+import org.openedx.course.presentation.offline.CourseOfflineViewModel
 import org.openedx.course.presentation.outline.CourseContentAllViewModel
 import org.openedx.course.presentation.outline.CourseOutlineViewModel
 import org.openedx.course.presentation.progress.CourseProgressViewModel
@@ -610,6 +611,23 @@ val screenModule = module {
         ContentTabViewModel(
             courseId,
             courseTitle,
+            get(),
+            get(),
+        )
+    }
+    single<org.openedx.core.domain.interactor.CourseInteractor> { get<CourseInteractor>() }
+    viewModel { (courseId: String, courseTitle: String) ->
+        CourseOfflineViewModel(
+            courseId,
+            courseTitle,
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
             get(),
             get(),
         )

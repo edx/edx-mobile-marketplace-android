@@ -69,6 +69,7 @@ import org.openedx.core.system.notifier.CourseDatesShifted
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseOpenBlock
+import org.openedx.core.system.notifier.CourseStructureGot
 import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.RefreshDates
@@ -283,6 +284,7 @@ class CourseContainerViewModel(
                 } else {
                     _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 }
+                courseNotifier.send(CourseStructureGot(courseId))
             }
         }
     }
@@ -651,7 +653,10 @@ class CourseContainerViewModel(
                 updateData()
             }
 
-            CourseContainerTab.VIDEOS -> {
+           /* CourseContainerTab.VIDEOS -> {
+                updateData()
+            }*/
+            CourseContainerTab.OFFLINE -> {
                 updateData()
             }
 
@@ -726,9 +731,10 @@ class CourseContainerViewModel(
             CourseContainerTab.HOME -> courseTabClickedEvent()
             CourseContainerTab.CONTENT -> contentTabClickedEvent()
             CourseContainerTab.PROGRESS -> progressTabClickedEvent()
-            CourseContainerTab.VIDEOS -> videoTabClickedEvent()
+           // CourseContainerTab.VIDEOS -> videoTabClickedEvent()
             CourseContainerTab.DISCUSSIONS -> discussionTabClickedEvent()
             CourseContainerTab.DATES -> datesTabClickedEvent()
+            CourseContainerTab.OFFLINE -> offlineTabClickedEvent()
             CourseContainerTab.MORE -> moreTabClickedEvent()
         }
     }
@@ -882,6 +888,9 @@ class CourseContainerViewModel(
     }
     private fun progressTabClickedEvent() {
         logCourseContainerEvent(CourseAnalyticsEvent.PROGRESS_TAB)
+    }
+    private fun offlineTabClickedEvent() {
+        logCourseContainerEvent(CourseAnalyticsEvent.OFFLINE_TAB)
     }
     private fun logCourseContainerEvent(event: CourseAnalyticsEvent) {
         courseAnalytics.logScreenEvent(

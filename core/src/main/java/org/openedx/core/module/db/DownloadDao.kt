@@ -18,6 +18,9 @@ interface DownloadDao {
     @Query("SELECT * FROM download_model")
     fun readAllData() : Flow<List<DownloadModelEntity>>
 
+    @Query("SELECT * FROM download_model")
+    suspend fun readAllDataNonFlow(): List<DownloadModelEntity>
+
     @Query("SELECT * FROM download_model WHERE id in (:ids)")
     fun readAllDataByIds(ids: List<String>) : Flow<List<DownloadModelEntity>>
 

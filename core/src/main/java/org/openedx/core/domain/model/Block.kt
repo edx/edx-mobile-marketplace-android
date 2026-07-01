@@ -37,6 +37,7 @@ data class Block(
         get() {
             return studentViewData != null && studentViewData.encodedVideos?.hasDownloadableVideo == true
         }
+    val isxBlock: Boolean = false
 
     val downloadableType: FileType
         get() = when (type) {
@@ -45,7 +46,7 @@ data class Block(
             }
 
             else -> {
-                FileType.UNKNOWN
+                FileType.X_BLOCK
             }
         }
 
@@ -79,6 +80,14 @@ data class Block(
             }
         }
         return count
+    }
+
+    fun getFileSize(): Long {
+        return when {
+            type == BlockType.VIDEO -> downloadModel?.size ?: 0L
+            isxBlock ->  0L
+            else -> 0L
+        }
     }
 
     fun getVideoPreview(context: Context, isOnline: Boolean, offlineUrl: String?): VideoPreview? {

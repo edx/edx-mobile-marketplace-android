@@ -115,7 +115,13 @@ abstract class BaseDownloadViewModel(
             saveDownloadModels(folder, saveBlocksIds)
         }
     }
-
+    open fun saveDownloadModels(folder: String, courseId: String, id: String) {
+        viewModelScope.launch {
+            val saveBlocksIds = downloadableChildrenMap[id] ?: listOf()
+            logSubsectionDownloadEvent(id, saveBlocksIds.size)
+            saveDownloadModels(folder, saveBlocksIds)
+        }
+    }
     open fun saveAllDownloadModels(folder: String) {
         viewModelScope.launch {
             val saveBlocksIds = downloadableChildrenMap.values.flatten()
@@ -144,6 +150,7 @@ abstract class BaseDownloadViewModel(
                         DownloadModel(
                             block.id,
                             block.displayName,
+                            courseId,
                             size,
                             path,
                             url,
@@ -205,6 +212,13 @@ abstract class BaseDownloadViewModel(
     fun getDownloadableChildren(id: String) = downloadableChildrenMap[id]
 
     open fun removeDownloadModels(blockId: String) {
+        viewModelScope.launch {
+            val downloadableChildren = downloadableChildrenMap[blockId] ?: listOf()
+            logSubsectionDeleteEvent(blockId, downloadableChildren.size)
+            workerController.removeModels(downloadableChildren)
+        }
+    }
+    open fun removeDownloadModels(blockId: String, courseId: String) {
         viewModelScope.launch {
             val downloadableChildren = downloadableChildrenMap[blockId] ?: listOf()
             logSubsectionDeleteEvent(blockId, downloadableChildren.size)

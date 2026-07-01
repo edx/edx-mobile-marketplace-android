@@ -37,6 +37,19 @@ class CourseRepository(
     suspend fun removeDownloadModel(id: String) {
         downloadDao.removeDownloadModel(id)
     }
+    private val structureCache = CoalescingCache<String, CourseStructure>(
+        fetch = { courseId ->
+            val response = api.getCourseStructure(
+                "stale-if-error=0",
+                "v4",
+                preferencesManager.user?.username,
+                courseId
+            )
+            courseDao.insertCourseStructureEntity(response.mapToRoomEntity())
+            response.mapToDomain()
+        },
+        persist = { courseId, _ -> needsRefresh.remove(courseId) }
+    )
 
     fun getDownloadModels() = downloadDao.readAllData().map { list ->
         list.map { it.mapToDomain() }
@@ -103,6 +116,13 @@ class CourseRepository(
         }
 
         return courseStructure[courseId]!!
+    }
+    suspend fun getCourseStructureFromCache(courseId: String): CourseStructure {
+        return structureCache.getCached(courseId)
+            ?: courseDao.getCourseStructureById(courseId)?.mapToDomain()?.also {
+                structureCache.setCached(courseId, it)
+            }
+            ?: throw NoCachedDataException()
     }
 
     suspend fun getEnrollmentDetailsFlow(
@@ -230,6 +250,10 @@ class CourseRepository(
         return courseDao.getVideoProgressByBlockId(blockId)
             ?: VideoProgressEntity(blockId, "", null, null)
     }
+
+
+    suspend fun getAllDownloadModels() = downloadDao.readAllDataNonFlow().map { it.mapToDomain() }
+
     suspend fun saveVideoProgress(
         blockId: String,
         videoUrl: String,

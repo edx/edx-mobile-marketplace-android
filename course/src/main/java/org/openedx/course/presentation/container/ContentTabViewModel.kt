@@ -3,6 +3,8 @@ package org.openedx.course.presentation.container
 import org.openedx.core.BaseViewModel
 import org.openedx.core.system.ResourceManager
 import org.openedx.course.presentation.CourseAnalytics
+import org.openedx.course.presentation.CourseAnalyticsEvent
+import org.openedx.course.presentation.CourseAnalyticsKey
 
 class ContentTabViewModel(
     val courseId: String,
@@ -12,7 +14,7 @@ class ContentTabViewModel(
 ) : BaseViewModel() {
 
     fun logTabClickEvent(contentTab: CourseContentTab) {
-       /* analytics.logEvent(
+        analytics.logEvent(
             CourseAnalyticsEvent.COURSE_CONTENT_TAB_CLICK.eventName,
             buildMap {
                 put(
@@ -23,6 +25,6 @@ class ContentTabViewModel(
                 put(CourseAnalyticsKey.COURSE_NAME.key, courseTitle)
                 put(CourseAnalyticsKey.TAB_NAME.key, contentTab.name)
             }
-        )*/
+        )
     }
 }

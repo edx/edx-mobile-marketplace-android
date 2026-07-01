@@ -158,7 +158,7 @@ fun ContentTabScreen(
             HorizontalPager(
                 state = pagerState,
                 userScrollEnabled = false,
-                beyondBoundsPageCount = CourseContentTab.entries.size
+                beyondViewportPageCount = CourseContentTab.entries.size
             ) { page ->
                 when (CourseContentTab.entries[page]) {
                     CourseContentTab.ALL -> CourseContentAllScreen(

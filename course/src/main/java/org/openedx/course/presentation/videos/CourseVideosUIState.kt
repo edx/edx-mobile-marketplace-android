@@ -17,17 +17,8 @@ sealed class CourseVideosUIState {
         val courseVideos: Map<String, List<Block>>,
         val videoPreview: Map<String, VideoPreview?>,
         val videoProgress: Map<String, Float?>,
+        val isCompletedSectionsShown: Boolean,
     ) : CourseVideosUIState()
-/*data class CourseData(
-            val courseStructure: CourseStructure,
-            val downloadedState: Map<String, DownloadedState>,
-            val courseVideos: Map<String, List<Block>>,
-            val subSectionsDownloadsCount: Map<String, Int>,
-            val downloadModelsSize: DownloadModelsSize,
-            val isCompletedSectionsShown: Boolean,
-            val videoPreview: Map<String, VideoPreview?>,
-            val videoProgress: Map<String, Float?>,
-        ) : CourseVideoUIState()*/
     data object Empty : CourseVideosUIState()
     data object Loading : CourseVideosUIState()
 }

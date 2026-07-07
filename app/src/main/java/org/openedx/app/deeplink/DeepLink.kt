@@ -57,6 +57,7 @@ enum class DeepLinkType(val type: String) {
     COURSE_HANDOUT("course_handout"),
     COURSE_ANNOUNCEMENT("course_announcement"),
     COURSE_COMPONENT("course_component"),
+    COURSE_PROGRESS("course_progress"),  // ← ADD THIS LINE
     PROGRAM("program"),
     DISCUSSION_TOPIC("discussion_topic"),
     DISCUSSION_POST("discussion_post"),

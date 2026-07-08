@@ -25,6 +25,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,6 +45,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.delay
 import org.openedx.core.BlockType
 import org.openedx.core.NoContentScreenType
@@ -77,6 +81,7 @@ import org.openedx.course.R
 import org.openedx.course.presentation.ui.CourseDatesBanner
 import org.openedx.course.presentation.ui.CourseDatesBannerTablet
 import org.openedx.course.presentation.ui.CourseMessage
+import org.openedx.course.presentation.ui.CourseProgressCallback
 import org.openedx.course.presentation.ui.CourseSection
 import java.util.Date
 import org.openedx.core.R as CoreR
@@ -93,18 +98,16 @@ fun CourseOutlineScreen(
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val canShowPLSBanner by viewModel.canShowPLSBanner.collectAsState()
     val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        viewModel.startProgressNotifications(context)
-    }
-    LaunchedEffect(Unit) {
-        viewModel.notifyEvent.collect { (title, message) ->
-            NotificationHelper.showNotification(
-                context,
-                title,
-                message
-            )
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+
+    LaunchedEffect(viewModel, context) {
+        viewModel.notificationEvent.collect { (courseId, title, message) ->
+            (context as? CourseProgressCallback)?.onCourseNotification(courseId, title, message)
         }
     }
+
     LaunchedEffect(resumeBlockId) {
         if (resumeBlockId.isNotEmpty()) {
             viewModel.openBlock(fragmentManager, resumeBlockId)
@@ -126,6 +129,7 @@ fun CourseOutlineScreen(
             }
         },
         onSubSectionClick = { subSectionBlock ->
+            viewModel.notifyCourseStarted() // Add this line
             if (viewModel.isCourseNestedListEnabled) {
                 viewModel.courseSubSectionUnit[subSectionBlock.id]?.let { unit ->
                     viewModel.logUnitDetailViewedEvent(
@@ -153,6 +157,7 @@ fun CourseOutlineScreen(
             }
         },
         onResumeClick = { componentId ->
+            viewModel.notifyCourseStarted() // Add this line
             viewModel.openBlock(
                 fragmentManager,
                 componentId
@@ -663,6 +668,8 @@ private fun CourseOutlineScreenTabletPreview() {
         )
     }
 }
+
+
 
 @Preview(uiMode = UI_MODE_NIGHT_NO)
 @Preview(uiMode = UI_MODE_NIGHT_YES)

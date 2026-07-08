@@ -110,6 +110,7 @@ import org.openedx.course.presentation.dates.CourseDatesScreen
 import org.openedx.course.presentation.handouts.HandoutsScreen
 import org.openedx.course.presentation.handouts.HandoutsType
 import org.openedx.course.presentation.outline.CourseOutlineScreen
+import org.openedx.course.presentation.outline.CourseOutlineViewModel
 import org.openedx.course.presentation.ui.CourseVideosScreen
 import org.openedx.course.presentation.ui.DatesShiftedSnackBar
 import org.openedx.discussion.presentation.topics.DiscussionTopicsScreen
@@ -128,6 +129,10 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
             requireArguments().getString(ARG_RESUME_BLOCK, ""),
             requireArguments().getString(ARG_OPEN_TAB, CourseContainerTab.HOME.name)
         )
+    }
+    private val courseOutlineViewModel by viewModel<CourseOutlineViewModel> {
+        // Get courseId and courseName from the main viewModel
+        parametersOf(viewModel.courseId, viewModel.courseName)
     }
 
     private val permissionLauncher = registerForActivityResult(
@@ -158,6 +163,7 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
         observe()
     }
 
+
     override fun onResume() {
         super.onResume()
         if (viewModel.courseAccessStatus.value == CourseAccessError.NONE) {
@@ -168,6 +174,20 @@ class CourseContainerFragment : Fragment(R.layout.fragment_course_container) {
     override fun onDestroyView() {
         snackBar?.dismiss()
         super.onDestroyView()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // When the user enters the screen, cancel any pending reminder
+        courseOutlineViewModel.cancelNotification(requireContext(), courseOutlineViewModel.courseId)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Only save and schedule a reminder if the user is truly leaving the app/screen
+        if (requireActivity().isFinishing) {
+            courseOutlineViewModel.saveLatestProgress(requireContext())
+        }
     }
 
     private fun observe() {

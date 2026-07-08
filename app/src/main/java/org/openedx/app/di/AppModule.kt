@@ -100,7 +100,6 @@ val appModule = module {
     single<InAppReviewPreferences> { get<PreferencesManager>() }
     single<CoursePreferences> { get<PreferencesManager>() }
     single<NotificationsPreferences> { get<PreferencesManager>() }
-
     single { ResourceManager(get()) }
     single { AppCookieManager(get(), get()) }
     single { ReviewManagerFactory.create(get()) }

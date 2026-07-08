@@ -3,6 +3,7 @@ package org.openedx.course.presentation.outline
 import android.content.Context
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,12 +44,14 @@ import org.openedx.core.system.notifier.RefreshPLSBanner
 import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.Logger
 import org.openedx.course.R
+import org.openedx.course.data.storage.CourseNotificationPrefs
 import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseAnalyticsKey
 import org.openedx.course.presentation.CourseRouter
+import org.openedx.course.presentation.ui.CourseProgressCallback
 import org.openedx.core.R as CoreR
 
 class CourseOutlineViewModel(
@@ -64,6 +67,7 @@ class CourseOutlineViewModel(
     private val analytics: CourseAnalytics,
     val courseRouter: CourseRouter,
     coreAnalytics: CoreAnalytics,
+    private val courseNotificationPrefs: CourseNotificationPrefs,
     downloadDao: DownloadDao,
     workerController: DownloadWorkerController,
 ) : BaseDownloadViewModel(
@@ -74,7 +78,7 @@ class CourseOutlineViewModel(
     coreAnalytics
 ) {
     private val logger = Logger(TAG)
-
+    private var previousCourseStructure: CourseStructure? = null
     val isCourseNestedListEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
     private val _uiState = MutableStateFlow<CourseOutlineUIState>(CourseOutlineUIState.Loading)
@@ -101,9 +105,8 @@ class CourseOutlineViewModel(
     private val subSectionsDownloadsCount = mutableMapOf<String, Int>()
     val courseSubSectionUnit = mutableMapOf<String, Block?>()
 
-    private val _notifyEvent = MutableSharedFlow<Pair<String, String>>()
-    val notifyEvent = _notifyEvent.asSharedFlow()
-
+    private val _notificationEvent = MutableSharedFlow<Triple<String, String, String>>()
+    val notificationEvent: SharedFlow<Triple<String, String, String>> = _notificationEvent.asSharedFlow()
     init {
         viewModelScope.launch {
             courseNotifier.notifier.collect { event ->
@@ -145,6 +148,36 @@ class CourseOutlineViewModel(
         }
 
         getCourseData()
+
+
+    }
+
+    fun saveLatestProgress(context: Context) {
+        viewModelScope.launch {
+            val state = _uiState.value
+            if (state is CourseOutlineUIState.CourseData) {
+                val course = state.courseStructure
+                val progress = course.progress?.value ?: 0f
+
+                // Save progress to SharedPreferences
+                val prefs =
+                    context.getSharedPreferences("course_progress_prefs", Context.MODE_PRIVATE)
+                prefs.edit().putFloat(course.id, progress).apply()
+
+                // Schedule a notification via the AlarmScheduler
+                // We need a way to call the scheduler from the app module.
+                // Let's use the callback interface again.
+                (context as? CourseProgressCallback)?.scheduleCourseProgressNotification(
+                    course.id,
+                    course.name
+                )
+            }
+        }
+    }
+
+    // ADD a function to cancel notifications
+    fun cancelNotification(context: Context, courseId: String) {
+        (context as? CourseProgressCallback)?.cancelCourseProgressNotification(courseId)
     }
 
     override fun saveDownloadModels(folder: String, id: String) {
@@ -248,10 +281,37 @@ class CourseOutlineViewModel(
             subSectionsDownloadsCount = subSectionsDownloadsCount,
             datesBannerInfo = datesBannerInfo,
         )
+        previousCourseStructure?.let { oldStructure ->
+            checkForCompletedModules(oldStructure, courseStructure)
+        }
+        previousCourseStructure = courseStructure // Update the previous structure
+
         _canShowPLSBanner.value =
             coursePreferences.canShowPLSBanner(courseId, datesBannerInfo.bannerType.name)
     }
 
+    private fun checkForCompletedModules(oldStructure: CourseStructure, newStructure: CourseStructure) {
+        val oldCompletedBlocks = oldStructure.blockData.filter { it.isCompleted() }.map { it.id }.toSet()
+        val newCompletedBlocks = newStructure.blockData.filter { it.isCompleted() }.map { it.id }
+
+        newCompletedBlocks.forEach { blockId ->
+            if (blockId !in oldCompletedBlocks && !courseNotificationPrefs.isBlockCompletionNotified(blockId)) {
+                val block = newStructure.blockData.find { it.id == blockId }
+                if (block != null) {
+                    viewModelScope.launch {
+                        _notificationEvent.emit(
+                            Triple(
+                                newStructure.id,
+                                "Module ${block.displayName} complete!",
+                                "Well done on successfully completing module ${block.displayName}!"
+                            )
+                        )
+                    }
+                    courseNotificationPrefs.setBlockCompletionNotified(blockId)
+                }
+            }
+        }
+    }
     private suspend fun handleCourseDataError(e: Throwable) {
         logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
         _uiState.value = CourseOutlineUIState.Error
@@ -459,7 +519,29 @@ class CourseOutlineViewModel(
             }
         }
     }
+    // In CourseOutlineViewModel
 
+    fun notifyCourseStarted() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            if (state is CourseOutlineUIState.CourseData) {
+                val course = state.courseStructure
+                // Fire only if progress is near zero and it hasn't been notified before
+                if (course.progress?.isStarted() == true && !courseNotificationPrefs.isCourseStartedNotified(course.id)) {
+                    _notificationEvent.emit(
+                        Triple(
+                            course.id, // Use the 'course' object
+                            "You're on your way!", // Correct title
+                            "You've officially started ${course.name}. Good luck!" // Correct message
+                        )
+                    )
+                    courseNotificationPrefs.setCourseStartedNotified(course.id)
+                }
+            }
+        }
+    }
+
+    
     private fun logPLSBannerEvents(event: CourseAnalyticsEvent) {
         analytics.logEvent(
             event.eventName,
@@ -473,51 +555,6 @@ class CourseOutlineViewModel(
         )
     }
 
-    fun startProgressNotifications(context: Context) {
-        viewModelScope.launch {
-
-            while (true) {
-
-                val state = _uiState.value
-
-                if (state is CourseOutlineUIState.CourseData) {
-
-                    val course = state.courseStructure
-                    val progress = course.progress
-
-                    if (progress != null) {
-
-                        val milestone =
-                            CourseProgressNotificationManager.getProgressMilestone(progress.value)
-
-                        if (milestone != null &&
-                            CourseProgressNotificationManager.shouldNotify(
-                                context,
-                                course.id,
-                                milestone
-                            )
-                        ) {
-
-                            _notifyEvent.emit(
-                                course.name to CourseProgressNotificationManager.getProgressMessage(
-                                    milestone,
-                                    course.name
-                                )
-                            )
-
-                            CourseProgressNotificationManager.saveMilestone(
-                                context,
-                                course.id,
-                                milestone
-                            )
-                        }
-                    }
-                }
-
-                delay(30_000)
-            }
-        }
-    }
 
 
     companion object {

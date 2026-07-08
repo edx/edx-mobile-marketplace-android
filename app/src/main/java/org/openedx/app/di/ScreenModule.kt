@@ -21,6 +21,7 @@ import org.openedx.core.presentation.iap.IAPViewModel
 import org.openedx.core.presentation.settings.video.VideoQualityViewModel
 import org.openedx.core.ui.WindowSize
 import org.openedx.course.data.repository.CourseRepository
+import org.openedx.course.data.storage.CourseNotificationPrefs
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.container.CourseContainerViewModel
 import org.openedx.course.presentation.dates.CourseDatesViewModel
@@ -293,6 +294,8 @@ val screenModule = module {
             get(),
         )
     }
+
+    single { CourseNotificationPrefs(androidContext()) }
     viewModel { (courseId: String, courseTitle: String) ->
         CourseOutlineViewModel(
             courseId,
@@ -309,6 +312,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get()
         )
     }
     viewModel { (courseId: String) ->

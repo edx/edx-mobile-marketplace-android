@@ -167,6 +167,15 @@ class DeepLinkRouter(
                     )
                 }
 
+                DeepLinkType.COURSE_PROGRESS -> {
+                    navigateToDashboard(fm = fm)
+                    navigateToCourseDashboard(
+                        fm = fm,
+                        deepLink = deepLink,
+                        courseTitle = ""
+                    )
+                }
+
                 DeepLinkType.COURSE_COMPONENT -> {
                     navigateToDashboard(fm = fm)
                     navigateToCourseDashboard(

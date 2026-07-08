@@ -18,6 +18,10 @@ data class Progress(
             0f
         }
 
+    fun isStarted(): Boolean {
+        return value > 0.0f && value < 1.0f
+    }
+
     companion object {
         val DEFAULT_PROGRESS = Progress(0, 0)
     }

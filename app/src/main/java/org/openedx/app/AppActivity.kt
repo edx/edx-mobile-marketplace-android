@@ -20,6 +20,8 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.app.databinding.ActivityAppBinding
 import org.openedx.app.deeplink.DeepLink
+import org.openedx.app.system.notification.CourseAlarmScheduler
+import org.openedx.app.system.push.CourseNotificationHelper
 import org.openedx.auth.presentation.logistration.LogistrationFragment
 import org.openedx.auth.presentation.signin.SignInFragment
 import org.openedx.core.data.storage.CorePreferences
@@ -29,11 +31,12 @@ import org.openedx.core.presentation.global.WindowSizeHolder
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.utils.Logger
+import org.openedx.course.presentation.ui.CourseProgressCallback
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.whatsnew.WhatsNewManager
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
 
-class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
+class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder , CourseProgressCallback {
 
     override val topInset: Int
         get() = _insetTop
@@ -44,6 +47,26 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
 
     override val windowSize: WindowSize
         get() = _windowSize
+
+
+    private val alarmScheduler by lazy { CourseAlarmScheduler(this) }
+    override fun onCourseNotification(courseId: String, title: String, message: String) {
+        CourseNotificationHelper.showCourseProgressNotification(
+            context = this,
+            courseId = courseId,
+            title = title,
+            message = message,
+            isReminder = false // This is an immediate notification
+        )
+    }
+
+    override fun scheduleCourseProgressNotification(courseId: String, courseName: String) {
+        alarmScheduler.schedule(courseId, courseName)
+    }
+
+    override fun cancelCourseProgressNotification(courseId: String) {
+        alarmScheduler.cancel(courseId)
+    }
 
     private lateinit var binding: ActivityAppBinding
     private val viewModel by viewModel<AppViewModel>()
@@ -194,6 +217,8 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
             }
         }
     }
+
+
 
     private fun addFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()

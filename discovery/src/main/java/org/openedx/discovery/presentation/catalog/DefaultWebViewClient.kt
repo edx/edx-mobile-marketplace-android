@@ -2,13 +2,14 @@ package org.openedx.discovery.presentation.catalog
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.net.Uri
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.net.toUri
 import org.openedx.core.extension.isEmailValid
 import org.openedx.core.utils.EmailUtil
+import java.util.concurrent.atomic.AtomicBoolean
 
 open class DefaultWebViewClient(
     val context: Context,
@@ -16,31 +17,53 @@ open class DefaultWebViewClient(
     val isAllLinksExternal: Boolean,
     val refreshSessionCookie: () -> Unit,
     val onUriClick: (String, WebViewLink.Authority) -> Unit,
+    val trustedHosts: Set<String> = emptySet(),
+    val alwaysExternalHosts: Set<String> = emptySet(),
 ) : WebViewClient() {
 
     private var hostForThisPage: String? = null
-    private var isPossibleRedirection = true
-    private var hasRetried = false
+    private val hasRetried = AtomicBoolean(false)
+    private val hasPendingUserNavigation = AtomicBoolean(false)
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
 
         if (hostForThisPage == null && url != null) {
-            hostForThisPage = Uri.parse(url).host
+            hostForThisPage = url.toUri().host
         }
     }
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val clickUrl = request?.url?.toString() ?: ""
 
-        if (clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl)) && !isPossibleRedirection) {
+        val isHttpNavigation = clickUrl.startsWith("http://") || clickUrl.startsWith("https://")
+        val hasGesture = request?.hasGesture() == true
+
+        if (isHttpNavigation && hasGesture) {
+            hasPendingUserNavigation.set(true)
+        }
+        val isUserInitiatedNavigation = hasGesture || hasPendingUserNavigation.get()
+
+        val shouldOpenExternally = clickUrl.isNotEmpty() && (isAllLinksExternal || isExternalLink(clickUrl))
+
+        if (isTrustedLogoutUrl(clickUrl)) {
+            if (isUserInitiatedNavigation) {
+                onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
+            }
+            hasPendingUserNavigation.set(false)
+            return true
+        }
+        if (shouldOpenExternally && isUserInitiatedNavigation) {
+            hasPendingUserNavigation.set(false)
             onUriClick(clickUrl, WebViewLink.Authority.EXTERNAL)
             return true
         }
 
+
         return if (clickUrl.startsWith("mailto:")) {
             val email = clickUrl.replace("mailto:", "")
             if (email.isEmailValid()) {
+                hasPendingUserNavigation.set(false)
                 EmailUtil.sendEmailIntent(context, email, "", "")
                 true
             } else {
@@ -53,7 +76,7 @@ open class DefaultWebViewClient(
 
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
-        isPossibleRedirection = false
+        hasPendingUserNavigation.set(false)
     }
 
     override fun onReceivedHttpError(
@@ -61,10 +84,11 @@ open class DefaultWebViewClient(
         request: WebResourceRequest,
         errorResponse: WebResourceResponse,
     ) {
-        if (request.url.toString() == view.url && !hasRetried) {
+        hasPendingUserNavigation.set(false)
+        if (request.url.toString() == view.url && !hasRetried.get()) {
             when (errorResponse.statusCode) {
                 403, 401, 404 -> {
-                    hasRetried = true
+                    hasRetried.set(true)
                     refreshSessionCookie()
                     webView.loadUrl(request.url.toString())
                 }
@@ -75,18 +99,73 @@ open class DefaultWebViewClient(
 
     private fun isExternalLink(strUrl: String?): Boolean {
         return strUrl?.let { url ->
-            val uri = Uri.parse(url)
+            val uri = url.toUri()
+            val host = uri.host ?: return@let false
             val externalLinkValue = if (uri.isHierarchical) {
                 uri.getQueryParameter(QUERY_PARAM_EXTERNAL_LINK)
             } else {
                 null
             }
-            hostForThisPage != null && hostForThisPage != uri.host ||
-                    externalLinkValue?.toBoolean() == true
+
+            if (externalLinkValue?.toBoolean() == true) return@let true
+
+            if (isAlwaysExternalUrl(uri)) return@let true
+
+             if (isTrustedDomain(host)) return@let false
+
+            hostForThisPage != null && hostForThisPage != host
         } ?: false
+    }
+
+    private fun isTrustedLogoutUrl(strUrl: String?): Boolean {
+        return strUrl?.let { url ->
+            val uri = url.toUri()
+            val host = uri.host ?: return@let false
+            if (isAlwaysExternalUrl(uri)) return@let false
+            if (!isTrustedDomain(host)) return@let false
+
+            val normalizedPath = uri.path?.trimEnd('/') ?: return@let false
+            normalizedPath.equals("/logout", ignoreCase = true)
+        } ?: false
+    }
+
+    private fun isAlwaysExternalUrl(uri: android.net.Uri): Boolean {
+        val host = uri.host ?: return false
+        return isAlwaysExternalHost(host) || isKnownExternalPath(uri.path)
+    }
+
+    private fun isAlwaysExternalHost(host: String): Boolean {
+        return isKnownExternalHost(host) || alwaysExternalHosts.any { externalHost ->
+            host == externalHost || host.endsWith(".$externalHost")
+        }
+    }
+
+    private fun isKnownExternalHost(host: String): Boolean {
+        val normalizedHost = host.lowercase()
+        return normalizedHost.contains("commerce") ||
+                normalizedHost.contains("checkout") ||
+                normalizedHost.contains("payment")
+    }
+
+    private fun isKnownExternalPath(path: String?): Boolean {
+        val normalizedPath = path?.trimEnd('/')?.lowercase() ?: return false
+        return EXTERNAL_PATH_PREFIXES.any { normalizedPath.startsWith(it) }
+    }
+
+    private fun isTrustedDomain(host: String): Boolean {
+            return trustedHosts.contains(host)
     }
 
     companion object {
         const val QUERY_PARAM_EXTERNAL_LINK = "external_link"
+
+        private val EXTERNAL_PATH_PREFIXES = listOf(
+            "/lms/payment_page_redirect",
+            "/payment_page_redirect",
+            "/course_modes/choose",
+            "/verify_student/start-flow",
+            "/basket",
+            "/checkout",
+        )
     }
 }

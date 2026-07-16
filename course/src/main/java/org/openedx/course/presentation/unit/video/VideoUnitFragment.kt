@@ -422,8 +422,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     }
 
-
-
     override fun onStop() {
         super.onStop()
 
@@ -448,7 +446,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         super.onStart()
         pipReceiverManager.register()
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class)
@@ -500,7 +497,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
         return mode == AppOpsManager.MODE_ALLOWED
     }
-
 
     @OptIn(UnstableApi::class)
     private fun restoreNormalUI() {
@@ -738,14 +734,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     }
 
-
-
-
     @OptIn(UnstableApi::class)
     private fun setupMediaSession() {
-        mediaSession = MediaSession.Builder(requireContext(), viewModel.exoPlayer!!).build()
-
+        mediaSession = MediaSession.Builder(requireContext(), viewModel.exoPlayer!!)
+            .setId("video_session_${System.currentTimeMillis()}")
+            .build()
     }
+
     private fun retryPlayback() {
         val player = viewModel.exoPlayer ?: return
 
@@ -761,6 +756,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             it.seekTo(position.coerceAtLeast(0))
         }
     }
+
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class)
     private fun updatePipActions() {
@@ -828,7 +824,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 
-
     private fun resetConstraintsForPip() {
         val set = ConstraintSet()
         set.clone(constraintContainer)
@@ -859,7 +854,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         set.applyTo(constraintContainer)
     }
 
-
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showReplayAction() {
         if (!requireActivity().isInPictureInPictureMode) return
@@ -886,7 +880,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         )
     }
 
-
     private fun showPipDisabledMessage() {
         Toast.makeText(
             requireContext(),
@@ -894,8 +887,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             Toast.LENGTH_LONG
         ).show()
     }
-
-
 }
 
 

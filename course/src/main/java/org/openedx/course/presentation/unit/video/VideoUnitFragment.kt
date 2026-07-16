@@ -86,7 +86,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private val constraintContainer: ConstraintLayout
         get() = binding.rootLayout as ConstraintLayout
 
-
     private var lastVideoAspectRatio: Rational? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

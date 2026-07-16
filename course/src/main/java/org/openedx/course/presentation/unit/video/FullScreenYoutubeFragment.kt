@@ -64,8 +64,6 @@ class FullscreenYoutubeFragment : DialogFragment() {
             }
         })
 
-
-
         closeBtn.setOnClickListener {
             parentFragmentManager.setFragmentResult(
                 "FULLSCREEN_EXIT",

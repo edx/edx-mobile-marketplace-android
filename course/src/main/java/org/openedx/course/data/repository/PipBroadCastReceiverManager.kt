@@ -7,14 +7,6 @@ import android.content.IntentFilter
 import android.os.Build
 import androidx.core.content.ContextCompat
 
-/**
- * Manages the lifecycle of a BroadcastReceiver for PiP remote actions.
- *
- * Handles registration/unregistration tied to fragment lifecycle (onStart/onStop).
- * Works identically for both ExoPlayer and YouTube player types.
- *
- * Injected via Koin; one instance per video fragment.
- */
 class PipBroadcastReceiverManager(
     private val context: Context,
     private val pipPlayerRepository: PipPlayerRepository,
@@ -42,10 +34,6 @@ class PipBroadcastReceiverManager(
         }
     }
 
-    /**
-     * Register the broadcast receiver. Safe to call multiple times.
-     * Should be called in Fragment.onStart().
-     */
     fun register() {
         if (isRegistered) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -64,10 +52,6 @@ class PipBroadcastReceiverManager(
         }
     }
 
-    /**
-     * Unregister the broadcast receiver. Safe to call multiple times.
-     * Should be called in Fragment.onStop() when NOT in PiP mode.
-     */
     fun unregister() {
         if (!isRegistered) return
         try {

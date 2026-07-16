@@ -2,13 +2,6 @@ package org.openedx.course.data.repository.player
 
 import androidx.media3.common.Player
 
-/**
- * Abstraction for player controls - allows unified PiP control
- * for both ExoPlayer and YouTube player types.
- *
- * All PiP actions route through this interface so both players
- * are controlled with identical code paths.
- */
 interface PlayerController {
     fun play()
     fun pause()
@@ -19,12 +12,8 @@ interface PlayerController {
     fun isEnded(): Boolean
     fun currentPosition(): Long
     fun duration(): Long
-    fun release()
 }
 
-/**
- * ExoPlayer implementation of [PlayerController].
- */
 class ExoPlayerController(
     private val player: Player
 ) : PlayerController {
@@ -67,15 +56,8 @@ class ExoPlayerController(
     override fun currentPosition(): Long = player.currentPosition
 
     override fun duration(): Long = player.duration
-
-    override fun release() {
-        // ExoPlayer lifecycle managed by EncodedVideoUnitViewModel, not here
-    }
 }
 
-/**
- * YouTube Player implementation of [PlayerController].
- */
 class YouTubePlayerController(
     private val player: com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 ) : PlayerController {
@@ -134,8 +116,4 @@ class YouTubePlayerController(
     override fun currentPosition(): Long = (_currentSeconds * 1000).toLong()
 
     override fun duration(): Long = (_duration * 1000).toLong()
-
-    override fun release() {
-        // YouTube player lifecycle managed by YouTubePlayerView, not here
-    }
 }

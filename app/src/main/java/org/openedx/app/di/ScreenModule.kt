@@ -509,7 +509,7 @@ val screenModule = module {
     }
 
     viewModel { (courseId: String?, infoType: String?) ->
-        WhatsNewViewModel(  
+        WhatsNewViewModel(
             courseId,
             infoType,
             get(),

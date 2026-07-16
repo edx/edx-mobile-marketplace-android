@@ -569,9 +569,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
     }
 
-
-
-
     private fun clearAllMarginsAndConstraints() {
         val cardParams = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
         cardParams.marginStart = 0

@@ -501,7 +501,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         }
     }
 
-
     @OptIn(UnstableApi::class)
     private fun updatePipActions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&

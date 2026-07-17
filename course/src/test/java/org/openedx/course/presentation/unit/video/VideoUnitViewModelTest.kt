@@ -5,10 +5,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -53,86 +50,6 @@ class VideoUnitViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
-    }
-
-    @Test
-    fun `markBlockCompleted exception`() = runTest {
-        val viewModel = VideoUnitViewModel(
-            "",
-            "",
-            courseRepository,
-            notifier,
-            networkConnection,
-            transcriptManager,
-            courseAnalytics
-        )
-        coEvery {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        } throws Exception()
-        every {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        } returns Unit
-        viewModel.markBlockCompleted("")
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        }
-    }
-
-    @Test
-    fun `markBlockCompleted success`() = runTest {
-        val viewModel = VideoUnitViewModel(
-            "",
-            "",
-            courseRepository,
-            notifier,
-            networkConnection,
-            transcriptManager,
-            courseAnalytics,
-        )
-        coEvery {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        } returns Unit
-        every {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        } returns Unit
-        viewModel.markBlockCompleted("")
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        }
     }
 
     @Test

@@ -19,7 +19,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.media3.common.util.UnstableApi
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
@@ -59,7 +58,6 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import org.openedx.course.presentation.videos.SharedViewModel
 
 class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) {
 
@@ -88,7 +86,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     private var isPlayerInitialized = false
 
     private val youtubeTrackerListener = YouTubePlayerTracker()
-    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     private var _playerUiController: DefaultPlayerUiController? = null
     private var ignoringNextOrientation = false
@@ -447,7 +444,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             }
             binding.subtitles.isVisible = false
             binding.pipBtn?.isVisible = false
-            sharedViewModel.buttonVisibility.value = false
+            pipViewModel.buttonVisibility.value = false
             binding.cvVideoTitle?.visibility = View.GONE
             clearAllMarginsAndConstraints()
 
@@ -472,7 +469,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
             }
             binding.subtitles.visibility = View.VISIBLE
-            sharedViewModel.buttonVisibility.value = true
+            pipViewModel.buttonVisibility.value = true
 
             clearAllMarginsAndConstraints()
 

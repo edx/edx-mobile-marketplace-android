@@ -1,10 +1,9 @@
 package org.openedx.course.presentation.unit.video
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.course.data.repository.player.PlayerController
@@ -23,7 +22,7 @@ class PipViewModel(
 
     /** One-time events for UI updates. */
     private val _pipEvent = MutableSharedFlow<PipUiEvent>(extraBufferCapacity = 1)
-    val pipEvent: SharedFlow<PipUiEvent> = _pipEvent.asSharedFlow()
+    val buttonVisibility = MutableLiveData<Boolean>(true)
 
     // --- Player Registration ---
 

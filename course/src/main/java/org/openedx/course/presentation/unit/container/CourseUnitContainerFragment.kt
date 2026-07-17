@@ -56,7 +56,7 @@ import org.openedx.course.presentation.ui.NavigationUnitsButtons
 import org.openedx.course.presentation.ui.SubSectionUnitsList
 import org.openedx.course.presentation.ui.SubSectionUnitsTitle
 import org.openedx.course.presentation.ui.VerticalPageIndicator
-import org.openedx.course.presentation.videos.SharedViewModel
+import org.openedx.course.presentation.unit.video.PipViewModel
 
 
 class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_container) {
@@ -64,7 +64,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     private val binding: FragmentCourseUnitContainerBinding
         get() = _binding!!
     private var _binding: FragmentCourseUnitContainerBinding? = null
-    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
 
     private val viewModel by viewModel<CourseUnitContainerViewModel> {
         parametersOf(
@@ -233,7 +233,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             binding.cvCount.isVisible = true
         }
 
-        sharedViewModel.buttonVisibility.observe(viewLifecycleOwner) { visible ->
+        pipViewModel.buttonVisibility.observe(viewLifecycleOwner) { visible ->
             binding.btnBack.visibility = if (visible) View.VISIBLE else View.GONE
             binding.rightControls?.visibility = if (visible) View.VISIBLE else View.GONE
             binding.subSectionUnitsTitle.visibility = if (visible) View.VISIBLE else View.GONE
@@ -598,7 +598,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         if (_binding == null) return
 
         updateNavigationBarsVisibility(
-            isVisible = sharedViewModel.buttonVisibility.value != false,
+            isVisible = pipViewModel.buttonVisibility.value != false,
             isLandscape = isLandscape,
         )
     }

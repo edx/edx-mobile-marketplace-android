@@ -58,11 +58,9 @@ import org.openedx.course.domain.model.PipPlayerType
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
 import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
-import org.openedx.course.presentation.videos.SharedViewModel
 
 class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private var pictureInPictureParamsBuilder: PictureInPictureParams.Builder? = null
-    private val sharedViewModel: SharedViewModel by activityViewModels()
     private var mediaSession: MediaSession? = null
     private var cvVideoTitle: ComposeView? = null
     private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
@@ -390,7 +388,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.subtitles.isVisible = false
         cvVideoTitle?.isVisible = false
         binding.pipBtn.isVisible = false
-        sharedViewModel.buttonVisibility.value = false
+        pipViewModel.buttonVisibility.value = false
         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView?.useController = false
 
@@ -450,7 +448,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.subtitles.isVisible = false
             binding.pipBtn.isVisible = false
             binding.playerView?.useController = false
-            sharedViewModel.buttonVisibility.value = false
+            pipViewModel.buttonVisibility.value = false
             cvVideoTitle?.visibility = View.GONE
             clearAllMarginsAndConstraints()
 
@@ -506,7 +504,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView?.showController()
         cvVideoTitle?.visibility = View.VISIBLE
-        sharedViewModel.buttonVisibility.value = true
+        pipViewModel.buttonVisibility.value = true
 
         binding.cardView.radius =
             resources.getDimension(R.dimen.video_corner_radius)

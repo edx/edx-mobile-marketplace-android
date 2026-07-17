@@ -64,13 +64,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private var pictureInPictureParamsBuilder: PictureInPictureParams.Builder? = null
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private var mediaSession: MediaSession? = null
-
     private var cvVideoTitle: ComposeView? = null
-
     private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
-
     private val pipReceiverManager: PipBroadcastReceiverManager by inject()
-
     val binding by viewBinding(FragmentVideoUnitBinding::bind)
     private val viewModel by viewModel<EncodedVideoUnitViewModel> {
         parametersOf(
@@ -80,13 +76,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         )
     }
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
-
     private var windowSize: WindowSize? = null
-
     private val constraintContainer: ConstraintLayout
         get() = binding.rootLayout as ConstraintLayout
-
     private var lastVideoAspectRatio: Rational? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         windowSize = computeWindowSizeClasses()

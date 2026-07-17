@@ -361,7 +361,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             binding.youtubePlayerView.initialize(listener, options)
             isPlayerInitialized = true
         }
-
     }
 
     override fun onStart() {
@@ -566,7 +565,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         binding.rootLayout.post {
             updateLayoutForOrientation()
         }
-
     }
 
     private fun clearAllMarginsAndConstraints() {
@@ -636,7 +634,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             constraintSet.constrainWidth(binding.subtitles.id, 0)
             constraintSet.constrainPercentWidth(binding.subtitles.id, 0.35f)
             binding.pipBtn?.visibility = View.GONE
-
 
         } else {
 
@@ -721,7 +718,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             Toast.LENGTH_LONG
         ).show()
     }
-
 }
 
 

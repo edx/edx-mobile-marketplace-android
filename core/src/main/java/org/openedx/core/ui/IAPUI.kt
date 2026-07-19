@@ -33,10 +33,14 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.Surface
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -44,14 +48,18 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -59,8 +67,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import org.openedx.core.R
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isNotNullOrEmpty
@@ -897,6 +903,133 @@ fun PurchasesFulfillmentCompletedDialog(onConfirm: () -> Unit, onDismiss: () -> 
         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
         onDismissRequest = {}
     )
+}
+@Composable
+fun SubscriptionBanner(
+    visible: Boolean,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val uriHandler = LocalUriHandler.current
+    if (!visible) return
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = MaterialTheme.appShapes.cardShape
+            )
+            .border(
+                width = 1.dp,
+                color = Color(0xFFBFDBEA),
+                shape = MaterialTheme.appShapes.cardShape
+            ),
+        shape = MaterialTheme.appShapes.cardShape,
+        backgroundColor = MaterialTheme.appColors.subscriptionBannerBackground,
+        elevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+
+            Text(
+                text = stringResource(id = R.string.banner_title),
+                style = MaterialTheme.appTypography.titleMedium,
+                color = MaterialTheme.appColors.textPrimary
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val bannerText = stringResource(id = R.string.banner_content)
+
+            val annotatedText = buildAnnotatedString {
+                val linkText = "mobile web browser?"
+                val startIndex = bannerText.indexOf(linkText)
+
+                if (startIndex >= 0) {
+
+                    append(bannerText.substring(0, startIndex))
+
+                    pushStringAnnotation(
+                        tag = "URL",
+                        annotation = "https://www.google.com"
+                    )
+
+                    withStyle(
+                        SpanStyle(
+                            color = MaterialTheme.appColors.textHyperLink,
+                            textDecoration = TextDecoration.Underline,
+                            fontSize = MaterialTheme.appTypography.bodyMedium.fontSize
+                        )
+                    ) {
+                        append(linkText)
+                    }
+
+                    pop()
+
+                    append(
+                        bannerText.substring(
+                            startIndex + linkText.length
+                        )
+                    )
+
+                } else {
+                    append(bannerText)
+                }
+            }
+
+            ClickableText(
+                text = annotatedText,
+                style = MaterialTheme.appTypography.bodyMedium.copy(
+                    color = MaterialTheme.appColors.textPrimary
+                ),
+                onClick = { offset ->
+                    annotatedText
+                        .getStringAnnotations(
+                            tag = "URL",
+                            start = offset,
+                            end = offset
+                        )
+                        .firstOrNull()
+                        ?.let {
+                            uriHandler.openUri(it.item)
+                        }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text(
+                        text = stringResource(id = R.string.core_dismiss)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewSubscriptionBanner() {
+    OpenEdXTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.appColors.background
+        ) {
+            SubscriptionBanner(
+                visible = true,
+                onDismiss = {}
+            )
+        }
+    }
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)

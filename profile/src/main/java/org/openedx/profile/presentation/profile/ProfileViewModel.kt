@@ -44,6 +44,9 @@ class ProfileViewModel(
     val isUpdating: LiveData<Boolean>
         get() = _isUpdating
 
+    private val _isSubscriptionBannerVisible = MutableStateFlow(true)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
+
     init {
         getAccount()
     }
@@ -117,6 +120,10 @@ class ProfileViewModel(
                 putAll(params)
             }
         )
+    }
+
+    fun dismissSubscriptionBanner() {
+        _isSubscriptionBannerVisible.value = false
     }
 
     companion object {

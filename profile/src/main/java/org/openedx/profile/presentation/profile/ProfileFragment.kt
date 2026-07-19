@@ -36,12 +36,14 @@ class ProfileFragment : Fragment() {
                 val uiState by viewModel.uiState.collectAsState()
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val refreshing by viewModel.isUpdating.observeAsState(false)
+                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
 
                 ProfileView(
                     windowSize = windowSize,
                     uiState = uiState,
                     uiMessage = uiMessage,
                     refreshing = refreshing,
+                    isSubscriptionBannerVisible = isSubscriptionBannerVisible,
                     onSettingsClick = {
                         viewModel.profileRouter.navigateToSettings(requireActivity().supportFragmentManager)
                     },
@@ -54,6 +56,9 @@ class ProfileFragment : Fragment() {
                             }
                             ProfileViewAction.SwipeRefresh -> {
                                 viewModel.updateAccount()
+                            }
+                            ProfileViewAction.DismissSubscriptionBanner -> {
+                                viewModel.dismissSubscriptionBanner()
                             }
                         }
                     }

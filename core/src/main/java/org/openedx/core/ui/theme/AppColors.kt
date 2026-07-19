@@ -1,5 +1,6 @@
 package org.openedx.core.ui.theme
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.Colors
 import androidx.compose.ui.graphics.Color
 
@@ -91,6 +92,8 @@ data class AppColors(
     val highlightDiscussionResponse: Color,
     val certificatePreviewHeading: Color,
     val certificatePreviewMessage: Color,
+    val subscriptionBannerBackground: Color,
+    val subscriptionBannerBorderStroke: Color
 ) {
     val primary: Color get() = material.primary
     val primaryVariant: Color get() = material.primaryVariant

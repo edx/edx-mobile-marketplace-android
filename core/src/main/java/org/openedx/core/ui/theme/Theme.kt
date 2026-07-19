@@ -110,6 +110,7 @@ private val DarkColorPalette = AppColors(
 
     certificatePreviewHeading = dark_certificate_preview_headline,
     certificatePreviewMessage = dark_certificate_preview_message,
+    subscriptionBannerBackground = dark_subscription_banner_background
 )
 
 private val LightColorPalette = AppColors(
@@ -212,6 +213,7 @@ private val LightColorPalette = AppColors(
 
     certificatePreviewHeading = light_certificate_preview_headline,
     certificatePreviewMessage = light_certificate_preview_message,
+    subscriptionBannerBackground = light_subscription_banner_background
 )
 
 val MaterialTheme.appColors: AppColors

@@ -118,6 +118,9 @@ fun CourseVideosScreen(
             viewModel.switchCourseSections(block.id)
         },
         onSubSectionClick = { subSectionBlock ->
+            if (viewModel.isCourseNotStarted(uiState)) {
+                viewModel.showCourseStartedNotification(context)
+            }
             viewModel.courseSubSectionUnit[subSectionBlock.id]?.let { unit ->
                 viewModel.sequentialClickedEvent(
                     unit.blockId,

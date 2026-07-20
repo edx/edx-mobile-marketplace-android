@@ -1,6 +1,10 @@
 package org.openedx.course.presentation.outline
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -467,6 +471,56 @@ class CourseOutlineViewModel(
                 put(CourseAnalyticsKey.SCREEN_NAME.key, CourseAnalyticsKey.COURSE_DASHBOARD.key)
             }
         )
+    }
+
+    fun showCourseStartedNotification(context: Context) {
+        viewModelScope.launch {
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            val channelId = "course_notifications"
+            val channelName = "Course Notifications"
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    channelId,
+                    channelName,
+                    NotificationManager.IMPORTANCE_HIGH
+                )
+                notificationManager.createNotificationChannel(channel)
+            }
+            val courseName = (_uiState.value as? CourseOutlineUIState.CourseData)
+                ?.courseStructure?.name ?: "Course"
+
+            val notificationText = "You've officially started $courseName. Good luck!"
+
+            val notification = NotificationCompat.Builder(context, channelId)
+                .setContentTitle(context.getString(R.string.course_started))
+                .setContentText(notificationText)
+                .setSmallIcon(R.drawable.course_ic_task_alt)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .build()
+
+            notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        }
+    }
+
+    fun isResumeButttonVisible(uiState: CourseOutlineUIState): Boolean {
+        return if (uiState is CourseOutlineUIState.CourseData) {
+            val hasResumeComponent = uiState.resumeComponent != null
+            // Check: Course hasn't started AND Resume button is NOT visible AND no assignment progress
+            hasResumeComponent
+        } else {
+            false
+        }
+    }
+
+    fun isCourseNotStarted(uiState: CourseOutlineUIState): Boolean {
+        return if (uiState is CourseOutlineUIState.CourseData) {
+            uiState.courseStructure.isStarted.not()
+        } else {
+            false
+        }
     }
 
     companion object {

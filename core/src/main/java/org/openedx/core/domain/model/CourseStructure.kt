@@ -23,7 +23,7 @@ data class CourseStructure(
     val enrollmentDetails: EnrollmentDetails,
     val productInfo: ProductInfo?
 ) {
-    private val isStarted: Boolean
+    val isStarted: Boolean
         get() = TimeUtils.isDatePassed(Date(), start)
 
     val isUpgradeable: Boolean

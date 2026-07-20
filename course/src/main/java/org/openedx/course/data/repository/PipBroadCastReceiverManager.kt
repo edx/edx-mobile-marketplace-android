@@ -7,6 +7,14 @@ import android.content.IntentFilter
 import android.os.Build
 import androidx.core.content.ContextCompat
 
+/**
+ * Manages the lifecycle of a BroadcastReceiver for PiP remote actions.
+ *
+ * Handles registration/unregistration tied to fragment lifecycle (onStart/onStop).
+ * Works identically for both ExoPlayer and YouTube player types.
+ *
+ * Injected via Koin; one instance per video fragment.
+ */
 class PipBroadcastReceiverManager(
     private val context: Context,
     private val pipPlayerRepository: PipPlayerRepository,
@@ -15,43 +23,70 @@ class PipBroadcastReceiverManager(
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
-            when (intent?.action) {
+            val action = intent?.action
+            android.util.Log.d("PipReceiver", "Action received: $action, Controller: ${pipPlayerRepository.controller}")
+
+            when (action) {
                 ACTION_PLAY -> {
+                    android.util.Log.d("PipReceiver", "Playing...")
                     pipPlayerRepository.play()
                     pipPlayerRepository.updatePlaybackState(isPlaying = true, isEnded = false)
                 }
                 ACTION_PAUSE -> {
+                    android.util.Log.d("PipReceiver", "Pausing...")
                     pipPlayerRepository.pause()
                     pipPlayerRepository.updatePlaybackState(isPlaying = false)
                 }
                 ACTION_FORWARD -> {
+                    android.util.Log.d("PipReceiver", "Seeking forward...")
                     pipPlayerRepository.seekForward()
                 }
                 ACTION_REWIND -> {
+                    android.util.Log.d("PipReceiver", "Seeking backward...")
                     pipPlayerRepository.seekBackward()
                 }
             }
         }
     }
-
+    /**
+     * Register the broadcast receiver. Safe to call multiple times.
+     * Should be called in Fragment.onStart().
+     */
     fun register() {
         if (isRegistered) return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            ContextCompat.registerReceiver(
-                context,
-                receiver,
-                IntentFilter().apply {
-                    addAction(ACTION_PLAY)
-                    addAction(ACTION_PAUSE)
-                    addAction(ACTION_FORWARD)
-                    addAction(ACTION_REWIND)
-                },
-                ContextCompat.RECEIVER_EXPORTED,
-            )
+        try {
+            val intentFilter = IntentFilter().apply {
+                addAction(ACTION_PLAY)
+                addAction(ACTION_PAUSE)
+                addAction(ACTION_FORWARD)
+                addAction(ACTION_REWIND)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                ContextCompat.registerReceiver(
+                    context,
+                    receiver,
+                    intentFilter,
+                    ContextCompat.RECEIVER_EXPORTED,
+                )
+            } else {
+                ContextCompat.registerReceiver(
+                    context,
+                    receiver,
+                    intentFilter,
+                    ContextCompat.RECEIVER_NOT_EXPORTED
+                )
+            }
             isRegistered = true
+        } catch (e: Exception) {
+            // Receiver already registered or context invalid
+            e.printStackTrace()
         }
     }
-
+    /**
+     * Unregister the broadcast receiver. Safe to call multiple times.
+     * Should be called in Fragment.onStop() when NOT in PiP mode.
+     */
     fun unregister() {
         if (!isRegistered) return
         try {

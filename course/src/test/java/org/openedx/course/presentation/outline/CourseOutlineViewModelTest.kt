@@ -97,7 +97,8 @@ class CourseOutlineViewModelTest {
     private val assignmentProgress = AssignmentProgress(
         assignmentType = "Homework",
         numPointsEarned = 1f,
-        numPointsPossible = 3f
+        numPointsPossible = 3f,
+        shortLabel = ""
     )
 
     private val blocks = listOf(
@@ -228,6 +229,7 @@ class CourseOutlineViewModelTest {
     private val downloadModel = DownloadModel(
         "id",
         "title",
+        "",
         0,
         "",
         "url",

@@ -107,7 +107,7 @@ fun CourseCompletionHomePagerCardContent(
 
             CourseSection(
                 modifier = modifier,
-                block = subsection,
+                block = chapter,
                 onItemClick = {
                     onSubSectionClick(subsection)
                 },

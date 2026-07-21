@@ -150,7 +150,7 @@ private fun CourseContentAssignmentScreen(
                 )
                 LazyColumn(
                     modifier = screenWidth,
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    contentPadding = PaddingValues(bottom = 16.dp, top = 20.dp)
                 ) {
                     item {
                         Column {

@@ -1,6 +1,7 @@
 package org.openedx.course.presentation.home
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.openedx.core.BlockType
+import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.helper.VideoPreviewHelper
@@ -39,7 +41,7 @@ import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseOpenBlock
 import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.utils.FileUtil
-import org.openedx.course.R
+import org.openedx.course.R as courseR
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -136,23 +138,21 @@ class CourseHomeViewModel(
         getCourseData()
     }
 
-    /*override fun saveDownloadModels(folder: String, courseId: String, id: String) {
+    override fun saveDownloadModels(folder: String, courseId: String, id: String) {
         if (preferencesManager.videoSettings.wifiDownloadOnly) {
             if (networkConnection.isWifiConnected()) {
                 super.saveDownloadModels(folder, courseId, id)
             } else {
                 viewModelScope.launch {
-                    sendMessage(
                         UIMessage.ToastMessage(
                             resourceManager.getString(courseR.string.course_can_download_only_with_wifi)
                         )
-                    )
                 }
             }
         } else {
             super.saveDownloadModels(folder, courseId, id)
         }
-    }*/
+    }
 
     fun getCourseData() {
         getCourseDataInternal()
@@ -207,7 +207,7 @@ class CourseHomeViewModel(
                 }.collect { }
             } finally {
                     Log.d("FLOW", "Flow completed / cancelled")
-                _uiState.value = CourseHomeUIState.Error
+               // _uiState.value = CourseHomeUIState.Error
                 }
         }
     }
@@ -400,89 +400,26 @@ class CourseHomeViewModel(
             }
         }
     }
-
-    fun downloadBlocks(blocksIds: List<String>, fragmentManager: FragmentManager) {
-        viewModelScope.launch {
-            val courseData = _uiState.value as? CourseHomeUIState.CourseData ?: return@launch
-
-            val subSectionsBlocks =
-                courseData.courseSubSections.values.flatten().filter { it.id in blocksIds }
-
-            val blocks = subSectionsBlocks.flatMap { subSectionsBlock ->
-                val verticalBlocks =
-                    allBlocks.values.filter { it.id in subSectionsBlock.descendants }
-                allBlocks.values.filter { it.id in verticalBlocks.flatMap { it.descendants } }
-            }
-
-            val downloadableBlocks = blocks.filter { it.isDownloadable }
-            val downloadingBlocks = blocksIds.filter { isBlockDownloading(it) }
-            val isAllBlocksDownloaded = downloadableBlocks.all { isBlockDownloaded(it.id) }
-
-            val notDownloadedSubSectionBlocks = subSectionsBlocks.mapNotNull { subSectionsBlock ->
-                val verticalBlocks =
-                    allBlocks.values.filter { it.id in subSectionsBlock.descendants }
-                val notDownloadedBlocks = allBlocks.values.filter {
-                    it.id in verticalBlocks.flatMap { it.descendants } && it.isDownloadable && !isBlockDownloaded(
-                        it.id
-                    )
-                }
-                if (notDownloadedBlocks.isNotEmpty()) {
-                    subSectionsBlock
-                } else {
-                    null
-                }
-            }
-
-            val requiredSubSections = notDownloadedSubSectionBlocks.ifEmpty {
-                subSectionsBlocks
-            }
-
-            if (downloadingBlocks.isNotEmpty()) {
-                val downloadableChildren =
-                    downloadingBlocks.flatMap { getDownloadableChildren(it).orEmpty() }
-                if (config.getCourseUIConfig().isCourseDownloadQueueEnabled) {
-                    courseRouter.navigateToDownloadQueue(fragmentManager, downloadableChildren)
-                } else {
-                    downloadableChildren.forEach {
-                        if (!isBlockDownloaded(it)) {
-                            removeBlockDownloadModel(it)
-                        }
-                    }
-                }
+    fun downloadBlocks(
+        blocksIds: List<String>,
+        fragmentManager: FragmentManager,
+        context: Context,
+    ) {
+        if (blocksIds.find { isBlockDownloading(it) } != null) {
+            courseRouter.navigateToDownloadQueue(fm = fragmentManager)
+            return
+        }
+        blocksIds.forEach { blockId ->
+            if (isBlockDownloaded(blockId)) {
+                removeDownloadModels(blockId)
             } else {
-                /*downloadDialogManager.showPopup(
-                    subSectionsBlocks = requiredSubSections,
-                    courseId = courseId,
-                    isBlocksDownloaded = isAllBlocksDownloaded,
-                    fragmentManager = fragmentManager,
-                    removeDownloadModels = ::removeDownloadModels,
-                    saveDownloadModels = { blockId ->
-                        saveDownloadModels(fileUtil.getExternalAppDir().path, courseId, blockId)
-                    }
-                )*/
+                saveDownloadModels(
+                    FileUtil(context).getExternalAppDir().path, blockId
+                )
             }
         }
     }
 
-    fun getCourseProgress() {
-        viewModelScope.launch {
-            if (_uiState.value !is CourseHomeUIState.CourseData) {
-                _uiState.value = CourseHomeUIState.Loading
-            }
-            interactor.getCourseProgress(courseId, false, true)
-                .catch { e ->
-                    if (_uiState.value !is CourseHomeUIState.CourseData) {
-                        _uiState.value = CourseHomeUIState.Error
-                    }
-                }
-                .collectLatest { progress ->
-                    val currentState = _uiState.value
-                    if (currentState is CourseHomeUIState.CourseData) {
-                        _uiState.value = currentState.copy(courseProgress = progress)
-                    }
-                }
-        }
-    }
 
     fun logVideoClick(blockId: String) {
         val currentState = uiState.value

@@ -122,7 +122,8 @@ private fun CourseVideosUI(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.appColors.background
+        containerColor = MaterialTheme.appColors.background,
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0)
     ) {
         val screenWidth by remember(key1 = windowSize) {
             mutableStateOf(
@@ -152,6 +153,7 @@ private fun CourseVideosUI(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
+                .padding(top = 20.dp)
                 .displayCutoutForLandscape(),
             contentAlignment = Alignment.TopCenter
         ) {

@@ -2,8 +2,10 @@ package org.openedx.course.presentation.worker
 
 import org.openedx.core.BlockType
 import org.openedx.core.data.model.User
+import org.openedx.core.data.model.room.VideoProgressEntity
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.AssignmentProgress
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseAccessDetails
@@ -26,6 +28,7 @@ import org.openedx.core.domain.model.VideoInfo
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
+import org.openedx.core.module.db.TranscriptsDownloadedState
 import org.openedx.core.module.download.DownloadModelsSize
 import java.util.Date
 
@@ -70,8 +73,8 @@ object CoreMocks {
         containsGatedContent = false,
         assignmentProgress = mockAssignmentProgress,
         due = Date(),
-        authorizationDenialReason = TODO(),
-        downloadModel = TODO()
+        authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
+        downloadModel = null
     )
 
     val mockBlockData = listOf(
@@ -84,7 +87,9 @@ object CoreMocks {
             assignmentProgress = mockAssignmentProgress.copy(
                 assignmentType = "Homework"
             ),
-            due = Date()
+            due = Date(),
+            authorizationDenialReason = AuthorizationDenialReason.FEATURE_BASED_ENROLLMENTS,
+            downloadModel = null
         ),
         mockChapterBlock.copy(
             id = "id1",
@@ -135,11 +140,20 @@ object CoreMocks {
 
         media = null,
         certificate = null,
-        courseAccessDetails = TODO(),
-        isSelfPaced = TODO(),
-        progress = TODO(),
-        enrollmentDetails = TODO(),
-        productInfo = TODO()
+        courseAccessDetails = CourseAccessDetails(
+            hasUnmetPrerequisites = false,
+            isTooEarly = false,
+            isStaff = false,
+            auditAccessExpires = null,
+            coursewareAccess = CoursewareAccess(
+                false, "", "", "",
+                "", ""
+            )
+        ),
+        isSelfPaced = false,
+        progress = Progress(1,2),
+        enrollmentDetails = EnrollmentDetails(Date(),"",true,Date()),
+        productInfo = null
     )
 
     val mockCourseComponentStatus = CourseComponentStatus(
@@ -214,9 +228,9 @@ object CoreMocks {
         media = null,
         courseSharingUtmParameters = CourseSharingUtmParameters("", ""),
         courseAbout = "About course",
-        orgLogo = TODO(),
-        courseModes = TODO(),
-        productInfo = TODO()
+        orgLogo = "",
+        courseModes = null,
+        productInfo = null
     )
 
     val mockCourseEnrollmentDetails = CourseEnrollmentDetails(
@@ -238,7 +252,12 @@ object CoreMocks {
         link = "",
         linkText = ""
     )
-
+    val mockVideoProgress = VideoProgressEntity(
+        blockId = "video1",
+        videoUrl = "test-video-url",
+        videoTime = 1000L,
+        duration = 5000L
+    )
     val mockDownloadModel = DownloadModel(
         id = "video1",
         title = "Video 1",
@@ -247,10 +266,10 @@ object CoreMocks {
         url = "test-url",
         type = FileType.VIDEO,
         downloadedState = DownloadedState.NOT_DOWNLOADED,
-        progress = TODO(),
-        transcriptUrls = TODO(),
-        transcriptPaths = TODO(),
-        transcriptDownloadedStatus = TODO(),
+        progress = 1f,
+        transcriptUrls = mapOf(),
+        transcriptPaths = mapOf(),
+        transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED,
         courseId = ""
     )
 
@@ -276,7 +295,7 @@ object CoreMocks {
                 mobileLow = VideoInfo(
                     url = "test-url",
                     fileSize = 1000L,
-                    streamPriority = TODO()
+                    streamPriority = 1
                 )
             ),
             topicId = ""
@@ -289,8 +308,8 @@ object CoreMocks {
         containsGatedContent = false,
         assignmentProgress = null,
         due = null,
-        authorizationDenialReason = TODO(),
-        downloadModel = TODO(),
+        authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
+        downloadModel =null,
     )
 
     val mockSequentialBlockForDownload = Block(
@@ -311,8 +330,8 @@ object CoreMocks {
         containsGatedContent = false,
         assignmentProgress = null,
         due = null,
-        authorizationDenialReason = TODO(),
-        downloadModel = TODO(),
+        authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
+        downloadModel =null,
     )
 
     val mockVerticalBlock = Block(
@@ -333,8 +352,8 @@ object CoreMocks {
         containsGatedContent = false,
         assignmentProgress = null,
         due = null,
-        authorizationDenialReason = TODO(),
-        downloadModel = TODO(),
+        authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
+        downloadModel =null,
     )
 
     val mockCourseStructureForDownload = CourseStructure(
@@ -352,9 +371,9 @@ object CoreMocks {
         certificate = null,
         isSelfPaced = false,
         progress = null,
-        courseAccessDetails = TODO(),
-        enrollmentDetails = TODO(),
-        productInfo = TODO()
+        courseAccessDetails =mockCourseAccessDetails,
+        enrollmentDetails = mockEnrollmentDetails,
+        productInfo = null
     )
 
 

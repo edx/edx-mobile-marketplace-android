@@ -145,6 +145,7 @@ fun CourseHomeScreen(
             viewModel.downloadBlocks(
                 blocksIds = blocksIds,
                 fragmentManager = fragmentManager,
+                context = context
             )
         },
         onCertificateClick = {

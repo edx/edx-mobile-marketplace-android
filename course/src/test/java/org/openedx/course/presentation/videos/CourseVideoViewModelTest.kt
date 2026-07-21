@@ -32,6 +32,7 @@ import org.openedx.core.BlockType
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.helper.VideoPreviewHelper
 import org.openedx.core.domain.model.AssignmentProgress
 import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
@@ -80,13 +81,15 @@ class CourseVideoViewModelTest {
     private val downloadDao = mockk<DownloadDao>()
     private val workerController = mockk<DownloadWorkerController>()
     private val courseRouter = mockk<CourseRouter>()
+    private val videoPreviewHelper = mockk<VideoPreviewHelper>()
 
     private val cantDownload = "You can download content only from Wi-fi"
 
     private val assignmentProgress = AssignmentProgress(
         assignmentType = "Homework",
         numPointsEarned = 1f,
-        numPointsPossible = 3f
+        numPointsPossible = 3f,
+        shortLabel = ""
     )
 
     private val blocks = listOf(
@@ -183,11 +186,12 @@ class CourseVideoViewModelTest {
     )
 
     private val downloadModelEntity =
-        DownloadModelEntity("", "", 1, "", "", "VIDEO", "DOWNLOADED", null, "", "", "NOT_DOWNLOADED")
+        DownloadModelEntity("", "", "",1, "", "", "VIDEO", "DOWNLOADED", null, "", "", "NOT_DOWNLOADED")
 
     private val downloadModel = DownloadModel(
         "id",
         "title",
+        "",
         0,
         "",
         "url",
@@ -205,6 +209,10 @@ class CourseVideoViewModelTest {
         Dispatchers.setMain(dispatcher)
         every { config.getApiHostURL() } returns "http://localhost:8000"
         every { courseNotifier.notifier } returns flowOf(CourseLoading(false))
+        every { videoPreviewHelper.getVideoPreviewWithId(any(), any(), any()) } returns Pair(
+            "test",
+            null
+        )
     }
 
     @After
@@ -230,6 +238,7 @@ class CourseVideoViewModelTest {
             videoNotifier,
             analytics,
             courseRouter,
+            videoPreviewHelper,
             coreAnalytics,
             downloadDao,
             workerController,
@@ -261,6 +270,7 @@ class CourseVideoViewModelTest {
             videoNotifier,
             analytics,
             courseRouter,
+            videoPreviewHelper,
             coreAnalytics,
             downloadDao,
             workerController
@@ -300,6 +310,7 @@ class CourseVideoViewModelTest {
             videoNotifier,
             analytics,
             courseRouter,
+            videoPreviewHelper,
             coreAnalytics,
             downloadDao,
             workerController
@@ -341,6 +352,7 @@ class CourseVideoViewModelTest {
             videoNotifier,
             analytics,
             courseRouter,
+            videoPreviewHelper,
             coreAnalytics,
             downloadDao,
             workerController
@@ -378,6 +390,7 @@ class CourseVideoViewModelTest {
                 videoNotifier,
                 analytics,
                 courseRouter,
+                videoPreviewHelper,
                 coreAnalytics,
                 downloadDao,
                 workerController
@@ -419,6 +432,7 @@ class CourseVideoViewModelTest {
                 videoNotifier,
                 analytics,
                 courseRouter,
+                videoPreviewHelper,
                 coreAnalytics,
                 downloadDao,
                 workerController

@@ -1,5 +1,6 @@
 package org.openedx.course.presentation.outline
 
+import android.content.Context
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -122,21 +123,19 @@ class CourseContentAllViewModel(
     }
 
     override fun saveDownloadModels(folder: String, id: String) {
-       /* if (preferencesManager.videoSettings.wifiDownloadOnly) {
+        if (preferencesManager.videoSettings.wifiDownloadOnly) {
             if (networkConnection.isWifiConnected()) {
                 super.saveDownloadModels(folder, courseId, id)
             } else {
                 viewModelScope.launch {
-                    sendMessage(
                         UIMessage.ToastMessage(
                             resourceManager.getString(courseR.string.course_can_download_only_with_wifi)
                         )
-                    )
                 }
             }
         } else {
             super.saveDownloadModels(folder, courseId, id)
-        }*/
+        }
     }
 
     fun getCourseData() {
@@ -379,66 +378,22 @@ class CourseContentAllViewModel(
             )
         }
     }
-
-    fun downloadBlocks(blocksIds: List<String>, fragmentManager: FragmentManager) {
-        viewModelScope.launch {
-            val courseData = _uiState.value as? CourseContentAllUIState.CourseData ?: return@launch
-
-            val subSectionsBlocks =
-                courseData.courseSubSections.values.flatten().filter { it.id in blocksIds }
-
-            val blocks = subSectionsBlocks.flatMap { subSectionsBlock ->
-                val verticalBlocks =
-                    allBlocks.values.filter { it.id in subSectionsBlock.descendants }
-                allBlocks.values.filter { it.id in verticalBlocks.flatMap { it.descendants } }
-            }
-
-            val downloadableBlocks = blocks.filter { it.isDownloadable }
-            val downloadingBlocks = blocksIds.filter { isBlockDownloading(it) }
-            val isAllBlocksDownloaded = downloadableBlocks.all { isBlockDownloaded(it.id) }
-
-            val notDownloadedSubSectionBlocks = subSectionsBlocks.mapNotNull { subSectionsBlock ->
-                val verticalBlocks =
-                    allBlocks.values.filter { it.id in subSectionsBlock.descendants }
-                val notDownloadedBlocks = allBlocks.values.filter {
-                    it.id in verticalBlocks.flatMap { it.descendants } && it.isDownloadable && !isBlockDownloaded(
-                        it.id
-                    )
-                }
-                if (notDownloadedBlocks.isNotEmpty()) {
-                    subSectionsBlock
-                } else {
-                    null
-                }
-            }
-
-            val requiredSubSections = notDownloadedSubSectionBlocks.ifEmpty {
-                subSectionsBlocks
-            }
-
-            if (downloadingBlocks.isNotEmpty()) {
-                val downloadableChildren =
-                    downloadingBlocks.flatMap { getDownloadableChildren(it).orEmpty() }
-                if (config.getCourseUIConfig().isCourseDownloadQueueEnabled) {
-                    courseRouter.navigateToDownloadQueue(fragmentManager, downloadableChildren)
-                } else {
-                    downloadableChildren.forEach {
-                        if (!isBlockDownloaded(it)) {
-                            removeBlockDownloadModel(it)
-                        }
-                    }
-                }
+    fun downloadBlocks(
+        blocksIds: List<String>,
+        fragmentManager: FragmentManager,
+        context: Context,
+    ) {
+        if (blocksIds.find { isBlockDownloading(it) } != null) {
+            courseRouter.navigateToDownloadQueue(fm = fragmentManager)
+            return
+        }
+        blocksIds.forEach { blockId ->
+            if (isBlockDownloaded(blockId)) {
+                removeDownloadModels(blockId)
             } else {
-              /*  downloadDialogManager.showPopup(
-                    subSectionsBlocks = requiredSubSections,
-                    courseId = courseId,
-                    isBlocksDownloaded = isAllBlocksDownloaded,
-                    fragmentManager = fragmentManager,
-                    removeDownloadModels = ::removeDownloadModels,
-                    saveDownloadModels = { blockId ->
-                      //  saveDownloadModels(fileUtil.getExternalAppDir().path, courseId, blockId)
-                    }
-                )*/
+                saveDownloadModels(
+                    FileUtil(context).getExternalAppDir().path, blockId
+                )
             }
         }
     }

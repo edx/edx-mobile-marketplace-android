@@ -138,6 +138,7 @@ fun CourseContentAllScreen(
             viewModel.downloadBlocks(
                 blocksIds = blocksIds,
                 fragmentManager = fragmentManager,
+                context = context,
             )
         },
         onCertificateClick = {
@@ -165,7 +166,8 @@ private fun CourseContentAllUI(
     Scaffold(
         modifier = Modifier
             .fillMaxSize(),
-        containerColor = MaterialTheme.appColors.background
+        containerColor = MaterialTheme.appColors.background,
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0)
     ) {
         val screenWidth by remember(key1 = windowSize) {
             mutableStateOf(
@@ -204,6 +206,7 @@ private fun CourseContentAllUI(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
+                .padding(top = 20.dp)
                 .displayCutoutForLandscape(),
             contentAlignment = Alignment.TopCenter
         ) {

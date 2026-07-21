@@ -156,6 +156,7 @@ class VideoUnitViewModelTest {
                 )
             )
         }
+        coEvery { courseRepository.saveVideoProgress(any(), any(), any(), any()) } returns Unit
         val mockLifeCycleOwner: LifecycleOwner = mockk()
         val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
         lifecycleRegistry.addObserver(viewModel)

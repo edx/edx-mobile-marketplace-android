@@ -4,12 +4,16 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -19,6 +23,8 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -68,21 +74,31 @@ internal fun ProfileView(
         onRefresh = { onAction(ProfileViewAction.SwipeRefresh) }
     )
 
+    val contentWidth = remember(windowSize) {
+        windowSize.windowSizeValue(
+            expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
+            compact = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        )
+    }
+
+    val bannerWidth = when (windowSize.width) {
+        WindowType.Compact -> Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+
+        WindowType.Medium, WindowType.Expanded -> Modifier
+            .fillMaxWidth()
+            .widthIn(max = 420.dp)
+    }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .semantics { testTagsAsResourceId = true },
         scaffoldState = scaffoldState
     ) { paddingValues ->
-
-        val contentWidth = remember(windowSize) {
-            windowSize.windowSizeValue(
-                expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
-                compact = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-            )
-        }
 
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
@@ -110,36 +126,42 @@ internal fun ProfileView(
                             .pullRefresh(pullRefreshState),
                         contentAlignment = Alignment.TopCenter
                     ) {
-                        if (uiState is ProfileUIState.Data) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .then(contentWidth)
-                                    .verticalScroll(rememberScrollState())
-                                    .padding(top = if (isSubscriptionBannerVisible) 72.dp else 0.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(24.dp)
-                            ) {
-                                SubscriptionBanner(
-                                    visible = isSubscriptionBannerVisible,
-                                    onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) }
-                                )
-                                ProfileTopic(
-                                    image = uiState.account.profileImage.imageUrlFull,
-                                    title = uiState.account.name,
-                                    subtitle = "@${uiState.account.username}"
-                                )
+                        when (uiState) {
+                            is ProfileUIState.Loading -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                                }
+                            }
 
-                                ProfileInfoSection(uiState.account)
+                            is ProfileUIState.Data -> {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .then(contentWidth)
+                                        .verticalScroll(rememberScrollState()),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                                ) {
+                                    Spacer(modifier = Modifier.height(12.dp))
 
-                                OpenEdXOutlinePrimaryButton(
-                                    text = stringResource(R.string.profile_edit_profile),
-                                    onClick = { onAction(ProfileViewAction.EditAccountClick) }
-                                )
-//                                SubscriptionBanner(
-//                                    visible = isSubscriptionBannerVisible,
-//                                    onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) }
-//                                )
+                                    ProfileTopic(
+                                        image = uiState.account.profileImage.imageUrlFull,
+                                        title = uiState.account.name,
+                                        subtitle = "@${uiState.account.username}"
+                                    )
+
+                                    ProfileInfoSection(uiState.account)
+
+                                    OpenEdXOutlinePrimaryButton(
+                                        text = stringResource(R.string.profile_edit_profile),
+                                        onClick = { onAction(ProfileViewAction.EditAccountClick) }
+                                    )
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
                             }
                         }
 
@@ -152,17 +174,24 @@ internal fun ProfileView(
                 }
             }
 
-//            Box(
-//                modifier = Modifier
-//                    .align(Alignment.TopCenter)
-//                    .padding(start = 24.dp, top = 80.dp, end = 24.dp)
-//                    .zIndex(1f)
-//            ) {
-//                SubscriptionBanner(
-//                    visible = isSubscriptionBannerVisible,
-//                    onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) }
-//                )
-//            }
+            if (isSubscriptionBannerVisible) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 80.dp)
+                        .then(bannerWidth)
+                        .padding(
+                            horizontal = if (windowSize.width == WindowType.Compact) 0.dp else 32.dp
+                        )
+                        .zIndex(1f)
+                ) {
+                    SubscriptionBanner(
+                        visible = true,
+                        onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
         }
     }
 }
@@ -185,7 +214,6 @@ private fun ProfileScreenPreview() {
         )
     }
 }
-
 
 @Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)

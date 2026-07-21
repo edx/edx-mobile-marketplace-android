@@ -904,6 +904,8 @@ fun PurchasesFulfillmentCompletedDialog(onConfirm: () -> Unit, onDismiss: () -> 
         onDismissRequest = {}
     )
 }
+
+
 @Composable
 fun SubscriptionBanner(
     visible: Boolean,
@@ -912,16 +914,16 @@ fun SubscriptionBanner(
 ) {
     val uriHandler = LocalUriHandler.current
     if (!visible) return
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .shadow(
                 elevation = 4.dp,
                 shape = MaterialTheme.appShapes.cardShape
             )
             .border(
                 width = 1.dp,
-                color = Color(0xFFBFDBEA),
+                color = MaterialTheme.appColors.subscriptionBannerBorderStroke,
                 shape = MaterialTheme.appShapes.cardShape
             ),
         shape = MaterialTheme.appShapes.cardShape,
@@ -930,10 +932,9 @@ fun SubscriptionBanner(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth() // Ensures it expands up to parent constraints (420.dp on tablet)
                 .padding(16.dp)
         ) {
-
             Text(
                 text = stringResource(id = R.string.banner_title),
                 style = MaterialTheme.appTypography.titleMedium,
@@ -949,7 +950,6 @@ fun SubscriptionBanner(
                 val startIndex = bannerText.indexOf(linkText)
 
                 if (startIndex >= 0) {
-
                     append(bannerText.substring(0, startIndex))
 
                     pushStringAnnotation(
@@ -969,12 +969,7 @@ fun SubscriptionBanner(
 
                     pop()
 
-                    append(
-                        bannerText.substring(
-                            startIndex + linkText.length
-                        )
-                    )
-
+                    append(bannerText.substring(startIndex + linkText.length))
                 } else {
                     append(bannerText)
                 }
@@ -993,9 +988,7 @@ fun SubscriptionBanner(
                             end = offset
                         )
                         .firstOrNull()
-                        ?.let {
-                            uriHandler.openUri(it.item)
-                        }
+                        ?.let { uriHandler.openUri(it.item) }
                 }
             )
 
@@ -1006,15 +999,12 @@ fun SubscriptionBanner(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text(
-                        text = stringResource(id = R.string.core_dismiss)
-                    )
+                    Text(text = stringResource(id = R.string.core_dismiss))
                 }
             }
         }
     }
 }
-
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable

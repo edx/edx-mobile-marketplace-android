@@ -19,6 +19,7 @@ sealed class CourseVideosUIState {
         val videoProgress: Map<String, Float?>,
         val isCompletedSectionsShown: Boolean,
     ) : CourseVideosUIState()
+
     data object Empty : CourseVideosUIState()
     data object Loading : CourseVideosUIState()
 }

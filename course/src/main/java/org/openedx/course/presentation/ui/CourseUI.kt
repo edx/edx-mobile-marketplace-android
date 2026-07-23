@@ -661,7 +661,6 @@ fun CourseSection(
                     useRelativeDates = true
                 )
             }
-
         }
     }
 }
@@ -685,10 +684,7 @@ fun CourseExpandableChapterCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        if (isExpandable) {
-            CardArrow(degrees = arrowDegrees)
-        }
-
+        if (isExpandable) { CardArrow(degrees = arrowDegrees) }
         if (block.isCompleted()) {
             val completedIconPainter = painterResource(R.drawable.course_ic_task_alt)
             val completedIconColor = MaterialTheme.appColors.successGreen
@@ -790,7 +786,8 @@ fun CourseSubSectionItem(
     val due by rememberSaveable {
         mutableStateOf(block.due?.let { TimeUtils.getAssignmentFormattedDate(context, it) })
     }
-    val isAssignmentEnable = !block.isCompleted() && block.assignmentProgress != null && !due.isNullOrEmpty()
+    val isAssignmentEnable =
+        !block.isCompleted() && block.assignmentProgress != null && !due.isNullOrEmpty()
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -841,95 +838,6 @@ fun CourseSubSectionItem(
         }
     }
 }
-/*
-* @Composable
-fun CourseSubSectionItem(
-    modifier: Modifier = Modifier,
-    block: Block,
-    useRelativeDates: Boolean,
-    showDueDate: Boolean,
-    onClick: (Block) -> Unit,
-) {
-    val context = LocalContext.current
-    val icon = if (block.isCompleted()) {
-        painterResource(R.drawable.course_ic_task_alt)
-    } else {
-        painterResource(coreR.drawable.ic_core_chapter_icon)
-    }
-    val iconColor = if (block.isCompleted()) {
-       MaterialTheme.appColors.successGreen
-    } else {
-        MaterialTheme.appColors.onSurface
-    }
-    val due by rememberSaveable {
-        mutableStateOf(
-            block.due?.let { TimeUtils.formatToString(context, it, useRelativeDates) }
-        )
-    }
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick(block) }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            androidx.compose.material3.Icon(
-                painter = icon,
-                contentDescription = null,
-                tint = iconColor
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            androidx.compose.material3.Text(
-                modifier = Modifier.weight(1f),
-                text = block.displayName,
-                style = MaterialTheme.appTypography.titleSmall,
-                color = MaterialTheme.appColors.textPrimary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            if (due != null || showDueDate) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    tint = MaterialTheme.appColors.onSurface,
-                    contentDescription = null
-                )
-            }
-        }
-        val strings = listOf(
-            block.assignmentProgress?.assignmentType,
-            due?.let {
-                stringResource(
-                    id = coreR.string.core_date_format_assignment_due,
-                    it
-                )
-            },
-            block.assignmentProgress?.numPointsPossible?.let {
-                if (it > 0) {
-                    block.assignmentProgress?.toPointString(" ")
-                } else {
-                    null
-                }
-            }
-        )
-        val assignmentString = strings
-            .filter { !it.isNullOrEmpty() }
-            .joinToString(" - ")
-
-        if (assignmentString.isNotEmpty() && showDueDate) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = assignmentString,
-                style = MaterialTheme.appTypography.bodySmall,
-                color = MaterialTheme.appColors.textPrimary
-            )
-        }
-    }
-}*/
-
 @Composable
 fun CourseUnitToolbar(
     title: String,

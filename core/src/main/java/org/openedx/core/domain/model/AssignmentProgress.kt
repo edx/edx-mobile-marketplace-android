@@ -9,7 +9,7 @@ data class AssignmentProgress(
     val shortLabel: String
 ) {
     fun toPointString(separator: String = ""): String {
-        return "${numPointsEarned?.toInt()}$separator/$separator${numPointsEarned?.toInt()}"
+        return "${numPointsEarned.toInt()}$separator/$separator${numPointsPossible.toInt()}"
     }
     @IgnoredOnParcel
     val label = shortLabel

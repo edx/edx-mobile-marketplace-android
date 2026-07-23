@@ -36,6 +36,9 @@ class WebViewDiscoveryViewModel(
     private val _cookiesReady = MutableStateFlow(false)
     val cookiesReady: StateFlow<Boolean> = _cookiesReady.asStateFlow()
 
+    private val _isSubscriptionBannerVisible = MutableStateFlow(true)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
+
     val uriScheme: String get() = config.getUriScheme()
 
     private val webViewConfig get() = config.getDiscoveryConfig().webViewConfig
@@ -146,5 +149,9 @@ class WebViewDiscoveryViewModel(
                 put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
             }
         )
+    }
+
+    fun dismissSubscriptionBanner() {
+        _isSubscriptionBannerVisible.value = false
     }
 }

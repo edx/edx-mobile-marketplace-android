@@ -68,6 +68,7 @@ import org.openedx.core.presentation.global.webview.WebViewUIAction
 import org.openedx.core.presentation.global.webview.WebViewUIState
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.FullScreenErrorView
+import org.openedx.core.ui.SubscriptionBanner
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -99,6 +100,7 @@ class WebViewDiscoveryFragment : Fragment() {
                 val windowSize = rememberWindowSize()
                 val uiState by viewModel.uiState.collectAsState()
                 val cookiesReady by viewModel.cookiesReady.collectAsState()
+                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.hasInternetConnection)
                 }
@@ -107,6 +109,7 @@ class WebViewDiscoveryFragment : Fragment() {
                     uiState = uiState,
                     cookiesReady = cookiesReady,
                     isPreLogin = viewModel.isPreLogin,
+                    isSubscriptionBannerVisible = isSubscriptionBannerVisible,
                     contentUrl = viewModel.discoveryUrl,
                     uriScheme = viewModel.uriScheme,
                     userAgent = viewModel.appUserAgent,
@@ -183,6 +186,9 @@ class WebViewDiscoveryFragment : Fragment() {
                     },
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStackImmediate()
+                    },
+                    onDismissSubscriptionBanner = {
+                        viewModel.dismissSubscriptionBanner()
                     }
                 )
             }
@@ -209,6 +215,7 @@ private fun WebViewDiscoveryScreen(
     uiState: WebViewUIState,
     cookiesReady: Boolean,
     isPreLogin: Boolean,
+    isSubscriptionBannerVisible: Boolean,
     contentUrl: String,
     uriScheme: String,
     userAgent: String,
@@ -220,6 +227,7 @@ private fun WebViewDiscoveryScreen(
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
     onRefreshSessionCookie: () -> Unit = {},
+    onDismissSubscriptionBanner: () -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -322,6 +330,24 @@ private fun WebViewDiscoveryScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                        }
+                    }
+
+                    // SubscriptionBanner overlay
+                    if (isSubscriptionBannerVisible) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = 16.dp)
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .zIndex(2f)
+                        ) {
+                            SubscriptionBanner(
+                                visible = true,
+                                onDismiss = onDismissSubscriptionBanner,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }
@@ -438,6 +464,7 @@ private fun WebViewDiscoveryScreenPreview() {
             uiState = WebViewUIState.Error(ErrorType.CONNECTION_ERROR),
             cookiesReady = true,
             isPreLogin = false,
+            isSubscriptionBannerVisible = true,
             contentUrl = "https://www.example.com/",
             uriScheme = "",
             userAgent = "",

@@ -653,9 +653,6 @@ class CourseContainerViewModel(
                 updateData()
             }
 
-           /* CourseContainerTab.VIDEOS -> {
-                updateData()
-            }*/
             CourseContainerTab.OFFLINE -> {
                 updateData()
             }
@@ -731,7 +728,6 @@ class CourseContainerViewModel(
             CourseContainerTab.HOME -> courseTabClickedEvent()
             CourseContainerTab.CONTENT -> contentTabClickedEvent()
             CourseContainerTab.PROGRESS -> progressTabClickedEvent()
-           // CourseContainerTab.VIDEOS -> videoTabClickedEvent()
             CourseContainerTab.DISCUSSIONS -> discussionTabClickedEvent()
             CourseContainerTab.DATES -> datesTabClickedEvent()
             CourseContainerTab.OFFLINE -> offlineTabClickedEvent()

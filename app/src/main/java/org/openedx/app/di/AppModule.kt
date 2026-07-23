@@ -253,6 +253,7 @@ val appModule = module {
         if (get<Config>().isPushNotificationsEnabled()) get<PushManager>()
         else get<DummyPushManager>()
     }
+
     factory { AgreementProvider(get(), get()) }
     factory { FacebookAuthHelper() }
     factory { GoogleAuthHelper(get(), get()) }

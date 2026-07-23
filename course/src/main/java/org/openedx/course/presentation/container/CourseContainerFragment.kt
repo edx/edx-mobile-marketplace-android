@@ -675,27 +675,7 @@ private fun DashboardPager(
                         }
                     }
                 )
-                /*CourseOutlineScreen(
-                    windowSize = windowSize,
-                    viewModel = koinViewModel(
-                        parameters = { parametersOf(viewModel.courseId, viewModel.courseName) }
-                    ),
-                    fragmentManager = fragmentManager,
-                    onResetDatesClick = {
-                        viewModel.onRefresh(CourseContainerTab.DATES)
-                    }
-                )*/
             }
-
-           /* CourseContainerTab.VIDEOS -> {
-                CourseVideosScreen(
-                    windowSize = windowSize,
-                    viewModel = koinViewModel(
-                        parameters = { parametersOf(viewModel.courseId, viewModel.courseName) }
-                    ),
-                    fragmentManager = fragmentManager
-                )
-            }*/
 
             CourseContainerTab.DATES -> {
                 CourseDatesScreen(

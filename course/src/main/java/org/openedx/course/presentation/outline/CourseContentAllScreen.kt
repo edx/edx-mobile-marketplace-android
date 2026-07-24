@@ -196,11 +196,6 @@ private fun CourseContentAllUI(
             )
         }
 
-      /*  HandleUIMessage(
-            uiMessage = uiMessage,
-            scaffoldState = snackbarHostState,
-            onDisplayed = TODO()
-        )*/
 
         Box(
             modifier = Modifier

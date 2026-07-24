@@ -194,7 +194,7 @@ class CourseContentAllViewModel(
                 val blocks = courseStructure.blockData
 
                 checkIfCalendarOutOfDate(courseDates.datesSection.values.flatten())
-                updateOutdatedOfflineXBlocks(courseStructure)
+               // updateOutdatedOfflineXBlocks(courseStructure)
 
                 initializeCourseData(blocks, courseStructure, courseStatus)
             }
@@ -395,37 +395,6 @@ class CourseContentAllViewModel(
                     FileUtil(context).getExternalAppDir().path, blockId
                 )
             }
-        }
-    }
-
-    private fun updateOutdatedOfflineXBlocks(courseStructure: CourseStructure) {
-        viewModelScope.launch {
-           /* if (!isOfflineBlocksUpToDate) {
-                val xBlocks = courseStructure.blockData.filter { it.isxBlock }
-                if (xBlocks.isNotEmpty()) {
-                    val xBlockIds = xBlocks.map { it.id }.toSet()
-                    val savedDownloadModelsMap = interactor.getAllDownloadModels()
-                        .filter { it.id in xBlockIds }
-                        .associateBy { it.id }
-
-                    val outdatedBlockIds = xBlocks
-                        .filter { block ->
-                            val savedBlock = savedDownloadModelsMap[block.id]
-                            savedBlock != null && block.offlineDownload?.lastModified != savedBlock.lastModified
-                        }
-                        .map { it.id }
-
-                    outdatedBlockIds.forEach { blockId ->
-                        interactor.removeDownloadModel(blockId)
-                    }
-                    saveDownloadModels(
-                        fileUtil.getExternalAppDir().path,
-                        courseId,
-                        outdatedBlockIds
-                    )
-                }
-                isOfflineBlocksUpToDate = true
-            }*/
         }
     }
 }

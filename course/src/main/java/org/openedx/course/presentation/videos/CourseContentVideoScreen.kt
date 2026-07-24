@@ -143,11 +143,6 @@ private fun CourseVideosUI(
             )
         }
 
-       /* HandleUIMessage(
-            uiMessage = uiMessage, snackbarHostState = snackbarHostState,
-            scaffoldState = TODO(),
-            onDisplayed = TODO()
-        )*/
 
         Box(
             modifier = Modifier
@@ -466,74 +461,3 @@ fun DownloadIcon(
         }
     }
 }
-
-/*@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun CourseVideosScreenPreview() {
-    OpenEdXTheme {
-        CourseVideosUI(
-            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiMessage = null,
-            uiState = CourseVideosUIState.CourseData(
-                CoreMocks.mockCourseStructure,
-                emptyMap(),
-                mapOf(),
-                mapOf(),
-                CoreMocks.mockDownloadModelsSize,
-                isCompletedSectionsShown = false,
-                videoPreview = mapOf(),
-                videoProgress = mapOf(),
-            ),
-            onVideoClick = { },
-            onDownloadClick = {},
-            onCompletedSectionVisibilityChange = {},
-            onNavigateToHome = {},
-        )
-    }
-}*/
-
-/*@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun CourseVideosScreenEmptyPreview() {
-    OpenEdXTheme {
-        CourseVideosUI(
-            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiMessage = null,
-            uiState = CourseVideosUIState.Empty,
-            onVideoClick = { },
-            onDownloadClick = {},
-            onCompletedSectionVisibilityChange = {},
-            onNavigateToHome = {},
-        )
-    }
-}*/
-/*
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, device = Devices.NEXUS_9)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.NEXUS_9)
-@Composable
-private fun CourseVideosScreenTabletPreview() {
-    OpenEdXTheme {
-        CourseVideosUI(
-            windowSize = WindowSize(WindowType.Medium, WindowType.Medium),
-            uiMessage = null,
-            uiState = CourseVideosUIState.CourseData(
-                CoreMocks.mockCourseStructure,
-                emptyMap(),
-                mapOf(),
-                mapOf(),
-                CoreMocks.mockDownloadModelsSize.copy(
-                    allCount = 0
-                ),
-                isCompletedSectionsShown = true,
-                videoPreview = mapOf(),
-                videoProgress = mapOf(),
-            ),
-            onVideoClick = { },
-            onDownloadClick = {},
-            onCompletedSectionVisibilityChange = {},
-            onNavigateToHome = {},
-        )
-    }
-}*/

@@ -233,38 +233,3 @@ private fun DownloadConfirmDialogView(
         }
     }
 }
-
-/*@Preview
-@Composable
-private fun DownloadConfirmDialogViewPreview() {
-    OpenEdXTheme {
-        DownloadConfirmDialogView(
-            downloadDialogResource = DownloadDialogResource(
-                title = "Title",
-                description = "Description Description Description Description Description Description Description "
-            ),
-            uiState = DownloadDialogUIState(
-                downloadDialogItems = listOf(
-                    DownloadDialogItem(
-                        title = "Subsection title 1",
-                        size = 20000
-                    ),
-                    DownloadDialogItem(
-                        title = "Subsection title 2",
-                        size = 10000000
-                    )
-                ),
-                sizeSum = 1000000,
-                isAllBlocksDownloaded = false,
-                isDownloadFailed = false,
-                saveDownloadModels = {},
-                removeDownloadModels = {},
-                fragmentManager = PreviewFragmentManager
-            ),
-            dialogType = DownloadConfirmDialogType.CONFIRM,
-            onConfirmClick = {},
-            onRemoveClick = {},
-            onCancelClick = {}
-        )
-    }
-}*/

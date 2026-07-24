@@ -150,26 +150,6 @@ class DownloadDialogManager(
         )
     }
 
-  /*  fun showPopup(
-        coursePreview: DownloadCoursePreview,
-        isBlocksDownloaded: Boolean,
-        fragmentManager: FragmentManager,
-        removeDownloadModels: (blockId: String, courseId: String) -> Unit,
-        saveDownloadModels: () -> Unit,
-        onDismissClick: () -> Unit = {},
-        onConfirmClick: () -> Unit = {},
-    ) {
-        createCourseDownloadItems(
-            coursePreview = coursePreview,
-            fragmentManager = fragmentManager,
-            isBlocksDownloaded = isBlocksDownloaded,
-            removeDownloadModels = removeDownloadModels,
-            saveDownloadModels = saveDownloadModels,
-            onDismissClick = onDismissClick,
-            onConfirmClick = onConfirmClick
-        )
-    }
-*/
     fun showRemoveDownloadModelPopup(
         downloadDialogItem: DownloadDialogItem,
         fragmentManager: FragmentManager,
@@ -189,70 +169,7 @@ class DownloadDialogManager(
             )
         }
     }
-    /*
-        fun showDownloadFailedPopup(
-            downloadModel: List<DownloadModel>,
-            fragmentManager: FragmentManager,
-        ) {
-            createDownloadItems(
-                downloadModels = downloadModel,
-                fragmentManager = fragmentManager,
-            )
-        }
-    */
-   /* private fun createDownloadItems(
-        downloadModels: List<DownloadModel>,
-        fragmentManager: FragmentManager,
-    ) {
-        coroutineScope.launch {
-            val courseIds = downloadModels.map { it.courseId }.distinct()
-            val blockIds = downloadModels.map { it.id }
-            val notDownloadedSubSections = mutableListOf<Block>()
-            val allDownloadDialogItems = mutableListOf<DownloadDialogItem>()
 
-            courseIds.forEach { courseId ->
-                val courseStructure = interactor.getCourseStructureFromCache(courseId)
-                val allSubSectionBlocks =
-                    courseStructure.blockData.filter { it.type == BlockType.SEQUENTIAL }
-
-                allSubSectionBlocks.forEach { subSectionBlock ->
-                    val verticalBlocks =
-                        courseStructure.blockData.filter { it.id in subSectionBlock.descendants }
-                    val blocks = courseStructure.blockData.filter {
-                        it.id in verticalBlocks.flatMap { it.descendants } && it.id in blockIds
-                    }
-                    val totalSize = blocks.sumOf { it.getFileSize() }
-
-                    if (blocks.isNotEmpty()) notDownloadedSubSections.add(subSectionBlock)
-                    if (totalSize > 0) {
-                        allDownloadDialogItems.add(
-                            DownloadDialogItem(
-                                title = subSectionBlock.displayName,
-                                size = totalSize
-                            )
-                        )
-                    }
-                }
-            }
-
-            uiState.emit(
-                DownloadDialogUIState(
-                    downloadDialogItems = allDownloadDialogItems,
-                    isAllBlocksDownloaded = false,
-                    isDownloadFailed = true,
-                    sizeSum = allDownloadDialogItems.sumOf { it.size },
-                    fragmentManager = fragmentManager,
-                    removeDownloadModels = {},
-                    saveDownloadModels = {
-                        coroutineScope.launch {
-                            workerController.saveModels(downloadModels)
-                        }
-                    }
-                )
-            )
-        }
-    }
-*/
     private fun createDownloadItems(
         subSectionsBlocks: List<Block>,
         courseId: String,
@@ -312,49 +229,4 @@ class DownloadDialogManager(
         }
     }
 
-   /* private fun createCourseDownloadItems(
-        coursePreview: DownloadCoursePreview,
-        fragmentManager: FragmentManager,
-        isBlocksDownloaded: Boolean,
-        removeDownloadModels: (blockId: String, courseId: String) -> Unit,
-        saveDownloadModels: () -> Unit,
-        onDismissClick: () -> Unit = {},
-        onConfirmClick: () -> Unit = {},
-    ) {
-        coroutineScope.launch {
-            val downloadDialogItems = listOf(
-                DownloadDialogItem(
-                    title = coursePreview.name,
-                    size = coursePreview.totalSize,
-                    icon = Icons.Default.School
-                )
-            )
-
-            uiState.emit(
-                DownloadDialogUIState(
-                    downloadDialogItems = downloadDialogItems,
-                    isAllBlocksDownloaded = isBlocksDownloaded,
-                    isDownloadFailed = false,
-                    sizeSum = downloadDialogItems.sumOf { it.size },
-                    fragmentManager = fragmentManager,
-                    removeDownloadModels = {
-                        coroutineScope.launch {
-                            val downloadModels = interactor.getAllDownloadModels().filter {
-                                it.courseId == coursePreview.id
-                            }
-                            downloadModels.forEach {
-                                removeDownloadModels(
-                                    it.id,
-                                    coursePreview.id
-                                )
-                            }
-                        }
-                    },
-                    saveDownloadModels = saveDownloadModels,
-                    onDismissClick = onDismissClick,
-                    onConfirmClick = onConfirmClick,
-                )
-            )
-        }
-    }*/
 }

@@ -263,37 +263,3 @@ private fun StorageBar(
     }
 }
 
-/*
-@Preview
-@Composable
-private fun DownloadStorageErrorDialogViewPreview() {
-    OpenEdXTheme {
-        DownloadStorageErrorDialogView(
-            downloadDialogResource = DownloadDialogResource(
-                title = "Title",
-                description = "Description Description Description Description Description Description Description ",
-                icon = painterResource(id = R.drawable.core_ic_error)
-            ),
-            uiState = DownloadDialogUIState(
-                downloadDialogItems = listOf(
-                    DownloadDialogItem(
-                        title = "Subsection title 1",
-                        size = 20000
-                    ),
-                    DownloadDialogItem(
-                        title = "Subsection title 2",
-                        size = 10000000
-                    )
-                ),
-                sizeSum = 100000,
-                isAllBlocksDownloaded = false,
-                isDownloadFailed = false,
-                fragmentManager = PreviewFragmentManager,
-                removeDownloadModels = {},
-                saveDownloadModels = {}
-            ),
-            onCancelClick = {}
-        )
-    }
-}
-*/

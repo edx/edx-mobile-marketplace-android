@@ -3,9 +3,11 @@ package org.openedx.app
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
@@ -29,6 +31,7 @@ import org.openedx.core.presentation.global.WindowSizeHolder
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.utils.Logger
+import org.openedx.course.presentation.unit.video.VideoUnitFragment
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.whatsnew.WhatsNewManager
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
@@ -193,6 +196,11 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
                     .reInit()
             }
         }
+    }
+    @RequiresApi(Build.VERSION_CODES.S)
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        VideoUnitFragment.triggerPipModeIfActive()
     }
 
     private fun addFragment(fragment: Fragment) {

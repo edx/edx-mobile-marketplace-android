@@ -265,52 +265,7 @@ class CourseVideoViewModel(
         }
     }
 
-    fun showCourseStartedNotification(context: Context) {
-        viewModelScope.launch {
-            try {
-                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-                val channelId = COURSE_NOTIFICATION_CHANNEL_ID
-                val channelName = "Course Notifications"
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val channel = NotificationChannel(
-                        channelId,
-                        channelName,
-                        NotificationManager.IMPORTANCE_HIGH
-                    ).apply {
-                        description = "Notifications for course activities"
-                    }
-                    notificationManager.createNotificationChannel(channel)
-                }
-
-                val courseName = (_uiState.value as? CourseVideosUIState.CourseData)
-                    ?.courseStructure?.name ?: resourceManager.getString(R.string.course_started)
-
-                val notificationText = "You've officially started $courseName. Good luck!"
-
-                val notification = NotificationCompat.Builder(context, channelId)
-                    .setContentTitle(resourceManager.getString(R.string.course_started))
-                    .setContentText(notificationText)
-                    .setSmallIcon(R.drawable.course_ic_task_alt)
-                    .setAutoCancel(true)
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .build()
-
-                notificationManager.notify(generateNotificationId(), notification)
-            } catch (e: Exception) {
-                logger.e(throwable = e, metadata = mapOf("action" to "showCourseStartedNotification"))
-            }
-        }
-    }
-
-    private fun generateNotificationId(): Int {
-        return System.currentTimeMillis().toInt()
-    }
-
     companion object {
         private const val TAG = "CourseVideoViewModel"
-        private const val COURSE_NOTIFICATION_CHANNEL_ID = "course_notifications"
-
     }
 }

@@ -3,6 +3,7 @@ package org.openedx.course.presentation.ui
 import android.content.res.Configuration
 import android.view.MotionEvent
 import android.view.ViewConfiguration
+import android.widget.Toast
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -59,6 +60,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.openedx.core.AppDataConstants
 import org.openedx.core.AppDataConstants.VIDEO_DOUBLE_SPEED
 import org.openedx.core.AppDataConstants.VIDEO_NORMAL_SPEED
@@ -92,6 +94,7 @@ import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.FileUtil
 import org.openedx.course.R
+import org.openedx.course.presentation.outline.CourseOutlineViewModel
 import org.openedx.course.presentation.videos.CourseVideoViewModel
 import org.openedx.course.presentation.videos.CourseVideosUIState
 import java.util.Date
@@ -107,6 +110,7 @@ fun CourseVideosScreen(
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val videoSettings by viewModel.videoSettings.collectAsState()
     val context = LocalContext.current
+    val courseOutlineViewModel: CourseOutlineViewModel = koinViewModel()
 
     CourseVideosUI(
         windowSize = windowSize,
@@ -119,7 +123,13 @@ fun CourseVideosScreen(
         },
         onSubSectionClick = { subSectionBlock ->
             if (viewModel.isCourseNotStarted(uiState)) {
-                viewModel.showCourseStartedNotification(context)
+                courseOutlineViewModel.showCourseStartedNotification(
+                    context = context,
+                    notificationTitle = "",
+                    notificationSubtitle = "",
+                    isModuleCompleted = false
+                )
+
             }
             viewModel.courseSubSectionUnit[subSectionBlock.id]?.let { unit ->
                 viewModel.sequentialClickedEvent(

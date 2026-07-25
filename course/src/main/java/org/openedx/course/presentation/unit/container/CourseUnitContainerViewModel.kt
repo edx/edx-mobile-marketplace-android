@@ -50,7 +50,7 @@ class CourseUnitContainerViewModel(
 
     private val logger = Logger(TAG)
 
-    private val blocks = ArrayList<Block>()
+    val blocks = ArrayList<Block>()
 
     val isCourseExpandableSectionsEnabled get() = config.getCourseUIConfig().isCourseDropdownNavigationEnabled
 
@@ -61,7 +61,7 @@ class CourseUnitContainerViewModel(
 
     private var currentIndex = 0
     private var currentVerticalIndex = 0
-    private var currentSectionIndex = -1
+    var currentSectionIndex = -1
 
     val isFirstIndexInContainer: Boolean
         get() {

@@ -46,6 +46,7 @@ import org.openedx.course.databinding.FragmentCourseUnitContainerBinding
 import org.openedx.course.presentation.ChapterEndFragmentDialog
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.DialogListener
+import org.openedx.course.presentation.outline.CourseOutlineViewModel
 import org.openedx.course.presentation.ui.CourseUnitToolbar
 import org.openedx.course.presentation.ui.HorizontalPageIndicator
 import org.openedx.course.presentation.ui.NavigationUnitsButtons
@@ -60,6 +61,12 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         get() = _binding!!
     private var _binding: FragmentCourseUnitContainerBinding? = null
 
+    private val courseViewModel: CourseOutlineViewModel by viewModel {
+        parametersOf(
+            requireArguments().getString(ARG_COURSE_ID, ""),
+            "Course Title"  // or get it from somewhere
+        )
+    }
     private val viewModel by viewModel<CourseUnitContainerViewModel> {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
@@ -403,6 +410,24 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             } else {
                 val currentVerticalBlock = viewModel.getCurrentVerticalBlock()
                 val nextVerticalBlock = viewModel.getNextVerticalBlock()
+                val blocks = viewModel.blocks // You may need to expose this or create a getter
+                val currentSectionBlock = blocks.getOrNull(viewModel.currentSectionIndex)
+                val chapters = blocks.filter { it.type == BlockType.CHAPTER }
+                val moduleNumber = chapters.indexOfFirst {
+                    it.descendants.contains(currentSectionBlock?.id)
+                } + 1
+
+                val notificationTitle = "Module $moduleNumber complete!"
+                val notificationSubtitle = "Well done on successfully completing module $moduleNumber!"
+                val isModuleCompleted: Boolean = true
+                context?.let {
+                    courseViewModel?.showCourseStartedNotification(
+                        it,
+                        notificationTitle,
+                        notificationSubtitle,
+                        isModuleCompleted
+                    )
+                }
                 val dialog = ChapterEndFragmentDialog.newInstance(
                     currentVerticalBlock?.displayName ?: "",
                     nextVerticalBlock?.displayName ?: "",

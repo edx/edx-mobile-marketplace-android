@@ -1,10 +1,6 @@
 package org.openedx.course.presentation.videos
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
-import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow

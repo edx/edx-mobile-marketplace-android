@@ -64,7 +64,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     private val courseViewModel: CourseOutlineViewModel by viewModel {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
-            "Course Title"  // or get it from somewhere
+            resources.getString(R.string.course_title)
         )
     }
     private val viewModel by viewModel<CourseUnitContainerViewModel> {
@@ -410,23 +410,23 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             } else {
                 val currentVerticalBlock = viewModel.getCurrentVerticalBlock()
                 val nextVerticalBlock = viewModel.getNextVerticalBlock()
-                val blocks = viewModel.blocks // You may need to expose this or create a getter
+                val blocks = viewModel.blocks
                 val currentSectionBlock = blocks.getOrNull(viewModel.currentSectionIndex)
                 val chapters = blocks.filter { it.type == BlockType.CHAPTER }
-                val moduleNumber = chapters.indexOfFirst {
-                    it.descendants.contains(currentSectionBlock?.id)
-                } + 1
-
-                val notificationTitle = "Module $moduleNumber complete!"
-                val notificationSubtitle = "Well done on successfully completing module $moduleNumber!"
-                val isModuleCompleted: Boolean = true
-                context?.let {
-                    courseViewModel?.showCourseStartedNotification(
-                        it,
-                        notificationTitle,
-                        notificationSubtitle,
-                        isModuleCompleted
-                    )
+                val moduleNumber = chapters.indexOfFirst { it.descendants.contains(currentSectionBlock?.id) }
+                    .takeIf { it >= 0 }
+                    ?.plus(1)
+                if (moduleNumber != null) {
+                    val notificationTitle = "Module $moduleNumber complete!"
+                    val notificationSubtitle = "Well done on successfully completing module $moduleNumber!"
+                    context?.let {
+                        courseViewModel.showCourseStartedNotification(
+                            it,
+                            notificationTitle,
+                            notificationSubtitle,
+                            isModuleCompleted = true
+                        )
+                    }
                 }
                 val dialog = ChapterEndFragmentDialog.newInstance(
                     currentVerticalBlock?.displayName ?: "",

@@ -480,10 +480,10 @@ class CourseOutlineViewModel(
         isModuleCompleted: Boolean
     ) {
         viewModelScope.launch {
+            if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) return@launch
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-            val channelId = "course_notifications"
-            val channelName = "Course Notifications"
+            val channelId = resourceManager.getString(R.string.course_notification_channel_id)
+            val channelName = resourceManager.getString(R.string.course_notification_channel_name)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channel = NotificationChannel(
@@ -502,9 +502,10 @@ class CourseOutlineViewModel(
                 notificationContentText = notificationSubtitle
             }
             else{
-                notificationContentText = "You've officially started $courseName. Good luck!"
-                notificationContentTitle = resourceManager.getString(R.string.course_started)
-
+                notificationContentText = resourceManager.getString(
+                    R.string.course_notification_started_message,
+                    courseName
+                )
             }
             val notification = NotificationCompat.Builder(context, channelId)
                 .setContentTitle(notificationContentTitle)
@@ -517,7 +518,7 @@ class CourseOutlineViewModel(
         }
     }
 
-    fun isResumeButttonVisible(uiState: CourseOutlineUIState): Boolean {
+    fun isResumeButtonVisible(uiState: CourseOutlineUIState): Boolean {
         return if (uiState is CourseOutlineUIState.CourseData) {
             val hasResumeComponent = uiState.resumeComponent != null
             hasResumeComponent

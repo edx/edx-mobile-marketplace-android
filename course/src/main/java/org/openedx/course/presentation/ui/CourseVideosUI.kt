@@ -3,7 +3,6 @@ package org.openedx.course.presentation.ui
 import android.content.res.Configuration
 import android.view.MotionEvent
 import android.view.ViewConfiguration
-import android.widget.Toast
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -110,8 +109,9 @@ fun CourseVideosScreen(
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val videoSettings by viewModel.videoSettings.collectAsState()
     val context = LocalContext.current
-    val courseOutlineViewModel: CourseOutlineViewModel = koinViewModel()
-
+    val courseOutlineViewModel: CourseOutlineViewModel = koinViewModel(
+        parameters = { org.koin.core.parameter.parametersOf(viewModel.courseId, viewModel.courseTitle) }
+    )
     CourseVideosUI(
         windowSize = windowSize,
         uiState = uiState,

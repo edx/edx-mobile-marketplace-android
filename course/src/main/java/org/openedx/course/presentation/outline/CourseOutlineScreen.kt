@@ -2,7 +2,6 @@ package org.openedx.course.presentation.outline
 
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -114,7 +113,7 @@ fun CourseOutlineScreen(
             }
         },
         onSubSectionClick = { subSectionBlock ->
-            if (!viewModel.isResumeButttonVisible(uiState)) {
+            if (!viewModel.isResumeButtonVisible(uiState)) {
                 viewModel.showCourseStartedNotification(
                     context,
                     "",

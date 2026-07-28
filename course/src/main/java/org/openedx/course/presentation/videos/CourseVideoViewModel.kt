@@ -155,7 +155,6 @@ class CourseVideoViewModel(
                     courseSubSectionUnit.clear()
                     courseStructure = courseStructure.copy(blockData = sortBlocks(blocks))
                     initDownloadModelsStatus()
-
                     _uiState.value =
                         CourseVideosUIState.CourseData(
                             courseStructure = courseStructure,

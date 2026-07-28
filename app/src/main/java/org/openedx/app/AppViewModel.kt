@@ -44,6 +44,7 @@ class AppViewModel(
     private val context: Context,
     private val pushManager: PushGlobalManager,
     private val appCookieManager: AppCookieManager,
+    private val notificationManager: NotificationManager,
     ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -143,8 +144,6 @@ class AppViewModel(
 
             if (config.getFirebaseConfig().isCloudMessagingEnabled) {
                 RefreshFirebaseTokenWorker.schedule(context)
-                val notificationManager =
-                    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.cancelAll()
             }
         }

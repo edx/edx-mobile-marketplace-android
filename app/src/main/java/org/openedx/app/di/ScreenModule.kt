@@ -1,5 +1,6 @@
 package org.openedx.app.di
 
+import android.app.NotificationManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -73,7 +74,7 @@ import org.openedx.profile.presentation.profile.ProfileViewModel
 import org.openedx.profile.presentation.settings.SettingsViewModel
 import org.openedx.profile.presentation.video.VideoSettingsViewModel
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewViewModel
-
+import org.openedx.core.system.NotificationDisplayManager
 val screenModule = module {
 
     viewModel {
@@ -88,7 +89,8 @@ val screenModule = module {
             get(),
             get(),
             get(),
-           get()
+           get(),
+            get<NotificationManager>()
         )
     }
     viewModel { MainViewModel(get(), get(), get(), get(), get()) }
@@ -309,6 +311,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get<NotificationDisplayManager>()
         )
     }
     viewModel { (courseId: String) ->

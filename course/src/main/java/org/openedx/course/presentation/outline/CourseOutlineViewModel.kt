@@ -1,9 +1,6 @@
 package org.openedx.course.presentation.outline
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
@@ -53,6 +50,7 @@ import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseAnalyticsKey
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.core.R as CoreR
+import org.openedx.core.system.NotificationDisplayManager
 
 class CourseOutlineViewModel(
     val courseId: String,
@@ -69,6 +67,7 @@ class CourseOutlineViewModel(
     coreAnalytics: CoreAnalytics,
     downloadDao: DownloadDao,
     workerController: DownloadWorkerController,
+    private val notificationDisplayManager: NotificationDisplayManager,
 ) : BaseDownloadViewModel(
     courseId,
     downloadDao,
@@ -480,41 +479,33 @@ class CourseOutlineViewModel(
         isModuleCompleted: Boolean
     ) {
         viewModelScope.launch {
-            if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) return@launch
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (!notificationDisplayManager.areNotificationsEnabled(context)) return@launch
+
             val channelId = resourceManager.getString(R.string.course_notification_channel_id)
             val channelName = resourceManager.getString(R.string.course_notification_channel_name)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                    channelId,
-                    channelName,
-                    NotificationManager.IMPORTANCE_HIGH
-                )
-                notificationManager.createNotificationChannel(channel)
-            }
             val courseName = (_uiState.value as? CourseOutlineUIState.CourseData)
                 ?.courseStructure?.name ?: "Course"
-            var notificationContentText: String ? =null
-            var notificationContentTitle: String ? = null
-            if(isModuleCompleted){
-                notificationContentTitle = notificationTitle
-                notificationContentText = notificationSubtitle
-            }
-            else{
-                notificationContentText = resourceManager.getString(
+
+            val (notificationContentTitle, notificationContentText) = if (isModuleCompleted) {
+                notificationTitle to notificationSubtitle
+            } else {
+                null to resourceManager.getString(
                     R.string.course_notification_started_message,
                     courseName
                 )
             }
-            val notification = NotificationCompat.Builder(context, channelId)
-                .setContentTitle(notificationContentTitle)
-                .setContentText(notificationContentText)
-                .setSmallIcon(R.drawable.course_ic_task_alt)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .build()
-            notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+
+            notificationDisplayManager.showNotification(
+                context = context,
+                channelId = channelId,
+                channelName = channelName,
+                notificationId = System.currentTimeMillis().toInt(),
+                title = notificationContentTitle,
+                content = notificationContentText,
+                smallIconResId = R.drawable.course_ic_task_alt,
+                priority = NotificationCompat.PRIORITY_HIGH
+            )
         }
     }
 

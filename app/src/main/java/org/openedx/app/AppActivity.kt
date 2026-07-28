@@ -197,11 +197,6 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
             }
         }
     }
-    @RequiresApi(Build.VERSION_CODES.S)
-    override fun onUserLeaveHint() {
-        super.onUserLeaveHint()
-        VideoUnitFragment.triggerPipModeIfActive()
-    }
 
     private fun addFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()

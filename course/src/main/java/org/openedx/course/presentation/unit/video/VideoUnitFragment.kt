@@ -1,3 +1,4 @@
+
 package org.openedx.course.presentation.unit.video
 
 import android.app.AppOpsManager
@@ -101,7 +102,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        currentVideoFragment = this  // Track this instance
         pipViewModel.pipState
             .onEach {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
@@ -297,27 +297,17 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
 
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-        // Resume playback in all cases
-        viewModel.exoPlayer?.let { player ->
-            if (!player.isPlaying) {
-                player.playWhenReady = true
-            }
-        }
     }
 
     override fun onPause() {
         super.onPause()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (requireActivity().isInPictureInPictureMode) {
-                // In PiP mode - KEEP audio playing
-                viewModel.exoPlayer?.playWhenReady = true
-                requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                return
+            if (!requireActivity().isInPictureInPictureMode) {
+                requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
+        } else {
+            requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
-        // Not in PiP - normal pause behavior
-        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     @UnstableApi
@@ -329,14 +319,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         mediaSession?.release()
         mediaSession = null
         super.onDestroy()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        if (currentVideoFragment == this) {
-            currentVideoFragment = null
-        }
-        super.onDestroyView()
     }
 
     @UnstableApi
@@ -368,12 +350,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_TITLE = "title"
         private const val ARG_DOWNLOADED = "isDownloaded"
-        private var currentVideoFragment: VideoUnitFragment? = null
-
-        @RequiresApi(Build.VERSION_CODES.S)
-        fun triggerPipModeIfActive() {
-            currentVideoFragment?.enablePipMode()
-        }
 
         fun newInstance(
             blockId: String,
@@ -486,10 +462,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
         } else {
             pipViewModel.exitPipMode()
-            viewModel.exoPlayer?.let { player ->
-                player.pause()
-                player.playWhenReady = false
-            }
             restoreNormalUI()
         }
     }
@@ -526,6 +498,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             updateLayoutForOrientation()
         }
     }
+
     private fun clearAllMarginsAndConstraints() {
         val cardParams = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
         cardParams.marginStart = 0
@@ -784,7 +757,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val shouldShowPauseButton = player.isPlaying || player.playWhenReady
+        val shouldShowPauseButton = pipViewModel.pipState.value.isPlaying
 
         val actions = listOf(
             RemoteAction(

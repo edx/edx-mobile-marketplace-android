@@ -64,13 +64,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private var pictureInPictureParamsBuilder: PictureInPictureParams.Builder? = null
     private val sharedViewModel: PipViewModel by activityViewModels()
     private var mediaSession: MediaSession? = null
-
     private var cvVideoTitle: ComposeView? = null
-
     private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
-
     private val pipReceiverManager: PipBroadcastReceiverManager by inject()
-
     val binding by viewBinding(FragmentVideoUnitBinding::bind)
     private val viewModel by viewModel<EncodedVideoUnitViewModel> {
         parametersOf(
@@ -80,14 +76,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         )
     }
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
-
     private var windowSize: WindowSize? = null
-
     private val constraintContainer: ConstraintLayout
         get() = binding.rootLayout as ConstraintLayout
-
-
     private var lastVideoAspectRatio: Rational? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         windowSize = computeWindowSizeClasses()
@@ -109,7 +102,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         pipViewModel.pipState
             .onEach {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
@@ -119,11 +111,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
-
         binding.pipBtn.isVisible = true
-
         updateLayoutForOrientation()
-
         cvVideoTitle = ComposeView(requireContext()).apply {
             id = View.generateViewId()
             layoutParams = ConstraintLayout.LayoutParams(
@@ -138,7 +127,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
         constraintContainer.addView(cvVideoTitle)
         updateLayoutForOrientation()
-
         binding.connectionError.setContent {
             OpenEdXTheme {
                 ConnectionErrorView {
@@ -147,7 +135,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
             }
         }
-
         binding.subtitles.setContent {
             OpenEdXTheme {
                 val state = rememberLazyListState()
@@ -178,16 +165,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 )
             }
         }
-
         setupMediaSession()
-
         binding.connectionError.isVisible =
             !viewModel.hasInternetConnection && !viewModel.isDownloaded
         binding.pipBtn.setOnClickListener {
             enablePipMode()
 
         }
-
         binding.playerView?.resizeMode =
             AspectRatioFrameLayout.RESIZE_MODE_FILL
 
@@ -218,7 +202,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
 
             override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
-
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     val aspect =
                         if (videoSize.height > 0) Rational(videoSize.width, videoSize.height)
@@ -244,7 +227,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
             }
 
-
             override fun onPlayerError(error: PlaybackException) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                     requireActivity().isInPictureInPictureMode
@@ -255,7 +237,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
 
         })
-
 
         viewModel.state.onEach {
             when {
@@ -274,8 +255,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
             }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
-
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collect {
                 if (viewModel.hasInternetConnection &&
@@ -286,7 +265,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
             }
         }
-
         enableLongPressDoubleSpeed()
     }
 
@@ -373,7 +351,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         private const val ARG_TITLE = "title"
         private const val ARG_DOWNLOADED = "isDownloaded"
 
-
         fun newInstance(
             blockId: String,
             courseId: String,
@@ -414,30 +391,22 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         sharedViewModel.buttonVisibility.value = false
         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView?.useController = false
-
         val cs = ConstraintSet()
         cs.clone(constraintContainer)
-        cs.setDimensionRatio(binding.cardView.id, null) // If your ConstraintSet version doesn’t accept null, set "0:0"
+        cs.setDimensionRatio(binding.cardView.id, null)
         cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
         cs.constrainHeight(binding.cardView.id, ConstraintSet.WRAP_CONTENT)
         cs.applyTo(constraintContainer)
-
         resetConstraintsForPip()
-
         lastVideoAspectRatio?.let { pictureInPictureParamsBuilder?.setAspectRatio(it) }
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             pictureInPictureParamsBuilder?.setSeamlessResizeEnabled(true)
         }
-
         updatePipActions()
         pictureInPictureParamsBuilder?.build()?.let {
             requireActivity().enterPictureInPictureMode(it)
         }
-
     }
-
-
 
     override fun onStop() {
         super.onStop()
@@ -449,13 +418,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         } else {
             pipReceiverManager.unregister()
         }
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
             requireActivity().isInPictureInPictureMode
         ) {
             return
         }
-
         binding.playerView?.player?.let { player ->
             if (player.isPlaying) player.pause()
         }
@@ -465,7 +432,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         super.onStart()
         pipReceiverManager.register()
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class)
@@ -479,19 +445,14 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             sharedViewModel.buttonVisibility.value = false
             cvVideoTitle?.visibility = View.GONE
             clearAllMarginsAndConstraints()
-
             binding.cardView.radius = 0f
             updatePipActions()
-
             (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
                 width = FrameLayout.LayoutParams.MATCH_PARENT
                 height = FrameLayout.LayoutParams.WRAP_CONTENT
             }
-
             binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-
             resetConstraintsForPip()
-
             lastVideoAspectRatio?.let { ar ->
                 pictureInPictureParamsBuilder?.setAspectRatio(ar)
                 requireActivity().setPictureInPictureParams(
@@ -508,16 +469,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @RequiresApi(Build.VERSION_CODES.O)
     fun Context.isPipPermissionGranted(): Boolean {
         val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-
         val mode = appOps.checkOpNoThrow(
             AppOpsManager.OPSTR_PICTURE_IN_PICTURE,
             android.os.Process.myUid(),
             packageName
         )
-
         return mode == AppOpsManager.MODE_ALLOWED
     }
-
 
     @OptIn(UnstableApi::class)
     private fun restoreNormalUI() {
@@ -526,7 +484,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             height = FrameLayout.LayoutParams.MATCH_PARENT
         }
         binding.playerView?.requestLayout()
-
         binding.subtitles.isVisible = true
         binding.pipBtn.isVisible = true
         binding.playerView?.useController = true
@@ -534,16 +491,14 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.playerView?.showController()
         cvVideoTitle?.visibility = View.VISIBLE
         sharedViewModel.buttonVisibility.value = true
-
         binding.cardView.radius =
             resources.getDimension(R.dimen.video_corner_radius)
-
         clearAllMarginsAndConstraints()
-
         binding.rootLayout?.post {
             updateLayoutForOrientation()
         }
     }
+
     private fun clearAllMarginsAndConstraints() {
         val cardParams = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
         cardParams.marginStart = 0
@@ -551,14 +506,12 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         cardParams.topMargin = 0
         cardParams.bottomMargin = 0
         binding.cardView.layoutParams = cardParams
-
         val subtitleParams = binding.subtitles.layoutParams as ConstraintLayout.LayoutParams
         subtitleParams.marginStart = 0
         subtitleParams.marginEnd = 0
         subtitleParams.topMargin = 0
         subtitleParams.bottomMargin = 0
         binding.subtitles.layoutParams = subtitleParams
-
         binding.cardView.requestLayout()
         binding.subtitles.requestLayout()
         binding.rootLayout?.requestLayout()
@@ -571,23 +524,17 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         ) {
             return
         }
-
         val titleView = cvVideoTitle ?: return
-
         clearAllMarginsAndConstraints()
-
         val isLandscape =
             resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-
         val constraintSet = androidx.constraintlayout.widget.ConstraintSet()
         constraintSet.clone(constraintContainer)
-
         val playerHeight = resources.getDimensionPixelSize(R.dimen.player_height)
         val playerMarginH = resources.getDimensionPixelSize(R.dimen.video_margin_horizontal)
         val subtitleMarginH = resources.getDimensionPixelSize(R.dimen.subtitle_margin_horizontal)
         val subtitleMarginBottom = resources.getDimensionPixelSize(R.dimen.subtitle_margin_bottom)
         val subtitleMarginTop = resources.getDimensionPixelSize(R.dimen.subtitle_margin_top)
-
         constraintSet.clear(binding.cardView.id)
         constraintSet.clear(binding.subtitles.id)
         constraintSet.clear(titleView.id)
@@ -614,7 +561,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 ConstraintSet.START,
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.START,
-                8  // Reduced left margin
+                8
             )
             constraintSet.connect(
                 binding.cardView.id,
@@ -642,7 +589,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 ConstraintSet.START,
                 binding.cardView.id,
                 ConstraintSet.END,
-                70  // Add gap between video and subtitles
+                70
             )
             constraintSet.connect(
                 binding.subtitles.id,
@@ -755,9 +702,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     }
 
-
-
-
     @OptIn(UnstableApi::class)
     private fun setupMediaSession() {
         mediaSession = MediaSession.Builder(requireContext(), viewModel.exoPlayer!!)
@@ -768,7 +712,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         val player = viewModel.exoPlayer ?: return
 
         player.apply {
-            prepare()   // re-buffer stream
+            prepare()
             playWhenReady = true
         }
     }
@@ -813,7 +757,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        // More reliable check: use both isPlaying and playWhenReady
         val shouldShowPauseButton = player.isPlaying || player.playWhenReady
 
         val actions = listOf(
@@ -849,7 +792,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 
-
     private fun resetConstraintsForPip() {
         val set = ConstraintSet()
         set.clone(constraintContainer)
@@ -880,7 +822,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         set.applyTo(constraintContainer)
     }
 
-
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showReplayAction() {
         if (!requireActivity().isInPictureInPictureMode) return
@@ -907,7 +848,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         )
     }
 
-
     private fun showPipDisabledMessage() {
         Toast.makeText(
             requireContext(),
@@ -915,8 +855,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             Toast.LENGTH_LONG
         ).show()
     }
-
-
 }
 
 

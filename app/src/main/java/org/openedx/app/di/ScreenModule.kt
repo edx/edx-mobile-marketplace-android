@@ -397,18 +397,14 @@ val screenModule = module {
         )
     }
 
-
-    // ✅ FIXED: PiP Architecture - Data Layer
     single { PipPlayerRepository() }
     factory {
         PipBroadcastReceiverManager( get(),get()
         )
     }
 
-// PiP Architecture - Domain Layer
     factory { PipInteractor(get()) }
 
-// PiP Architecture - Presentation Layer
     viewModel { PipViewModel(get()) }
 
     viewModel { (courseId: String, courseTitle: String, enrollmentMode: String) ->
@@ -560,4 +556,3 @@ val screenModule = module {
     viewModel { ProgramViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 
 }
-

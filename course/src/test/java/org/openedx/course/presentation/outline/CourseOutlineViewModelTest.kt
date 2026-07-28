@@ -68,6 +68,7 @@ import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseRouter
 import java.net.UnknownHostException
 import java.util.Date
+import org.openedx.core.system.NotificationDisplayManager
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CourseOutlineViewModelTest {
@@ -94,6 +95,7 @@ class CourseOutlineViewModelTest {
     private val somethingWrong = "Something went wrong"
     private val cantDownload = "You can download content only from Wi-fi"
 
+    private val notificationDisplayManager = mockk<NotificationDisplayManager>(relaxed = true)
     private val assignmentProgress = AssignmentProgress(
         assignmentType = "Homework",
         numPointsEarned = 1f,
@@ -282,6 +284,7 @@ class CourseOutlineViewModelTest {
             coreAnalytics,
             downloadDao,
             workerController,
+            notificationDisplayManager
         )
 
         val message = async {
@@ -316,7 +319,8 @@ class CourseOutlineViewModelTest {
             courseRouter,
             coreAnalytics,
             downloadDao,
-            workerController
+            workerController,
+            notificationDisplayManager
         )
 
         val message = async {
@@ -363,7 +367,8 @@ class CourseOutlineViewModelTest {
             courseRouter,
             coreAnalytics,
             downloadDao,
-            workerController
+            workerController,
+            notificationDisplayManager
         )
 
         val message = async {
@@ -411,7 +416,8 @@ class CourseOutlineViewModelTest {
             courseRouter,
             coreAnalytics,
             downloadDao,
-            workerController
+            workerController,
+            notificationDisplayManager
         )
 
         val message = async {
@@ -458,7 +464,8 @@ class CourseOutlineViewModelTest {
             courseRouter,
             coreAnalytics,
             downloadDao,
-            workerController
+            workerController,
+            notificationDisplayManager
         )
 
         val message = async {
@@ -497,7 +504,8 @@ class CourseOutlineViewModelTest {
             courseRouter,
             coreAnalytics,
             downloadDao,
-            workerController
+            workerController,
+            notificationDisplayManager
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -543,7 +551,8 @@ class CourseOutlineViewModelTest {
             courseRouter,
             coreAnalytics,
             downloadDao,
-            workerController
+            workerController,
+            notificationDisplayManager
         )
         val message = async {
             withTimeoutOrNull(5000) {
@@ -588,7 +597,8 @@ class CourseOutlineViewModelTest {
             courseRouter,
             coreAnalytics,
             downloadDao,
-            workerController
+            workerController,
+            notificationDisplayManager
         )
         val message = async {
             withTimeoutOrNull(5000) {
@@ -626,7 +636,8 @@ class CourseOutlineViewModelTest {
             courseRouter,
             coreAnalytics,
             downloadDao,
-            workerController
+            workerController,
+            notificationDisplayManager
         )
         val message = async {
             withTimeoutOrNull(5000) {

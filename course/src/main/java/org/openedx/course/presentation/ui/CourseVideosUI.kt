@@ -129,7 +129,6 @@ fun CourseVideosScreen(
                     notificationSubtitle = "",
                     isModuleCompleted = false
                 )
-
             }
             viewModel.courseSubSectionUnit[subSectionBlock.id]?.let { unit ->
                 viewModel.sequentialClickedEvent(

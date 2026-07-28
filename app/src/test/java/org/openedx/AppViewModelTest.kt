@@ -1,5 +1,6 @@
 package org.openedx
 
+import android.app.NotificationManager
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Lifecycle
@@ -56,7 +57,7 @@ class AppViewModelTest {
     private val context = mockk<Context>()
     private val pushManager = mockk<PushGlobalManager>()
     private val appCookieManager = mockk<AppCookieManager>(relaxed = true)
-
+    private val notificationManager = mockk<NotificationManager>(relaxed = true)
     private val user = User(0, "", "", "")
     private val appThemeMode = AppThemeMode.MATCH_DEVICE
 
@@ -94,7 +95,8 @@ class AppViewModelTest {
             context,
             pushManager,
             appCookieManager,
-        )
+            notificationManager
+            )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
         val lifecycleRegistry = LifecycleRegistry(mockLifeCycleOwner)
@@ -130,6 +132,7 @@ class AppViewModelTest {
             context,
             pushManager,
             appCookieManager,
+            notificationManager
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -168,6 +171,7 @@ class AppViewModelTest {
             context,
             pushManager,
             appCookieManager,
+            notificationManager
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -205,6 +209,7 @@ class AppViewModelTest {
             context,
             pushManager,
             appCookieManager,
+            notificationManager
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()
@@ -236,6 +241,7 @@ class AppViewModelTest {
             context,
             pushManager,
             appCookieManager,
+            notificationManager
         )
 
         val mockLifeCycleOwner: LifecycleOwner = mockk()

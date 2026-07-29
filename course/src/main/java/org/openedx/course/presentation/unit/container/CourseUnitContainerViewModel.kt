@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -35,6 +36,14 @@ import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseAnalyticsKey
+
+
+data class ModuleCompletionEvent(
+    val moduleNumber: Int,
+    val currentUnitName: String,
+    val nextUnitName: String,
+    val showVerticalLayout: Boolean
+)
 
 class CourseUnitContainerViewModel(
     val courseId: String,
@@ -105,6 +114,10 @@ class CourseUnitContainerViewModel(
 
     val videoQuality
         get() = corePreferences.videoSettings.videoStreamingQuality
+
+    private val _showModuleCompletionNotification = MutableSharedFlow<ModuleCompletionEvent>()
+    val showModuleCompletionNotification: SharedFlow<ModuleCompletionEvent>
+        get() = _showModuleCompletionNotification.asSharedFlow()
 
     fun loadBlocks(mode: CourseViewMode, componentId: String = "", isNeedRefresh: Boolean = false) {
         currentMode = mode
@@ -341,6 +354,36 @@ class CourseUnitContainerViewModel(
 
     fun setUnitsListVisibility(isVisible: Boolean) {
         _unitsListShowed.value = isVisible
+    }
+
+    fun handleModuleCompletion() {
+        viewModelScope.launch {
+            try {
+                val currentSectionBlock = blocks.getOrNull(currentSectionIndex)
+                val chapters = blocks.filter { it.type == BlockType.CHAPTER }
+                val moduleNumber = chapters.indexOfFirst { it.descendants.contains(currentSectionBlock?.id) }
+                    .takeIf { it >= 0 }
+                    ?.plus(1)
+                if (moduleNumber != null) {
+                    val currentVerticalBlock = getCurrentVerticalBlock()
+                    val nextVerticalBlock = getNextVerticalBlock()
+                    _showModuleCompletionNotification.emit(
+                        ModuleCompletionEvent(
+                            moduleNumber = moduleNumber,
+                            currentUnitName = currentVerticalBlock?.displayName ?: "",
+                            nextUnitName = nextVerticalBlock?.displayName ?: "",
+                            showVerticalLayout = !isCourseUnitProgressEnabled
+                        )
+                    )
+                    finishVerticalClickedEvent(
+                        currentVerticalBlock?.blockId ?: "",
+                        currentVerticalBlock?.displayName ?: ""
+                    )
+                }
+            } catch (e: Exception) {
+                logger.e(throwable = e)
+            }
+        }
     }
 
     companion object {

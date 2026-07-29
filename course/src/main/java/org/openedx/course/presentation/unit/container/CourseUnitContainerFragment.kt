@@ -269,6 +269,28 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 }
             }
 
+            viewModel.showModuleCompletionNotification.onEach { event ->
+                context?.let {
+                    courseViewModel.showCourseStartedNotification(
+                        context = it,
+                        notificationTitle = "Module ${event.moduleNumber} complete!",
+                        notificationSubtitle = "Well done on successfully completing module ${event.moduleNumber}!",
+                        isModuleCompleted = true
+                    )
+                }
+                val dialog = ChapterEndFragmentDialog.newInstance(
+                    sectionName = event.currentUnitName,
+                    nextSectionName = event.nextUnitName,
+                    isVerticalNavigation = event.showVerticalLayout
+                )
+                dialog.listener = dialogListener
+                dialog.show(
+                    requireActivity().supportFragmentManager,
+                    ChapterEndFragmentDialog::class.simpleName
+                )
+            }.flowOn(Dispatchers.Main)
+                .launchIn(lifecycleScope)
+
             binding.subSectionUnitsBg.setOnClickListener { handleUnitsClick() }
 
             binding.subSectionUnitsList.setContent {
@@ -408,42 +430,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                     }
                 }
             } else {
-                val currentVerticalBlock = viewModel.getCurrentVerticalBlock()
-                val nextVerticalBlock = viewModel.getNextVerticalBlock()
-                val blocks = viewModel.blocks
-                val currentSectionBlock = blocks.getOrNull(viewModel.currentSectionIndex)
-                val chapters = blocks.filter { it.type == BlockType.CHAPTER }
-                val moduleNumber = chapters.indexOfFirst { it.descendants.contains(currentSectionBlock?.id) }
-                    .takeIf { it >= 0 }
-                    ?.plus(1)
-                if (moduleNumber != null) {
-                    val notificationTitle = "Module $moduleNumber complete!"
-                    val notificationSubtitle = "Well done on successfully completing module $moduleNumber!"
-                    context?.let {
-                        courseViewModel.showCourseStartedNotification(
-                            it,
-                            notificationTitle,
-                            notificationSubtitle,
-                            isModuleCompleted = true
-                        )
-                    }
-                }
-                val dialog = ChapterEndFragmentDialog.newInstance(
-                    currentVerticalBlock?.displayName ?: "",
-                    nextVerticalBlock?.displayName ?: "",
-                    !viewModel.isCourseUnitProgressEnabled
-                )
-                currentVerticalBlock?.let {
-                    viewModel.finishVerticalClickedEvent(
-                        it.blockId,
-                        it.displayName
-                    )
-                }
-                dialog.listener = dialogListener
-                dialog.show(
-                    requireActivity().supportFragmentManager,
-                    ChapterEndFragmentDialog::class.simpleName
-                )
+                viewModel.handleModuleCompletion()
             }
         }
     }

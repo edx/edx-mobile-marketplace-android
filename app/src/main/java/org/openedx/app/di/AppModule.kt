@@ -38,7 +38,7 @@ import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.data.model.CourseStructureModel
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
-import org.openedx.core.domain.helper.VideoPreviewHelper
+import org.openedx.course.domain.helper.VideoPreviewHelper
 import org.openedx.core.module.DownloadWorker
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.TranscriptManager

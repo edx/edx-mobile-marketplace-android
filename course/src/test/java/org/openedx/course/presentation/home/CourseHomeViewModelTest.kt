@@ -25,7 +25,7 @@ import org.junit.rules.TestRule
 import org.openedx.core.R
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.helper.VideoPreviewHelper
+import org.openedx.course.domain.helper.VideoPreviewHelper
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.presentation.CoreAnalytics

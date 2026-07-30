@@ -272,7 +272,7 @@
     <string name="core_date_format_due_in_days">Due in %1$d days</string>
     <string name="core_date_format_assignment_due">Due %1$s</string>
     <string name="course_review_grading_policy">Review Course Grading Policy</string>
-    <string name="course_completed_of">%1$s/%2$s Completed</string>\
+    <string name="course_completed_of">%1$s/%2$s Completed</string>
     <string name="course_complete_points">Complete - %1$s points</string>
     <string name="course_past_due">Past Due - %1$s points</string>
     <string name="course_in_progress">- %1$s points</string>

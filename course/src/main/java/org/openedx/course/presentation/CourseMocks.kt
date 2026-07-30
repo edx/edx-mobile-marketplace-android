@@ -3,6 +3,7 @@ package org.openedx.course.presentation
 import org.openedx.core.BlockType
 import org.openedx.core.data.model.DateType
 import org.openedx.core.domain.model.AssignmentProgress
+import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.BlockCounts
 import org.openedx.core.domain.model.CourseDateBlock
@@ -38,8 +39,8 @@ object CourseMocks {
             shortLabel = "HM1"
         ),
         due = Date(),
-        authorizationDenialReason = TODO(),
-        downloadModel = TODO()
+        authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
+        downloadModel = null
     )
 
     val coursewareAccess = CoursewareAccess(

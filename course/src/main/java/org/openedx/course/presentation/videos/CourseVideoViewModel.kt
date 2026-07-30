@@ -14,9 +14,9 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BlockType
 import org.openedx.core.UIMessage
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.helper.VideoPreviewHelper
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.VideoSettings
+import org.openedx.core.exception.safeDivBy
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.download.BaseDownloadViewModel
@@ -31,6 +31,7 @@ import org.openedx.core.system.notifier.VideoQualityChanged
 import org.openedx.core.utils.FileUtil
 import org.openedx.core.utils.Logger
 import org.openedx.course.R
+import org.openedx.course.domain.helper.VideoPreviewHelper
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -216,15 +217,6 @@ class CourseVideoViewModel(
                 )
             }
         }
-    }
-    fun Float.safeDivBy(divisor: Float): Float = try {
-        var result = this / divisor
-        if (result.isNaN()) {
-            result = 0f
-        }
-        result
-    } catch (_: ArithmeticException) {
-        0f
     }
 
     fun switchCourseSections(blockId: String) {

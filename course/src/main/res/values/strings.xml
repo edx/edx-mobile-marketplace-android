@@ -82,7 +82,7 @@
     <string name="course_an_error_occurred">An error occurred while loading your course</string>
     <string name="course_container_content_tab_all">All</string>
     <string name="course_container_content_tab_video">Video</string>
-    <string name="course_container_content_tab_assignment">Assigment</string>
+    <string name="course_container_content_tab_assignment">Assignment</string>
 
     <!-- Course Completion UI -->
     <string name="course_completion_title">Course Completion</string>

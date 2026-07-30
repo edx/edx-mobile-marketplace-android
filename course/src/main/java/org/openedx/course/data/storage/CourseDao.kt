@@ -40,4 +40,5 @@ interface CourseDao {
     suspend fun getVideoProgressByBlockId(blockId: String): VideoProgressEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertVideoProgressEntity(vararg videoProgressEntity: VideoProgressEntity)}
+    suspend fun insertVideoProgressEntity(vararg videoProgressEntity: VideoProgressEntity)
+}

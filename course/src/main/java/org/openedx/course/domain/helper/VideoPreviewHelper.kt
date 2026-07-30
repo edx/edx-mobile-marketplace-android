@@ -1,4 +1,4 @@
-package org.openedx.core.domain.helper
+package org.openedx.course.domain.helper
 
 import android.content.Context
 import org.openedx.core.domain.model.Block

@@ -32,7 +32,7 @@ import org.openedx.core.BlockType
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.helper.VideoPreviewHelper
+import org.openedx.course.domain.helper.VideoPreviewHelper
 import org.openedx.core.domain.model.AssignmentProgress
 import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block

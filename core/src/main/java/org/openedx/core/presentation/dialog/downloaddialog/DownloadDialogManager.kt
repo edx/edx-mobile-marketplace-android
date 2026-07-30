@@ -195,7 +195,14 @@ class DownloadDialogManager(
                                 (!onlyVideoBlocks || it.type == BlockType.VIDEO)
                     }
                 }
-                val size = blocks.sumOf { it.getFileSize() }
+                val size = blocks.sumOf { block ->
+                    when (block.type) {
+                        BlockType.VIDEO -> block.studentViewData?.encodedVideos
+                            ?.getPreferredVideoInfoForDownloading(corePreferences.videoSettings.videoDownloadQuality)
+                            ?.fileSize ?: 0L
+                        else -> 0L
+                    }
+                }
                 if (size > 0) {
                     DownloadDialogItem(
                         title = subSectionBlock.displayName,

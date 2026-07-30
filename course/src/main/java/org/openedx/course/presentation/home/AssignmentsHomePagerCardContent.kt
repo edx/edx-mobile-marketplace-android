@@ -45,6 +45,7 @@ import org.openedx.core.ui.theme.appColors
 import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.utils.TimeUtils
 import org.openedx.course.R
+import org.openedx.course.presentation.container.CourseContentAssignmentEmptyState
 import java.util.Date
 import org.openedx.core.R as coreR
 
@@ -156,19 +157,6 @@ fun AssignmentsHomePagerCardContent(
             onClick = onViewAllAssignmentsClick
         )
     }
-}
-@Composable
-fun CourseContentAssignmentEmptyState(
-    modifier: Modifier = Modifier,
-    onReturnToCourseClick: () -> Unit,
-    showReturnButton: Boolean = true
-) {
-    ContentTabEmptyState(
-        modifier = modifier,
-        message = stringResource(id = org.openedx.core.R.string.core_no_assignments),
-        onReturnToCourseClick = onReturnToCourseClick,
-        showReturnButton = showReturnButton
-    )
 }
 
 @Composable

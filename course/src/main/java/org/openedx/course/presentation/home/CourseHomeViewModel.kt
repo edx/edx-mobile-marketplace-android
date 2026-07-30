@@ -21,7 +21,7 @@ import org.openedx.core.BlockType
 import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.helper.VideoPreviewHelper
+import org.openedx.course.domain.helper.VideoPreviewHelper
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.CourseComponentStatus
 import org.openedx.core.domain.model.CourseProgress

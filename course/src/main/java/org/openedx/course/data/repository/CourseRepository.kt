@@ -231,6 +231,9 @@ class CourseRepository(
         val hasCache = progressCache.getCached(courseId) != null
         val shouldFetch = shouldRefresh || !hasCache || !getOnlyCacheIfExist
 
+        if (!networkConnection.isOnline() && !hasCache) {
+            throw NoCachedDataException()
+        }
         if (networkConnection.isOnline() && shouldFetch) {
             emit(progressCache.getOrFetch(courseId, forceRefresh = true))
         }

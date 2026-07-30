@@ -16,7 +16,6 @@ import org.openedx.core.BlockType
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.CourseStructure
-import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.exception.safeDivBy
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.db.DownloadDao
@@ -87,7 +86,6 @@ class CourseOfflineViewModel(
     fun downloadAllBlocks(fragmentManager: FragmentManager) {
 
         viewModelScope.launch {
-            try {
             val courseStructure = courseInteractor.getCourseStructureFromCache(courseId)
             val downloadModels = courseInteractor.getAllDownloadModels()
             val subSectionsBlocks = allBlocks.values.filter { it.type == BlockType.SEQUENTIAL }
@@ -111,9 +109,6 @@ class CourseOfflineViewModel(
                     saveDownloadModels(fileUtil.getExternalAppDir().path, courseId, blockId)
                 }
             )
-            }catch (e: NoCachedDataException){
-
-            }
         }
 
     }
@@ -176,7 +171,6 @@ class CourseOfflineViewModel(
     private fun getOfflineData() {
 
         viewModelScope.launch {
-            try {
                 val courseStructure = courseInteractor.getCourseStructureFromCache(courseId)
                 val totalDownloadableSize = getFilesSize(courseStructure.blockData)
                 courseInteractor.getDownloadModels().collect { downloadModels ->
@@ -202,9 +196,6 @@ class CourseOfflineViewModel(
                         isHaveDownloadableBlocks
                     )
                 }
-            }catch (e: NoCachedDataException){
-
-            }
 
         }
 

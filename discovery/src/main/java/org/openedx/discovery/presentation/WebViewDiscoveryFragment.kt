@@ -11,6 +11,7 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -41,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -51,12 +52,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
-import androidx.core.os.bundleOf
 import androidx.core.net.toUri
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
@@ -89,6 +91,11 @@ class WebViewDiscoveryFragment : Fragment() {
         parametersOf(requireArguments().getString(ARG_SEARCH_QUERY, ""))
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lifecycle.addObserver(viewModel)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -100,16 +107,38 @@ class WebViewDiscoveryFragment : Fragment() {
                 val windowSize = rememberWindowSize()
                 val uiState by viewModel.uiState.collectAsState()
                 val cookiesReady by viewModel.cookiesReady.collectAsState()
-                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
+                val lifecycleOwner = LocalLifecycleOwner.current
+                var isSubscriptionBannerVisible by remember { mutableStateOf(true) }
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.hasInternetConnection)
                 }
+
+                DisposableEffect(lifecycleOwner) {
+                    fun refreshBannerVisibility() {
+                        isSubscriptionBannerVisible = viewModel.isSubscriptionBannerVisible()
+                    }
+
+                    // Refresh immediately so we don't keep an initial stale false value.
+                    refreshBannerVisibility()
+
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_START || event == Lifecycle.Event.ON_RESUME) {
+                            refreshBannerVisibility()
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose {
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
+
                 WebViewDiscoveryScreen(
                     windowSize = windowSize,
                     uiState = uiState,
                     cookiesReady = cookiesReady,
                     isPreLogin = viewModel.isPreLogin,
                     isSubscriptionBannerVisible = isSubscriptionBannerVisible,
+                    viewModel.subscriptionBannerUrl,
                     contentUrl = viewModel.discoveryUrl,
                     uriScheme = viewModel.uriScheme,
                     userAgent = viewModel.appUserAgent,
@@ -189,6 +218,7 @@ class WebViewDiscoveryFragment : Fragment() {
                     },
                     onDismissSubscriptionBanner = {
                         viewModel.dismissSubscriptionBanner()
+                        isSubscriptionBannerVisible = false
                     }
                 )
             }
@@ -216,6 +246,7 @@ private fun WebViewDiscoveryScreen(
     cookiesReady: Boolean,
     isPreLogin: Boolean,
     isSubscriptionBannerVisible: Boolean,
+    subscriptionBannerUrl: String = "",
     contentUrl: String,
     uriScheme: String,
     userAgent: String,
@@ -285,6 +316,25 @@ private fun WebViewDiscoveryScreen(
                 onBackClick = onBackClick,
             )
 
+            if (isSubscriptionBannerVisible) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .zIndex(2f)
+                ) {
+                    SubscriptionBanner(
+                        visible = true,
+                        Modifier.fillMaxWidth(),
+                        subscriptionBannerUrl,
+                        onDismiss = onDismissSubscriptionBanner,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Surface {
                 Box(
                     modifier = modifierScreenWidth
@@ -292,9 +342,11 @@ private fun WebViewDiscoveryScreen(
                         .background(Color.White),
                     contentAlignment = Alignment.TopCenter
                 ) {
+
                     if ((uiState is WebViewUIState.Error).not()) {
                         if (hasInternetConnection) {
                             if (cookiesReady) {
+
                                 DiscoveryWebView(
                                     contentUrl = contentUrl,
                                     uriScheme = uriScheme,
@@ -330,24 +382,6 @@ private fun WebViewDiscoveryScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(color = MaterialTheme.appColors.primary)
-                        }
-                    }
-
-                    // SubscriptionBanner overlay
-                    if (isSubscriptionBannerVisible) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = 16.dp)
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .zIndex(2f)
-                        ) {
-                            SubscriptionBanner(
-                                visible = true,
-                                onDismiss = onDismissSubscriptionBanner,
-                                modifier = Modifier.fillMaxWidth()
-                            )
                         }
                     }
                 }

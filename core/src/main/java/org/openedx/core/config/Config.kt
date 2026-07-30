@@ -136,6 +136,15 @@ class Config(context: Context) {
         return getObjectOrNewInstance(RECAPTCHA, RecaptchaConfig::class.java)
     }
 
+    fun getSubscriptionBannerConfig(): SubscriptionBannerConfig {
+        val element = getObject(SUBSCRIPTION_BANNER) ?: getObject(SUBSCRIPTION_BANNER_LOWERCASE)
+        return if (element != null) {
+            Gson().fromJson(element, SubscriptionBannerConfig::class.java)
+        } else {
+            SubscriptionBannerConfig()
+        }
+    }
+
     private fun getString(key: String, defaultValue: String = ""): String {
         val element = getObject(key)
         return if (element != null) {
@@ -200,6 +209,8 @@ class Config(context: Context) {
         private const val VIDEO_PLAYER = "VIDEO_PLAYER"
         private const val RECAPTCHA = "RECAPTCHA"
         private const val DATADOG = "DATADOG"
+        private const val SUBSCRIPTION_BANNER = "SUBSCRIPTION_BANNER"
+        private const val SUBSCRIPTION_BANNER_LOWERCASE = "subscription_banner"
     }
 
     enum class ViewType {

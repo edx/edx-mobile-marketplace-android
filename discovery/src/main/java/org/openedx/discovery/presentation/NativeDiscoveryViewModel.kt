@@ -13,6 +13,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -29,6 +30,7 @@ class NativeDiscoveryViewModel(
     private val analytics: DiscoveryAnalytics,
     private val appNotifier: AppNotifier,
     private val corePreferences: CorePreferences,
+    private val subscriptionAlertBannerViewModel: SubscriptionAlertBannerViewModel,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -36,6 +38,7 @@ class NativeDiscoveryViewModel(
     val apiHostUrl get() = config.getApiHostURL()
     val isUserLoggedIn get() = corePreferences.user != null
     val canShowBackButton get() = config.isPreLoginExperienceEnabled() && !isUserLoggedIn
+    val subscriptionBannerUrl: String get() = subscriptionAlertBannerViewModel.getBannerUrl()
 
     private val _uiState = MutableLiveData<DiscoveryUIState>(DiscoveryUIState.Loading)
     val uiState: LiveData<DiscoveryUIState>
@@ -199,6 +202,16 @@ class NativeDiscoveryViewModel(
                 put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
             }
         )
+    }
+
+    fun isSubscriptionBannerVisible(): Boolean {
+        return subscriptionAlertBannerViewModel.isBannerVisible(
+            SubscriptionAlertBannerViewModel.Screen.DISCOVERY
+        )
+    }
+
+    fun dismissSubscriptionBanner() {
+        subscriptionAlertBannerViewModel.dismiss(SubscriptionAlertBannerViewModel.Screen.DISCOVERY)
     }
 
     companion object {

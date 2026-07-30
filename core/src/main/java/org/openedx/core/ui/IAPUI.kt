@@ -909,8 +909,9 @@ fun PurchasesFulfillmentCompletedDialog(onConfirm: () -> Unit, onDismiss: () -> 
 @Composable
 fun SubscriptionBanner(
     visible: Boolean,
-    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    url: String = "",
+    onDismiss: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     if (!visible) return
@@ -954,7 +955,7 @@ fun SubscriptionBanner(
 
                     pushStringAnnotation(
                         tag = "URL",
-                        annotation = "https://www.google.com"
+                        annotation = url
                     )
 
                     withStyle(
@@ -981,14 +982,17 @@ fun SubscriptionBanner(
                     color = MaterialTheme.appColors.textPrimary
                 ),
                 onClick = { offset ->
-                    annotatedText
-                        .getStringAnnotations(
-                            tag = "URL",
-                            start = offset,
-                            end = offset
-                        )
-                        .firstOrNull()
-                        ?.let { uriHandler.openUri(it.item) }
+                    if (url.isNotBlank()) {
+                        annotatedText
+                            .getStringAnnotations(
+                                tag = "URL",
+                                start = offset,
+                                end = offset
+                            )
+                            .firstOrNull()
+                            ?.takeIf { it.item.isNotBlank() }
+                            ?.let { uriHandler.openUri(it.item) }
+                    }
                 }
             )
 

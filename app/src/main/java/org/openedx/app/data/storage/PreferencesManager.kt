@@ -7,6 +7,7 @@ import org.openedx.auth.data.model.AuthType
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
+import org.openedx.core.data.storage.SubscriptionBannerStorage
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.domain.model.VideoPlaybackSpeed
@@ -24,7 +25,8 @@ import org.openedx.whatsnew.data.storage.WhatsNewPreferences
 import java.util.concurrent.TimeUnit
 
 class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences,
-    WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences {
+    WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences,
+    SubscriptionBannerStorage {
 
     private val sharedPreferences =
         context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE)
@@ -242,6 +244,34 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         set(value) = saveBoolean(KEY_DATADOG_ENABLED, value)
         get() = getBoolean(KEY_DATADOG_ENABLED, defValue = true) // default: enabled
 
+    // ── SubscriptionBannerStorage ────────────────────────────────────────────
+
+    private fun saveInt(key: String, value: Int) {
+        sharedPreferences.edit().apply { putInt(key, value) }.apply()
+    }
+
+    private fun getInt(key: String, defValue: Int = 0): Int {
+        return sharedPreferences.getInt(key, defValue)
+    }
+
+    override fun getSubscriptionBannerSessionCount(): Int =
+        getInt(SUBSCRIPTION_BANNER_SESSION_COUNT)
+
+    override fun setSubscriptionBannerSessionCount(value: Int) =
+        saveInt(SUBSCRIPTION_BANNER_SESSION_COUNT, value)
+
+    override fun isSubscriptionBannerDismissed(screenKey: String): Boolean =
+        getBoolean(subscriptionBannerDismissedKey(screenKey))
+
+    override fun setSubscriptionBannerDismissed(screenKey: String, dismissed: Boolean) =
+        saveBoolean(subscriptionBannerDismissedKey(screenKey), dismissed)
+
+    private fun subscriptionBannerDismissedKey(screenKey: String): String =
+        "${SUBSCRIPTION_BANNER_DISMISSED}_${screenKey}_${currentUserKey()}"
+
+    private fun currentUserKey(): String =
+        user?.id?.toString().takeUnless { it.isNullOrBlank() } ?: GUEST_USER
+
     companion object {
         private const val ACCESS_TOKEN = "access_token"
         private const val REFRESH_TOKEN = "refresh_token"
@@ -264,5 +294,8 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val PLS_BANNER_SHOWN = "pls_banner_shown"
         private const val APP_THEME_MODE = "app_theme_mode"
         private const val KEY_DATADOG_ENABLED = "datadog_enabled"
+        private const val SUBSCRIPTION_BANNER_SESSION_COUNT = "subscription_banner_session_count_v2"
+        private const val SUBSCRIPTION_BANNER_DISMISSED = "subscription_banner_dismissed_v2"
+        private const val GUEST_USER = "guest"
     }
 }

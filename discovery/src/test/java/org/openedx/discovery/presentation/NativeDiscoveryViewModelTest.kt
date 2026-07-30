@@ -26,6 +26,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Pagination
+import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -50,6 +51,7 @@ class NativeDiscoveryViewModelTest {
     private val analytics = mockk<DiscoveryAnalytics>()
     private val appNotifier = mockk<AppNotifier>()
     private val corePreferences = mockk<CorePreferences>()
+    private val subscriptionAlertBannerViewModel = mockk<SubscriptionAlertBannerViewModel>(relaxed = true)
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
@@ -81,7 +83,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBannerViewModel,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws UnknownHostException()
@@ -106,7 +109,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBannerViewModel,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws Exception()
@@ -130,7 +134,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBannerViewModel,
         )
         every { networkConnection.isOnline() } returns false
         coEvery { interactor.getCoursesListFromCache() } returns emptyList()
@@ -153,7 +158,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBannerViewModel,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -183,7 +189,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBannerViewModel,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -214,7 +221,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBannerViewModel,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws UnknownHostException()
@@ -239,7 +247,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBannerViewModel,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws Exception()
@@ -264,7 +273,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBannerViewModel,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -295,7 +305,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBannerViewModel,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(

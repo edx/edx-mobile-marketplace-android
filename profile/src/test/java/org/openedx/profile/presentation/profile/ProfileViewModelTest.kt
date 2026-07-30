@@ -29,6 +29,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.domain.model.AgreementUrls
 import org.openedx.core.domain.model.ProfileImage
+import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
@@ -53,6 +54,7 @@ class ProfileViewModelTest {
     private val notifier = mockk<ProfileNotifier>()
     private val analytics = mockk<ProfileAnalytics>()
     private val router = mockk<ProfileRouter>()
+    private val subscriptionAlertBannerViewModel = mockk<SubscriptionAlertBannerViewModel>(relaxed = true)
 
     private val account = Account(
         username = "",
@@ -101,7 +103,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBannerViewModel,
         )
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } throws UnknownHostException()
@@ -121,7 +124,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBannerViewModel,
         )
         coEvery { interactor.getCachedAccount() } returns account
         coEvery { interactor.getAccount() } throws UnknownHostException()
@@ -141,7 +145,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBannerViewModel,
         )
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } throws Exception()
@@ -161,7 +166,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBannerViewModel,
         )
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } returns account
@@ -180,7 +186,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBannerViewModel,
         )
         coEvery { interactor.getCachedAccount() } returns null
         every { notifier.notifier } returns flow { emit(AccountUpdated()) }

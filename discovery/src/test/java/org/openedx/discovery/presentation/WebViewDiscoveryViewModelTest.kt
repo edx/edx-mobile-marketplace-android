@@ -20,6 +20,7 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.connection.NetworkConnection
@@ -39,6 +40,7 @@ class WebViewDiscoveryViewModelTest {
     private val router = mockk<DiscoveryRouter>(relaxed = true)
     private val analytics = mockk<DiscoveryAnalytics>(relaxed = true)
     private val appCookieManager = mockk<AppCookieManager>(relaxed = true)
+    private val subscriptionAlertBannerViewModel = mockk<SubscriptionAlertBannerViewModel>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -64,6 +66,7 @@ class WebViewDiscoveryViewModelTest {
             router = router,
             analytics = analytics,
             appCookieManager = appCookieManager,
+            subscriptionAlertBannerViewModel = subscriptionAlertBannerViewModel,
         )
 
         advanceUntilIdle()
@@ -86,6 +89,7 @@ class WebViewDiscoveryViewModelTest {
             router = router,
             analytics = analytics,
             appCookieManager = appCookieManager,
+            subscriptionAlertBannerViewModel = subscriptionAlertBannerViewModel,
         )
 
         advanceUntilIdle()
@@ -106,6 +110,7 @@ class WebViewDiscoveryViewModelTest {
             router = router,
             analytics = analytics,
             appCookieManager = appCookieManager,
+            subscriptionAlertBannerViewModel = subscriptionAlertBannerViewModel,
         )
         advanceUntilIdle()
 
@@ -129,6 +134,7 @@ class WebViewDiscoveryViewModelTest {
             router = router,
             analytics = analytics,
             appCookieManager = appCookieManager,
+            subscriptionAlertBannerViewModel = subscriptionAlertBannerViewModel,
         )
         advanceUntilIdle()
 
@@ -139,4 +145,3 @@ class WebViewDiscoveryViewModelTest {
         assertTrue(viewModel.cookiesReady.value)
     }
 }
-

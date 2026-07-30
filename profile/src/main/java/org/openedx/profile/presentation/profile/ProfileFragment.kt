@@ -3,12 +3,16 @@ package org.openedx.profile.presentation.profile
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
@@ -36,14 +40,30 @@ class ProfileFragment : Fragment() {
                 val uiState by viewModel.uiState.collectAsState()
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val refreshing by viewModel.isUpdating.observeAsState(false)
-                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
+                val lifecycleOwner = LocalLifecycleOwner.current
+                val bannerVisibilityState = androidx.compose.runtime.remember {
+                    androidx.compose.runtime.mutableStateOf(viewModel.isSubscriptionBannerVisible())
+                }
+
+                DisposableEffect(lifecycleOwner) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_START) {
+                            bannerVisibilityState.value = viewModel.isSubscriptionBannerVisible()
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose {
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
 
                 ProfileView(
                     windowSize = windowSize,
                     uiState = uiState,
                     uiMessage = uiMessage,
                     refreshing = refreshing,
-                    isSubscriptionBannerVisible = isSubscriptionBannerVisible,
+                    isSubscriptionBannerVisible = bannerVisibilityState.value,
+                    viewModel.subscriptionBannerUrl,
                     onSettingsClick = {
                         viewModel.profileRouter.navigateToSettings(requireActivity().supportFragmentManager)
                     },
@@ -59,6 +79,7 @@ class ProfileFragment : Fragment() {
                             }
                             ProfileViewAction.DismissSubscriptionBanner -> {
                                 viewModel.dismissSubscriptionBanner()
+                                bannerVisibilityState.value = false
                             }
                         }
                     }

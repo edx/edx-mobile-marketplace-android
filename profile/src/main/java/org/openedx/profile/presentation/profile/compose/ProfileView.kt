@@ -24,7 +24,6 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -64,6 +63,7 @@ internal fun ProfileView(
     uiMessage: UIMessage?,
     refreshing: Boolean,
     isSubscriptionBannerVisible: Boolean,
+    subscriptionBannerUrl: String = "",
     onAction: (ProfileViewAction) -> Unit,
     onSettingsClick: () -> Unit,
 ) {
@@ -146,7 +146,11 @@ internal fun ProfileView(
                                     verticalArrangement = Arrangement.spacedBy(24.dp)
                                 ) {
                                     Spacer(modifier = Modifier.height(12.dp))
-
+//                                    SubscriptionBanner(
+//                                        visible = true,
+//                                        onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) },
+//                                        modifier = Modifier.fillMaxWidth()
+//                                    )
                                     ProfileTopic(
                                         image = uiState.account.profileImage.imageUrlFull,
                                         title = uiState.account.name,
@@ -187,8 +191,9 @@ internal fun ProfileView(
                 ) {
                     SubscriptionBanner(
                         visible = true,
+                        Modifier.fillMaxWidth(),
+                        subscriptionBannerUrl,
                         onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) },
-                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

@@ -28,6 +28,7 @@ import org.openedx.core.presentation.global.InsetHolder
 import org.openedx.core.presentation.global.WindowSizeHolder
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
+import org.openedx.core.system.AppSessionTracker
 import org.openedx.core.utils.Logger
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.whatsnew.WhatsNewManager
@@ -50,6 +51,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
     private val whatsNewManager by inject<WhatsNewManager>()
     private val corePreferencesManager by inject<CorePreferences>()
     private val profileRouter by inject<ProfileRouter>()
+    private val appSessionTracker by inject<AppSessionTracker>()
 
     private val branchLogger = Logger(BRANCH_TAG)
 
@@ -168,6 +170,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
 
     override fun onStart() {
         super.onStart()
+        appSessionTracker.onAppForegrounded()
 
         if (viewModel.isBranchEnabled) {
             Branch.sessionBuilder(this)

@@ -1,6 +1,5 @@
 package org.openedx.core.ui.theme
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.Colors
 import androidx.compose.ui.graphics.Color
 

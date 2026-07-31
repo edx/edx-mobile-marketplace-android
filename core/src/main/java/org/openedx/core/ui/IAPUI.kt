@@ -916,94 +916,96 @@ fun SubscriptionBanner(
     val uriHandler = LocalUriHandler.current
     if (!visible) return
 
-    Card(
-        modifier = modifier
-            .shadow(
-                elevation = 4.dp,
-                shape = MaterialTheme.appShapes.cardShape
-            )
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.appColors.subscriptionBannerBorderStroke,
-                shape = MaterialTheme.appShapes.cardShape
-            ),
-        shape = MaterialTheme.appShapes.cardShape,
-        backgroundColor = MaterialTheme.appColors.subscriptionBannerBackground,
-        elevation = 0.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth() // Ensures it expands up to parent constraints (420.dp on tablet)
-                .padding(16.dp)
-        ) {
-            Text(
-                text = stringResource(id = R.string.banner_title),
-                style = MaterialTheme.appTypography.titleMedium,
-                color = MaterialTheme.appColors.textPrimary
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            val bannerText = stringResource(id = R.string.banner_content)
-
-            val annotatedText = buildAnnotatedString {
-                val linkText = "mobile web browser?"
-                val startIndex = bannerText.indexOf(linkText)
-
-                if (startIndex >= 0) {
-                    append(bannerText.substring(0, startIndex))
-
-                    pushStringAnnotation(
-                        tag = "URL",
-                        annotation = url
-                    )
-
-                    withStyle(
-                        SpanStyle(
-                            color = MaterialTheme.appColors.textHyperLink,
-                            textDecoration = TextDecoration.Underline,
-                            fontSize = MaterialTheme.appTypography.bodyMedium.fontSize
-                        )
-                    ) {
-                        append(linkText)
-                    }
-
-                    pop()
-
-                    append(bannerText.substring(startIndex + linkText.length))
-                } else {
-                    append(bannerText)
-                }
-            }
-
-            ClickableText(
-                text = annotatedText,
-                style = MaterialTheme.appTypography.bodyMedium.copy(
-                    color = MaterialTheme.appColors.textPrimary
+    OpenEdXTheme(darkTheme = false) {
+        Card(
+            modifier = modifier
+                .shadow(
+                    elevation = 4.dp,
+                    shape = MaterialTheme.appShapes.cardShape
+                )
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.appColors.subscriptionBannerBorderStroke,
+                    shape = MaterialTheme.appShapes.cardShape
                 ),
-                onClick = { offset ->
-                    if (url.isNotBlank()) {
-                        annotatedText
-                            .getStringAnnotations(
-                                tag = "URL",
-                                start = offset,
-                                end = offset
+            shape = MaterialTheme.appShapes.cardShape,
+            backgroundColor = MaterialTheme.appColors.subscriptionBannerBackground,
+            elevation = 0.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth() // Ensures it expands up to parent constraints (420.dp on tablet)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.banner_title),
+                    style = MaterialTheme.appTypography.titleMedium,
+                    color = MaterialTheme.appColors.textPrimary
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val bannerText = stringResource(id = R.string.banner_content)
+
+                val annotatedText = buildAnnotatedString {
+                    val linkText = "mobile web browser?"
+                    val startIndex = bannerText.indexOf(linkText)
+
+                    if (startIndex >= 0) {
+                        append(bannerText.substring(0, startIndex))
+
+                        pushStringAnnotation(
+                            tag = "URL",
+                            annotation = url
+                        )
+
+                        withStyle(
+                            SpanStyle(
+                                color = MaterialTheme.appColors.textHyperLink,
+                                textDecoration = TextDecoration.Underline,
+                                fontSize = MaterialTheme.appTypography.bodyMedium.fontSize
                             )
-                            .firstOrNull()
-                            ?.takeIf { it.item.isNotBlank() }
-                            ?.let { uriHandler.openUri(it.item) }
+                        ) {
+                            append(linkText)
+                        }
+
+                        pop()
+
+                        append(bannerText.substring(startIndex + linkText.length))
+                    } else {
+                        append(bannerText)
                     }
                 }
-            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                ClickableText(
+                    text = annotatedText,
+                    style = MaterialTheme.appTypography.bodyMedium.copy(
+                        color = MaterialTheme.appColors.textPrimary
+                    ),
+                    onClick = { offset ->
+                        if (url.isNotBlank()) {
+                            annotatedText
+                                .getStringAnnotations(
+                                    tag = "URL",
+                                    start = offset,
+                                    end = offset
+                                )
+                                .firstOrNull()
+                                ?.takeIf { it.item.isNotBlank() }
+                                ?.let { uriHandler.openUri(it.item) }
+                        }
+                    }
+                )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(onClick = onDismiss) {
-                    Text(text = stringResource(id = R.string.core_dismiss))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(text = stringResource(id = R.string.core_dismiss))
+                    }
                 }
             }
         }

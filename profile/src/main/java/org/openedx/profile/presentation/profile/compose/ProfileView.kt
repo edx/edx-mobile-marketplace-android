@@ -145,12 +145,14 @@ internal fun ProfileView(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(24.dp)
                                 ) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-//                                    SubscriptionBanner(
-//                                        visible = true,
-//                                        onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) },
-//                                        modifier = Modifier.fillMaxWidth()
-//                                    )
+                                    if (isSubscriptionBannerVisible) {
+                                        SubscriptionBanner(
+                                            visible = true,
+                                            Modifier.fillMaxWidth(),
+                                            subscriptionBannerUrl,
+                                            onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) },
+                                        )
+                                    }
                                     ProfileTopic(
                                         image = uiState.account.profileImage.imageUrlFull,
                                         title = uiState.account.name,
@@ -175,26 +177,6 @@ internal fun ProfileView(
                             Modifier.align(Alignment.TopCenter)
                         )
                     }
-                }
-            }
-
-            if (isSubscriptionBannerVisible) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 80.dp)
-                        .then(bannerWidth)
-                        .padding(
-                            horizontal = if (windowSize.width == WindowType.Compact) 0.dp else 32.dp
-                        )
-                        .zIndex(1f)
-                ) {
-                    SubscriptionBanner(
-                        visible = true,
-                        Modifier.fillMaxWidth(),
-                        subscriptionBannerUrl,
-                        onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) },
-                    )
                 }
             }
         }

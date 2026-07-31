@@ -11,8 +11,16 @@ class AppSessionTracker(
     private val storage: SubscriptionBannerStorage,
 ) {
     private val logger = Logger("AppSessionTracker")
+    private var isAppInForeground = false
 
     fun onAppForegrounded() {
+        if (isAppInForeground) {
+            logger.i { "Foreground event ignored because app is already in foreground" }
+            return
+        }
+
+        isAppInForeground = true
+
         val bannerConfig = config.getSubscriptionBannerConfig()
         if (!bannerConfig.isEnabled) {
             logger.i { "Session not counted because banner is disabled in config" }
@@ -33,5 +41,12 @@ class AppSessionTracker(
             storage.setSubscriptionBannerDismissed(screen.key, false)
             logger.i { "Dismissed flag reset for screen=${screen.key} on new session $nextSessionCount" }
         }
+    }
+
+    fun onAppBackgrounded() {
+        if (isAppInForeground) {
+            logger.i { "App moved to background" }
+        }
+        isAppInForeground = false
     }
 }

@@ -64,5 +64,19 @@ class AppSessionTrackerTest {
 
         verify { storage.setSubscriptionBannerSessionCount(1) }
     }
+
+    @Test
+    fun `onAppForegrounded ignores repeated foreground callback until backgrounded`() {
+        every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
+            isEnabled = true,
+            maxSessions = 4,
+        )
+        every { storage.getSubscriptionBannerSessionCount() } returns 0
+
+        tracker.onAppForegrounded()
+        tracker.onAppForegrounded()
+
+        verify(exactly = 1) { storage.setSubscriptionBannerSessionCount(1) }
+    }
 }
 

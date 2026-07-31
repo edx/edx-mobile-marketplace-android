@@ -6,6 +6,9 @@ import com.braze.configuration.BrazeConfig
 import com.braze.ui.BrazeDeeplinkHandler
 import com.google.firebase.FirebaseApp
 import io.branch.referral.Branch
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.loadKoinModules
@@ -15,16 +18,19 @@ import org.openedx.app.di.appModule
 import org.openedx.app.di.networkingModule
 import org.openedx.app.di.screenModule
 import org.openedx.core.config.Config
+import org.openedx.core.system.AppSessionTracker
 import org.openedx.featuremanagement.di.FeatureModuleProvider
 import org.openedx.notifications.di.NotificationsModuleProvider
 import kotlin.getValue
 class OpenEdXApp : Application() {
 
     private val config by inject<Config>()
+    private val appSessionTracker by inject<AppSessionTracker>()
 
     override fun onCreate() {
         super.onCreate()
         initializeKoinModules()
+        registerAppForegroundObserver()
 
         if (config.getFirebaseConfig().enabled) {
             FirebaseApp.initializeApp(this)
@@ -56,6 +62,19 @@ class OpenEdXApp : Application() {
             }
         }
     }
+
+    private fun registerAppForegroundObserver() {
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                appSessionTracker.onAppForegrounded()
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                appSessionTracker.onAppBackgrounded()
+            }
+        })
+    }
+
     private fun initializeKoinModules() {
         startKoin {
             androidContext(this@OpenEdXApp)

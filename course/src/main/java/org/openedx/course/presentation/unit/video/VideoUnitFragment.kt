@@ -102,6 +102,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        currentVideoFragment = this
         pipViewModel.pipState
             .onEach {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
@@ -312,6 +313,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     @UnstableApi
     override fun onDestroy() {
+        if (currentVideoFragment == this) {
+            currentVideoFragment = null
+        }
         if (!requireActivity().isChangingConfigurations) {
             viewModel.releasePlayers()
             pipViewModel.unregisterPlayer()
@@ -350,6 +354,12 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_TITLE = "title"
         private const val ARG_DOWNLOADED = "isDownloaded"
+        private var currentVideoFragment: VideoUnitFragment? = null
+
+        @RequiresApi(Build.VERSION_CODES.S)
+        fun triggerPipModeIfActive() {
+            currentVideoFragment?.enablePipMode()
+        }
 
         fun newInstance(
             blockId: String,

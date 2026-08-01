@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.Icon
 import android.os.Build
@@ -35,6 +36,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.AspectRatioFrameLayout
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -59,6 +61,7 @@ import org.openedx.course.domain.model.PipPlayerType
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
 import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
+import org.openedx.course.presentation.unit.video.MediaPlaybackService
 
 class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private var pictureInPictureParamsBuilder: PictureInPictureParams.Builder? = null
@@ -285,29 +288,81 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        pipReceiverManager.register()
+    }
+
     override fun onResume() {
         super.onResume()
+
+        // Always restore screen-on flag if in PiP
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             requireActivity().isInPictureInPictureMode
         ) {
+            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             viewModel.exoPlayer?.let { player ->
                 val controller = ExoPlayerController(player)
                 pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
                 android.util.Log.d("PipMode", "Player re-registered on resume")
             }
+            return
         }
 
+        // Not in PiP: normal resume behavior
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onPause() {
         super.onPause()
+
+        // Check if we're in PiP mode - if yes, keep screen on for background audio
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!requireActivity().isInPictureInPictureMode) {
-                requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            if (requireActivity().isInPictureInPictureMode) {
+                // In PiP: keep screen on to maintain audio playback
+                // Don't pause the player or clear keep-screen-on flag
+                requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                return
             }
+        }
+
+        // Not in PiP: clear keep-screen-on flag
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (requireActivity().isInPictureInPictureMode) {
+                // In PiP mode and device is locked: preserve playback state
+                // Don't unregister the broadcast receiver - keep it active for background playback
+                pipReceiverManager.register()  // Ensure it stays registered
+
+                // Keep the player active
+                viewModel.exoPlayer?.let { player ->
+                    if (player.isPlaying) {
+                        // Let it continue playing in background
+                        android.util.Log.d("PipMode", "Playback continuing in background during device lock")
+                    }
+                }
+                return
+            }
+
+            // Not in PiP: normal behavior
+            pipReceiverManager.unregister()
         } else {
-            requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            pipReceiverManager.unregister()
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+            requireActivity().isInPictureInPictureMode
+        ) {
+            return
+        }
+
+        binding.playerView?.player?.let { player ->
+            if (player.isPlaying) player.pause()
         }
     }
 
@@ -416,31 +471,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         pictureInPictureParamsBuilder?.build()?.let {
             requireActivity().enterPictureInPictureMode(it)
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!requireActivity().isInPictureInPictureMode) {
-                pipReceiverManager.unregister()
-            }
-        } else {
-            pipReceiverManager.unregister()
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
-            requireActivity().isInPictureInPictureMode
-        ) {
-            return
-        }
-        binding.playerView?.player?.let { player ->
-            if (player.isPlaying) player.pause()
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        pipReceiverManager.register()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -714,10 +744,36 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     @OptIn(UnstableApi::class)
     private fun setupMediaSession() {
-        mediaSession = MediaSession.Builder(requireContext(), viewModel.exoPlayer!!)
+        android.util.Log.d("PipMode", "setupMediaSession: Starting")
+
+        // Create the MediaSession
+        mediaSession = androidx.media3.session.MediaSession.Builder(requireContext(), viewModel.exoPlayer!!)
             .setId("video_session_${System.currentTimeMillis()}")
             .build()
+
+        android.util.Log.d("PipMode", "setupMediaSession: MediaSession created")
+
+        // Start the foreground service
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                val intent = Intent(requireContext(), MediaPlaybackService::class.java)
+                requireContext().startForegroundService(intent)
+                android.util.Log.d("PipMode", "setupMediaSession: Service start requested")
+
+                // Connect the session to the service - do this immediately after starting
+                lifecycleScope.launch {
+                    delay(100)  // Small delay to let service initialize
+                    val service = MediaPlaybackService.getInstance()
+                    android.util.Log.d("PipMode", "setupMediaSession: Service instance = $service")
+                    service?.setMediaSession(mediaSession)
+                    android.util.Log.d("PipMode", "setupMediaSession: MediaSession connected to service")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PipMode", "setupMediaSession: Error - ${e.message}", e)
+            }
+        }
     }
+
     private fun retryPlayback() {
         val player = viewModel.exoPlayer ?: return
 

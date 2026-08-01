@@ -35,7 +35,6 @@ import org.openedx.course.presentation.unit.video.VideoUnitFragment
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.whatsnew.WhatsNewManager
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
-import android.content.BroadcastReceiver
 import android.content.IntentFilter
 import android.content.Context
 
@@ -79,38 +78,6 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
             }
         }
 
-    private val screenLockReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            when (intent?.action) {
-                Intent.ACTION_SCREEN_OFF -> {
-                    android.util.Log.d("AppActivity", "Device locked - PiP audio should continue")
-                    // Audio playback continues automatically if in PiP mode
-                }
-                Intent.ACTION_SCREEN_ON -> {
-                    android.util.Log.d("AppActivity", "Device unlocked - restoring video UI")
-                    // Fragment will restore UI in onResume()
-                }
-            }
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun registerScreenLockReceiver() {
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_SCREEN_OFF)
-            addAction(Intent.ACTION_SCREEN_ON)
-        }
-        registerReceiver(screenLockReceiver, filter, Context.RECEIVER_EXPORTED)
-    }
-
-    private fun unregisterScreenLockReceiver() {
-        try {
-            unregisterReceiver(screenLockReceiver)
-        } catch (e: Exception) {
-            // Receiver was not registered
-        }
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putInt(TOP_INSET, topInset)
         outState.putInt(BOTTOM_INSET, bottomInset)
@@ -127,7 +94,6 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()
-        registerScreenLockReceiver()
         binding = ActivityAppBinding.inflate(layoutInflater)
         lifecycle.addObserver(viewModel)
         setContentView(binding.root)
@@ -283,7 +249,6 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
     }
 
     override fun onDestroy() {
-        unregisterScreenLockReceiver()
         super.onDestroy()
     }
 

@@ -261,14 +261,13 @@ class EncodedVideoUnitViewModel(
             playbackPosition = player.currentPosition
             currentWindow = player.currentMediaItemIndex
             playWhenReady = player.playWhenReady
-            //player.pause()
         }
     }
 
     private fun initPlayer() {
         val selector = applyTrackSelector(isSubtitlesDisabled = true)
         val renderersFactory = DefaultRenderersFactory(context)
-            .setEnableDecoderFallback(true) // Use software if hardware fails
+            .setEnableDecoderFallback(true)
         exoPlayer = ExoPlayer.Builder(
             context,
             renderersFactory,
@@ -285,31 +284,14 @@ class EncodedVideoUnitViewModel(
 
             setAudioAttributes(audioAttributes, true)
             setPlaybackSpeed(preferencesManager.videoSettings.videoPlaybackSpeed.speedValue)
-
-            // Build and set the media source once
             val mediaSource = buildMediaSource(videoUrl)
             setMediaSource(mediaSource)
-
-            // Restore playback position and playWhenReady from saved state
             seekTo(playbackPosition)
             playWhenReady = false
 
         }
         _state.update { it.copy(activePlayerType = PlayerType.EXO_REGULAR) }
         logVideoLoadedEvent(videoUrl)
-    }
-
-    fun onFragmentVisible() {
-        if (!isPlayerPrepared) {
-            exoPlayer?.prepare()
-            exoPlayer?.playWhenReady = true
-            isPlayerPrepared = true
-        }
-    }
-
-    fun onFragmentHidden() {
-        exoPlayer?.playWhenReady = false
-        exoPlayer?.pause()
     }
 
     private fun buildMediaSource(videoUrl: String): MediaSource {

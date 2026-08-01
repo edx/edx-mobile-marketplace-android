@@ -1,4 +1,3 @@
-
 package org.openedx.course.presentation.unit.video
 
 import android.app.AppOpsManager
@@ -62,7 +61,6 @@ import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
 
 class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private var pictureInPictureParamsBuilder: PictureInPictureParams.Builder? = null
-    private val sharedViewModel: PipViewModel by activityViewModels()
     private var mediaSession: MediaSession? = null
     private var cvVideoTitle: ComposeView? = null
     private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
@@ -292,8 +290,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     override fun onResume() {
         super.onResume()
-
-        // Always restore screen-on flag if in PiP
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             requireActivity().isInPictureInPictureMode
         ) {
@@ -305,48 +301,32 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
             return
         }
-
-        // Not in PiP: normal resume behavior
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onPause() {
         super.onPause()
-
-        // Check if we're in PiP mode - if yes, keep screen on for background audio
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (requireActivity().isInPictureInPictureMode) {
-                // In PiP: keep screen on to maintain audio playback
-                // Don't pause the player or clear keep-screen-on flag
                 requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 return
             }
         }
-
-        // Not in PiP: clear keep-screen-on flag
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onStop() {
         super.onStop()
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (requireActivity().isInPictureInPictureMode) {
-                // In PiP mode and device is locked: preserve playback state
-                // Don't unregister the broadcast receiver - keep it active for background playback
-                pipReceiverManager.register()  // Ensure it stays registered
-
-                // Keep the player active
+                pipReceiverManager.register()
                 viewModel.exoPlayer?.let { player ->
                     if (player.isPlaying) {
-                        // Let it continue playing in background
                         android.util.Log.d("PipMode", "Playback continuing in background during device lock")
                     }
                 }
                 return
             }
-
-            // Not in PiP: normal behavior
             pipReceiverManager.unregister()
         } else {
             pipReceiverManager.unregister()
@@ -450,7 +430,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.subtitles.isVisible = false
         cvVideoTitle?.isVisible = false
         binding.pipBtn.isVisible = false
-        sharedViewModel.buttonVisibility.value = false
+        pipViewModel.buttonVisibility.value = false
         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView?.useController = false
         val cs = ConstraintSet()
@@ -479,7 +459,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.subtitles.isVisible = false
             binding.pipBtn.isVisible = false
             binding.playerView?.useController = false
-            sharedViewModel.buttonVisibility.value = false
+            pipViewModel.buttonVisibility.value = false
             cvVideoTitle?.visibility = View.GONE
             clearAllMarginsAndConstraints()
             binding.cardView.radius = 0f
@@ -530,7 +510,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView?.showController()
         cvVideoTitle?.visibility = View.VISIBLE
-        sharedViewModel.buttonVisibility.value = true
+        pipViewModel.buttonVisibility.value = true
         binding.cardView.radius =
             resources.getDimension(R.dimen.video_corner_radius)
         clearAllMarginsAndConstraints()

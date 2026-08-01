@@ -8,7 +8,13 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
 
     <queries>
         <intent>
@@ -122,14 +128,16 @@
         </service>
 
         <service
-            android:name="org.openedx.course.presentation.unit.video.MediaPlaybackService"
-            android:description="@string/app_name"
-            android:exported="true"
-            android:foregroundServiceType="mediaPlayback">
+            android:name=".PlaybackService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="true">
+
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
+
         </service>
+
 
     </application>
 

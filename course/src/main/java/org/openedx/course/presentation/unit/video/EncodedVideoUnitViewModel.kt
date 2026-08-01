@@ -261,7 +261,7 @@ class EncodedVideoUnitViewModel(
             playbackPosition = player.currentPosition
             currentWindow = player.currentMediaItemIndex
             playWhenReady = player.playWhenReady
-            player.pause()
+            //player.pause()
         }
     }
 

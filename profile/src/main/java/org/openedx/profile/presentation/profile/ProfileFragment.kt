@@ -42,12 +42,12 @@ class ProfileFragment : Fragment() {
                 val refreshing by viewModel.isUpdating.observeAsState(false)
                 val lifecycleOwner = LocalLifecycleOwner.current
                 val bannerVisibilityState = androidx.compose.runtime.remember {
-                    androidx.compose.runtime.mutableStateOf(viewModel.isSubscriptionBannerVisible())
+                    androidx.compose.runtime.mutableStateOf(false)
                 }
 
                 DisposableEffect(lifecycleOwner) {
                     val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_START) {
+                        if (event == Lifecycle.Event.ON_RESUME) {
                             bannerVisibilityState.value = viewModel.isSubscriptionBannerVisible()
                         }
                     }

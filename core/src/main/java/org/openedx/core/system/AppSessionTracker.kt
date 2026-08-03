@@ -31,16 +31,18 @@ class AppSessionTracker(
             .takeIf { it > 0 }
             ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
 
-        val nextSessionCount = storage.getSubscriptionBannerSessionCount() + 1
-        storage.setSubscriptionBannerSessionCount(nextSessionCount)
-        logger.i { "Session incremented to $nextSessionCount (maxSessions=$maxSessions)" }
-
-        // Reset per-screen dismissal flags so the banner reappears each new session
-        // (as long as sessionCount is within the allowed range).
+        // Reset per-screen dismiss flags for the new app session.
         SubscriptionAlertBannerViewModel.Screen.entries.forEach { screen ->
             storage.setSubscriptionBannerDismissed(screen.key, false)
-            logger.i { "Dismissed flag reset for screen=${screen.key} on new session $nextSessionCount" }
+            logger.i {
+                "Screen=${screen.key}: dismiss flag reset for new app session"
+            }
         }
+
+        // Global app session counter.
+        val nextSessionCount = storage.getSubscriptionBannerSessionCount() + 1
+        storage.setSubscriptionBannerSessionCount(nextSessionCount)
+        logger.i { "App session incremented to $nextSessionCount (maxSessions=$maxSessions)" }
     }
 
     fun onAppBackgrounded() {

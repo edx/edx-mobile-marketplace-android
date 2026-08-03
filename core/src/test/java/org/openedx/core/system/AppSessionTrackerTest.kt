@@ -7,6 +7,7 @@ import org.junit.Test
 import org.openedx.core.config.Config
 import org.openedx.core.config.SubscriptionBannerConfig
 import org.openedx.core.data.storage.SubscriptionBannerStorage
+import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
 
 class AppSessionTrackerTest {
 
@@ -16,7 +17,7 @@ class AppSessionTrackerTest {
     private val tracker = AppSessionTracker(config, storage)
 
     @Test
-    fun `onAppForegrounded increments session count when feature enabled`() {
+    fun `onAppForegrounded increments global session count when feature enabled`() {
         every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
             isEnabled = true,
             maxSessions = 4,
@@ -26,6 +27,9 @@ class AppSessionTrackerTest {
         tracker.onAppForegrounded()
 
         verify { storage.setSubscriptionBannerSessionCount(3) }
+        SubscriptionAlertBannerViewModel.Screen.entries.forEach { screen ->
+            verify { storage.setSubscriptionBannerDismissed(screen.key, false) }
+        }
     }
 
     @Test
@@ -41,19 +45,7 @@ class AppSessionTrackerTest {
     }
 
     @Test
-    fun `onAppForegrounded does not increment when maxSessions is zero`() {
-        every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
-            isEnabled = true,
-            maxSessions = 0,
-        )
-
-        tracker.onAppForegrounded()
-
-        verify(exactly = 0) { storage.setSubscriptionBannerSessionCount(any()) }
-    }
-
-    @Test
-    fun `onAppForegrounded increments from zero to one on first session`() {
+    fun `onAppForegrounded increments from zero to one on first app session`() {
         every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
             isEnabled = true,
             maxSessions = 4,
@@ -77,6 +69,22 @@ class AppSessionTrackerTest {
         tracker.onAppForegrounded()
 
         verify(exactly = 1) { storage.setSubscriptionBannerSessionCount(1) }
+    }
+
+    @Test
+    fun `onAppBackgrounded allows counting next foreground as new session`() {
+        every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
+            isEnabled = true,
+            maxSessions = 4,
+        )
+        every { storage.getSubscriptionBannerSessionCount() } returnsMany listOf(0, 1)
+
+        tracker.onAppForegrounded()
+        tracker.onAppBackgrounded()
+        tracker.onAppForegrounded()
+
+        verify { storage.setSubscriptionBannerSessionCount(1) }
+        verify { storage.setSubscriptionBannerSessionCount(2) }
     }
 }
 

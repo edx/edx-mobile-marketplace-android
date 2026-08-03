@@ -260,11 +260,38 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
     override fun setSubscriptionBannerSessionCount(value: Int) =
         saveInt(SUBSCRIPTION_BANNER_SESSION_COUNT, value)
 
+    override fun getSubscriptionBannerScreenSessionCount(screenKey: String): Int =
+        getInt(subscriptionBannerScreenSessionKey(screenKey))
+
+    override fun setSubscriptionBannerScreenSessionCount(screenKey: String, value: Int) =
+        saveInt(subscriptionBannerScreenSessionKey(screenKey), value)
+
+    override fun getSubscriptionBannerScreenLastSeenAppSession(screenKey: String): Int =
+        getInt(subscriptionBannerScreenLastSeenSessionKey(screenKey))
+
+    override fun setSubscriptionBannerScreenLastSeenAppSession(screenKey: String, value: Int) =
+        saveInt(subscriptionBannerScreenLastSeenSessionKey(screenKey), value)
+
+    override fun getSubscriptionBannerDismissCount(screenKey: String): Int =
+        getInt(subscriptionBannerDismissCountKey(screenKey))
+
+    override fun setSubscriptionBannerDismissCount(screenKey: String, value: Int) =
+        saveInt(subscriptionBannerDismissCountKey(screenKey), value)
+
     override fun isSubscriptionBannerDismissed(screenKey: String): Boolean =
         getBoolean(subscriptionBannerDismissedKey(screenKey))
 
     override fun setSubscriptionBannerDismissed(screenKey: String, dismissed: Boolean) =
         saveBoolean(subscriptionBannerDismissedKey(screenKey), dismissed)
+
+    private fun subscriptionBannerScreenSessionKey(screenKey: String): String =
+        "${SUBSCRIPTION_BANNER_SCREEN_SESSION_COUNT}_${screenKey}_${currentUserKey()}"
+
+    private fun subscriptionBannerScreenLastSeenSessionKey(screenKey: String): String =
+        "${SUBSCRIPTION_BANNER_SCREEN_LAST_SEEN_SESSION}_${screenKey}_${currentUserKey()}"
+
+    private fun subscriptionBannerDismissCountKey(screenKey: String): String =
+        "${SUBSCRIPTION_BANNER_DISMISS_COUNT}_${screenKey}_${currentUserKey()}"
 
     private fun subscriptionBannerDismissedKey(screenKey: String): String =
         "${SUBSCRIPTION_BANNER_DISMISSED}_${screenKey}_${currentUserKey()}"
@@ -295,6 +322,9 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val APP_THEME_MODE = "app_theme_mode"
         private const val KEY_DATADOG_ENABLED = "datadog_enabled"
         private const val SUBSCRIPTION_BANNER_SESSION_COUNT = "subscription_banner_session_count_v2"
+        private const val SUBSCRIPTION_BANNER_SCREEN_SESSION_COUNT = "subscription_banner_screen_session_count_v3"
+        private const val SUBSCRIPTION_BANNER_SCREEN_LAST_SEEN_SESSION = "subscription_banner_screen_last_seen_session_v3"
+        private const val SUBSCRIPTION_BANNER_DISMISS_COUNT = "subscription_banner_dismiss_count_v1"
         private const val SUBSCRIPTION_BANNER_DISMISSED = "subscription_banner_dismissed_v2"
         private const val GUEST_USER = "guest"
     }

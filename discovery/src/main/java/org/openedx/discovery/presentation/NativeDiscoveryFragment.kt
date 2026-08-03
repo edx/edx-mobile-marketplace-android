@@ -112,15 +112,14 @@ class NativeDiscoveryFragment : Fragment() {
                 val wasUpdateDialogClosed by remember { wasUpdateDialogClosed }
                 val querySearch = arguments?.getString(ARG_SEARCH_QUERY, "") ?: ""
                 val lifecycleOwner = LocalLifecycleOwner.current
-                var isSubscriptionBannerVisible by remember { mutableStateOf(true) }
+                var isSubscriptionBannerVisible by remember { mutableStateOf(false) }
 
                 DisposableEffect(lifecycleOwner) {
                     fun refreshBannerVisibility() {
                         isSubscriptionBannerVisible = viewModel.isSubscriptionBannerVisible()
                     }
-                    refreshBannerVisibility()
                     val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_START || event == Lifecycle.Event.ON_RESUME) {
+                        if (event == Lifecycle.Event.ON_RESUME) {
                             refreshBannerVisibility()
                         }
                     }

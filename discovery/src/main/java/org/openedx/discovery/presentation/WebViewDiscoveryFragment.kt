@@ -108,7 +108,7 @@ class WebViewDiscoveryFragment : Fragment() {
                 val uiState by viewModel.uiState.collectAsState()
                 val cookiesReady by viewModel.cookiesReady.collectAsState()
                 val lifecycleOwner = LocalLifecycleOwner.current
-                var isSubscriptionBannerVisible by remember { mutableStateOf(true) }
+                var isSubscriptionBannerVisible by remember { mutableStateOf(false) }
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.hasInternetConnection)
                 }
@@ -118,11 +118,8 @@ class WebViewDiscoveryFragment : Fragment() {
                         isSubscriptionBannerVisible = viewModel.isSubscriptionBannerVisible()
                     }
 
-                    // Refresh immediately so we don't keep an initial stale false value.
-                    refreshBannerVisibility()
-
                     val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_START || event == Lifecycle.Event.ON_RESUME) {
+                        if (event == Lifecycle.Event.ON_RESUME) {
                             refreshBannerVisibility()
                         }
                     }

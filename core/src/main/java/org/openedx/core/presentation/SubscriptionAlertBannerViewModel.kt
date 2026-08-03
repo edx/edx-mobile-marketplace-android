@@ -24,25 +24,43 @@ class SubscriptionAlertBannerViewModel(
             return false
         }
 
+        val maxSessions = bannerConfig.maxSessions
+            .takeIf { it > 0 }
+            ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
+
+        val appSessionCount = storage.getSubscriptionBannerSessionCount()
+        if (appSessionCount <= 0) {
+            logger.i { "Banner hidden: screen=${screen.key} app session not started yet" }
+            return false
+        }
+
+        val dismissCount = storage.getSubscriptionBannerDismissCount(screen.key)
+        if (dismissCount >= maxSessions) {
+            logger.i { "Banner hidden: screen=${screen.key} reached dismiss limit ($dismissCount/$maxSessions)" }
+            return false
+        }
+
         val isDismissed = storage.isSubscriptionBannerDismissed(screen.key)
         if (isDismissed) {
             logger.i { "Banner dismissed for screen=${screen.key}" }
             return false
         }
 
-        val maxSessions = bannerConfig.maxSessions
-            .takeIf { it > 0 }
-            ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
-        val sessionCount = storage.getSubscriptionBannerSessionCount()
-        val visible = sessionCount in 1..maxSessions
-
+        val visible = true
         logger.i {
-            "Banner decision: screen=${screen.key}, enabled=${bannerConfig.isEnabled}, maxSessions=$maxSessions, sessionCount=$sessionCount, visible=$visible"
+            "Banner decision: screen=${screen.key}, enabled=${bannerConfig.isEnabled}, appSessionCount=$appSessionCount, maxDismisses=$maxSessions, dismissCount=$dismissCount, visible=$visible"
         }
         return visible
     }
 
     fun dismiss(screen: Screen) {
+        val maxDismisses = config.getSubscriptionBannerConfig().maxSessions
+            .takeIf { it > 0 }
+            ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
+        val currentCount = storage.getSubscriptionBannerDismissCount(screen.key)
+        if (currentCount < maxDismisses) {
+            storage.setSubscriptionBannerDismissCount(screen.key, currentCount + 1)
+        }
         storage.setSubscriptionBannerDismissed(screen.key, true)
     }
 

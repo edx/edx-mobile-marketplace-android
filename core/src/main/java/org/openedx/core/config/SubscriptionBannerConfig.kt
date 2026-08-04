@@ -7,11 +7,19 @@ const val DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS = 4
 data class SubscriptionBannerConfig(
 
     @SerializedName(value = "subscription_banner_enabled", alternate = ["SUBSCRIPTION_BANNER_ENABLED"])
-    val isEnabled: Boolean = true,
+    val isEnabled: Boolean = false,
 
     @SerializedName(value = "max_sessions", alternate = ["MAX_SESSIONS"])
     val maxSessions: Int = DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS,
 
     @SerializedName(value = "url", alternate = ["URL"])
     val url: String = ""
-)
+){
+    fun mapToDomain(): SubscriptionBannerConfig {
+        return SubscriptionBannerConfig(
+            isEnabled = isEnabled,
+            maxSessions = maxSessions,
+            url = url
+        )
+    }
+}

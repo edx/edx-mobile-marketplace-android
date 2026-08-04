@@ -1,12 +1,12 @@
 package org.openedx.core.presentation
 
-import org.openedx.core.config.Config
 import org.openedx.core.config.DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
 import org.openedx.core.utils.Logger
 
 class SubscriptionAlertBannerViewModel(
-    private val config: Config,
+    private val corePreferences: CorePreferences,
     private val storage: SubscriptionBannerStorage,
 ) {
 
@@ -18,7 +18,7 @@ class SubscriptionAlertBannerViewModel(
     }
 
     fun isBannerVisible(screen: Screen): Boolean {
-        val bannerConfig = config.getSubscriptionBannerConfig()
+        val bannerConfig = corePreferences.appConfig.subscriptionBannerConfig
         if (!bannerConfig.isEnabled) {
             logger.i { "Banner disabled from config: screen=${screen.key}" }
             return false
@@ -54,7 +54,7 @@ class SubscriptionAlertBannerViewModel(
     }
 
     fun dismiss(screen: Screen) {
-        val maxDismisses = config.getSubscriptionBannerConfig().maxSessions
+        val maxDismisses = corePreferences.appConfig.subscriptionBannerConfig.maxSessions
             .takeIf { it > 0 }
             ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
         val currentCount = storage.getSubscriptionBannerDismissCount(screen.key)
@@ -64,5 +64,5 @@ class SubscriptionAlertBannerViewModel(
         storage.setSubscriptionBannerDismissed(screen.key, true)
     }
 
-    fun getBannerUrl(): String = config.getSubscriptionBannerConfig().url
+    fun getBannerUrl(): String = corePreferences.appConfig.subscriptionBannerConfig.url
 }

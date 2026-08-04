@@ -135,7 +135,7 @@
     <string name="course_progress_grade_details">Grade Details</string>
     <string name="course_progress_assignment_type">Assignment Type</string>
     <string name="course_progress_current_max">Current / Max %</string>
-    <string name="course_container_nav_downloads">Downloads</string>
+    <string name="course_container_nav_offline">Offline</string>
 
     <plurals name="course_sections_complete" tools:ignore="MissingTranslation">
         <item quantity="one">%1$s/%2$s Section Completed</item>

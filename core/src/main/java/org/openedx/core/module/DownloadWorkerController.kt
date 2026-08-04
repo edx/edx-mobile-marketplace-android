@@ -56,7 +56,7 @@ class DownloadWorkerController(
 
     suspend fun saveModels(downloadModels: List<DownloadModel>) {
         downloadDao.insertDownloadModel(
-            downloadModels.map { DownloadModelEntity.createFrom(it) }
+            downloadModels.map { DownloadModelEntity.createFrom(it) }.toTypedArray()
         )
     }
 

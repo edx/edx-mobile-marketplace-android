@@ -24,7 +24,7 @@ enum class CourseContainerTab(
     PROGRESS(R.string.course_container_nav_progress, Icons.Default.Moving),
    // VIDEOS(R.string.course_container_nav_videos, Icons.Rounded.PlayCircleFilled),
     DATES(R.string.course_container_nav_dates, Icons.Outlined.CalendarMonth),
-    OFFLINE(R.string.course_container_nav_downloads, Icons.Filled.CloudDownload),
+    OFFLINE(R.string.course_container_nav_offline, Icons.Filled.CloudDownload),
     DISCUSSIONS(R.string.course_container_nav_discussions, Icons.AutoMirrored.Filled.Chat),
     MORE(R.string.course_container_nav_more, Icons.AutoMirrored.Filled.TextSnippet)
 }

@@ -38,23 +38,22 @@ class SubscriptionAlertBannerViewModelTest {
     @Test
     fun `isBannerVisible returns false when feature is disabled`() {
         config(enabled = false)
-        every { storage.getSubscriptionBannerSessionCount() } returns 1
 
         assertFalse(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
     }
 
     @Test
-    fun `isBannerVisible returns false when app session has not started`() {
+    fun `isBannerVisible returns true on first launch when session count is zero`() {
         config(enabled = true, maxSessions = 4)
-        every { storage.getSubscriptionBannerSessionCount() } returns 0
+        every { storage.getSubscriptionBannerDismissCount("discovery") } returns 0
+        every { storage.isSubscriptionBannerDismissed("discovery") } returns false
 
-        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
+        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
     }
 
     @Test
     fun `isBannerVisible returns false when banner is dismissed for that screen`() {
         config()
-        every { storage.getSubscriptionBannerSessionCount() } returns 2
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 1
         every { storage.isSubscriptionBannerDismissed("discovery") } returns true
 
@@ -64,7 +63,6 @@ class SubscriptionAlertBannerViewModelTest {
     @Test
     fun `isBannerVisible returns true when dismiss count is below max`() {
         config(maxSessions = 4)
-        every { storage.getSubscriptionBannerSessionCount() } returns 1
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 0
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
 
@@ -74,7 +72,6 @@ class SubscriptionAlertBannerViewModelTest {
     @Test
     fun `isBannerVisible returns false when dismiss count reaches max`() {
         config(maxSessions = 4)
-        every { storage.getSubscriptionBannerSessionCount() } returns 4
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 4
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
 
@@ -84,7 +81,6 @@ class SubscriptionAlertBannerViewModelTest {
     @Test
     fun `isBannerVisible discovery and profile are independent by dismiss count`() {
         config(maxSessions = 4)
-        every { storage.getSubscriptionBannerSessionCount() } returns 4
 
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 4
         every { storage.isSubscriptionBannerDismissed("discovery") } returns true
@@ -132,7 +128,6 @@ class SubscriptionAlertBannerViewModelTest {
     @Test
     fun `isBannerVisible returns true when not dismissed and below max count`() {
         config(maxSessions = 4)
-        every { storage.getSubscriptionBannerSessionCount() } returns 3
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 2
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
 
@@ -146,4 +141,3 @@ class SubscriptionAlertBannerViewModelTest {
         assert(viewModel.getBannerUrl() == "https://my.banner.url")
     }
 }
-

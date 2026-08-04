@@ -14,7 +14,7 @@ data class AppConfig(
     @SerializedName("feedback_form_url")
     val feedbackFormUrl: String = "",
 
-    @SerializedName(  "subscription_banner")
+    @SerializedName("subscription_banner")
     val subscriptionBannerConfig: SubscriptionBannerConfig = SubscriptionBannerConfig()
 ) {
     fun mapToDomain(): DomainAppConfig {

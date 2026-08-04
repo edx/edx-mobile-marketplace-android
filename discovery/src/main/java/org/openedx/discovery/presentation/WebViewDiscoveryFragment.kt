@@ -135,7 +135,7 @@ class WebViewDiscoveryFragment : Fragment() {
                     cookiesReady = cookiesReady,
                     isPreLogin = viewModel.isPreLogin,
                     isSubscriptionBannerVisible = isSubscriptionBannerVisible,
-                    viewModel.subscriptionBannerUrl,
+                    subscriptionBannerUrl = viewModel.subscriptionBannerUrl,
                     contentUrl = viewModel.discoveryUrl,
                     uriScheme = viewModel.uriScheme,
                     userAgent = viewModel.appUserAgent,
@@ -323,8 +323,8 @@ private fun WebViewDiscoveryScreen(
                 ) {
                     SubscriptionBanner(
                         visible = true,
-                        Modifier.fillMaxWidth(),
-                        subscriptionBannerUrl,
+                        modifier = Modifier.fillMaxWidth(),
+                        url = subscriptionBannerUrl,
                         onDismiss = onDismissSubscriptionBanner,
                     )
                 }

@@ -63,7 +63,7 @@ class ProfileFragment : Fragment() {
                     uiMessage = uiMessage,
                     refreshing = refreshing,
                     isSubscriptionBannerVisible = bannerVisibilityState.value,
-                    viewModel.subscriptionBannerUrl,
+                    subscriptionBannerUrl = viewModel.subscriptionBannerUrl,
                     onSettingsClick = {
                         viewModel.profileRouter.navigateToSettings(requireActivity().supportFragmentManager)
                     },

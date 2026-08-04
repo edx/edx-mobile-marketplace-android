@@ -69,10 +69,6 @@ class WebViewDiscoveryViewModel(
         checkAndRefreshCookies()
     }
 
-    override fun onStart(owner: LifecycleOwner) {
-        super.onStart(owner)
-    }
-
     fun isSubscriptionBannerVisible(): Boolean {
         return subscriptionAlertBannerViewModel.isBannerVisible(
             SubscriptionAlertBannerViewModel.Screen.DISCOVERY

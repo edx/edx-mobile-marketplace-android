@@ -244,10 +244,11 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         set(value) = saveBoolean(KEY_DATADOG_ENABLED, value)
         get() = getBoolean(KEY_DATADOG_ENABLED, defValue = true) // default: enabled
 
-    // ── SubscriptionBannerStorage ────────────────────────────────────────────
 
     private fun saveInt(key: String, value: Int) {
-        sharedPreferences.edit().apply { putInt(key, value) }.apply()
+        sharedPreferences.edit().apply {
+            putInt(key, value)
+        }.apply()
     }
 
     private fun getInt(key: String, defValue: Int = 0): Int {

@@ -64,10 +64,6 @@ class ProfileViewModel(
         }
     }
 
-    override fun onStart(owner: LifecycleOwner) {
-        super.onStart(owner)
-    }
-
     fun isSubscriptionBannerVisible(): Boolean {
         return subscriptionAlertBannerViewModel.isBannerVisible(
             SubscriptionAlertBannerViewModel.Screen.PROFILE

@@ -86,11 +86,3 @@ UI_COMPONENTS:
   COURSE_UNIT_PROGRESS_ENABLED: false
 
 ECOMMERCE_URL: 'http://localhost:8000'
-
-# B2C Subscription Alert Banner
-# Shows a banner on Discovery and Profile screens for the first max_sessions app sessions.
-# Each screen tracks its own dismiss state independently.
-SUBSCRIPTION_BANNER:
-  SUBSCRIPTION_BANNER_ENABLED: true
-  MAX_SESSIONS: 4
-  URL: ''

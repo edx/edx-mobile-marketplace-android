@@ -27,13 +27,3 @@ data class IAPConfig(
         return isEnabled && disableVersions.contains(versionName).not()
     }
 }
-data class SubscriptionBanner(
-    val isEnabled: Boolean = false,
-    val maxSessions: Int = DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS,
-    val url: String = ""
-) : Serializable {
-
-    companion object {
-        private const val DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS = 4
-    }
-}

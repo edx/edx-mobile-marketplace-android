@@ -4,24 +4,28 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Test
-import org.openedx.core.config.Config
 import org.openedx.core.config.SubscriptionBannerConfig
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
+import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
 
 class AppSessionTrackerTest {
 
-    private val config = mockk<Config>()
+    private val corePreferences = mockk<CorePreferences>()
     private val storage = mockk<SubscriptionBannerStorage>(relaxed = true)
 
-    private val tracker = AppSessionTracker(config, storage)
+    private val tracker = AppSessionTracker(corePreferences, storage)
 
     @Test
     fun `onAppForegrounded increments global session count when feature enabled`() {
-        every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
+        val appConfig = mockk<AppConfig>()
+        val bannerConfig = SubscriptionBannerConfig(
             isEnabled = true,
             maxSessions = 4,
         )
+        every { appConfig.subscriptionBannerConfig } returns bannerConfig
+        every { corePreferences.appConfig } returns appConfig
         every { storage.getSubscriptionBannerSessionCount() } returns 2
 
         tracker.onAppForegrounded()
@@ -34,10 +38,13 @@ class AppSessionTrackerTest {
 
     @Test
     fun `onAppForegrounded does not increment when feature is disabled`() {
-        every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
+        val appConfig = mockk<AppConfig>()
+        val bannerConfig = SubscriptionBannerConfig(
             isEnabled = false,
             maxSessions = 4,
         )
+        every { appConfig.subscriptionBannerConfig } returns bannerConfig
+        every { corePreferences.appConfig } returns appConfig
 
         tracker.onAppForegrounded()
 
@@ -46,10 +53,13 @@ class AppSessionTrackerTest {
 
     @Test
     fun `onAppForegrounded increments from zero to one on first app session`() {
-        every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
+        val appConfig = mockk<AppConfig>()
+        val bannerConfig = SubscriptionBannerConfig(
             isEnabled = true,
             maxSessions = 4,
         )
+        every { appConfig.subscriptionBannerConfig } returns bannerConfig
+        every { corePreferences.appConfig } returns appConfig
         every { storage.getSubscriptionBannerSessionCount() } returns 0
 
         tracker.onAppForegrounded()
@@ -59,10 +69,13 @@ class AppSessionTrackerTest {
 
     @Test
     fun `onAppForegrounded ignores repeated foreground callback until backgrounded`() {
-        every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
+        val appConfig = mockk<AppConfig>()
+        val bannerConfig = SubscriptionBannerConfig(
             isEnabled = true,
             maxSessions = 4,
         )
+        every { appConfig.subscriptionBannerConfig } returns bannerConfig
+        every { corePreferences.appConfig } returns appConfig
         every { storage.getSubscriptionBannerSessionCount() } returns 0
 
         tracker.onAppForegrounded()
@@ -73,10 +86,13 @@ class AppSessionTrackerTest {
 
     @Test
     fun `onAppBackgrounded allows counting next foreground as new session`() {
-        every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
+        val appConfig = mockk<AppConfig>()
+        val bannerConfig = SubscriptionBannerConfig(
             isEnabled = true,
             maxSessions = 4,
         )
+        every { appConfig.subscriptionBannerConfig } returns bannerConfig
+        every { corePreferences.appConfig } returns appConfig
         every { storage.getSubscriptionBannerSessionCount() } returnsMany listOf(0, 1)
 
         tracker.onAppForegrounded()

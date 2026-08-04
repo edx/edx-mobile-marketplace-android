@@ -7,28 +7,32 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.openedx.core.config.Config
 import org.openedx.core.config.SubscriptionBannerConfig
+import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
+import org.openedx.core.domain.model.AppConfig
 
 class SubscriptionAlertBannerViewModelTest {
 
-    private val config = mockk<Config>()
+    private val corePreferences = mockk<CorePreferences>()
     private val storage = mockk<SubscriptionBannerStorage>(relaxed = true)
 
     private lateinit var viewModel: SubscriptionAlertBannerViewModel
 
     private fun config(enabled: Boolean = true, maxSessions: Int = 4, url: String = "https://example.com") {
-        every { config.getSubscriptionBannerConfig() } returns SubscriptionBannerConfig(
+        val appConfig = mockk<AppConfig>()
+        val bannerConfig = SubscriptionBannerConfig(
             isEnabled = enabled,
             maxSessions = maxSessions,
             url = url,
         )
+        every { appConfig.subscriptionBannerConfig } returns bannerConfig
+        every { corePreferences.appConfig } returns appConfig
     }
 
     @Before
     fun setUp() {
-        viewModel = SubscriptionAlertBannerViewModel(config, storage)
+        viewModel = SubscriptionAlertBannerViewModel(corePreferences, storage)
     }
 
     @Test
@@ -82,11 +86,9 @@ class SubscriptionAlertBannerViewModelTest {
         config(maxSessions = 4)
         every { storage.getSubscriptionBannerSessionCount() } returns 4
 
-        // Discovery already reached dismiss limit and is dismissed.
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 4
         every { storage.isSubscriptionBannerDismissed("discovery") } returns true
 
-        // Profile has lower dismiss count and should still be visible.
         every { storage.getSubscriptionBannerDismissCount("profile") } returns 1
         every { storage.isSubscriptionBannerDismissed("profile") } returns false
 

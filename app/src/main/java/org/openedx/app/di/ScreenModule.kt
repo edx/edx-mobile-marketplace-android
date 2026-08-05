@@ -224,7 +224,7 @@ val screenModule = module {
             notifier = get(),
             analytics = get(),
             profileRouter = get(),
-            subscriptionAlertBannerViewModel = get(),
+            subscriptionAlertBanner = get(),
         )
     }
     viewModel { (account: Account) -> EditProfileViewModel(get(), get(), get(), get(), account) }

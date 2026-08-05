@@ -2,7 +2,7 @@ package org.openedx.core.system
 
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
-import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 
 class AppSessionTracker(
     private val corePreferences: CorePreferences,
@@ -25,7 +25,7 @@ class AppSessionTracker(
         val nextSessionCount = storage.getSubscriptionBannerSessionCount() + 1
         storage.setSubscriptionBannerSessionCount(nextSessionCount)
 
-        SubscriptionAlertBannerViewModel.Screen.entries.forEach { screen ->
+        SubscriptionAlertBanner.Screen.entries.forEach { screen ->
             storage.setSubscriptionBannerDismissed(screen.key, false)
         }
     }

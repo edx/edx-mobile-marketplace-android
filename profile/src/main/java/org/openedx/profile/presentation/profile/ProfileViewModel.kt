@@ -13,7 +13,7 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
-import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
@@ -30,7 +30,7 @@ class ProfileViewModel(
     private val notifier: ProfileNotifier,
     private val analytics: ProfileAnalytics,
     val profileRouter: ProfileRouter,
-    private val subscriptionAlertBannerViewModel: SubscriptionAlertBannerViewModel,
+    private val subscriptionAlertBanner: SubscriptionAlertBanner,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -47,7 +47,7 @@ class ProfileViewModel(
         get() = _isUpdating
 
     val subscriptionBannerUrl: String
-        get() = subscriptionAlertBannerViewModel.getBannerUrl()
+        get() = subscriptionAlertBanner.getBannerUrl()
 
     init {
         getAccount()
@@ -65,8 +65,8 @@ class ProfileViewModel(
     }
 
     fun isSubscriptionBannerVisible(): Boolean {
-        return subscriptionAlertBannerViewModel.isBannerVisible(
-            SubscriptionAlertBannerViewModel.Screen.PROFILE
+        return subscriptionAlertBanner.isBannerVisible(
+            SubscriptionAlertBanner.Screen.PROFILE
         )
     }
 
@@ -124,7 +124,7 @@ class ProfileViewModel(
     }
 
     fun dismissSubscriptionBanner() {
-        subscriptionAlertBannerViewModel.dismiss(SubscriptionAlertBannerViewModel.Screen.PROFILE)
+        subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.PROFILE)
     }
 
     companion object {

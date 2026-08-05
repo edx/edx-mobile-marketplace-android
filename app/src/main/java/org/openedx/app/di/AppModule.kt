@@ -39,7 +39,7 @@ import org.openedx.core.data.model.CourseStructureModel
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
-import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.system.AppSessionTracker
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.TranscriptManager
@@ -106,7 +106,7 @@ val appModule = module {
     single<SubscriptionBannerStorage> { get<PreferencesManager>() }
 
     single { AppSessionTracker(get<CorePreferences>(), get<SubscriptionBannerStorage>()) }
-    factory { SubscriptionAlertBannerViewModel(get<CorePreferences>(), get<SubscriptionBannerStorage>()) }
+    factory { SubscriptionAlertBanner(get<CorePreferences>(), get<SubscriptionBannerStorage>()) }
 
     single { ResourceManager(get()) }
     single { AppCookieManager(get(), get()) }

@@ -11,13 +11,14 @@ import org.openedx.core.config.SubscriptionBannerConfig
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
 import org.openedx.core.domain.model.AppConfig
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 
 class SubscriptionAlertBannerViewModelTest {
 
     private val corePreferences = mockk<CorePreferences>()
     private val storage = mockk<SubscriptionBannerStorage>(relaxed = true)
 
-    private lateinit var viewModel: SubscriptionAlertBannerViewModel
+    private lateinit var viewModel: SubscriptionAlertBanner
 
     private fun config(enabled: Boolean = true, maxSessions: Int = 4, url: String = "https://example.com") {
         val appConfig = mockk<AppConfig>()
@@ -32,14 +33,14 @@ class SubscriptionAlertBannerViewModelTest {
 
     @Before
     fun setUp() {
-        viewModel = SubscriptionAlertBannerViewModel(corePreferences, storage)
+        viewModel = SubscriptionAlertBanner(corePreferences, storage)
     }
 
     @Test
     fun `isBannerVisible returns false when feature is disabled`() {
         config(enabled = false)
 
-        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
+        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
     }
 
     @Test
@@ -48,7 +49,7 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 0
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
 
-        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
+        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
     }
 
     @Test
@@ -57,7 +58,7 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 1
         every { storage.isSubscriptionBannerDismissed("discovery") } returns true
 
-        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
+        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
     }
 
     @Test
@@ -66,7 +67,7 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 0
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
 
-        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
+        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
     }
 
     @Test
@@ -75,7 +76,7 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 4
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
 
-        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
+        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
     }
 
     @Test
@@ -88,8 +89,8 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.getSubscriptionBannerDismissCount("profile") } returns 1
         every { storage.isSubscriptionBannerDismissed("profile") } returns false
 
-        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
-        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.PROFILE))
+        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
+        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE))
     }
 
     @Test
@@ -97,7 +98,7 @@ class SubscriptionAlertBannerViewModelTest {
         config(maxSessions = 4)
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 2
 
-        viewModel.dismiss(SubscriptionAlertBannerViewModel.Screen.DISCOVERY)
+        viewModel.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
 
         verify { storage.setSubscriptionBannerDismissCount("discovery", 3) }
         verify { storage.setSubscriptionBannerDismissed("discovery", true) }
@@ -108,7 +109,7 @@ class SubscriptionAlertBannerViewModelTest {
         config(maxSessions = 4)
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 4
 
-        viewModel.dismiss(SubscriptionAlertBannerViewModel.Screen.DISCOVERY)
+        viewModel.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
 
         verify(exactly = 0) { storage.setSubscriptionBannerDismissCount("discovery", any()) }
         verify { storage.setSubscriptionBannerDismissed("discovery", true) }
@@ -119,7 +120,7 @@ class SubscriptionAlertBannerViewModelTest {
         config(maxSessions = 4)
         every { storage.getSubscriptionBannerDismissCount("profile") } returns 1
 
-        viewModel.dismiss(SubscriptionAlertBannerViewModel.Screen.PROFILE)
+        viewModel.dismiss(SubscriptionAlertBanner.Screen.PROFILE)
 
         verify { storage.setSubscriptionBannerDismissCount("profile", 2) }
         verify(exactly = 0) { storage.setSubscriptionBannerDismissCount("discovery", any()) }
@@ -131,7 +132,7 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.getSubscriptionBannerDismissCount("discovery") } returns 2
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
 
-        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBannerViewModel.Screen.DISCOVERY))
+        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
     }
 
     @Test

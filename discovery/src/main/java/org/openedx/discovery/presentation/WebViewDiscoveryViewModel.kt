@@ -1,7 +1,6 @@
 package org.openedx.discovery.presentation
 
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +9,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.presentation.SubscriptionAlertBannerViewModel
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
@@ -28,7 +27,7 @@ class WebViewDiscoveryViewModel(
     private val router: DiscoveryRouter,
     private val analytics: DiscoveryAnalytics,
     private val appCookieManager: AppCookieManager,
-    private val subscriptionAlertBannerViewModel: SubscriptionAlertBannerViewModel,
+    private val subscriptionAlertBanner: SubscriptionAlertBanner,
 ) : BaseViewModel() {
 
     private val logger = Logger("WebViewDiscoveryViewModel")
@@ -40,7 +39,7 @@ class WebViewDiscoveryViewModel(
     val cookiesReady: StateFlow<Boolean> = _cookiesReady.asStateFlow()
 
     val subscriptionBannerUrl: String
-        get() = subscriptionAlertBannerViewModel.getBannerUrl()
+        get() = subscriptionAlertBanner.getBannerUrl()
 
     val uriScheme: String get() = config.getUriScheme()
 
@@ -70,8 +69,8 @@ class WebViewDiscoveryViewModel(
     }
 
     fun isSubscriptionBannerVisible(): Boolean {
-        return subscriptionAlertBannerViewModel.isBannerVisible(
-            SubscriptionAlertBannerViewModel.Screen.DISCOVERY
+        return subscriptionAlertBanner.isBannerVisible(
+            SubscriptionAlertBanner.Screen.DISCOVERY
         )
     }
 
@@ -161,6 +160,6 @@ class WebViewDiscoveryViewModel(
     }
 
     fun dismissSubscriptionBanner() {
-        subscriptionAlertBannerViewModel.dismiss(SubscriptionAlertBannerViewModel.Screen.DISCOVERY)
+        subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
     }
 }

@@ -1,10 +1,10 @@
-package org.openedx.core.presentation
+package org.openedx.core.module.subscriptionBanner
 
 import org.openedx.core.config.DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
 
-class SubscriptionAlertBannerViewModel(
+class SubscriptionAlertBanner(
     private val corePreferences: CorePreferences,
     private val storage: SubscriptionBannerStorage,
 ) {

@@ -945,10 +945,13 @@ fun SubscriptionBanner(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val bannerText = stringResource(id = R.string.banner_content)
+                val linkText = stringResource(id = R.string.banner_link_text)
+                val bannerText = stringResource(
+                    id = R.string.banner_content,
+                    linkText
+                )
 
                 val annotatedText = buildAnnotatedString {
-                    val linkText = "mobile web browser?"
                     val startIndex = bannerText.indexOf(linkText)
 
                     if (startIndex >= 0) {

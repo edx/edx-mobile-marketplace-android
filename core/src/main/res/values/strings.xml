@@ -267,5 +267,6 @@
 
     <!-- Subscription Banner -->
     <string name="banner_title">Looking for subscriptions?</string>
-    <string name="banner_content">Subscription features aren\'t supported in the mobile app just yet. To access your subscription, please log in to your account via a desktop or mobile web browser?</string>
+    <string name="banner_content">Subscription features aren\'t supported in the mobile app just yet. To access your subscription, please log in to your account via a desktop or %1$s?</string>
+    <string name="banner_link_text">mobile web browser</string>
 </resources>

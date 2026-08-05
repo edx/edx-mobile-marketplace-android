@@ -8,8 +8,6 @@ class SubscriptionAlertBannerViewModel(
     private val corePreferences: CorePreferences,
     private val storage: SubscriptionBannerStorage,
 ) {
-
-
     enum class Screen(val key: String) {
         DISCOVERY("discovery"),
         PROFILE("profile"),

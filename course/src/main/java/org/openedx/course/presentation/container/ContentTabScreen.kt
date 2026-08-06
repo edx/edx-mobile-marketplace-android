@@ -66,7 +66,7 @@ fun ContentTabScreen(
     val tabsWidth by remember(key1 = windowSize) {
         mutableStateOf(
             windowSize.windowSizeValue(
-                expanded = Modifier.widthIn(Dp.Unspecified, 56.dp),
+                expanded = Modifier.widthIn(Dp.Unspecified, 550.dp),
                 compact = Modifier.fillMaxWidth()
             )
         )

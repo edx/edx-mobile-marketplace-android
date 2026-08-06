@@ -193,7 +193,7 @@ private fun CourseOfflineUI(
                             OpenEdXOutlineBrandButton(
                                 modifier = Modifier.fillMaxWidth(),
                                 text = stringResource(R.string.core_cancel_course_download),
-                                backgroundColor = MaterialTheme.appColors.background,
+                                backgroundColor = MaterialTheme.appColors.removeAllButtonBackground,
                                 borderColor = MaterialTheme.appColors.error,
                                 textColor = MaterialTheme.appColors.error,
                                 onClick = onCancelDownloadClick,
@@ -276,7 +276,7 @@ private fun LargestDownloads(
             OpenEdXOutlineBrandButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(R.string.core_remove_all_downloads),
-                backgroundColor = MaterialTheme.appColors.background,
+                backgroundColor = MaterialTheme.appColors.removeAllButtonBackground,
                 borderColor = MaterialTheme.appColors.error,
                 textColor = MaterialTheme.appColors.error,
                 onClick = onDeleteAllClick,

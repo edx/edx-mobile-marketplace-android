@@ -215,7 +215,7 @@ private fun DownloadConfirmDialogView(
                     IconText(
                         text = buttonText,
                         icon = buttonIcon,
-                        color = MaterialTheme.appColors.primaryButtonText,
+                        color = MaterialTheme.appColors.secondaryButtonText,
                         textStyle = MaterialTheme.appTypography.labelLarge
                     )
                 }

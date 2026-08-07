@@ -1,10 +1,8 @@
 package org.openedx.core.system
 
-import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
 
 class AppSessionTracker(
-    private val corePreferences: CorePreferences,
     private val storage: SubscriptionBannerStorage,
 ) {
     private var isAppInForeground = false

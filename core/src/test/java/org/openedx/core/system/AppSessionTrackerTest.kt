@@ -14,7 +14,7 @@ class AppSessionTrackerTest {
     private val corePreferences = mockk<CorePreferences>()
     private val storage = mockk<SubscriptionBannerStorage>(relaxed = true)
 
-    private val tracker = AppSessionTracker(corePreferences, storage)
+    private val tracker = AppSessionTracker(storage)
 
     @Test
     fun `onAppForegrounded increments global session count when feature enabled`() {
@@ -42,10 +42,11 @@ class AppSessionTrackerTest {
         )
         every { appConfig.subscriptionBannerConfig } returns bannerConfig
         every { corePreferences.appConfig } returns appConfig
+        every { storage.getSubscriptionBannerSessionCount() } returns 0
 
         tracker.onAppForegrounded()
 
-        verify(exactly = 0) { storage.setSubscriptionBannerSessionCount(any()) }
+        verify { storage.setSubscriptionBannerSessionCount(1) }
     }
 
     @Test
@@ -100,4 +101,3 @@ class AppSessionTrackerTest {
         verify { storage.setSubscriptionBannerSessionCount(2) }
     }
 }
-

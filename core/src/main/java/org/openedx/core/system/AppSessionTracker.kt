@@ -16,10 +16,6 @@ class AppSessionTracker(
 
         isAppInForeground = true
 
-        val bannerConfig = corePreferences.appConfig.subscriptionBannerConfig
-        if (!bannerConfig.isEnabled) {
-            return
-        }
 
         val nextSessionCount = storage.getSubscriptionBannerSessionCount() + 1
         storage.setSubscriptionBannerSessionCount(nextSessionCount)

@@ -8,7 +8,6 @@ import org.openedx.core.config.SubscriptionBannerConfig
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
 import org.openedx.core.domain.model.AppConfig
-import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 
 class AppSessionTrackerTest {
 
@@ -31,9 +30,7 @@ class AppSessionTrackerTest {
         tracker.onAppForegrounded()
 
         verify { storage.setSubscriptionBannerSessionCount(3) }
-        SubscriptionAlertBanner.Screen.entries.forEach { screen ->
-            verify { storage.setSubscriptionBannerDismissed(screen.key, false) }
-        }
+        verify(exactly = 0) { storage.setSubscriptionBannerDismissed(any(), any()) }
     }
 
     @Test

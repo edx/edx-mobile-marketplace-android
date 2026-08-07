@@ -19,22 +19,29 @@ class SubscriptionAlertBanner(
             return false
         }
 
+        if (storage.isSubscriptionBannerDismissed(screen.key)) {
+            return false
+        }
+
         val maxSessions = bannerConfig.maxSessions
             .takeIf { it > 0 }
             ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
 
-        val dismissCount = storage.getSubscriptionBannerDismissCount(screen.key)
-        if (dismissCount >= maxSessions) {
-            return false
+        val shownSessions = storage.getSubscriptionBannerScreenSessionCount(screen.key)
+
+        val currentAppSession = storage.getSubscriptionBannerSessionCount().coerceAtLeast(1)
+        val lastSeenAppSession = storage.getSubscriptionBannerScreenLastSeenAppSession(screen.key)
+
+        val effectiveSessions = if (currentAppSession > lastSeenAppSession) {
+            val updated = shownSessions + 1
+            storage.setSubscriptionBannerScreenSessionCount(screen.key, updated)
+            storage.setSubscriptionBannerScreenLastSeenAppSession(screen.key, currentAppSession)
+            updated
+        } else {
+            shownSessions
         }
 
-        val isDismissed = storage.isSubscriptionBannerDismissed(screen.key)
-        if (isDismissed) {
-            return false
-        }
-
-        val visible = true
-        return visible
+        return effectiveSessions <= maxSessions
     }
 
     fun dismiss(screen: Screen) {

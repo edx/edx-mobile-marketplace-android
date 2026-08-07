@@ -314,12 +314,19 @@ private fun WebViewDiscoveryScreen(
             )
 
             if (isSubscriptionBannerVisible) {
+                val searchTabWidth by remember(key1 = windowSize) {
+                    mutableStateOf(
+                        windowSize.windowSizeValue(
+                            expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
+                            compact = Modifier.fillMaxWidth()
+                        )
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .padding(top = 16.dp)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .zIndex(2f)
+                        .padding(start = 24.dp, end = 24.dp)
+                        .then(searchTabWidth)
                 ) {
                     SubscriptionBanner(
                         visible = true,

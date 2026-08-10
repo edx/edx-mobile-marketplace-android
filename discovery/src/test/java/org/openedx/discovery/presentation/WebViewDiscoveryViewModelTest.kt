@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -20,6 +21,7 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.connection.NetworkConnection
@@ -39,6 +41,7 @@ class WebViewDiscoveryViewModelTest {
     private val router = mockk<DiscoveryRouter>(relaxed = true)
     private val analytics = mockk<DiscoveryAnalytics>(relaxed = true)
     private val appCookieManager = mockk<AppCookieManager>(relaxed = true)
+    private val subscriptionAlertBanner = mockk<SubscriptionAlertBanner>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -64,6 +67,7 @@ class WebViewDiscoveryViewModelTest {
             router = router,
             analytics = analytics,
             appCookieManager = appCookieManager,
+            subscriptionAlertBanner = subscriptionAlertBanner,
         )
 
         advanceUntilIdle()
@@ -86,6 +90,7 @@ class WebViewDiscoveryViewModelTest {
             router = router,
             analytics = analytics,
             appCookieManager = appCookieManager,
+            subscriptionAlertBanner = subscriptionAlertBanner,
         )
 
         advanceUntilIdle()
@@ -106,6 +111,7 @@ class WebViewDiscoveryViewModelTest {
             router = router,
             analytics = analytics,
             appCookieManager = appCookieManager,
+            subscriptionAlertBanner = subscriptionAlertBanner,
         )
         advanceUntilIdle()
 
@@ -129,6 +135,7 @@ class WebViewDiscoveryViewModelTest {
             router = router,
             analytics = analytics,
             appCookieManager = appCookieManager,
+            subscriptionAlertBanner = subscriptionAlertBanner,
         )
         advanceUntilIdle()
 
@@ -138,5 +145,50 @@ class WebViewDiscoveryViewModelTest {
         coVerify(exactly = 0) { appCookieManager.tryToRefreshSessionCookie() }
         assertTrue(viewModel.cookiesReady.value)
     }
-}
 
+    @Test
+    fun `onResume refreshes subscription banner visibility state`() = runTest {
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+
+        val viewModel = WebViewDiscoveryViewModel(
+            querySearch = "",
+            appData = appData,
+            config = config,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            router = router,
+            analytics = analytics,
+            appCookieManager = appCookieManager,
+            subscriptionAlertBanner = subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.onResume(mockk())
+
+        assertTrue(viewModel.isSubscriptionBannerVisible.value)
+    }
+
+    @Test
+    fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+
+        val viewModel = WebViewDiscoveryViewModel(
+            querySearch = "",
+            appData = appData,
+            config = config,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            router = router,
+            analytics = analytics,
+            appCookieManager = appCookieManager,
+            subscriptionAlertBanner = subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.dismissSubscriptionBanner()
+
+        assertFalse(viewModel.isSubscriptionBannerVisible.value)
+    }
+}

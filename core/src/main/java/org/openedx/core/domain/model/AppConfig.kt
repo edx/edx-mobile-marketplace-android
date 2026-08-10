@@ -1,11 +1,13 @@
 package org.openedx.core.domain.model
 
+import org.openedx.core.config.SubscriptionBannerConfig
 import java.io.Serializable
 
 data class AppConfig(
     val courseDatesCalendarSync: CourseDatesCalendarSync = CourseDatesCalendarSync(),
     val iapConfig: IAPConfig = IAPConfig(),
     val feedbackFormUrl: String = "",
+    val subscriptionBannerConfig: SubscriptionBannerConfig = SubscriptionBannerConfig()
 ) : Serializable
 
 data class CourseDatesCalendarSync(

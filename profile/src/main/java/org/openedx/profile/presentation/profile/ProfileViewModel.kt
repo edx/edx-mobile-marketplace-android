@@ -13,6 +13,7 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
@@ -28,13 +29,17 @@ class ProfileViewModel(
     private val resourceManager: ResourceManager,
     private val notifier: ProfileNotifier,
     private val analytics: ProfileAnalytics,
-    val profileRouter: ProfileRouter
+    val profileRouter: ProfileRouter,
+    private val subscriptionAlertBanner: SubscriptionAlertBanner,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
 
     private val _uiState: MutableStateFlow<ProfileUIState> = MutableStateFlow(ProfileUIState.Loading)
     internal val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
+
+    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
 
     private val _uiMessage = MutableLiveData<UIMessage>()
     val uiMessage: LiveData<UIMessage>
@@ -44,7 +49,11 @@ class ProfileViewModel(
     val isUpdating: LiveData<Boolean>
         get() = _isUpdating
 
+    val subscriptionBannerUrl: String
+        get() = subscriptionAlertBanner.getBannerUrl()
+
     init {
+        refreshSubscriptionBannerVisibility()
         getAccount()
     }
 
@@ -59,6 +68,17 @@ class ProfileViewModel(
         }
     }
 
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        refreshSubscriptionBannerVisibility()
+    }
+
+    fun refreshSubscriptionBannerVisibility() {
+        _isSubscriptionBannerVisible.value = subscriptionAlertBanner.isBannerVisible(
+            SubscriptionAlertBanner.Screen.PROFILE
+        )
+    }
+
     private fun getAccount() {
         _uiState.value = ProfileUIState.Loading
         viewModelScope.launch {
@@ -67,14 +87,10 @@ class ProfileViewModel(
                 if (cachedAccount == null) {
                     _uiState.value = ProfileUIState.Loading
                 } else {
-                    _uiState.value = ProfileUIState.Data(
-                        account = cachedAccount
-                    )
+                    _uiState.value = ProfileUIState.Data(account = cachedAccount)
                 }
                 val account = interactor.getAccount()
-                _uiState.value = ProfileUIState.Data(
-                    account = account
-                )
+                _uiState.value = ProfileUIState.Data(account = account)
             } catch (e: Exception) {
                 logger.e(throwable = e)
                 if (e.isInternetError()) {
@@ -97,10 +113,7 @@ class ProfileViewModel(
 
     fun profileEditClicked(fragmentManager: FragmentManager) {
         (uiState.value as? ProfileUIState.Data)?.let { data ->
-            profileRouter.navigateToEditProfile(
-                fragmentManager,
-                data.account
-            )
+            profileRouter.navigateToEditProfile(fragmentManager, data.account)
         }
         logProfileEvent(ProfileAnalyticsEvent.EDIT_CLICKED)
     }
@@ -117,6 +130,11 @@ class ProfileViewModel(
                 putAll(params)
             }
         )
+    }
+
+    fun dismissSubscriptionBanner() {
+        subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.PROFILE)
+        _isSubscriptionBannerVisible.value = false
     }
 
     companion object {

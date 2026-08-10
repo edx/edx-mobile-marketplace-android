@@ -1,6 +1,7 @@
 package org.openedx.discovery.presentation
 
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
@@ -26,6 +28,7 @@ class WebViewDiscoveryViewModel(
     private val router: DiscoveryRouter,
     private val analytics: DiscoveryAnalytics,
     private val appCookieManager: AppCookieManager,
+    private val subscriptionAlertBanner: SubscriptionAlertBanner,
 ) : BaseViewModel() {
 
     private val logger = Logger("WebViewDiscoveryViewModel")
@@ -35,6 +38,12 @@ class WebViewDiscoveryViewModel(
 
     private val _cookiesReady = MutableStateFlow(false)
     val cookiesReady: StateFlow<Boolean> = _cookiesReady.asStateFlow()
+
+    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
+
+    val subscriptionBannerUrl: String
+        get() = subscriptionAlertBanner.getBannerUrl()
 
     val uriScheme: String get() = config.getUriScheme()
 
@@ -60,7 +69,19 @@ class WebViewDiscoveryViewModel(
         get() = networkConnection.isOnline()
 
     init {
+        refreshSubscriptionBannerVisibility()
         checkAndRefreshCookies()
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        refreshSubscriptionBannerVisibility()
+    }
+
+    fun refreshSubscriptionBannerVisibility() {
+        _isSubscriptionBannerVisible.value = subscriptionAlertBanner.isBannerVisible(
+            SubscriptionAlertBanner.Screen.DISCOVERY
+        )
     }
 
     private fun checkAndRefreshCookies() {
@@ -146,5 +167,10 @@ class WebViewDiscoveryViewModel(
                 put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
             }
         )
+    }
+
+    fun dismissSubscriptionBanner() {
+        subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
+        _isSubscriptionBannerVisible.value = false
     }
 }

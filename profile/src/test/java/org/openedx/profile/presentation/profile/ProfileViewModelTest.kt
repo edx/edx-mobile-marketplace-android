@@ -20,6 +20,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -199,5 +201,48 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 2) { interactor.getAccount() }
+    }
+
+    @Test
+    fun `onResume refreshes subscription banner visibility state`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE) } returns true
+        coEvery { interactor.getCachedAccount() } returns null
+        coEvery { interactor.getAccount() } returns account
+
+        val viewModel = ProfileViewModel(
+            interactor,
+            resourceManager,
+            notifier,
+            analytics,
+            router,
+            subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        val lifecycleOwner = mockk<LifecycleOwner>()
+        viewModel.onResume(lifecycleOwner)
+
+        assertTrue(viewModel.isSubscriptionBannerVisible.value)
+    }
+
+    @Test
+    fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE) } returns true
+        coEvery { interactor.getCachedAccount() } returns null
+        coEvery { interactor.getAccount() } returns account
+
+        val viewModel = ProfileViewModel(
+            interactor,
+            resourceManager,
+            notifier,
+            analytics,
+            router,
+            subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.dismissSubscriptionBanner()
+
+        assertFalse(viewModel.isSubscriptionBannerVisible.value)
     }
 }

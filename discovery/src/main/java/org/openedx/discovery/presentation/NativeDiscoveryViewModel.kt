@@ -1,9 +1,13 @@
 package org.openedx.discovery.presentation
 
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
@@ -44,6 +48,9 @@ class NativeDiscoveryViewModel(
     val uiState: LiveData<DiscoveryUIState>
         get() = _uiState
 
+    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
+
     private val _uiMessage = SingleEventLiveData<UIMessage>()
     val uiMessage: LiveData<UIMessage>
         get() = _uiMessage
@@ -68,8 +75,14 @@ class NativeDiscoveryViewModel(
     private var isLoading = false
 
     init {
+        refreshSubscriptionBannerVisibility()
         getCoursesList()
         collectAppUpgradeEvent()
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        refreshSubscriptionBannerVisibility()
     }
 
     private fun loadCoursesInternal(
@@ -204,14 +217,15 @@ class NativeDiscoveryViewModel(
         )
     }
 
-    fun isSubscriptionBannerVisible(): Boolean {
-        return subscriptionAlertBanner.isBannerVisible(
+    fun refreshSubscriptionBannerVisibility() {
+        _isSubscriptionBannerVisible.value = subscriptionAlertBanner.isBannerVisible(
             SubscriptionAlertBanner.Screen.DISCOVERY
         )
     }
 
     fun dismissSubscriptionBanner() {
         subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
+        _isSubscriptionBannerVisible.value = false
     }
 
     companion object {

@@ -107,26 +107,9 @@ class WebViewDiscoveryFragment : Fragment() {
                 val windowSize = rememberWindowSize()
                 val uiState by viewModel.uiState.collectAsState()
                 val cookiesReady by viewModel.cookiesReady.collectAsState()
-                val lifecycleOwner = LocalLifecycleOwner.current
-                var isSubscriptionBannerVisible by remember { mutableStateOf(false) }
+                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.hasInternetConnection)
-                }
-
-                DisposableEffect(lifecycleOwner) {
-                    fun refreshBannerVisibility() {
-                        isSubscriptionBannerVisible = viewModel.isSubscriptionBannerVisible()
-                    }
-
-                    val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_RESUME) {
-                            refreshBannerVisibility()
-                        }
-                    }
-                    lifecycleOwner.lifecycle.addObserver(observer)
-                    onDispose {
-                        lifecycleOwner.lifecycle.removeObserver(observer)
-                    }
                 }
 
                 WebViewDiscoveryScreen(
@@ -215,7 +198,6 @@ class WebViewDiscoveryFragment : Fragment() {
                     },
                     onDismissSubscriptionBanner = {
                         viewModel.dismissSubscriptionBanner()
-                        isSubscriptionBannerVisible = false
                     }
                 )
             }

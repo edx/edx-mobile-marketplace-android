@@ -17,6 +17,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -326,6 +328,52 @@ class NativeDiscoveryViewModelTest {
         assert(viewModel.isUpdating.value == false)
         assert(viewModel.canLoadMore.value == false)
         assert(viewModel.uiState.value is DiscoveryUIState.Courses)
+    }
+
+    @Test
+    fun `onResume refreshes subscription banner visibility state`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { networkConnection.isOnline() } returns false
+        coEvery { interactor.getCoursesListFromCache() } returns emptyList()
+
+        val viewModel = NativeDiscoveryViewModel(
+            config,
+            networkConnection,
+            interactor,
+            resourceManager,
+            analytics,
+            appNotifier,
+            corePreferences,
+            subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.onResume(mockk())
+
+        assertTrue(viewModel.isSubscriptionBannerVisible.value)
+    }
+
+    @Test
+    fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { networkConnection.isOnline() } returns false
+        coEvery { interactor.getCoursesListFromCache() } returns emptyList()
+
+        val viewModel = NativeDiscoveryViewModel(
+            config,
+            networkConnection,
+            interactor,
+            resourceManager,
+            analytics,
+            appNotifier,
+            corePreferences,
+            subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.dismissSubscriptionBanner()
+
+        assertFalse(viewModel.isSubscriptionBannerVisible.value)
     }
 
 }

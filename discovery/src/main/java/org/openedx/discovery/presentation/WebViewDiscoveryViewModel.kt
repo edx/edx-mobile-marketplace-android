@@ -1,6 +1,7 @@
 package org.openedx.discovery.presentation
 
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,9 @@ class WebViewDiscoveryViewModel(
     private val _cookiesReady = MutableStateFlow(false)
     val cookiesReady: StateFlow<Boolean> = _cookiesReady.asStateFlow()
 
+    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
+
     val subscriptionBannerUrl: String
         get() = subscriptionAlertBanner.getBannerUrl()
 
@@ -65,11 +69,17 @@ class WebViewDiscoveryViewModel(
         get() = networkConnection.isOnline()
 
     init {
+        refreshSubscriptionBannerVisibility()
         checkAndRefreshCookies()
     }
 
-    fun isSubscriptionBannerVisible(): Boolean {
-        return subscriptionAlertBanner.isBannerVisible(
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        refreshSubscriptionBannerVisibility()
+    }
+
+    fun refreshSubscriptionBannerVisibility() {
+        _isSubscriptionBannerVisible.value = subscriptionAlertBanner.isBannerVisible(
             SubscriptionAlertBanner.Screen.DISCOVERY
         )
     }
@@ -161,5 +171,6 @@ class WebViewDiscoveryViewModel(
 
     fun dismissSubscriptionBanner() {
         subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
+        _isSubscriptionBannerVisible.value = false
     }
 }

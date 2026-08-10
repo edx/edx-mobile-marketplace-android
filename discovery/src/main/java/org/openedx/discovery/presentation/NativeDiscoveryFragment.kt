@@ -34,6 +34,7 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -94,6 +95,11 @@ class NativeDiscoveryFragment : Fragment() {
     private val viewModel by viewModel<NativeDiscoveryViewModel>()
     private val router: DiscoveryRouter by inject()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lifecycle.addObserver(viewModel)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -108,26 +114,10 @@ class NativeDiscoveryFragment : Fragment() {
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
+                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
                 val appUpgradeEvent by viewModel.appUpgradeEvent.observeAsState()
                 val wasUpdateDialogClosed by remember { wasUpdateDialogClosed }
                 val querySearch = arguments?.getString(ARG_SEARCH_QUERY, "") ?: ""
-                val lifecycleOwner = LocalLifecycleOwner.current
-                var isSubscriptionBannerVisible by remember { mutableStateOf(false) }
-
-                DisposableEffect(lifecycleOwner) {
-                    fun refreshBannerVisibility() {
-                        isSubscriptionBannerVisible = viewModel.isSubscriptionBannerVisible()
-                    }
-                    val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_RESUME) {
-                            refreshBannerVisibility()
-                        }
-                    }
-                    lifecycleOwner.lifecycle.addObserver(observer)
-                    onDispose {
-                        lifecycleOwner.lifecycle.removeObserver(observer)
-                    }
-                }
 
                 DiscoveryScreen(
                     windowSize = windowSize,
@@ -194,7 +184,6 @@ class NativeDiscoveryFragment : Fragment() {
                     },
                     onDismissSubscriptionBanner = {
                         viewModel.dismissSubscriptionBanner()
-                        isSubscriptionBannerVisible = false
                     },
                 )
                 LaunchedEffect(uiState) {

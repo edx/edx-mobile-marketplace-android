@@ -38,6 +38,9 @@ class ProfileViewModel(
     private val _uiState: MutableStateFlow<ProfileUIState> = MutableStateFlow(ProfileUIState.Loading)
     internal val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
 
+    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
+
     private val _uiMessage = MutableLiveData<UIMessage>()
     val uiMessage: LiveData<UIMessage>
         get() = _uiMessage
@@ -50,6 +53,7 @@ class ProfileViewModel(
         get() = subscriptionAlertBanner.getBannerUrl()
 
     init {
+        refreshSubscriptionBannerVisibility()
         getAccount()
     }
 
@@ -64,8 +68,13 @@ class ProfileViewModel(
         }
     }
 
-    fun isSubscriptionBannerVisible(): Boolean {
-        return subscriptionAlertBanner.isBannerVisible(
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        refreshSubscriptionBannerVisibility()
+    }
+
+    fun refreshSubscriptionBannerVisibility() {
+        _isSubscriptionBannerVisible.value = subscriptionAlertBanner.isBannerVisible(
             SubscriptionAlertBanner.Screen.PROFILE
         )
     }
@@ -125,6 +134,7 @@ class ProfileViewModel(
 
     fun dismissSubscriptionBanner() {
         subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.PROFILE)
+        _isSubscriptionBannerVisible.value = false
     }
 
     companion object {

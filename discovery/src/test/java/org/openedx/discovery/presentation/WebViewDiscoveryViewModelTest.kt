@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -143,5 +144,51 @@ class WebViewDiscoveryViewModelTest {
 
         coVerify(exactly = 0) { appCookieManager.tryToRefreshSessionCookie() }
         assertTrue(viewModel.cookiesReady.value)
+    }
+
+    @Test
+    fun `onResume refreshes subscription banner visibility state`() = runTest {
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+
+        val viewModel = WebViewDiscoveryViewModel(
+            querySearch = "",
+            appData = appData,
+            config = config,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            router = router,
+            analytics = analytics,
+            appCookieManager = appCookieManager,
+            subscriptionAlertBanner = subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.onResume(mockk())
+
+        assertTrue(viewModel.isSubscriptionBannerVisible.value)
+    }
+
+    @Test
+    fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+
+        val viewModel = WebViewDiscoveryViewModel(
+            querySearch = "",
+            appData = appData,
+            config = config,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            router = router,
+            analytics = analytics,
+            appCookieManager = appCookieManager,
+            subscriptionAlertBanner = subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.dismissSubscriptionBanner()
+
+        assertFalse(viewModel.isSubscriptionBannerVisible.value)
     }
 }

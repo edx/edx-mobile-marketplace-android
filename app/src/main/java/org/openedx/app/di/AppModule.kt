@@ -106,7 +106,7 @@ val appModule = module {
     single<SubscriptionBannerStorage> { get<PreferencesManager>() }
 
     single { AppSessionTracker(get<SubscriptionBannerStorage>()) }
-    factory { SubscriptionAlertBanner(get<CorePreferences>(), get<SubscriptionBannerStorage>()) }
+    single { SubscriptionAlertBanner(get<CorePreferences>(), get<SubscriptionBannerStorage>()) }
 
     single { ResourceManager(get()) }
     single { AppCookieManager(get(), get()) }

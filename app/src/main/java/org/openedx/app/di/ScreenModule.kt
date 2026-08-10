@@ -12,6 +12,8 @@ import org.openedx.auth.presentation.logistration.LogistrationViewModel
 import org.openedx.auth.presentation.restore.RestorePasswordViewModel
 import org.openedx.auth.presentation.signin.SignInViewModel
 import org.openedx.auth.presentation.signup.SignUpViewModel
+import org.openedx.core.ExoPlayerFactory
+import org.openedx.core.ExoPlayerFactoryImpl
 import org.openedx.core.Validator
 import org.openedx.core.data.repository.iap.IAPRepository
 import org.openedx.core.domain.interactor.IAPInteractor
@@ -404,6 +406,8 @@ val screenModule = module {
     }
 
     factory { PipInteractor(get()) }
+
+    single<ExoPlayerFactory> { ExoPlayerFactoryImpl() }
 
     viewModel { PipViewModel(get()) }
 

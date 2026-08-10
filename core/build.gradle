@@ -121,6 +121,7 @@ dependencies {
 
     // Room
     api "androidx.room:room-runtime:$room_version"
+    implementation 'androidx.media3:media3-exoplayer:1.11.0'
     ksp "androidx.room:room-compiler:$room_version"
 
     //Compose

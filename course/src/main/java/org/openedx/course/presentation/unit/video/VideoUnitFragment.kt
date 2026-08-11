@@ -387,8 +387,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         private const val ARG_DOWNLOADED = "isDownloaded"
         private var currentVideoFragment: VideoUnitFragment? = null
 
-        @RequiresApi(Build.VERSION_CODES.S)
-        fun triggerPipModeIfActive() {
+        @RequiresApi(Build.VERSION_CODES.O)
+            fun triggerPipModeIfActive() {
             currentVideoFragment?.enablePipMode()
         }
 
@@ -413,10 +413,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
+    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class)
     private fun enablePipMode() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         if (!requireContext().isPipPermissionGranted()) {
             showPipDisabledMessage()
             return

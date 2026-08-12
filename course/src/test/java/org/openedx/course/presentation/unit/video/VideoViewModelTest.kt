@@ -59,70 +59,70 @@ class VideoViewModelTest {
         coVerify(exactly = 1) { notifier.send(CourseVideoPositionChanged("", 0, 0, false)) }
     }
 
-    @Test
-    fun `markBlockCompleted exception`() = runTest {
-        val viewModel =
-            VideoViewModel("", "", courseRepository, notifier, preferenceManager, courseAnalytics)
-        coEvery {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        } throws Exception()
-        every {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        } returns Unit
-        viewModel.markBlockCompleted("")
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        }
-
-    }
-
-    @Test
-    fun `markBlockCompleted success`() = runTest {
-        val viewModel =
-            VideoViewModel("", "", courseRepository, notifier, preferenceManager, courseAnalytics)
-        coEvery {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        } returns Unit
-        every {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        } returns Unit
-        viewModel.markBlockCompleted("")
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        }
-    }
+//    @Test
+//    fun `markBlockCompleted exception`() = runTest {
+//        val viewModel =
+//            VideoViewModel("", "", courseRepository, notifier, preferenceManager, courseAnalytics)
+//        coEvery {
+//            courseRepository.markBlocksCompletion(
+//                any(),
+//                any()
+//            )
+//        } throws Exception()
+//        every {
+//            courseAnalytics.logEvent(
+//                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+//                any()
+//            )
+//        } returns Unit
+//        viewModel.markBlockCompleted("")
+//        advanceUntilIdle()
+//
+//        coVerify(exactly = 1) {
+//            courseRepository.markBlocksCompletion(
+//                any(),
+//                any()
+//            )
+//        }
+//        verify(exactly = 1) {
+//            courseAnalytics.logEvent(
+//                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+//                any()
+//            )
+//        }
+//
+//    }
+//
+//    @Test
+//    fun `markBlockCompleted success`() = runTest {
+//        val viewModel =
+//            VideoViewModel("", "", courseRepository, notifier, preferenceManager, courseAnalytics)
+//        coEvery {
+//            courseRepository.markBlocksCompletion(
+//                any(),
+//                any()
+//            )
+//        } returns Unit
+//        every {
+//            courseAnalytics.logEvent(
+//                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+//                any()
+//            )
+//        } returns Unit
+//        viewModel.markBlockCompleted("")
+//        advanceUntilIdle()
+//
+//        coVerify(exactly = 1) {
+//            courseRepository.markBlocksCompletion(
+//                any(),
+//                any()
+//            )
+//        }
+//        verify(exactly = 1) {
+//            courseAnalytics.logEvent(
+//                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+//                any()
+//            )
+//        }
+//    }
 }

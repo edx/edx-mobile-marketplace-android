@@ -139,6 +139,7 @@ internal fun ProfileView(
                                             modifier = Modifier.fillMaxWidth(),
                                             url = subscriptionBannerUrl,
                                             onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) },
+                                            onCtaClick = { onAction(ProfileViewAction.SubscriptionBannerCtaClick(it)) },
                                         )
                                     }
                                     ProfileTopic(
@@ -215,4 +216,5 @@ internal interface ProfileViewAction {
     object EditAccountClick : ProfileViewAction
     object SwipeRefresh : ProfileViewAction
     object DismissSubscriptionBanner : ProfileViewAction
+    data class SubscriptionBannerCtaClick(val url: String) : ProfileViewAction
 }

@@ -32,7 +32,6 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,9 +56,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.openedx.core.AppUpdateState
@@ -185,6 +181,9 @@ class NativeDiscoveryFragment : Fragment() {
                     onDismissSubscriptionBanner = {
                         viewModel.dismissSubscriptionBanner()
                     },
+                    onSubscriptionBannerCtaClick = { url ->
+                        viewModel.onSubscriptionBannerCtaClicked(url)
+                    },
                 )
                 LaunchedEffect(uiState) {
                     if (querySearch.isNotEmpty()) {
@@ -235,6 +234,7 @@ internal fun DiscoveryScreen(
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
     onDismissSubscriptionBanner: () -> Unit,
+    onSubscriptionBannerCtaClick: (String) -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
@@ -354,6 +354,7 @@ internal fun DiscoveryScreen(
                             modifier = Modifier.fillMaxWidth(),
                             url = subscriptionBannerUrl,
                             onDismiss = onDismissSubscriptionBanner,
+                            onCtaClick = onSubscriptionBannerCtaClick,
                         )
                     }
                 }

@@ -79,9 +79,22 @@ class WebViewDiscoveryViewModel(
     }
 
     fun refreshSubscriptionBannerVisibility() {
-        _isSubscriptionBannerVisible.value = subscriptionAlertBanner.isBannerVisible(
-            SubscriptionAlertBanner.Screen.DISCOVERY
-        )
+        val wasVisible = _isSubscriptionBannerVisible.value
+        val isVisible = subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY)
+        _isSubscriptionBannerVisible.value = isVisible
+        if (isVisible && !wasVisible) {
+            val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
+            analytics.logEvent(
+                DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.eventName,
+                buildMap {
+                    put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.biValue)
+                    put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                    put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                    put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                    put(DiscoveryAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
+                }
+            )
+        }
     }
 
     private fun checkAndRefreshCookies() {
@@ -170,7 +183,30 @@ class WebViewDiscoveryViewModel(
     }
 
     fun dismissSubscriptionBanner() {
+        val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
+        analytics.logEvent(
+            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.eventName,
+            buildMap {
+                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.biValue)
+                put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+            }
+        )
         subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
         _isSubscriptionBannerVisible.value = false
+    }
+
+    fun onSubscriptionBannerCtaClicked(url: String) {
+        if (url.isBlank()) return
+        analytics.logEvent(
+            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED.eventName,
+            buildMap {
+                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED.biValue)
+                put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                put(DiscoveryAnalyticsKey.URL.key, url)
+            }
+        )
     }
 }

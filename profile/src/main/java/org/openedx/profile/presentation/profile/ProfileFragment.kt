@@ -61,6 +61,9 @@ class ProfileFragment : Fragment() {
                             ProfileViewAction.DismissSubscriptionBanner -> {
                                 viewModel.dismissSubscriptionBanner()
                             }
+                            is ProfileViewAction.SubscriptionBannerCtaClick -> {
+                                viewModel.subscriptionBannerCtaClicked(action.url)
+                            }
                         }
                     }
                 )

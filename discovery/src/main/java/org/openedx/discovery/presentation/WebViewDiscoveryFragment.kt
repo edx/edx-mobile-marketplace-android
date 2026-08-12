@@ -198,6 +198,9 @@ class WebViewDiscoveryFragment : Fragment() {
                     },
                     onDismissSubscriptionBanner = {
                         viewModel.dismissSubscriptionBanner()
+                    },
+                    onSubscriptionBannerCtaClick = { url ->
+                        viewModel.onSubscriptionBannerCtaClicked(url)
                     }
                 )
             }
@@ -238,6 +241,7 @@ private fun WebViewDiscoveryScreen(
     onBackClick: () -> Unit,
     onRefreshSessionCookie: () -> Unit = {},
     onDismissSubscriptionBanner: () -> Unit = {},
+    onSubscriptionBannerCtaClick: (String) -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -315,6 +319,7 @@ private fun WebViewDiscoveryScreen(
                         modifier = Modifier.fillMaxWidth(),
                         url = subscriptionBannerUrl,
                         onDismiss = onDismissSubscriptionBanner,
+                        onCtaClick = onSubscriptionBannerCtaClick,
                     )
                 }
             }

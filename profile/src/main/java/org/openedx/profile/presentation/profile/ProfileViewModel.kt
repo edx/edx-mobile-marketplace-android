@@ -74,9 +74,20 @@ class ProfileViewModel(
     }
 
     fun refreshSubscriptionBannerVisibility() {
-        _isSubscriptionBannerVisible.value = subscriptionAlertBanner.isBannerVisible(
-            SubscriptionAlertBanner.Screen.PROFILE
-        )
+        val wasVisible = _isSubscriptionBannerVisible.value
+        val isVisible = subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE)
+        _isSubscriptionBannerVisible.value = isVisible
+        if (isVisible && !wasVisible) {
+            val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE)
+            logProfileEvent(
+                event = ProfileAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED,
+                params = buildMap {
+                    put(ProfileAnalyticsKey.SCREEN_NAME.key, PROFILE_SCREEN_NAME)
+                    put(ProfileAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                    put(ProfileAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
+                }
+            )
+        }
     }
 
     private fun getAccount() {
@@ -133,11 +144,31 @@ class ProfileViewModel(
     }
 
     fun dismissSubscriptionBanner() {
+        val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE)
+        logProfileEvent(
+            event = ProfileAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED,
+            params = buildMap {
+                put(ProfileAnalyticsKey.SCREEN_NAME.key, PROFILE_SCREEN_NAME)
+                put(ProfileAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+            }
+        )
         subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.PROFILE)
         _isSubscriptionBannerVisible.value = false
     }
 
+    fun subscriptionBannerCtaClicked(url: String) {
+        if (url.isBlank()) return
+        logProfileEvent(
+            event = ProfileAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED,
+            params = buildMap {
+                put(ProfileAnalyticsKey.SCREEN_NAME.key, PROFILE_SCREEN_NAME)
+                put(ProfileAnalyticsKey.URL.key, url)
+            }
+        )
+    }
+
     companion object {
         private const val TAG = "ProfileViewModel"
+        private const val PROFILE_SCREEN_NAME = "Profile"
     }
 }

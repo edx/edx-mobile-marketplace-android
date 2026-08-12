@@ -912,6 +912,7 @@ fun SubscriptionBanner(
     modifier: Modifier = Modifier,
     url: String = "",
     onDismiss: () -> Unit,
+    onCtaClick: (String) -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
     if (!visible) return
@@ -995,7 +996,10 @@ fun SubscriptionBanner(
                                 )
                                 .firstOrNull()
                                 ?.takeIf { it.item.isNotBlank() }
-                                ?.let { uriHandler.openUri(it.item) }
+                                ?.let {
+                                    onCtaClick(it.item)
+                                    uriHandler.openUri(it.item)
+                                }
                         }
                     }
                 )

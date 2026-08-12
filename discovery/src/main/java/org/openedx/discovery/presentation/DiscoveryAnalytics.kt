@@ -25,6 +25,18 @@ enum class DiscoveryAnalyticsEvent(val eventName: String, val biValue: String) {
         "Discovery:Course Enroll Success",
         "edx.bi.app.course.enroll.success"
     ),
+    SUBSCRIPTION_BANNER_VIEWED(
+        "Subscription:Banner Viewed",
+        "edx.bi.app.subscription.banner.viewed"
+    ),
+    SUBSCRIPTION_BANNER_DISMISSED(
+        "Subscription:Banner Dismissed",
+        "edx.bi.app.subscription.banner.dismissed"
+    ),
+    SUBSCRIPTION_BANNER_CTA_CLICKED(
+        "Subscription:Banner CTA Clicked",
+        "edx.bi.app.subscription.banner.cta.clicked"
+    ),
 }
 
 enum class DiscoveryAnalyticsKey(val key: String) {
@@ -34,6 +46,10 @@ enum class DiscoveryAnalyticsKey(val key: String) {
     CATEGORY("category"),
     CONVERSION("conversion"),
     DISCOVERY("discovery"),
+    SCREEN_NAME("screen_name"),
+    SESSION_COUNT("session_count"),
+    MAX_SESSIONS("max_sessions"),
+    URL("url"),
 }
 
 enum class DiscoveryAnalyticsScreen(val screenName: String) {

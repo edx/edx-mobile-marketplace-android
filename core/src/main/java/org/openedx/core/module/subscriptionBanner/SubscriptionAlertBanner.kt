@@ -8,6 +8,11 @@ class SubscriptionAlertBanner(
     private val corePreferences: CorePreferences,
     private val storage: SubscriptionBannerStorage,
 ) {
+    data class BannerTelemetry(
+        val sessionCount: Int,
+        val maxSessions: Int,
+    )
+
     enum class Screen(val key: String) {
         DISCOVERY("discovery"),
         PROFILE("profile"),
@@ -53,6 +58,16 @@ class SubscriptionAlertBanner(
             storage.setSubscriptionBannerDismissCount(screen.key, currentCount + 1)
         }
         storage.setSubscriptionBannerDismissed(screen.key, true)
+    }
+
+    fun getTelemetry(screen: Screen): BannerTelemetry {
+        val maxSessions = corePreferences.appConfig.subscriptionBannerConfig.maxSessions
+            .takeIf { it > 0 }
+            ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
+        return BannerTelemetry(
+            sessionCount = storage.getSubscriptionBannerScreenSessionCount(screen.key),
+            maxSessions = maxSessions,
+        )
     }
 
     fun getBannerUrl(): String = corePreferences.appConfig.subscriptionBannerConfig.url

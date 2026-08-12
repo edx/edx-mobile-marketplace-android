@@ -31,12 +31,10 @@ import org.openedx.core.presentation.global.WindowSizeHolder
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
 import org.openedx.core.utils.Logger
-import org.openedx.course.presentation.unit.video.VideoUnitFragment
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.whatsnew.WhatsNewManager
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
-import android.content.IntentFilter
-import android.content.Context
+import org.openedx.course.presentation.unit.video.PipViewModel
 
 class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
 
@@ -61,9 +59,8 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
     private var _insetTop = 0
     private var _insetBottom = 0
     private var _insetCutout = 0
-
     private var _windowSize = WindowSize(WindowType.Compact, WindowType.Compact)
-
+    private val pipViewModel by viewModel<PipViewModel>()
     private val branchCallback =
         BranchUniversalReferralInitListener { branchUniversalObject, _, error ->
             if (branchUniversalObject?.contentMetadata?.customMetadata != null) {
@@ -204,7 +201,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        VideoUnitFragment.triggerPipModeIfActive()
+        pipViewModel.requestPipMode()
     }
 
     private fun addFragment(fragment: Fragment) {

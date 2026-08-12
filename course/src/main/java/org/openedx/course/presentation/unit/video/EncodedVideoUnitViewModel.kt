@@ -55,7 +55,6 @@ import org.openedx.course.module.CastManager
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 
-@SuppressLint("StaticFieldLeak")
 @androidx.annotation.OptIn(UnstableApi::class)
 class EncodedVideoUnitViewModel(
     courseId: String,

@@ -1,10 +1,8 @@
 package org.openedx.course.presentation.unit.video
 
-import android.app.AppOpsManager
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
-import android.content.Context
 import android.content.res.Configuration
 import android.graphics.drawable.Icon
 import android.os.Build
@@ -99,7 +97,19 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        currentVideoFragment = this
+
+        pipViewModel.pipActions.observe(viewLifecycleOwner) { actions ->
+            if (actions.isNotEmpty()) {
+                pictureInPictureParamsBuilder?.setActions(actions)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireActivity().isInPictureInPictureMode
+                ) {
+                    requireActivity().setPictureInPictureParams(
+                        pictureInPictureParamsBuilder!!.build()
+                    )
+                }
+            }
+        }
         pipViewModel.pipState
             .onEach {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
@@ -186,8 +196,10 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 ) {
                     when (playbackState) {
                         Player.STATE_READY -> {
-                            if (!viewModel.exoPlayer!!.isPlaying) {
-                                viewModel.exoPlayer?.play()
+                            viewModel.exoPlayer?.let { player ->
+                                if (!player.isPlaying) {
+                                    player.play()
+                                }
                             }
                             updatePipActions()
                         }
@@ -235,7 +247,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
 
         })
-
+        lifecycleScope.launchWhenStarted {
+            pipViewModel.pipEvent.collect { event ->
+                if (event is PipUiEvent.PipModeRequested && isAdded) {
+                    enablePipMode()
+                }
+            }
+        }
         viewModel.state.onEach {
             when {
                 it.activePlayerType == PlayerType.EXO_REGULAR -> {
@@ -293,11 +311,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             requireActivity().isInPictureInPictureMode
         ) {
             requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            viewModel.exoPlayer?.let { player ->
-                val controller = ExoPlayerController(player)
-                pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
-                android.util.Log.d("PipMode", "Player re-registered on resume")
-            }
             return
         }
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -344,9 +357,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     @UnstableApi
     override fun onDestroy() {
-        if (currentVideoFragment == this) {
-            currentVideoFragment = null
-        }
         if (!requireActivity().isChangingConfigurations) {
             viewModel.releasePlayers()
             pipViewModel.unregisterPlayer()
@@ -359,7 +369,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @UnstableApi
     private fun showVideoControllerIndefinitely(show: Boolean) {
         if (show) {
-            binding.playerView?.controllerAutoShow = false
+            binding.playerView.controllerAutoShow = false
             binding.playerView?.controllerShowTimeoutMs = 0
             binding.playerView?.controllerHideOnTouch = true
         } else {
@@ -385,12 +395,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         private const val ARG_COURSE_ID = "courseId"
         private const val ARG_TITLE = "title"
         private const val ARG_DOWNLOADED = "isDownloaded"
-        private var currentVideoFragment: VideoUnitFragment? = null
-
-        @RequiresApi(Build.VERSION_CODES.O)
-            fun triggerPipModeIfActive() {
-            currentVideoFragment?.enablePipMode()
-        }
 
         fun newInstance(
             blockId: String,
@@ -416,19 +420,18 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class)
     private fun enablePipMode() {
-        if (!requireContext().isPipPermissionGranted()) {
+        if (!pipViewModel.isPipPermissionGranted(requireContext())) {
             showPipDisabledMessage()
             return
         }
         viewModel.exoPlayer?.let { player ->
             val controller = ExoPlayerController(player)
             pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
-            android.util.Log.d("PipMode", "Player registered: $controller")
         }
         binding.subtitles.isVisible = false
         cvVideoTitle?.isVisible = false
         binding.pipBtn.isVisible = false
-        pipViewModel.buttonVisibility.value = false
+        pipViewModel.updateButtonVisibility(false)
         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView?.useController = false
         val cs = ConstraintSet()
@@ -457,7 +460,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             binding.subtitles.isVisible = false
             binding.pipBtn.isVisible = false
             binding.playerView?.useController = false
-            pipViewModel.buttonVisibility.value = false
+            pipViewModel.updateButtonVisibility(false)
             cvVideoTitle?.visibility = View.GONE
             clearAllMarginsAndConstraints()
             binding.cardView.radius = 0f
@@ -484,17 +487,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun Context.isPipPermissionGranted(): Boolean {
-        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = appOps.checkOpNoThrow(
-            AppOpsManager.OPSTR_PICTURE_IN_PICTURE,
-            android.os.Process.myUid(),
-            packageName
-        )
-        return mode == AppOpsManager.MODE_ALLOWED
-    }
-
     @OptIn(UnstableApi::class)
     private fun restoreNormalUI() {
         (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
@@ -508,7 +500,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView?.showController()
         cvVideoTitle?.visibility = View.VISIBLE
-        pipViewModel.buttonVisibility.value = true
+        pipViewModel.updateButtonVisibility(true)
         binding.cardView.radius =
             resources.getDimension(R.dimen.video_corner_radius)
         clearAllMarginsAndConstraints()
@@ -722,17 +714,14 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
     @OptIn(UnstableApi::class)
     private fun setupMediaSession() {
-        mediaSession = MediaSession.Builder(requireContext(), viewModel.exoPlayer!!)
-            .setId("video_session_${System.currentTimeMillis()}")
-            .build()
+        viewModel.exoPlayer?.let { player ->
+            mediaSession = MediaSession.Builder(requireContext(), player)
+                .setId("video_session_${System.currentTimeMillis()}")
+                .build()
+        }
     }
     private fun retryPlayback() {
-        val player = viewModel.exoPlayer ?: return
-
-        player.apply {
-            prepare()
-            playWhenReady = true
-        }
+        pipViewModel.retryPlayback()
     }
 
     private fun seekBy(millis: Long) {
@@ -745,62 +734,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     private fun updatePipActions() {
         val player = viewModel.exoPlayer ?: return
-
         if (player.playbackState == Player.STATE_ENDED) {
             showReplayAction()
             return
         }
-
-        val playIntent = PendingIntent.getBroadcast(
-            requireContext(), PipBroadcastReceiverManager.REQUEST_PLAY,
-            android.content.Intent(PipBroadcastReceiverManager.ACTION_PLAY),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val pauseIntent = PendingIntent.getBroadcast(
-            requireContext(), PipBroadcastReceiverManager.REQUEST_PAUSE,
-            android.content.Intent(PipBroadcastReceiverManager.ACTION_PAUSE),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val forwardIntent = PendingIntent.getBroadcast(
-            requireContext(), PipBroadcastReceiverManager.REQUEST_FORWARD,
-            android.content.Intent(PipBroadcastReceiverManager.ACTION_FORWARD),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val rewindIntent = PendingIntent.getBroadcast(
-            requireContext(), PipBroadcastReceiverManager.REQUEST_REWIND,
-            android.content.Intent(PipBroadcastReceiverManager.ACTION_REWIND),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val shouldShowPauseButton = pipViewModel.pipState.value.isPlaying
-
-        val actions = listOf(
-            RemoteAction(
-                Icon.createWithResource(requireContext(), R.drawable.ic_rewind),
-                "Rewind", "Rewind 10s", rewindIntent
-            ),
-            if (shouldShowPauseButton) {
-                RemoteAction(
-                    Icon.createWithResource(requireContext(), R.drawable.ic_pause),
-                    "Pause", "Pause Video", pauseIntent
-                )
-            } else {
-                RemoteAction(
-                    Icon.createWithResource(requireContext(), R.drawable.ic_play),
-                    "Play", "Play Video", playIntent
-                )
-            },
-            RemoteAction(
-                Icon.createWithResource(requireContext(), R.drawable.ic_forward),
-                "Forward", "Forward 10s", forwardIntent
-            )
-        )
-
-        pictureInPictureParamsBuilder?.setActions(actions)
-
+        pipViewModel.loadPipActions(requireContext(), player.isPlaying)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             requireActivity().isInPictureInPictureMode
         ) {

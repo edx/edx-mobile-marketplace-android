@@ -16,25 +16,19 @@ class PipBroadcastReceiverManager(
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
             val action = intent?.action
-            android.util.Log.d("PipReceiver", "Action received: $action, Controller: ${pipPlayerRepository.controller}")
-
             when (action) {
                 ACTION_PLAY -> {
-                    android.util.Log.d("PipReceiver", "Playing...")
                     pipPlayerRepository.play()
                     pipPlayerRepository.updatePlaybackState(isPlaying = true, isEnded = false)
                 }
                 ACTION_PAUSE -> {
-                    android.util.Log.d("PipReceiver", "Pausing...")
                     pipPlayerRepository.pause()
                     pipPlayerRepository.updatePlaybackState(isPlaying = false)
                 }
                 ACTION_FORWARD -> {
-                    android.util.Log.d("PipReceiver", "Seeking forward...")
                     pipPlayerRepository.seekForward()
                 }
                 ACTION_REWIND -> {
-                    android.util.Log.d("PipReceiver", "Seeking backward...")
                     pipPlayerRepository.seekBackward()
                 }
             }

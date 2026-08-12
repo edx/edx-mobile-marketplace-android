@@ -388,7 +388,7 @@ val screenModule = module {
             courseId = courseId,
             blockId = blockId,
             title = title,
-            context = get(),
+            context = androidContext(),
             preferencesManager = get(),
             castManager = get(),
             courseRepository = get(),
@@ -400,18 +400,11 @@ val screenModule = module {
     }
 
     single { PipPlayerRepository() }
-    factory {
-        PipBroadcastReceiverManager( get(),get()
-        )
-    }
-
-    factory { PipInteractor(get()) }
-
+    single { PipBroadcastReceiverManager( get(),get()) }
+    single { PipInteractor(get()) }
     single<ExoPlayerFactory> { ExoPlayerFactoryImpl() }
-
     viewModel { PipViewModel(get()) }
-
-    viewModel { (courseId: String, courseTitle: String, enrollmentMode: String) ->
+        viewModel { (courseId: String, courseTitle: String, enrollmentMode: String) ->
         CourseDatesViewModel(
             courseId,
             courseTitle,

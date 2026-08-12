@@ -444,7 +444,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             }
             binding.subtitles.isVisible = false
             binding.pipBtn?.isVisible = false
-            pipViewModel.buttonVisibility.value = false
+            pipViewModel.updateButtonVisibility(false)
             binding.cvVideoTitle?.visibility = View.GONE
             clearAllMarginsAndConstraints()
 
@@ -469,7 +469,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
             }
             binding.subtitles.visibility = View.VISIBLE
-            pipViewModel.buttonVisibility.value = true
+            pipViewModel.updateButtonVisibility(true)
 
             clearAllMarginsAndConstraints()
 

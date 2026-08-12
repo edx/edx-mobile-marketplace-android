@@ -138,52 +138,52 @@ class VideoUnitViewModelTest {
         }
     }
 
-//    @Test
-//    fun `markBlockCompleted exception handling`() = runTest {
-//        val viewModel = VideoUnitViewModel(
-//            courseId = "test_course",
-//            blockId = "test_block",
-//            courseRepository,
-//            notifier,
-//            networkConnection,
-//            transcriptManager,
-//            courseAnalytics,
-//        )
-//        coEvery {
-//            courseRepository.markBlocksCompletion(
-//                any(),
-//                any()
-//            )
-//        } throws Exception("Network error")
-//        every {
-//            courseAnalytics.logEvent(
-//                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-//                any()
-//            )
-//        } returns Unit
-//
-//        viewModel.markBlockCompleted("test_block")
-//        advanceUntilIdle()
-//
-//        // Verify completion was attempted
-//        coVerify(exactly = 1) {
-//            courseRepository.markBlocksCompletion(
-//                "test_course",
-//                listOf("test_block")
-//            )
-//        }
-//        // Verify analytics event was still logged before exception
-//        verify(exactly = 1) {
-//            courseAnalytics.logEvent(
-//                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-//                any()
-//            )
-//        }
-//        // Verify notifier was NOT sent due to exception
-//        coVerify(exactly = 0) {
-//            notifier.send(any<CourseCompletionSet>())
-//        }
-//    }
+    @Test
+    fun `markBlockCompleted exception handling`() = runTest {
+        val viewModel = VideoUnitViewModel(
+            courseId = "test_course",
+            blockId = "test_block",
+            courseRepository,
+            notifier,
+            networkConnection,
+            transcriptManager,
+            courseAnalytics,
+        )
+        coEvery {
+            courseRepository.markBlocksCompletion(
+                any(),
+                any()
+            )
+        } throws Exception("Network error")
+        every {
+            courseAnalytics.logEvent(
+                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+                any()
+            )
+        } returns Unit
+
+        viewModel.markBlockCompleted("test_block")
+        advanceUntilIdle()
+
+        // Verify completion was attempted
+        coVerify(exactly = 1) {
+            courseRepository.markBlocksCompletion(
+                "test_course",
+                listOf("test_block")
+            )
+        }
+        // Verify analytics event was still logged before exception
+        verify(exactly = 1) {
+            courseAnalytics.logEvent(
+                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+                any()
+            )
+        }
+        // Verify notifier was NOT sent due to exception
+        coVerify(exactly = 0) {
+            notifier.send(any<CourseCompletionSet>())
+        }
+    }
 
     @Test
     fun `markBlockCompleted idempotency`() = runTest {

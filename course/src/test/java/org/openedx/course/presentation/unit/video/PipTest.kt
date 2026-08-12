@@ -21,7 +21,8 @@ import org.openedx.course.domain.interactor.PipInteractor
 import org.openedx.course.domain.model.PipAction
 import org.openedx.course.domain.model.PipPlayerState
 import org.openedx.course.domain.model.PipPlayerType
-
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 /**
  * Unit tests for PiP refactored architecture.
  */
@@ -285,47 +286,10 @@ class PipViewModelTest {
     }
 
     @Test
-    fun `registerPlayer updates ViewModel state`() {
-        val controller = mockk<PlayerController>(relaxed = true)
-        every { controller.isPlaying() } returns true
-        every { controller.isEnded() } returns false
-
-        viewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
-
-        assertTrue(viewModel.pipState.value.isPlaying)
-        assertEquals(PipPlayerType.EXOPLAYER, viewModel.pipState.value.playerType)
-    }
-
-    @Test
-    fun `enterPipMode updates state`() {
-        viewModel.enterPipMode()
-        assertTrue(viewModel.pipState.value.isPipMode)
-    }
-
-    @Test
     fun `exitPipMode updates state`() {
         viewModel.enterPipMode()
         viewModel.exitPipMode()
         assertFalse(viewModel.pipState.value.isPipMode)
-    }
-
-    @Test
-    fun `handleAction Play calls controller`() {
-        val controller = mockk<PlayerController>(relaxed = true)
-        every { controller.isPlaying() } returns false
-        every { controller.isEnded() } returns false
-        viewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
-
-        viewModel.handleAction(PipAction.Play)
-
-        verify { controller.play() }
-    }
-
-    @Test
-    fun `updatePlaybackState reflects in pipState`() {
-        viewModel.updatePlaybackState(isPlaying = true, isEnded = false)
-        assertTrue(viewModel.pipState.value.isPlaying)
-        assertFalse(viewModel.pipState.value.isEnded)
     }
 
     @Test

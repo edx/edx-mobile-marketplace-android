@@ -67,6 +67,7 @@ class NativeDiscoveryViewModelTest {
         every { corePreferences.user } returns null
         every { config.getApiHostURL() } returns "http://localhost:8000"
         every { config.isPreLoginExperienceEnabled() } returns false
+        every { analytics.logEvent(any(), any()) } returns Unit
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
@@ -333,6 +334,8 @@ class NativeDiscoveryViewModelTest {
     @Test
     fun `onResume refreshes subscription banner visibility state`() = runTest {
         every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
         every { networkConnection.isOnline() } returns false
         coEvery { interactor.getCoursesListFromCache() } returns emptyList()
 
@@ -356,6 +359,9 @@ class NativeDiscoveryViewModelTest {
     @Test
     fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
         every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
+        every { subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY) } returns Unit
         every { networkConnection.isOnline() } returns false
         coEvery { interactor.getCoursesListFromCache() } returns emptyList()
 

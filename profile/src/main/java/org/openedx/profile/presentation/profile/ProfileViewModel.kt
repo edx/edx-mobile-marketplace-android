@@ -150,6 +150,7 @@ class ProfileViewModel(
             params = buildMap {
                 put(ProfileAnalyticsKey.SCREEN_NAME.key, PROFILE_SCREEN_NAME)
                 put(ProfileAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                put(ProfileAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
             }
         )
         subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.PROFILE)

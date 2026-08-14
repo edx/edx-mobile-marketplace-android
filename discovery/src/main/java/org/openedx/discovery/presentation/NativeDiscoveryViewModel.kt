@@ -245,6 +245,7 @@ class NativeDiscoveryViewModel(
                 put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
                 put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
                 put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                put(DiscoveryAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
             }
         )
         subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)

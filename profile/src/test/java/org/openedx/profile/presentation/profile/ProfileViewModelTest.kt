@@ -89,6 +89,7 @@ class ProfileViewModelTest {
         every { config.getFeedbackEmailAddress() } returns ""
         every { config.getAgreement(Locale.current.language) } returns AgreementUrls()
         every { config.getFaqUrl() } returns ""
+        every { analytics.logEvent(any(), any()) } returns Unit  // Add this line
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
@@ -206,6 +207,9 @@ class ProfileViewModelTest {
     @Test
     fun `onResume refreshes subscription banner visibility state`() = runTest {
         every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
+        every { analytics.logEvent(any(), any()) } returns Unit  // Add this line
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } returns account
 
@@ -228,6 +232,10 @@ class ProfileViewModelTest {
     @Test
     fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
         every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
+        every { subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.PROFILE) } returns Unit
+        every { analytics.logEvent(any(), any()) } returns Unit  // Add this line
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } returns account
 

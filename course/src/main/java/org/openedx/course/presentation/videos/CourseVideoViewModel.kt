@@ -252,14 +252,6 @@ class CourseVideoViewModel(
         return expandedState
     }
 
-    fun isCourseNotStarted(uiState: CourseVideosUIState): Boolean {
-        return if (uiState is CourseVideosUIState.CourseData) {
-            uiState.courseStructure.isStarted.not()
-        } else {
-            false
-        }
-    }
-
     companion object {
         private const val TAG = "CourseVideoViewModel"
     }

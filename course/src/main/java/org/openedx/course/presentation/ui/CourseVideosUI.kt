@@ -1,8 +1,10 @@
 package org.openedx.course.presentation.ui
 
 import android.content.res.Configuration
+import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewConfiguration
+import android.widget.Toast
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -60,6 +62,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.androidx.compose.viewModel
 import org.openedx.core.AppDataConstants
 import org.openedx.core.AppDataConstants.VIDEO_DOUBLE_SPEED
 import org.openedx.core.AppDataConstants.VIDEO_NORMAL_SPEED
@@ -122,13 +125,17 @@ fun CourseVideosScreen(
             viewModel.switchCourseSections(block.id)
         },
         onSubSectionClick = { subSectionBlock ->
-            if (viewModel.isCourseNotStarted(uiState)) {
-                courseOutlineViewModel.showCourseStartedNotification(
-                    context = context,
-                    notificationTitle = "",
-                    notificationSubtitle = "",
-                    isModuleCompleted = false
-                )
+            val uiStateValue = uiState
+            if (uiStateValue is CourseVideosUIState.CourseData) {
+                Toast.makeText(context, "Course"+uiStateValue.courseStructure.isStarted, Toast.LENGTH_SHORT).show()
+                if (uiStateValue.courseStructure.isStarted) {
+                    courseOutlineViewModel.showCourseStartedNotification(
+                        context = context,
+                        notificationTitle = "",
+                        notificationSubtitle = "",
+                        isModuleCompleted = false
+                    )
+                }
             }
             viewModel.courseSubSectionUnit[subSectionBlock.id]?.let { unit ->
                 viewModel.sequentialClickedEvent(
@@ -193,7 +200,7 @@ private fun CourseVideosUI(
     onVideoDownloadQualityClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
-
+    val uiStateValue = uiState
     Scaffold(
         modifier = Modifier
             .fillMaxSize(),

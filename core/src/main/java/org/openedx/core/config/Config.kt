@@ -136,15 +136,6 @@ class Config(context: Context) {
         return getObjectOrNewInstance(RECAPTCHA, RecaptchaConfig::class.java)
     }
 
-    fun getSubscriptionBannerConfig(): SubscriptionBannerConfig {
-        val element = getObject(SUBSCRIPTION_BANNER) ?: getObject(SUBSCRIPTION_BANNER_LOWERCASE)
-        return if (element != null) {
-            Gson().fromJson(element, SubscriptionBannerConfig::class.java)
-        } else {
-            SubscriptionBannerConfig()
-        }
-    }
-
     private fun getString(key: String, defaultValue: String = ""): String {
         val element = getObject(key)
         return if (element != null) {

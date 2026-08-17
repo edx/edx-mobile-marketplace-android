@@ -89,7 +89,7 @@ class ProfileViewModelTest {
         every { config.getFeedbackEmailAddress() } returns ""
         every { config.getAgreement(Locale.current.language) } returns AgreementUrls()
         every { config.getFaqUrl() } returns ""
-        every { analytics.logEvent(any(), any()) } returns Unit  // Add this line
+        every { analytics.logEvent(any(), any()) } returns Unit
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
@@ -209,7 +209,7 @@ class ProfileViewModelTest {
         every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE) } returns true
         every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE) } returns
                 SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
-        every { analytics.logEvent(any(), any()) } returns Unit  // Add this line
+        every { analytics.logEvent(any(), any()) } returns Unit
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } returns account
 
@@ -235,7 +235,7 @@ class ProfileViewModelTest {
         every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE) } returns
                 SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
         every { subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.PROFILE) } returns Unit
-        every { analytics.logEvent(any(), any()) } returns Unit  // Add this line
+        every { analytics.logEvent(any(), any()) } returns Unit
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } returns account
 

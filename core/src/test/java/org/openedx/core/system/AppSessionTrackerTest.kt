@@ -34,7 +34,7 @@ class AppSessionTrackerTest {
     }
 
     @Test
-    fun `onAppForegrounded does not increment when feature is disabled`() {
+    fun `onAppForegrounded increments global session count even when feature is disabled`() {
         val appConfig = mockk<AppConfig>()
         val bannerConfig = SubscriptionBannerConfig(
             isEnabled = false,

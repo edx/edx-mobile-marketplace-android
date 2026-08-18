@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,8 +82,14 @@ fun ValuePropUpgradeFeatures(
     learnerName: String?,
     courseName: String,
     orgName: String,
-    orgLogo: String?
+    orgLogo: String?,
+    onCertificatePreviewShown: () -> Unit = {}
 ) {
+    if (previewCertificate) {
+        LaunchedEffect(previewCertificate) {
+            onCertificatePreviewShown()
+        }
+    }
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE

@@ -1,6 +1,5 @@
 package org.openedx.app.di
 
-import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -519,12 +518,10 @@ val screenModule = module {
             iapInteractor = get(),
             resourceManager = get(),
             iapNotifier = get(),
-            config = get(),
-            featureManager = get(),
             appData = get(),
             corePreferences = get(),
             analytics = get(),
-            appContext = androidContext(),
+            iapPreferences = get(),
         )
     }
 

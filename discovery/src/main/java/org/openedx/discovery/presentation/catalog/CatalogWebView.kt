@@ -8,9 +8,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toUri
-import com.datadog.android.webview.WebViewTracking
+import org.koin.compose.koinInject
 import org.openedx.core.extension.applyDarkModeIfEnabled
+import org.openedx.core.presentation.WebViewTrackingAnalytics
 import org.openedx.discovery.presentation.catalog.WebViewLink.Authority as linkAuthority
 
 @SuppressLint("SetJavaScriptEnabled", "ComposableNaming")
@@ -25,10 +25,10 @@ fun CatalogWebViewScreen(
     onWebPageUpdated: (String) -> Unit = {},
     onUriClick: (String, linkAuthority) -> Unit,
     onWebPageLoadError: () -> Unit,
-    isDatadogWebViewTrackingEnabled: Boolean,
 ): WebView {
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
+    val webViewTrackingAnalytics = koinInject<WebViewTrackingAnalytics>()
     val webView = remember {
         WebView(context).apply {
             webViewClient = object : DefaultWebViewClient(
@@ -124,11 +124,7 @@ fun CatalogWebViewScreen(
             }
             isVerticalScrollBarEnabled = false
             isHorizontalScrollBarEnabled = false
-
-            val host = url.toUri().host
-            if (isDatadogWebViewTrackingEnabled && !host.isNullOrEmpty()) {
-                WebViewTracking.enable(this, listOf(host))
-            }
+            webViewTrackingAnalytics.enableWebViewTracking(this, url)
             loadUrl(url)
             applyDarkModeIfEnabled(isDarkTheme)
         }

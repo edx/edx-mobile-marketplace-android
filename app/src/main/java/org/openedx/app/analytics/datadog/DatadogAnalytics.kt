@@ -1,6 +1,6 @@
 package org.openedx.app.analytics.datadog
-
 import android.app.Application
+import android.webkit.WebView
 import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
 import com.datadog.android.privacy.TrackingConsent
@@ -8,7 +8,11 @@ import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumActionType
 import com.datadog.android.rum.RumConfiguration
+import com.datadog.android.webview.WebViewTracking
 import com.datadog.android.core.configuration.Configuration
+import androidx.core.net.toUri
+import com.datadog.android.event.EventMapper
+import com.datadog.android.rum.model.ResourceEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,6 +21,7 @@ import org.openedx.app.BuildConfig
 import org.openedx.app.analytics.Analytics
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.presentation.WebViewTrackingAnalytics
 import org.openedx.core.system.notifier.app.AppNotifier
 import org.openedx.core.system.notifier.app.DatadogTrackingToggledEvent
 import org.openedx.core.utils.Logger
@@ -26,7 +31,7 @@ class DatadogAnalytics(
     private val config: Config,
     private val corePreferences: CorePreferences,
     private val appNotifier: AppNotifier,
-) : Analytics {
+) : Analytics, WebViewTrackingAnalytics {
 
     private val logger = Logger(TAG)
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -60,6 +65,16 @@ class DatadogAnalytics(
                 .trackUserInteractions()
                 .trackLongTasks()
                 .trackNonFatalAnrs(enabled = true)
+                .setResourceEventMapper(object : EventMapper<ResourceEvent> {
+                    override fun map(event: ResourceEvent): ResourceEvent? {
+                        val url = event.resource.url
+                        return if (url.contains("prod-discovery.edx-cdn.org")) {
+                            null // Drop these
+                        } else {
+                            event // Keep others
+                        }
+                    }
+                })
                 .build()
 
             Rum.enable(rumConfig)
@@ -114,6 +129,17 @@ class DatadogAnalytics(
                 null,
                 null
             )
+        } catch (e: Exception) {
+            logger.e(throwable = e)
+        }
+    }
+
+    override fun enableWebViewTracking(webView: WebView, url: String) {
+        if (!config.getDatadogConfig().enabled || !corePreferences.isDatadogEnabled) return
+
+        val host = url.toUri().host ?: return
+        try {
+            WebViewTracking.enable(webView, listOf(host))
         } catch (e: Exception) {
             logger.e(throwable = e)
         }

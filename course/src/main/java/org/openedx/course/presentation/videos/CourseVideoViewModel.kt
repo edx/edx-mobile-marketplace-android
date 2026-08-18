@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.openedx.core.BlockType
 import org.openedx.core.UIMessage
@@ -155,6 +156,24 @@ class CourseVideoViewModel(
                     courseSubSectionUnit.clear()
                     courseStructure = courseStructure.copy(blockData = sortBlocks(blocks))
                     initDownloadModelsStatus()
+
+                    val courseStatus = try {
+                        interactor.getCourseStatusFlow(courseId).first()
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    val resumeBlock = try {
+                        if (courseStatus?.lastVisitedBlockId != null && courseStatus.lastVisitedBlockId.isNotEmpty()) {
+                            val fullCourseStructure = interactor.getCourseStructure(courseId, false)
+                            getResumeBlock(fullCourseStructure.blockData, courseStatus.lastVisitedBlockId)
+                        } else {
+                            null
+                        }
+                    } catch (e: Exception) {
+                        null
+                    }
+
                     _uiState.value =
                         CourseVideosUIState.CourseData(
                             courseStructure = courseStructure,
@@ -163,6 +182,7 @@ class CourseVideoViewModel(
                             courseSectionsState = getCourseSectionExpandedState(courseStructure.blockData),
                             subSectionsDownloadsCount = subSectionsDownloadsCount,
                             downloadModelsSize = getDownloadModelsSize(),
+                            resumeComponent = resumeBlock
                         )
                 }
                 courseNotifier.send(CourseLoading(false))
@@ -173,6 +193,13 @@ class CourseVideoViewModel(
         }
     }
 
+    private fun getResumeBlock(
+        blocks: List<Block>,
+        continueBlockId: String,
+    ): Block? {
+        if (continueBlockId.isEmpty()) return null
+        return blocks.firstOrNull { it.id == continueBlockId }
+    }
     fun switchCourseSections(blockId: String) {
         if (_uiState.value is CourseVideosUIState.CourseData) {
             val state = _uiState.value as CourseVideosUIState.CourseData
@@ -250,6 +277,15 @@ class CourseVideoViewModel(
         expandedState.putAll(existingState)
 
         return expandedState
+    }
+
+    fun isResumeButtonVisible(uiState: CourseVideosUIState): Boolean {
+        return if (uiState is CourseVideosUIState.CourseData) {
+            val hasResumeComponent = uiState.resumeComponent != null
+            hasResumeComponent
+        } else {
+            false
+        }
     }
 
     companion object {

@@ -1,10 +1,8 @@
 package org.openedx.course.presentation.ui
 
 import android.content.res.Configuration
-import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewConfiguration
-import android.widget.Toast
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -127,8 +125,7 @@ fun CourseVideosScreen(
         onSubSectionClick = { subSectionBlock ->
             val uiStateValue = uiState
             if (uiStateValue is CourseVideosUIState.CourseData) {
-                Toast.makeText(context, "Course"+uiStateValue.courseStructure.isStarted, Toast.LENGTH_SHORT).show()
-                if (uiStateValue.courseStructure.isStarted) {
+                if (!viewModel.isResumeButtonVisible(uiStateValue)) {  // Use the function here
                     courseOutlineViewModel.showCourseStartedNotification(
                         context = context,
                         notificationTitle = "",
@@ -673,7 +670,8 @@ private fun CourseVideosScreenPreview() {
                     remainingSize = 0,
                     allCount = 1,
                     allSize = 0
-                )
+                ),
+                resumeComponent = null
             ),
             courseTitle = "",
             onExpandClick = { },
@@ -727,8 +725,9 @@ private fun CourseVideosScreenTabletPreview() {
                     remainingCount = 0,
                     remainingSize = 0,
                     allCount = 0,
-                    allSize = 0
-                )
+                    allSize = 0,
+                ),
+                resumeComponent = null
             ),
             courseTitle = "",
             onExpandClick = { },

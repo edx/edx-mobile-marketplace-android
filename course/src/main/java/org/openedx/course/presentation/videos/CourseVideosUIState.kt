@@ -12,7 +12,8 @@ sealed class CourseVideosUIState {
         val courseSubSections: Map<String, List<Block>>,
         val courseSectionsState: Map<String, Boolean>,
         val subSectionsDownloadsCount: Map<String, Int>,
-        val downloadModelsSize: DownloadModelsSize
+        val downloadModelsSize: DownloadModelsSize,
+        val resumeComponent: Block?,
     ) : CourseVideosUIState()
 
     data object Empty : CourseVideosUIState()

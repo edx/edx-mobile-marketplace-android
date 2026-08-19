@@ -32,6 +32,7 @@ import org.openedx.core.system.notifier.CourseSectionChanged
 import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.Logger
+import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -53,6 +54,7 @@ class CourseUnitContainerViewModel(
     private val notifier: CourseNotifier,
     private val analytics: CourseAnalytics,
     private val corePreferences: CorePreferences,
+    private val coursePreferences: CoursePreferences,
     private val networkConnection: NetworkConnection,
     iapNotifier: IAPNotifier,
 ) : BaseViewModel() {
@@ -360,13 +362,23 @@ class CourseUnitContainerViewModel(
         viewModelScope.launch {
             try {
                 val currentSectionBlock = blocks.getOrNull(currentSectionIndex)
+
                 val chapters = blocks.filter { it.type == BlockType.CHAPTER }
-                val moduleNumber = chapters.indexOfFirst { it.descendants.contains(currentSectionBlock?.id) }
-                    .takeIf { it >= 0 }
-                    ?.plus(1)
+
+                val moduleNumber = chapters.indexOfFirst {
+                    it.descendants.contains(currentSectionBlock?.id)
+                }.takeIf { it >= 0 }?.plus(1)
+
                 if (moduleNumber != null) {
+                    val completionId = unitId
+                    if (coursePreferences.isModuleCompletionNotificationShown(unitId)) {
+                        return@launch
+                    }
+                    coursePreferences.setModuleCompletionNotificationShown(unitId)
+
                     val currentVerticalBlock = getCurrentVerticalBlock()
                     val nextVerticalBlock = getNextVerticalBlock()
+
                     _showModuleCompletionNotification.emit(
                         ModuleCompletionEvent(
                             moduleNumber = moduleNumber,
@@ -375,10 +387,12 @@ class CourseUnitContainerViewModel(
                             showVerticalLayout = !isCourseUnitProgressEnabled
                         )
                     )
-                    finishVerticalClickedEvent(
-                        currentVerticalBlock?.blockId ?: "",
-                        currentVerticalBlock?.displayName ?: ""
-                    )
+                    logger.d({ "unitId=$unitId" })
+                    logger.d({ "currentVerticalIndex=$currentVerticalIndex" })
+                    logger.d({ "currentSectionIndex=$currentSectionIndex" })
+                    logger.d({ "currentSectionBlock=${currentSectionBlock?.displayName}" })
+                    logger.d({ "unitId=$unitId" })
+                    logger.d({ "completionId=$completionId" })
                 }
             } catch (e: Exception) {
                 logger.e(throwable = e)

@@ -273,21 +273,11 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 context?.let {
                     courseViewModel.showCourseStartedNotification(
                         context = it,
-                        notificationTitle = "Module ${event.moduleNumber} complete!",
-                        notificationSubtitle = "Well done on successfully completing module ${event.moduleNumber}!",
+                        notificationTitle = "Module ${event.currentUnitName} complete!",
+                        notificationSubtitle = "Well done on successfully completing module ${event.currentUnitName}!",
                         isModuleCompleted = true
                     )
                 }
-                val dialog = ChapterEndFragmentDialog.newInstance(
-                    sectionName = event.currentUnitName,
-                    nextSectionName = event.nextUnitName,
-                    isVerticalNavigation = event.showVerticalLayout
-                )
-                dialog.listener = dialogListener
-                dialog.show(
-                    requireActivity().supportFragmentManager,
-                    ChapterEndFragmentDialog::class.simpleName
-                )
             }.flowOn(Dispatchers.Main)
                 .launchIn(lifecycleScope)
 
@@ -430,6 +420,24 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                     }
                 }
             } else {
+                val currentVerticalBlock = viewModel.getCurrentVerticalBlock()
+                val nextVerticalBlock = viewModel.getNextVerticalBlock()
+                val dialog = ChapterEndFragmentDialog.newInstance(
+                    currentVerticalBlock?.displayName ?: "",
+                    nextVerticalBlock?.displayName ?: "",
+                    !viewModel.isCourseUnitProgressEnabled
+                )
+                currentVerticalBlock?.let {
+                    viewModel.finishVerticalClickedEvent(
+                        it.blockId,
+                        it.displayName
+                    )
+                }
+                dialog.listener = dialogListener
+                dialog.show(
+                    requireActivity().supportFragmentManager,
+                    ChapterEndFragmentDialog::class.simpleName
+                )
                 viewModel.handleModuleCompletion()
             }
         }

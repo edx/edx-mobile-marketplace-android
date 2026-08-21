@@ -200,8 +200,6 @@ class Config(context: Context) {
         private const val VIDEO_PLAYER = "VIDEO_PLAYER"
         private const val RECAPTCHA = "RECAPTCHA"
         private const val DATADOG = "DATADOG"
-        private const val SUBSCRIPTION_BANNER = "SUBSCRIPTION_BANNER"
-        private const val SUBSCRIPTION_BANNER_LOWERCASE = "subscription_banner"
     }
 
     enum class ViewType {

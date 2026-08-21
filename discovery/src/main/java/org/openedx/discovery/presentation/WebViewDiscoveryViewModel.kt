@@ -185,9 +185,9 @@ class WebViewDiscoveryViewModel(
     fun dismissSubscriptionBanner() {
         val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
         analytics.logEvent(
-            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.eventName,
+            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_SUPPRESSED.eventName,
             buildMap {
-                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.biValue)
+                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_SUPPRESSED.biValue)
                 put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
                 put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
                 put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)

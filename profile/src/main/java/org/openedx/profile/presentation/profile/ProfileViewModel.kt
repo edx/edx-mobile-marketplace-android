@@ -146,7 +146,7 @@ class ProfileViewModel(
     fun dismissSubscriptionBanner() {
         val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE)
         logProfileEvent(
-            event = ProfileAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED,
+            event = ProfileAnalyticsEvent.SUBSCRIPTION_BANNER_SUPPRESSED,
             params = buildMap {
                 put(ProfileAnalyticsKey.SCREEN_NAME.key, PROFILE_SCREEN_NAME)
                 put(ProfileAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)

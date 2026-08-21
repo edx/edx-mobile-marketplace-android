@@ -94,10 +94,10 @@ enum class ProfileAnalyticsEvent(val eventName: String, val biValue: String) {
         "Subscription:Banner Viewed",
         "edx.bi.app.subscription.banner.viewed"
     ),
-    SUBSCRIPTION_BANNER_DISMISSED(
-        "Subscription:Banner Dismissed",
-        "edx.bi.app.subscription.banner.dismissed"
-    ),
+//    SUBSCRIPTION_BANNER_DISMISSED(
+//        "Subscription:Banner Dismissed",
+//        "edx.bi.app.subscription.banner.dismissed"
+//    ),
     SUBSCRIPTION_BANNER_CTA_CLICKED(
         "Subscription:Banner CTA Clicked",
         "edx.bi.app.subscription.banner.cta.clicked"

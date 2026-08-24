@@ -45,6 +45,8 @@
 
     <string name="course_container_nav_home">Home</string>
     <string name="course_container_nav_videos">Videos</string>
+    <string name="course_container_nav_content">Content</string>
+    <string name="course_container_nav_progress">Progress</string>
     <string name="course_container_nav_discussions">Discussions</string>
     <string name="course_container_nav_more">More</string>
     <string name="course_container_nav_dates">Dates</string>
@@ -78,4 +80,65 @@
     <string name="course_find_new_course_button">Find a new course</string>
     <string name="course_error_not_started_title">This course will begin on %s. Come back then to start learning!</string>
     <string name="course_an_error_occurred">An error occurred while loading your course</string>
+    <string name="course_container_content_tab_all">All</string>
+    <string name="course_container_content_tab_video">Video</string>
+    <string name="course_container_content_tab_assignment">Assignment</string>
+
+    <!-- Course Completion UI -->
+    <string name="course_completion_title">Course Completion</string>
+    <string name="course_completion_progress_label">Progress</string>
+    <string name="course_completion_progress_description">You have completed %1$s%% of the course content</string>
+    <string name="course_completion_completed">Completed</string>
+    <string name="course_completion_next_sequence">Next Sequence</string>
+    <string name="course_completion_view_all_content">View All Content</string>
+
+    <!-- Videos UI -->
+    <string name="course_continue_watching">Continue Watching</string>
+    <string name="course_next_video">Next Video</string>
+    <string name="course_view_all_videos">View All Videos</string>
+    <string name="course_video_time_remaining">%1$s left</string>
+    <string name="course_videos_completed">Videos\ncompleted</string>
+
+    <!-- Assignments UI -->
+    <string name="course_assignments_completed">Assignments\ncompleted</string>
+    <string name="course_view_all_assignments">View All Assignments</string>
+    <string name="course_next_assignment">Next Assignment</string>
+    <string name="course_due_today">Due Today: %1$s</string>
+    <string name="course_days_past_due">%1$d Days Past Due: %2$s</string>
+    <string name="course_due_in_days">Due in %1$d Days: %2$s</string>
+    <string name="course_section">Section: %1$s</string>
+    <!-- Grades UI -->
+    <string name="course_grades_title">Grades</string>
+    <string name="course_grades_description">This represents your weighted grade against the grade needed to pass this course.</string>
+    <string name="course_view_progress">View Progress</string>
+
+    <!-- Caught Up Messages -->
+    <string name="course_videos_caught_up">You\'re all caught up on videos!</string>
+    <string name="course_assignments_caught_up">You\'re all caught up on assignments!</string>
+
+    <string name="course_accessibility_video_watched">Video watched</string>
+    <string name="course_continue">Continue</string>
+    <string name="course_return_to_course_home">Return to Course Home</string>
+    <string name="course_progress_required_grade_percent">A weighted grade of %1$s%% is required to pass this course</string>
+    <string name="course_progress_earned_possible_assignment_problems">%1$s / %2$s Complete</string>
+    <string name="course_progress_current_overall">Current Overall Weighted Grade:</string>
+    <string name="course_view_completed">View Completed</string>
+    <string name="course_hide_completed">Hide Completed</string>
+    <string name="course_completed">Completed</string>
+    <string name="course_video_watched">%1$s/%2$s Watched</string>
+    <string name="course_progress_current_and_max_weighted_graded_percent">%1$s / %2$s%%</string>
+    <string name="course_progress_completion_description">This represents how much of the course content you have completed. Note that some content may not yet be released.</string>
+    <string name="course_progress_of_grade">of Grade</string>
+    <string name="course_progress_completion_title">Course Completion</string>
+    <string name="course_progress_overall_title">Overall Grade</string>
+    <string name="course_progress_overall_description">This represents your weighted grade against the grade needed to pass this course.</string>
+    <string name="course_progress_grade_details">Grade Details</string>
+    <string name="course_progress_assignment_type">Assignment Type</string>
+    <string name="course_progress_current_max">Current / Max %</string>
+    <string name="course_container_nav_offline">Offline</string>
+
+    <plurals name="course_sections_complete" tools:ignore="MissingTranslation">
+        <item quantity="one">%1$s/%2$s Section Completed</item>
+        <item quantity="other">%1$s/%2$s Sections Completed</item>
+    </plurals>
 </resources>

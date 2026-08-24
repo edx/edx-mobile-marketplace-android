@@ -69,10 +69,12 @@ import org.openedx.core.system.notifier.CourseDatesShifted
 import org.openedx.core.system.notifier.CourseLoading
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.CourseOpenBlock
+import org.openedx.core.system.notifier.CourseStructureGot
 import org.openedx.core.system.notifier.CourseStructureUpdated
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.system.notifier.RefreshDates
 import org.openedx.core.system.notifier.RefreshDiscussions
+import org.openedx.core.system.notifier.RefreshProgress
 import org.openedx.core.system.notifier.UpdateCourseData
 import org.openedx.core.utils.Logger
 import org.openedx.core.utils.TimeUtils
@@ -282,6 +284,7 @@ class CourseContainerViewModel(
                 } else {
                     _courseAccessStatus.value = CourseAccessError.UNKNOWN
                 }
+                courseNotifier.send(CourseStructureGot(courseId))
             }
         }
     }
@@ -650,7 +653,7 @@ class CourseContainerViewModel(
                 updateData()
             }
 
-            CourseContainerTab.VIDEOS -> {
+            CourseContainerTab.OFFLINE -> {
                 updateData()
             }
 
@@ -663,6 +666,12 @@ class CourseContainerViewModel(
             CourseContainerTab.DISCUSSIONS -> {
                 viewModelScope.launch {
                     courseNotifier.send(RefreshDiscussions)
+                }
+            }
+
+            CourseContainerTab.PROGRESS -> {
+                viewModelScope.launch {
+                    courseNotifier.send(RefreshProgress)
                 }
             }
 
@@ -717,9 +726,11 @@ class CourseContainerViewModel(
     fun courseContainerTabClickedEvent(index: Int) {
         when (getTabByIndex(index)) {
             CourseContainerTab.HOME -> courseTabClickedEvent()
-            CourseContainerTab.VIDEOS -> videoTabClickedEvent()
+            CourseContainerTab.CONTENT -> contentTabClickedEvent()
+            CourseContainerTab.PROGRESS -> progressTabClickedEvent()
             CourseContainerTab.DISCUSSIONS -> discussionTabClickedEvent()
             CourseContainerTab.DATES -> datesTabClickedEvent()
+            CourseContainerTab.OFFLINE -> offlineTabClickedEvent()
             CourseContainerTab.MORE -> moreTabClickedEvent()
         }
     }
@@ -852,6 +863,10 @@ class CourseContainerViewModel(
         logCourseContainerEvent(CourseAnalyticsEvent.HOME_TAB)
     }
 
+    private fun contentTabClickedEvent() {
+        logCourseContainerEvent(CourseAnalyticsEvent.CONTENT_TAB)
+    }
+
     private fun videoTabClickedEvent() {
         logCourseContainerEvent(CourseAnalyticsEvent.VIDEOS_TAB)
     }
@@ -867,7 +882,12 @@ class CourseContainerViewModel(
     private fun moreTabClickedEvent() {
         logCourseContainerEvent(CourseAnalyticsEvent.MORE_TAB)
     }
-
+    private fun progressTabClickedEvent() {
+        logCourseContainerEvent(CourseAnalyticsEvent.PROGRESS_TAB)
+    }
+    private fun offlineTabClickedEvent() {
+        logCourseContainerEvent(CourseAnalyticsEvent.OFFLINE_TAB)
+    }
     private fun logCourseContainerEvent(event: CourseAnalyticsEvent) {
         courseAnalytics.logScreenEvent(
             screenName = event.eventName,

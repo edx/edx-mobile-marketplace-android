@@ -1,6 +1,5 @@
 package org.openedx.core.module.download
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -31,7 +30,7 @@ abstract class BaseDownloadViewModel(
     private val analytics: CoreAnalytics,
 ) : BaseViewModel() {
 
-    private val allBlocks = hashMapOf<String, Block>()
+    val allBlocks = hashMapOf<String, Block>()
 
     private val downloadableChildrenMap = hashMapOf<String, List<String>>()
     private val downloadModelsStatus = hashMapOf<String, DownloadedState>()
@@ -58,7 +57,7 @@ abstract class BaseDownloadViewModel(
         _downloadModelsStatusFlow.emit(downloadModelsStatus)
     }
 
-    private suspend fun getDownloadModelList(): List<DownloadModel> {
+    protected suspend fun getDownloadModelList(): List<DownloadModel> {
         return downloadDao.readAllData().first().map { it.mapToDomain() }
     }
 
@@ -116,7 +115,13 @@ abstract class BaseDownloadViewModel(
             saveDownloadModels(folder, saveBlocksIds)
         }
     }
-
+    open fun saveDownloadModels(folder: String, courseId: String, id: String) {
+        viewModelScope.launch {
+            val saveBlocksIds = downloadableChildrenMap[id] ?: listOf()
+            logSubsectionDownloadEvent(id, saveBlocksIds.size)
+            saveDownloadModels(folder, saveBlocksIds)
+        }
+    }
     open fun saveAllDownloadModels(folder: String) {
         viewModelScope.launch {
             val saveBlocksIds = downloadableChildrenMap.values.flatten()
@@ -145,6 +150,7 @@ abstract class BaseDownloadViewModel(
                         DownloadModel(
                             block.id,
                             block.displayName,
+                            courseId,
                             size,
                             path,
                             url,
@@ -212,7 +218,18 @@ abstract class BaseDownloadViewModel(
             workerController.removeModels(downloadableChildren)
         }
     }
-
+    open fun removeDownloadModels(blockId: String, courseId: String) {
+        viewModelScope.launch {
+            val downloadableChildren = downloadableChildrenMap[blockId] ?: listOf()
+            logSubsectionDeleteEvent(blockId, downloadableChildren.size)
+            workerController.removeModels(downloadableChildren)
+        }
+    }
+    fun removeBlockDownloadModel(blockId: String) {
+        viewModelScope.launch {
+            workerController.removeModel(blockId)
+        }
+    }
     fun removeAllDownloadModels() {
         viewModelScope.launch {
             val downloadableChildren = downloadableChildrenMap.values.flatten()

@@ -22,5 +22,6 @@ internal val LocalShapes = staticCompositionLocalOf {
         courseImageShape = RoundedCornerShape(8.dp),
         dialogShape = RoundedCornerShape(24.dp),
         socialAuthButtonShape = RoundedCornerShape(8.dp),
+        videoPreviewShape = RoundedCornerShape(8.dp),
     )
 }

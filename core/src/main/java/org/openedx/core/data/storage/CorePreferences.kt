@@ -16,6 +16,7 @@ interface CorePreferences {
     var appConfig: AppConfig
     var canResetAppDirectory: Boolean
     var lastSignInType: String
+    var isRelativeDatesEnabled: Boolean
     var isDatadogEnabled: Boolean
 
     fun clear()

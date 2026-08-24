@@ -236,10 +236,12 @@ data class AssignmentProgressDb(
     val numPointsEarned: Float?,
     @ColumnInfo("num_points_possible")
     val numPointsPossible: Float?,
+    val shortLabel: String?
 ) {
     fun mapToDomain() = DomainAssignmentProgress(
         assignmentType = assignmentType ?: "",
         numPointsEarned = numPointsEarned ?: 0f,
-        numPointsPossible = numPointsPossible ?: 0f
+        numPointsPossible = numPointsPossible ?: 0f,
+        shortLabel = shortLabel ?: ""
     )
 }

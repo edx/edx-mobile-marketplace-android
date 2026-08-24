@@ -1,22 +1,26 @@
 package org.openedx.course.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import org.openedx.core.ApiConstants
 import org.openedx.core.data.api.CourseApi
 import org.openedx.core.data.model.BlocksCompletionBody
+import org.openedx.core.data.model.room.VideoProgressEntity
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.CourseComponentStatus
 import org.openedx.core.domain.model.CourseDatesBannerInfo
 import org.openedx.core.domain.model.CourseDatesResult
 import org.openedx.core.domain.model.CourseEnrollmentDetails
 import org.openedx.core.domain.model.CourseEnrollmentDetailsSource
+import org.openedx.core.domain.model.CourseProgress
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.exception.NoCachedDataException
 import org.openedx.core.extension.channelFlowWithAwait
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.course.data.storage.CourseDao
+import java.util.concurrent.ConcurrentHashMap
 
 class CourseRepository(
     private val api: CourseApi,
@@ -26,13 +30,26 @@ class CourseRepository(
     private val networkConnection: NetworkConnection,
 ) {
     private val courseStructure = mutableMapOf<String, CourseStructure>()
-
+    private val needsRefresh = ConcurrentHashMap.newKeySet<String>()
     private val courseStatusMap = mutableMapOf<String, CourseComponentStatus>()
     private val courseDatesMap = mutableMapOf<String, CourseDatesResult>()
 
     suspend fun removeDownloadModel(id: String) {
         downloadDao.removeDownloadModel(id)
     }
+    private val structureCache = CoalescingCache<String, CourseStructure>(
+        fetch = { courseId ->
+            val response = api.getCourseStructure(
+                "stale-if-error=0",
+                "v4",
+                preferencesManager.user?.username,
+                courseId
+            )
+            courseDao.insertCourseStructureEntity(response.mapToRoomEntity())
+            response.mapToDomain()
+        },
+        persist = { courseId, _ -> needsRefresh.remove(courseId) }
+    )
 
     fun getDownloadModels() = downloadDao.readAllData().map { list ->
         list.map { it.mapToDomain() }
@@ -69,7 +86,13 @@ class CourseRepository(
             throw NoCachedDataException()
         }
     }
-
+    private val progressCache = CoalescingCache<String, CourseProgress>(
+        fetch = { courseId ->
+            val response = api.getCourseProgress(courseId)
+            courseDao.insertCourseProgressEntity(response.mapToRoomEntity(courseId))
+            response.mapToDomain()
+        }
+    )
     suspend fun getCourseStructure(courseId: String, isNeedRefresh: Boolean): CourseStructure {
         if (!isNeedRefresh) courseStructure[courseId]?.let { return it }
 
@@ -93,6 +116,13 @@ class CourseRepository(
         }
 
         return courseStructure[courseId]!!
+    }
+    suspend fun getCourseStructureFromCache(courseId: String): CourseStructure {
+        return structureCache.getCached(courseId)
+            ?: courseDao.getCourseStructureById(courseId)?.mapToDomain()?.also {
+                structureCache.setCached(courseId, it)
+            }
+            ?: throw NoCachedDataException()
     }
 
     suspend fun getEnrollmentDetailsFlow(
@@ -181,6 +211,34 @@ class CourseRepository(
         }
     }
 
+    fun getCourseProgress(
+        courseId: String,
+        isRefresh: Boolean,
+        getOnlyCacheIfExist: Boolean
+    ): Flow<CourseProgress> = flow {
+        if (!isRefresh) {
+            progressCache.getCached(courseId)?.let { emit(it) }
+        }
+
+        if (!isRefresh && progressCache.getCached(courseId) == null) {
+            courseDao.getCourseProgressById(courseId)?.mapToDomain()?.let {
+                progressCache.setCached(courseId, it)
+                emit(it)
+            }
+        }
+
+        val shouldRefresh = isRefresh || needsRefresh.contains(courseId)
+        val hasCache = progressCache.getCached(courseId) != null
+        val shouldFetch = shouldRefresh || !hasCache || !getOnlyCacheIfExist
+
+        if (!networkConnection.isOnline() && !hasCache) {
+            throw NoCachedDataException()
+        }
+        if (networkConnection.isOnline() && shouldFetch) {
+            emit(progressCache.getOrFetch(courseId, forceRefresh = true))
+        }
+    }
+
     suspend fun getCourseDates(courseId: String) =
         api.getCourseDates(courseId).getCourseDatesResult()
 
@@ -191,4 +249,21 @@ class CourseRepository(
 
     suspend fun getAnnouncements(courseId: String) =
         api.getAnnouncements(courseId).map { it.mapToDomain() }
+    suspend fun getVideoProgress(blockId: String): VideoProgressEntity {
+        return courseDao.getVideoProgressByBlockId(blockId)
+            ?: VideoProgressEntity(blockId, "", null, null)
+    }
+
+
+    suspend fun getAllDownloadModels() = downloadDao.readAllDataNonFlow().map { it.mapToDomain() }
+
+    suspend fun saveVideoProgress(
+        blockId: String,
+        videoUrl: String,
+        videoTime: Long,
+        duration: Long
+    ) {
+        val videoProgressEntity = VideoProgressEntity(blockId, videoUrl, videoTime, duration)
+        courseDao.insertVideoProgressEntity(videoProgressEntity)
+    }
 }

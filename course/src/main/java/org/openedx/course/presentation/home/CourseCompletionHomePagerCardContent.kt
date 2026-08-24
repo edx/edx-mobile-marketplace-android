@@ -1,0 +1,207 @@
+package org.openedx.course.presentation.home
+
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import org.openedx.core.domain.model.Block
+import org.openedx.core.ui.theme.OpenEdXTheme
+import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.appTypography
+import org.openedx.core.ui.windowSizeValue
+import org.openedx.course.R
+import org.openedx.course.presentation.ui.CourseSection
+import org.openedx.course.presentation.worker.CoreMocks
+
+@Composable
+fun CourseCompletionHomePagerCardContent(
+    modifier: Modifier = Modifier,
+    uiState: CourseHomeUIState.CourseData,
+    onViewAllContentClick: () -> Unit,
+    onDownloadClick: (blockIds: List<String>) -> Unit,
+    onSubSectionClick: (Block) -> Unit,
+) {
+    val courseProgress = uiState.courseProgress?.completion ?: 0f
+    val courseProgressPercent = uiState.courseProgress?.completionPercent ?: 0
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        // Title
+        Text(
+            text = stringResource(R.string.course_completion_title),
+            style = MaterialTheme.appTypography.titleLarge,
+            color = MaterialTheme.appColors.textDark
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Progress Section
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics(mergeDescendants = true) {},
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.course_completion_progress_label),
+                    style = MaterialTheme.appTypography.labelLarge,
+                    color = MaterialTheme.appColors.textDark,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(
+                        R.string.course_completion_progress_description,
+                        courseProgressPercent
+                    ),
+                    style = MaterialTheme.appTypography.bodyMedium,
+                    color = MaterialTheme.appColors.textDark
+                )
+            }
+
+            // Circular Progress
+            CourseCompletionCircularProgress(
+                progress = courseProgress,
+                progressPercent = courseProgressPercent,
+                completedText = stringResource(R.string.course_completion_completed)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        uiState.next?.let { (chapter, subsection) ->
+            // Section progress
+            val subSections = uiState.courseSubSections[chapter.id]
+            val completedCount = subSections?.count { it.isCompleted() } ?: 0
+            val totalCount = subSections?.size ?: 0
+            val progress = if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+
+            CourseSection(
+                modifier = modifier,
+                block = chapter,
+                onItemClick = {
+                    onSubSectionClick(subsection)
+                },
+                courseSectionsState = true,
+                courseSubSections =  listOf(subsection),
+                isExpandable = false,
+                downloadedStateMap = uiState.downloadedState,
+                onSubSectionClick = onSubSectionClick,
+                onDownloadClick = onDownloadClick,
+            )
+
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // View All Content Button
+        ViewAllButton(
+            text = stringResource(R.string.course_completion_view_all_content),
+            onClick = onViewAllContentClick,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+    }
+}
+@Composable
+fun CourseCompletionCircularProgress(
+    modifier: Modifier = Modifier,
+    progress: Float,
+    progressPercent: Int,
+    completedText: String
+) {
+    Box(
+        modifier = modifier
+            .semantics(mergeDescendants = true) {}
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .size(100.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.appColors.progressBarBackgroundColor,
+                    shape = CircleShape
+                )
+                .padding(3.dp),
+            progress = { progress },
+            color = MaterialTheme.appColors.primary,
+            trackColor = MaterialTheme.appColors.progressBarBackgroundColor,
+            strokeWidth = 10.dp,
+            strokeCap = StrokeCap.Round
+        )
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "$progressPercent%",
+                style = MaterialTheme.appTypography.headlineSmall,
+                color = MaterialTheme.appColors.primary,
+            )
+            Text(
+                text = completedText,
+                style = MaterialTheme.appTypography.labelSmall,
+                color = MaterialTheme.appColors.textPrimaryVariant,
+            )
+        }
+    }
+}
+
+
+@Preview
+@Composable
+private fun CourseCompletionHomePagerCardContentPreview() {
+    OpenEdXTheme {
+        CourseCompletionHomePagerCardContent(
+            uiState = CourseHomeUIState.CourseData(
+                courseStructure = CoreMocks.mockCourseStructure,
+                courseProgress = null, // No course progress for preview
+                next = Pair(
+                    CoreMocks.mockChapterBlock,
+                    CoreMocks.mockChapterBlock
+                ), // Mock next section
+                downloadedState = mapOf(),
+                resumeComponent = CoreMocks.mockChapterBlock,
+                resumeUnitTitle = "Resumed Unit",
+                courseSubSections = mapOf(),
+                subSectionsDownloadsCount = mapOf(),
+                useRelativeDates = true,
+                courseVideos = mapOf(),
+                courseAssignments = emptyList(),
+                videoPreview = null,
+                videoProgress = 0f
+            ),
+            onViewAllContentClick = {},
+            onDownloadClick = {},
+            onSubSectionClick = {},
+        )
+    }
+}

@@ -21,10 +21,16 @@ import org.openedx.core.presentation.settings.video.VideoQualityViewModel
 import org.openedx.core.ui.WindowSize
 import org.openedx.course.data.repository.CourseRepository
 import org.openedx.course.domain.interactor.CourseInteractor
+import org.openedx.course.presentation.assignments.CourseAssignmentViewModel
+import org.openedx.course.presentation.container.ContentTabViewModel
 import org.openedx.course.presentation.container.CourseContainerViewModel
 import org.openedx.course.presentation.dates.CourseDatesViewModel
 import org.openedx.course.presentation.handouts.HandoutsViewModel
+import org.openedx.course.presentation.home.CourseHomeViewModel
+import org.openedx.course.presentation.offline.CourseOfflineViewModel
+import org.openedx.course.presentation.outline.CourseContentAllViewModel
 import org.openedx.course.presentation.outline.CourseOutlineViewModel
+import org.openedx.course.presentation.progress.CourseProgressViewModel
 import org.openedx.course.presentation.section.CourseSectionViewModel
 import org.openedx.course.presentation.unit.container.CourseUnitContainerViewModel
 import org.openedx.course.presentation.unit.html.HtmlUnitViewModel
@@ -93,6 +99,61 @@ val screenModule = module {
     viewModel { MainViewModel(get(), get(), get(), get(), get()) }
 
     factory { AuthRepository(get(), get(), get(),get()) }
+    viewModel { (courseId: String, courseTitle: String) ->
+        CourseHomeViewModel(
+            courseId,
+            courseTitle,
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
+    viewModel { (courseId: String, courseTitle: String) ->
+        CourseContentAllViewModel(
+            courseId,
+            courseTitle,
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
+    viewModel { (courseId: String) ->
+        CourseAssignmentViewModel(
+            courseId = courseId,
+            interactor = get(),
+            courseRouter = get(),
+            courseNotifier = get(),
+            analytics = get()
+        )
+    }
+    viewModel { (courseId: String) ->
+        CourseProgressViewModel(
+            courseId,
+            get(),
+            get(),
+            get(),
+        )
+    }
+
     factory { AuthInteractor(get()) }
     factory { Validator() }
 
@@ -351,6 +412,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
             get()
         )
     }
@@ -542,5 +604,29 @@ val screenModule = module {
     }
 
     viewModel { ProgramViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
-
+    viewModel { (courseId: String, courseTitle: String) ->
+        ContentTabViewModel(
+            courseId,
+            courseTitle,
+            get(),
+            get(),
+        )
+    }
+    single<org.openedx.core.domain.interactor.CourseInteractor> { get<CourseInteractor>() }
+    viewModel { (courseId: String, courseTitle: String) ->
+        CourseOfflineViewModel(
+            courseId,
+            courseTitle,
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+        )
+    }
 }

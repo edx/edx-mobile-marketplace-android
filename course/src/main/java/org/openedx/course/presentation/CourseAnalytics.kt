@@ -50,6 +50,22 @@ enum class CourseAnalyticsEvent(val eventName: String, val biValue: String) {
         "Course:Home Tab",
         "edx.bi.app.course.home_tab"
     ),
+    CONTENT_TAB(
+        "Course:Content Tab",
+        "edx.bi.app.course.content_tab"
+    ),
+    VIDEO_SHOW_COMPLETED(
+        "Content Page:Show Completed Subsection Click",
+        "edx.bi.app.course.content.show_completed_subsection.clicked"
+    ),
+    COURSE_CONTENT_VIDEO_CLICK(
+        "Course:Video Clicked",
+        "edx.bi.app.course.content.video.clicked"
+    ),
+    COURSE_CONTENT_ASSIGNMENT_CLICK(
+        "Course:Assignment click",
+        "edx.bi.app.course.content.assignment.clicked"
+    ),
     VIDEOS_TAB(
         "Course:Videos Tab",
         "edx.bi.app.course.video_tab"
@@ -66,6 +82,14 @@ enum class CourseAnalyticsEvent(val eventName: String, val biValue: String) {
         "Course:Handouts Tab",
         "edx.bi.app.course.handouts_tab"
     ),
+    PROGRESS_TAB(
+        "Course:Progress Tab",
+        "edx.bi.app.course.progress_tab"
+    ),
+    OFFLINE_TAB(
+        "Course:Offline Tab",
+        "edx.bi.app.course.offline_tab"
+    ),
     ANNOUNCEMENTS(
         "Course:Announcements",
         "edx.bi.app.course.announcements"
@@ -77,6 +101,10 @@ enum class CourseAnalyticsEvent(val eventName: String, val biValue: String) {
     UNIT_DETAIL(
         "Course:Unit Detail",
         "edx.bi.app.course.unit_detail"
+    ),
+    COURSE_CONTENT_TAB_CLICK(
+        "Content Page:Section Click",
+        "edx.bi.app.course.content.section.clicked"
     ),
     VIEW_CERTIFICATE(
         "Course:View Certificate Clicked",
@@ -121,6 +149,34 @@ enum class CourseAnalyticsEvent(val eventName: String, val biValue: String) {
     DATES_COURSE_COMPONENT_CLICKED(
         "Dates:Course Component Clicked",
         "edx.bi.app.dates.component.clicked"
+    ),
+    COURSE_HOME_GRADES_VIEW_PROGRESS(
+        "Course Home:Grades View Progress",
+        "edx.bi.app.course.home.grades.view_progress.clicked"
+    ),
+    COURSE_HOME_VIDEO_CLICK(
+        "Course Home:Video Click",
+        "edx.bi.app.course.home.video.clicked"
+    ),
+    COURSE_HOME_ASSIGNMENT_CLICK(
+        "Course Home:Assignment Click",
+        "edx.bi.app.course.home.assignment.clicked"
+    ),
+    COURSE_HOME_SECTION_SUBSECTION_CLICK(
+        "Course Home:Section Subsection Click",
+        "edx.bi.app.course.home.section_subsection.clicked"
+    ),
+    COURSE_HOME_VIEW_ALL_CONTENT(
+        "Course Home:View All Content",
+        "edx.bi.app.course.home.view_all_content.clicked"
+    ),
+    COURSE_HOME_VIEW_ALL_VIDEOS(
+        "Course Home:View All Videos",
+        "edx.bi.app.course.home.view_all_videos.clicked"
+    ),
+    COURSE_HOME_VIEW_ALL_ASSIGNMENTS(
+        "Course Home:View All Assignments",
+        "edx.bi.app.course.home.view_all_assignments.clicked"
     ),
     PLS_BANNER_VIEWED(
         "PLS:Banner Viewed",
@@ -168,6 +224,7 @@ enum class CourseAnalyticsKey(val key: String) {
     LINK("link"),
     SUPPORTED("supported"),
     BLOCK_ID("block_id"),
+    TAB_NAME("tab_name"),
     BLOCK_NAME("block_name"),
     BLOCK_TYPE("block_type"),
     PLAY_MEDIUM("play_medium"),

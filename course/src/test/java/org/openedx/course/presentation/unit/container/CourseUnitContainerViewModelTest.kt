@@ -22,6 +22,7 @@ import org.junit.rules.TestRule
 import org.openedx.core.BlockType
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.course.domain.helper.VideoPreviewHelper
 import org.openedx.core.domain.model.AssignmentProgress
 import org.openedx.core.domain.model.AuthorizationDenialReason
 import org.openedx.core.domain.model.Block
@@ -55,12 +56,14 @@ class CourseUnitContainerViewModelTest {
     private val analytics = mockk<CourseAnalytics>()
     private val corePreferences = mockk<CorePreferences>()
     private val iapNotifier = mockk<IAPNotifier>()
+    private val videoPreviewHelper = mockk<VideoPreviewHelper>()
     private val networkConnection = mockk<NetworkConnection>()
 
     private val assignmentProgress = AssignmentProgress(
         assignmentType = "Homework",
         numPointsEarned = 1f,
-        numPointsPossible = 3f
+        numPointsPossible = 3f,
+        ""
     )
 
     private val blocks = listOf(
@@ -189,6 +192,7 @@ class CourseUnitContainerViewModelTest {
 
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
+        every { videoPreviewHelper.getVideoPreviews(any(), any()) } returns emptyMap()
     }
 
     @After

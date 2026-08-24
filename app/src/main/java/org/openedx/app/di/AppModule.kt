@@ -39,12 +39,15 @@ import org.openedx.core.data.model.CourseStructureModel
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
+import org.openedx.course.domain.helper.VideoPreviewHelper
+import org.openedx.core.module.DownloadWorker
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.TranscriptManager
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.download.FileDownloader
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.presentation.IAPAnalytics
+import org.openedx.core.presentation.dialog.downloaddialog.DownloadDialogManager
 import org.openedx.core.presentation.WebViewTrackingAnalytics
 import org.openedx.core.presentation.dialog.appreview.AppReviewAnalytics
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
@@ -108,6 +111,7 @@ val appModule = module {
     single { AppCookieManager(get(), get()) }
     single { ReviewManagerFactory.create(get()) }
     single { CalendarManager(get(), get(), get()) }
+    single { DownloadDialogManager(get(), get(), get(), get()) }
 
     single { ImageProcessor(get()) }
 
@@ -211,6 +215,7 @@ val appModule = module {
     single {
         DownloadWorkerController(get(), get(), get())
     }
+    single { DownloadWorker(get(), get()) }
 
     single {
         val resourceManager = get<ResourceManager>()
@@ -258,6 +263,7 @@ val appModule = module {
     factory { GoogleAuthHelper(get(), get()) }
     factory { MicrosoftAuthHelper() }
     factory { OAuthHelper(get(), get(), get()) }
+    factory { VideoPreviewHelper(get(), get()) }
 
     factory { FileUtil(get()) }
 

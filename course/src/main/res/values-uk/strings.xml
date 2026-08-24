@@ -45,4 +45,6 @@
     <string name="course_accessibility_stop_downloading_course_section">Зупинити завантаження секції курсу</string>
     <string name="course_accessibility_section_completed">Секція завершена</string>
     <string name="course_accessibility_section_uncompleted">Секція не завершена</string>
+    <string name="course_container_content_tab_all">Усі</string>
+    <string name="course_container_content_tab_video">Відео</string>
 </resources>

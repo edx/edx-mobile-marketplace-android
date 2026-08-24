@@ -4,8 +4,10 @@ import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import org.openedx.core.data.model.CourseProgressEntity
 import org.openedx.core.data.model.room.CourseEnrollmentDetailsEntity
 import org.openedx.core.data.model.room.CourseStructureEntity
+import org.openedx.core.data.model.room.VideoProgressEntity
 import org.openedx.core.data.model.room.discovery.EnrolledCourseEntity
 import org.openedx.core.module.db.DownloadDao
 import org.openedx.core.module.db.DownloadModelEntity
@@ -16,7 +18,7 @@ import org.openedx.discovery.data.converter.DiscoveryConverter
 import org.openedx.discovery.data.model.room.CourseEntity
 import org.openedx.discovery.data.storage.DiscoveryDao
 
-const val DATABASE_VERSION = 4
+const val DATABASE_VERSION = 5
 const val DATABASE_NAME = "OpenEdX_db"
 
 @Database(
@@ -26,11 +28,14 @@ const val DATABASE_NAME = "OpenEdX_db"
         CourseStructureEntity::class,
         DownloadModelEntity::class,
         CourseEnrollmentDetailsEntity::class,
+        VideoProgressEntity::class,
+        CourseProgressEntity::class,
     ],
     autoMigrations = [
         AutoMigration(1, 2),
         AutoMigration(2, 3),
-        AutoMigration(3, DATABASE_VERSION),
+        AutoMigration(3, 4),
+        AutoMigration(4, DATABASE_VERSION),
     ],
     version = DATABASE_VERSION
 )

@@ -4,6 +4,7 @@ import org.openedx.core.domain.model.Block
 import org.openedx.core.domain.model.CourseStructure
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.download.DownloadModelsSize
+import org.openedx.core.utils.VideoPreview
 
 sealed class CourseVideosUIState {
     data class CourseData(
@@ -12,7 +13,11 @@ sealed class CourseVideosUIState {
         val courseSubSections: Map<String, List<Block>>,
         val courseSectionsState: Map<String, Boolean>,
         val subSectionsDownloadsCount: Map<String, Int>,
-        val downloadModelsSize: DownloadModelsSize
+        val downloadModelsSize: DownloadModelsSize,
+        val courseVideos: Map<String, List<Block>>,
+        val videoPreview: Map<String, VideoPreview?>,
+        val videoProgress: Map<String, Float?>,
+        val isCompletedSectionsShown: Boolean,
     ) : CourseVideosUIState()
 
     data object Empty : CourseVideosUIState()

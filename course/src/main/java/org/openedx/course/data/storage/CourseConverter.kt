@@ -1,7 +1,10 @@
 package org.openedx.course.data.storage
 
 import androidx.room.TypeConverter
+import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
+import org.openedx.core.data.model.GradingPolicyDb
+import org.openedx.core.data.model.SectionScoreDb
 import org.openedx.core.data.model.room.BlockDb
 import org.openedx.core.data.model.room.CourseModeDB
 import org.openedx.core.data.model.room.VideoInfoDb
@@ -81,4 +84,30 @@ class CourseConverter {
         val type = genericType<List<CourseModeDB>>()
         return Gson().fromJson(value, type)
     }
+    @TypeConverter
+    fun fromSectionScoreDbList(value: List<SectionScoreDb>?): String =
+        Gson().toJson(value)
+
+    @TypeConverter
+    fun toSectionScoreDbList(value: String): List<SectionScoreDb> =
+        Gson().fromJson(value, object : TypeToken<List<SectionScoreDb>>() {}.type)
+
+    @TypeConverter
+    fun fromAssignmentPolicyDbList(value: List<GradingPolicyDb.AssignmentPolicyDb>?): String =
+        Gson().toJson(value)
+
+    @TypeConverter
+    fun toAssignmentPolicyDbList(value: String): List<GradingPolicyDb.AssignmentPolicyDb> =
+        Gson().fromJson(
+            value,
+            object : TypeToken<List<GradingPolicyDb.AssignmentPolicyDb>>() {}.type
+        )
+
+    @TypeConverter
+    fun fromGradeRangeMap(value: Map<String, Float>?): String =
+        Gson().toJson(value)
+
+    @TypeConverter
+    fun toGradeRangeMap(value: String): Map<String, Float> =
+        Gson().fromJson(value, object : TypeToken<Map<String, Float>>() {}.type)
 }

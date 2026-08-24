@@ -1,11 +1,14 @@
 package org.openedx.core.domain.model
 
+import android.content.Context
 import android.webkit.URLUtil
 import org.openedx.core.AppDataConstants
 import org.openedx.core.BlockType
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.module.db.FileType
+import org.openedx.core.utils.PreviewHelper
+import org.openedx.core.utils.VideoPreview
 import org.openedx.core.utils.VideoUtil
 import java.util.Date
 
@@ -34,6 +37,7 @@ data class Block(
         get() {
             return studentViewData != null && studentViewData.encodedVideos?.hasDownloadableVideo == true
         }
+    val isxBlock: Boolean = false
 
     val downloadableType: FileType
         get() = when (type) {
@@ -42,7 +46,7 @@ data class Block(
             }
 
             else -> {
-                FileType.UNKNOWN
+                FileType.X_BLOCK
             }
         }
 
@@ -78,6 +82,42 @@ data class Block(
         return count
     }
 
+    fun getFileSize(): Long {
+        return when {
+            type == BlockType.VIDEO -> downloadModel?.size ?: 0L
+            isxBlock ->  0L
+            else -> 0L
+        }
+    }
+
+    fun getVideoPreview(context: Context, isOnline: Boolean, offlineUrl: String?): VideoPreview? {
+        return if (studentViewData?.encodedVideos?.hasYoutubeUrl == true) {
+            val youtubeUrl = studentViewData.encodedVideos.youtube?.url ?: ""
+            VideoPreview.createYoutubePreview(
+                PreviewHelper.getYouTubeThumbnailUrl(youtubeUrl)
+            )
+        } else if (studentViewData?.encodedVideos?.hasVideoUrl == true) {
+            val videoUrl = if (studentViewData.encodedVideos.videoUrl.isNotEmpty() && isOnline) {
+                studentViewData.encodedVideos.videoUrl
+            } else {
+                offlineUrl ?: ""
+            }
+            val bitmap = PreviewHelper.getVideoFrameBitmap(
+                context = context,
+                isOnline = isOnline,
+                videoUrl = videoUrl
+            )
+            bitmap?.let { VideoPreview.createEncodedVideoPreview(it) }
+        } else {
+            null
+        }
+    }
+    val videoUrl: String?
+        get() = if (studentViewData?.encodedVideos?.hasVideoUrl == true) {
+            studentViewData.encodedVideos.videoUrl
+        } else {
+            studentViewData?.encodedVideos?.youtube?.url
+        }
     fun isPaidContent(): Boolean =
         authorizationDenialReason == AuthorizationDenialReason.FEATURE_BASED_ENROLLMENTS
 
@@ -122,12 +162,15 @@ data class EncodedVideos(
                 || hls?.url != null
                 || fallback?.url != null
 
+    val videoUrl: String
+        get() =  mobileLow?.url?.takeIf { it.isNotEmpty() }
+            ?: fallback?.url?.takeIf { it.isNotEmpty() }
+            ?: hls?.url?.takeIf { it.isNotEmpty() }
+            ?: desktopMp4?.url?.takeIf { it.isNotEmpty() }
+            ?: mobileHigh?.url?.takeIf { it.isNotEmpty() }
+            ?: ""
     val hasVideoUrl: Boolean
-        get() = isPreferredVideoInfo(mobileHigh) ||
-                isPreferredVideoInfo(mobileLow) ||
-                isPreferredVideoInfo(desktopMp4) ||
-                isPreferredVideoInfo(hls) ||
-                isPreferredVideoInfo(fallback)
+        get() = videoUrl.isNotEmpty()
 
     val hasYoutubeUrl: Boolean
         get() = youtube?.url?.isNotEmpty() == true

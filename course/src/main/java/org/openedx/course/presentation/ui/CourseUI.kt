@@ -43,6 +43,7 @@ import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDone
@@ -592,6 +593,7 @@ fun CourseSection(
     onItemClick: (Block) -> Unit,
     courseSectionsState: Boolean?,
     courseSubSections: List<Block>?,
+    isExpandable: Boolean = true,
     downloadedStateMap: Map<String, DownloadedState>,
     onSubSectionClick: (Block) -> Unit,
     onDownloadClick: (blocksIds: List<String>) -> Unit,
@@ -637,6 +639,7 @@ fun CourseSection(
         CourseExpandableChapterCard(
             block = block,
             arrowDegrees = arrowRotation,
+            isExpandable = isExpandable,
             downloadedState = downloadedState,
             onDownloadClick = {
                 if (downloadedState == DownloadedState.DOWNLOADED) {
@@ -653,7 +656,9 @@ fun CourseSection(
             ) {
                 CourseSubSectionItem(
                     block = subSectionBlock,
-                    onClick = onSubSectionClick
+                    onClick = onSubSectionClick,
+                    showDueDate = true,
+                    useRelativeDates = true
                 )
             }
         }
@@ -665,6 +670,7 @@ fun CourseExpandableChapterCard(
     modifier: Modifier = Modifier,
     block: Block,
     arrowDegrees: Float = 0f,
+    isExpandable: Boolean = true,
     downloadedState: DownloadedState?,
     onDownloadClick: () -> Unit,
 ) {
@@ -678,7 +684,7 @@ fun CourseExpandableChapterCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        CardArrow(degrees = arrowDegrees)
+        if (isExpandable) { CardArrow(degrees = arrowDegrees) }
         if (block.isCompleted()) {
             val completedIconPainter = painterResource(R.drawable.course_ic_task_alt)
             val completedIconColor = MaterialTheme.appColors.successGreen
@@ -742,7 +748,7 @@ fun CourseExpandableChapterCard(
                         )
                     } else if (downloadedState == DownloadedState.WAITING) {
                         Icon(
-                            painter = painterResource(id = R.drawable.course_download_waiting),
+                            painter = painterResource(id = coreR.drawable.course_download_waiting),
                             contentDescription = stringResource(id = R.string.course_accessibility_stop_downloading_course_section),
                             tint = MaterialTheme.appColors.error
                         )
@@ -766,6 +772,8 @@ fun CourseExpandableChapterCard(
 fun CourseSubSectionItem(
     modifier: Modifier = Modifier,
     block: Block,
+    useRelativeDates: Boolean,
+    showDueDate: Boolean,
     onClick: (Block) -> Unit,
 ) {
     val context = LocalContext.current
@@ -830,7 +838,6 @@ fun CourseSubSectionItem(
         }
     }
 }
-
 @Composable
 fun CourseUnitToolbar(
     title: String,
@@ -1378,7 +1385,8 @@ private fun OfflineQueueCardPreview() {
                     progress = 0f,
                     transcriptUrls = emptyMap(),
                     transcriptPaths = emptyMap(),
-                    transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED
+                    transcriptDownloadedStatus = TranscriptsDownloadedState.NOT_DOWNLOADED,
+                    courseId = ""
                 ),
                 progressValue = 10,
                 progressSize = 30,
@@ -1430,7 +1438,10 @@ private fun CourseSubSectionItemPreview() {
     OpenEdXTheme {
         CourseSubSectionItem(
             block = mockChapterBlock,
-            onClick = {}
+            onClick = {},
+            modifier = Modifier ,
+            useRelativeDates = true,
+            showDueDate = true
         )
     }
 }
@@ -1465,6 +1476,6 @@ private val mockChapterBlock = Block(
     completion = 1.0,
     containsGatedContent = false,
     authorizationDenialReason = AuthorizationDenialReason.UNKNOWN,
-    assignmentProgress = AssignmentProgress("", 1f, 2f),
+    assignmentProgress = AssignmentProgress("", 1f, 2f,"HM1"),
     due = Date()
 )

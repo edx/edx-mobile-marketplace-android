@@ -91,6 +91,7 @@ data class AppColors(
     val highlightDiscussionResponse: Color,
     val certificatePreviewHeading: Color,
     val certificatePreviewMessage: Color,
+    val removeAllButtonBackground: Color,
 ) {
     val primary: Color get() = material.primary
     val primaryVariant: Color get() = material.primaryVariant

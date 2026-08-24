@@ -13,6 +13,8 @@ data class DownloadModelEntity(
     val id: String,
     @ColumnInfo("title")
     val title: String,
+    @ColumnInfo(name = "courseId", defaultValue = "")
+    val courseId: String,
     @ColumnInfo("size")
     val size: Long,
     @ColumnInfo("path")
@@ -36,6 +38,7 @@ data class DownloadModelEntity(
     fun mapToDomain() = DownloadModel(
         id,
         title,
+        courseId,
         size,
         path,
         url,
@@ -54,6 +57,7 @@ data class DownloadModelEntity(
                 return DownloadModelEntity(
                     id,
                     title,
+                    courseId,
                     size,
                     path,
                     url,

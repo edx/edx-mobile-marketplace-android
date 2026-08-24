@@ -3,17 +3,7 @@ package org.openedx.course.data.repository
 import kotlinx.coroutines.CompletableDeferred
 import java.util.concurrent.ConcurrentHashMap
 
-/**
- * A cache with request coalescing support.
- *
- * When multiple callers request the same data simultaneously,
- * only one fetch operation is performed and all callers receive the same result.
- *
- * @param K the type of cache keys
- * @param V the type of cached values
- * @param fetch the suspend function to fetch data for a given key
- * @param persist optional callback invoked after successful fetch (e.g., to save to database)
- */
+
 class CoalescingCache<K, V>(
     private val fetch: suspend (K) -> V,
     private val persist: (suspend (K, V) -> Unit)? = null
@@ -40,13 +30,7 @@ class CoalescingCache<K, V>(
         cache.clear()
     }
 
-    /**
-     * Gets the value from cache or fetches it.
-     *
-     * If [forceRefresh] is false and a cached value exists, returns it immediately.
-     * Otherwise, fetches the value. If another fetch for the same key is already
-     * in progress, waits for that result instead of making a duplicate request.
-     */
+
     suspend fun getOrFetch(key: K, forceRefresh: Boolean = false): V {
         if (!forceRefresh) {
             cache[key]?.let { return it }

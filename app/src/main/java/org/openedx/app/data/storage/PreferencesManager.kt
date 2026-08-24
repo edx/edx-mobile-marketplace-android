@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 
 class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences,
     WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences,
-    SubscriptionBannerStorage {
+    SubscriptionBannerStorage,
     IAPPreferences {
 
     private val sharedPreferences =

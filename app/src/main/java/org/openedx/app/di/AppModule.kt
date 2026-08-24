@@ -37,6 +37,7 @@ import org.openedx.core.data.model.CourseEnrollmentDetails
 import org.openedx.core.data.model.CourseEnrollments
 import org.openedx.core.data.model.CourseStructureModel
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
 import org.openedx.course.domain.helper.VideoPreviewHelper
 import org.openedx.core.module.DownloadWorker
@@ -47,6 +48,7 @@ import org.openedx.core.module.download.FileDownloader
 import org.openedx.core.presentation.CoreAnalytics
 import org.openedx.core.presentation.IAPAnalytics
 import org.openedx.core.presentation.dialog.downloaddialog.DownloadDialogManager
+import org.openedx.core.presentation.WebViewTrackingAnalytics
 import org.openedx.core.presentation.dialog.appreview.AppReviewAnalytics
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
 import org.openedx.core.presentation.global.AppData
@@ -103,6 +105,7 @@ val appModule = module {
     single<InAppReviewPreferences> { get<PreferencesManager>() }
     single<CoursePreferences> { get<PreferencesManager>() }
     single<NotificationsPreferences> { get<PreferencesManager>() }
+    single<IAPPreferences> { get<PreferencesManager>() }
 
     single { ResourceManager(get()) }
     single { AppCookieManager(get(), get()) }
@@ -234,6 +237,7 @@ val appModule = module {
     single<FirebaseAnalytics> { FirebaseAnalytics(get()) }
     single<SegmentAnalytics> { SegmentAnalytics(get(), get()) }
     single<DatadogAnalytics> { DatadogAnalytics(androidApplication(), get(), get(), get()) }
+    single<WebViewTrackingAnalytics> { get<DatadogAnalytics>() }
     single<AnalyticsManager> { AnalyticsManager(get(), get(), get(), get()) }
     single<AppAnalytics> { get<AnalyticsManager>() }
     single<AuthAnalytics> { get<AnalyticsManager>() }

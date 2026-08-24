@@ -1,7 +1,7 @@
 package org.openedx.core.presentation.iap
 
-import android.content.Context
 import com.android.billingclient.api.BillingClient
+import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
 import org.openedx.core.domain.model.iap.PurchaseFlowData
@@ -19,6 +19,7 @@ class IAPEventLogger(
     private val analytics: IAPAnalytics,
     var isSilentIAPFlow: Boolean? = null,
     var purchaseFlowData: PurchaseFlowData? = null,
+    private val iapPreferences: IAPPreferences? = null,
 ) {
     fun upgradeNowClickedEvent() {
         logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED)
@@ -181,59 +182,37 @@ class IAPEventLogger(
             )
         }
     }
-
-    fun onCertificatePreviewShown(
-        isCertificatePreviewEnabled: Boolean,
-        courseId: String?,
-        varient: String,
-        context: Context
-    ) {
+    fun onCertificatePreviewShown(courseId: String?) {
         logIAPEvent(IAPAnalyticsEvent.IAP_CERT_PREVIEW_SHOWN, buildMap {
-            put(
-                IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key,
-                isCertificatePreviewEnabled.toString()
-            )
+            put(IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key, "true")
             put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
-            put(IAPAnalyticsKeys.CERT_PREVIEW_VARIENT.key, varient)
         })
-        PreviewCounter.increment(context,courseId.toString())
+        courseId?.takeIf { it.isNotEmpty() }?.let {
+            iapPreferences?.incrementPreviewCount(it)
+        }
     }
 
-    fun onUpgradeButtonTapped(
-        isCertificatePreviewEnabled: Boolean,
-        courseId: String?,
-        varient: String
-    ) {
+    fun onUpgradeButtonTapped(courseId: String?) {
         logIAPEvent(IAPAnalyticsEvent.IAP_UPGRADE_NOW_CLICKED, buildMap {
-            put(
-                IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key,
-                isCertificatePreviewEnabled.toString()
-            )
+            put(IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key, "true")
             put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
-            put(IAPAnalyticsKeys.CERT_PREVIEW_VARIENT.key, varient)
         })
     }
 
-    fun onCertificatePreviewPurchased(
-        isCertificatePreviewEnabled: Boolean,
-        courseId: String?,
-        varient: String,
-        price: Double,
-        appContext: Context
-    ) {
-        val previewCount = PreviewCounter.get(appContext, courseId.toString())
+    fun onCertificatePreviewPurchased(courseId: String?, price: Double) {
+        val previewCount = courseId?.takeIf { it.isNotEmpty() }
+            ?.let { iapPreferences?.getPreviewCount(it) } ?: 0
         logIAPEvent(IAPAnalyticsEvent.IAP_CERT_PREVIEW_PURCHASED, buildMap {
-            put(
-                IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key,
-                isCertificatePreviewEnabled.toString()
-            )
+            put(IAPAnalyticsKeys.SHOW_CERTIFICATE_PREVIEW.key, "true")
             put(IAPAnalyticsKeys.ATTEMPTS_TO_PURCHASE.key, previewCount)
             put(IAPAnalyticsKeys.COURSE_ID.key, courseId)
-            put(IAPAnalyticsKeys.CERT_PREVIEW_VARIENT.key, varient)
             put(IAPAnalyticsKeys.LMS_USD_PRICE.key, price)
         })
-        PreviewCounter.clear(appContext, courseId.toString())
+        courseId?.takeIf { it.isNotEmpty() }?.let {
+            iapPreferences?.clearPreviewCount(it)
+        }
     }
+
     private fun logIAPEvent(
         event: IAPAnalyticsEvent,
         params: Map<String, Any?> = mutableMapOf(),
@@ -247,29 +226,5 @@ class IAPEventLogger(
                 putAll(getUnfulfilledIAPEventParams())
             }
         )
-    }
-    object PreviewCounter {
-
-        private const val PREF_NAME = "preview_counter"
-
-        fun increment(context: Context, courseId: String): Int {
-            if (context == null || courseId.isNullOrEmpty()) return 0
-            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            val newValue = prefs.getInt(courseId, 0) + 1
-            prefs.edit().putInt(courseId, newValue).apply()
-            return newValue
-        }
-
-        fun get(context: Context, courseId: String): Int {
-            if (context == null || courseId.isNullOrEmpty()) return 0
-            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            return prefs.getInt(courseId, 0)
-        }
-
-        fun clear(context: Context, courseId: String) {
-            if (context == null || courseId.isNullOrEmpty()) return
-            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            prefs.edit().remove(courseId).apply()
-        }
     }
 }

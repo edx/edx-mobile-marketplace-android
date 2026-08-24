@@ -6,6 +6,7 @@ import org.openedx.app.BuildConfig
 import org.openedx.auth.data.model.AuthType
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
 import org.openedx.core.domain.model.AppConfig
@@ -27,9 +28,13 @@ import java.util.concurrent.TimeUnit
 class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences,
     WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences,
     SubscriptionBannerStorage {
+    IAPPreferences {
 
     private val sharedPreferences =
         context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE)
+
+    private val iapSharedPreferences =
+        context.getSharedPreferences(IAP_PREFS_NAME, Context.MODE_PRIVATE)
 
     private fun saveString(key: String, value: String) {
         sharedPreferences.edit().apply {
@@ -299,6 +304,22 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
 
     private fun currentUserKey(): String =
         user?.id?.toString().takeUnless { it.isNullOrBlank() } ?: GUEST_USER
+    override fun incrementPreviewCount(courseId: String): Int {
+        if (courseId.isEmpty()) return 0
+        val newValue = iapSharedPreferences.getInt(courseId, 0) + 1
+        iapSharedPreferences.edit().putInt(courseId, newValue).apply()
+        return newValue
+    }
+
+    override fun getPreviewCount(courseId: String): Int {
+        if (courseId.isEmpty()) return 0
+        return iapSharedPreferences.getInt(courseId, 0)
+    }
+
+    override fun clearPreviewCount(courseId: String) {
+        if (courseId.isEmpty()) return
+        iapSharedPreferences.edit().remove(courseId).apply()
+    }
 
     companion object {
         private const val ACCESS_TOKEN = "access_token"
@@ -328,5 +349,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val SUBSCRIPTION_BANNER_DISMISS_COUNT = "subscription_banner_dismiss_count_v1"
         private const val SUBSCRIPTION_BANNER_DISMISSED = "subscription_banner_dismissed_v2"
         private const val GUEST_USER = "guest"
+        private const val IAP_PREFS_NAME = "iap_preferences"
     }
 }

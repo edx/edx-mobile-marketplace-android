@@ -21,8 +21,8 @@ import org.openedx.core.AppDataConstants
 import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
-import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.domain.interactor.IAPInteractor
 import org.openedx.core.domain.model.iap.IAPFlow
 import org.openedx.core.domain.model.iap.IAPFlowSource
@@ -30,7 +30,6 @@ import org.openedx.core.domain.model.iap.PurchaseFlowData
 import org.openedx.core.exception.iap.IAPException
 import org.openedx.core.extension.isNull
 import org.openedx.core.extension.toIAPException
-import org.openedx.core.feature.FeatureManager
 import org.openedx.core.module.billing.BillingProcessor
 import org.openedx.core.module.billing.getCourseId
 import org.openedx.core.module.billing.getPriceAmount
@@ -48,12 +47,10 @@ class IAPViewModel(
     private val iapInteractor: IAPInteractor,
     private val resourceManager: ResourceManager,
     private val iapNotifier: IAPNotifier,
-    private val config: Config,
-    private val featureManager: FeatureManager,
     val appData: AppData,
     corePreferences: CorePreferences,
     analytics: IAPAnalytics,
-    private val appContext: Context
+    iapPreferences: IAPPreferences,
 ) : BaseViewModel() {
     private val logger = Logger(TAG)
 
@@ -68,16 +65,17 @@ class IAPViewModel(
     val purchaseData: PurchaseFlowData
         get() = purchaseFlowData
 
-    val eventLogger = IAPEventLogger(
+    private val eventLogger = IAPEventLogger(
         analytics = analytics,
         isSilentIAPFlow = purchaseData.isSilentIAPFlow(),
-        purchaseFlowData = purchaseData
+        purchaseFlowData = purchaseData,
+        iapPreferences = iapPreferences,
     )
 
     val user = corePreferences.user
 
     private var checkingCourseMode: Boolean = false
-    var isCertificatePreviewEnabled: Boolean = false
+    var isCertificatePreviewEnabled: Boolean = true
         private set
 
     private val purchaseListeners = object : BillingProcessor.PurchaseListeners {
@@ -101,18 +99,6 @@ class IAPViewModel(
     }
 
     init {
-        user?.id?.let { userId ->
-            val userId: Long = user.id
-            isCertificatePreviewEnabled = isUserIdOdd(userId)
-            if (isCertificatePreviewEnabled) {
-                eventLogger.onCertificatePreviewShown(
-                    isCertificatePreviewEnabled,
-                    purchaseFlowData.courseId,
-                    getVarient(isCertificatePreviewEnabled),
-                    appContext
-                )
-            }
-        }
 
         viewModelScope.launch(Dispatchers.IO) {
             iapNotifier.notifier.onEach { event ->
@@ -201,18 +187,15 @@ class IAPViewModel(
 
     fun startPurchaseFlow() {
         eventLogger.upgradeNowClickedEvent()
-        eventLogger.onUpgradeButtonTapped(
-            isCertificatePreviewEnabled,
-            purchaseFlowData.courseId,
-            getVarient(isCertificatePreviewEnabled)
-        )
+        if (isCertificatePreviewEnabled) {
+            eventLogger.onUpgradeButtonTapped(purchaseFlowData.courseId)
+        }
         _uiState.value = IAPUIState.Loading(loaderType = IAPLoaderType.PURCHASE_FLOW)
         purchaseFlowData.flowStartTime = TimeUtils.getCurrentTime()
         val courseName = purchaseFlowData.courseName
         val productInfo = purchaseFlowData.productInfo
 
         if (courseName == null || productInfo == null) {
-            // Handle missing data error
             updateErrorState(
                 IAPException(
                     requestType = IAPRequestType.NO_SKU_CODE,
@@ -241,6 +224,18 @@ class IAPViewModel(
         }
     }
 
+    fun onContinueToFreeTrackClicked() {
+        eventLogger.logContinueToFreeTrackClickedEvent()
+    }
+
+    fun logCertificatePreviewShown() {
+        eventLogger.onCertificatePreviewShown(purchaseFlowData.courseId)
+    }
+
+    fun logErrorAction(alertType: String, action: String) {
+        eventLogger.logIAPErrorActionEvent(alertType, action)
+    }
+
     private fun createOrder(purchaseFlowData: PurchaseFlowData) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
@@ -263,8 +258,6 @@ class IAPViewModel(
         if (purchaseFlowData.isConsumed) return
         viewModelScope.launch(Dispatchers.IO) {
             purchaseFlowData.run {
-                // If purchaseToken is null or empty, try to fetch it from the user's purchases
-                // after error dialogs, Unfulfilled/Restore flow, etc.
                 runCatching {
                     if (purchaseToken.isNullOrEmpty()) {
                         iapInteractor.consumePurchaseByCourseId(purchaseFlowData.courseId!!)
@@ -274,17 +267,14 @@ class IAPViewModel(
                 }.onSuccess {
                     if (eventLogger.isSilentIAPFlow.isNull()) {
                         eventLogger.upgradeSuccessEvent()
-                        eventLogger.onCertificatePreviewPurchased(
-                            isCertificatePreviewEnabled,
-                            purchaseFlowData.courseId,
-                            getVarient(isCertificatePreviewEnabled),
-                            purchaseFlowData.price,
-                            appContext
-                        )
+                        if (isCertificatePreviewEnabled) {
+                            eventLogger.onCertificatePreviewPurchased(
+                                purchaseFlowData.courseId,
+                                purchaseFlowData.price,
+                            )
+                        }
                     }
                     purchaseFlowData.isConsumed = true
-                    // The IAP dialog will be dismissed by `CourseUnitContainerFragment` after
-                    // refreshing the course components
                     if (eventLogger.purchaseFlowData?.screenName != IAPFlowSource.COURSE_COMPONENT.screen) {
                         _uiState.value = IAPUIState.CourseDataUpdated
                     } else {
@@ -320,7 +310,7 @@ class IAPViewModel(
                 updateErrorState(
                     IAPException(
                         requestType = IAPRequestType.PURCHASE_PRECHECK_CODE,
-                        httpErrorCode = 409, // Purchase already completed; enforcing ACTION_REFRESH to update the state.
+                        httpErrorCode = 409,
                         errorMessage = resourceManager.getString(R.string.iap_course_already_paid_for_message)
                     )
                 )
@@ -343,16 +333,13 @@ class IAPViewModel(
      * instead of linear, and reset the count after trigger the error state.
      *
      * Delay = retryCount * 2500ms
-     *
-     * This method implements a simple retry-with-delay mechanism for handling
-     * delayed course mode transitions (e.g., after an in-app purchase).
      */
     private fun retryCourseModeTransition() {
         if (purchaseData.courseModeTransitionRetryCount > AppDataConstants.ENROLLMENT_MODE_RETRY_THRESHOLD) {
             updateErrorState(
                 IAPException(
                     requestType = IAPRequestType.COURSE_REFRESH_CODE,
-                    httpErrorCode = 409, // Course not fulfilled; enforcing ACTION_REFRESH to update the state
+                    httpErrorCode = 409,
                     errorMessage = resourceManager.getString(R.string.iap_course_not_fullfilled)
                 )
             )
@@ -399,13 +386,6 @@ class IAPViewModel(
         }
     }
 
-    fun isUserIdOdd(userId: Long): Boolean {
-        return userId % 2L != 0L
-    }
-
-    private fun getVarient(certificatePreviewEnabled: Boolean): String {
-        return if (certificatePreviewEnabled) "treatment" else "control"
-    }
 
     fun clearIAPFLow() {
         _uiState.value = IAPUIState.Clear

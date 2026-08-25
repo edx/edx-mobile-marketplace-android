@@ -74,7 +74,7 @@ import org.openedx.profile.presentation.profile.ProfileViewModel
 import org.openedx.profile.presentation.settings.SettingsViewModel
 import org.openedx.profile.presentation.video.VideoSettingsViewModel
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewViewModel
-import org.openedx.core.system.NotificationDisplayManager
+
 val screenModule = module {
 
     viewModel {
@@ -89,8 +89,9 @@ val screenModule = module {
             get(),
             get(),
             get(),
-           get(),
+            get(),
             get<NotificationManager>()
+
         )
     }
     viewModel { MainViewModel(get(), get(), get(), get(), get()) }
@@ -311,7 +312,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
-            get<NotificationDisplayManager>()
+            get()
         )
     }
     viewModel { (courseId: String) ->
@@ -339,7 +340,8 @@ val screenModule = module {
             get(),
             get(),
             get(),
-get(),        )
+            get()
+        )
     }
     viewModel { (courseId: String, courseTitle: String) ->
         CourseVideoViewModel(
@@ -527,10 +529,9 @@ get(),        )
             appData = get(),
             corePreferences = get(),
             analytics = get(),
-            appContext = androidContext(),
+            appContext = androidContext()
         )
     }
-
     viewModel { (descendants: List<String>) ->
         DownloadQueueViewModel(
             descendants,

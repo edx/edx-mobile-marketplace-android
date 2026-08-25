@@ -527,7 +527,6 @@ val screenModule = module {
             appData = get(),
             corePreferences = get(),
             analytics = get(),
-            appContext = androidContext()
             iapPreferences = get(),
         )
     }

@@ -854,9 +854,6 @@ class CourseContainerViewModel(
 
     private fun videoTabClickedEvent() {
         logCourseContainerEvent(CourseAnalyticsEvent.VIDEOS_TAB)
-        viewModelScope.launch {
-            _uiMessage.emit(UIMessage.ToastMessage("📹 Videos Tab Clicked"))
-        }
     }
 
     private fun discussionTabClickedEvent() {

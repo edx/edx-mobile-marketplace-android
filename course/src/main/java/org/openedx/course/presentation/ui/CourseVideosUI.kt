@@ -60,7 +60,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import org.koin.androidx.compose.viewModel
 import org.openedx.core.AppDataConstants
 import org.openedx.core.AppDataConstants.VIDEO_DOUBLE_SPEED
 import org.openedx.core.AppDataConstants.VIDEO_NORMAL_SPEED
@@ -125,7 +124,7 @@ fun CourseVideosScreen(
         onSubSectionClick = { subSectionBlock ->
             val uiStateValue = uiState
             if (uiStateValue is CourseVideosUIState.CourseData) {
-                if (!viewModel.isResumeButtonVisible(uiStateValue)) {  // Use the function here
+                if (!viewModel.isResumeButtonVisible(uiStateValue)) {
                     courseOutlineViewModel.showCourseStartedNotification(
                         context = context,
                         notificationTitle = "",

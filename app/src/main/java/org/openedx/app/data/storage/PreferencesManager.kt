@@ -221,6 +221,14 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         return (currentTime - lastTime) > TimeUnit.DAYS.toMillis(1)
     }
 
+    override fun isModuleCompletionNotificationShown(moduleId: String): Boolean {
+        return getBoolean("module_completion_$moduleId", false)
+    }
+
+    override fun setModuleCompletionNotificationShown(moduleId: String) {
+        saveBoolean("module_completion_$moduleId", true)
+    }
+
     override var notifications: NotificationsConfiguration
         set(value) {
             val notificationsJson = Gson().toJson(value)

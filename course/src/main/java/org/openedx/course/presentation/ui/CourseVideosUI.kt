@@ -59,6 +59,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.openedx.core.AppDataConstants
 import org.openedx.core.AppDataConstants.VIDEO_DOUBLE_SPEED
 import org.openedx.core.AppDataConstants.VIDEO_NORMAL_SPEED
@@ -92,6 +93,7 @@ import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.core.utils.FileUtil
 import org.openedx.course.R
+import org.openedx.course.presentation.outline.CourseOutlineViewModel
 import org.openedx.course.presentation.videos.CourseVideoViewModel
 import org.openedx.course.presentation.videos.CourseVideosUIState
 import java.util.Date
@@ -107,7 +109,9 @@ fun CourseVideosScreen(
     val uiMessage by viewModel.uiMessage.collectAsState(null)
     val videoSettings by viewModel.videoSettings.collectAsState()
     val context = LocalContext.current
-
+    val courseOutlineViewModel: CourseOutlineViewModel = koinViewModel(
+        parameters = { org.koin.core.parameter.parametersOf(viewModel.courseId, viewModel.courseTitle) }
+    )
     CourseVideosUI(
         windowSize = windowSize,
         uiState = uiState,
@@ -118,6 +122,17 @@ fun CourseVideosScreen(
             viewModel.switchCourseSections(block.id)
         },
         onSubSectionClick = { subSectionBlock ->
+            val uiStateValue = uiState
+            if (uiStateValue is CourseVideosUIState.CourseData) {
+                if (!viewModel.isResumeButtonVisible(uiStateValue)) {
+                    courseOutlineViewModel.showCourseStartedNotification(
+                        context = context,
+                        notificationTitle = "",
+                        notificationSubtitle = "",
+                        isModuleCompleted = false
+                    )
+                }
+            }
             viewModel.courseSubSectionUnit[subSectionBlock.id]?.let { unit ->
                 viewModel.sequentialClickedEvent(
                     unit.blockId,
@@ -181,7 +196,7 @@ private fun CourseVideosUI(
     onVideoDownloadQualityClick: () -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
-
+    val uiStateValue = uiState
     Scaffold(
         modifier = Modifier
             .fillMaxSize(),
@@ -654,7 +669,8 @@ private fun CourseVideosScreenPreview() {
                     remainingSize = 0,
                     allCount = 1,
                     allSize = 0
-                )
+                ),
+                resumeComponent = null
             ),
             courseTitle = "",
             onExpandClick = { },
@@ -708,8 +724,9 @@ private fun CourseVideosScreenTabletPreview() {
                     remainingCount = 0,
                     remainingSize = 0,
                     allCount = 0,
-                    allSize = 0
-                )
+                    allSize = 0,
+                ),
+                resumeComponent = null
             ),
             courseTitle = "",
             onExpandClick = { },

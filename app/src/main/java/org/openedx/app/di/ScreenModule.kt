@@ -1,5 +1,7 @@
 package org.openedx.app.di
 
+import android.app.NotificationManager
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -87,7 +89,9 @@ val screenModule = module {
             get(),
             get(),
             get(),
-           get()
+            get(),
+            get<NotificationManager>()
+
         )
     }
     viewModel { MainViewModel(get(), get(), get(), get(), get()) }
@@ -308,6 +312,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get()
         )
     }
     viewModel { (courseId: String) ->
@@ -335,6 +340,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get()
         )
     }
     viewModel { (courseId: String, courseTitle: String) ->
@@ -524,7 +530,6 @@ val screenModule = module {
             iapPreferences = get(),
         )
     }
-
     viewModel { (descendants: List<String>) ->
         DownloadQueueViewModel(
             descendants,

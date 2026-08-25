@@ -46,6 +46,7 @@ import org.openedx.course.databinding.FragmentCourseUnitContainerBinding
 import org.openedx.course.presentation.ChapterEndFragmentDialog
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.course.presentation.DialogListener
+import org.openedx.course.presentation.outline.CourseOutlineViewModel
 import org.openedx.course.presentation.ui.CourseUnitToolbar
 import org.openedx.course.presentation.ui.HorizontalPageIndicator
 import org.openedx.course.presentation.ui.NavigationUnitsButtons
@@ -60,6 +61,12 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         get() = _binding!!
     private var _binding: FragmentCourseUnitContainerBinding? = null
 
+    private val courseViewModel: CourseOutlineViewModel by viewModel {
+        parametersOf(
+            requireArguments().getString(ARG_COURSE_ID, ""),
+            resources.getString(R.string.course_title)
+        )
+    }
     private val viewModel by viewModel<CourseUnitContainerViewModel> {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
@@ -262,6 +269,18 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 }
             }
 
+            viewModel.showModuleCompletionNotification.onEach { event ->
+                context?.let {
+                    courseViewModel.showCourseStartedNotification(
+                        context = it,
+                        notificationTitle = "Module ${event.currentUnitName} complete!",
+                        notificationSubtitle = "Well done on successfully completing module ${event.currentUnitName}!",
+                        isModuleCompleted = true
+                    )
+                }
+            }.flowOn(Dispatchers.Main)
+                .launchIn(lifecycleScope)
+
             binding.subSectionUnitsBg.setOnClickListener { handleUnitsClick() }
 
             binding.subSectionUnitsList.setContent {
@@ -419,6 +438,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                     requireActivity().supportFragmentManager,
                     ChapterEndFragmentDialog::class.simpleName
                 )
+                viewModel.handleModuleCompletion()
             }
         }
     }

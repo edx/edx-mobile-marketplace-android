@@ -91,7 +91,10 @@ import org.openedx.whatsnew.data.storage.WhatsNewPreferences
 import org.openedx.whatsnew.presentation.WhatsNewAnalytics
 import org.openedx.core.DatabaseManager as IDatabaseManager
 import org.openedx.core.R as CoreR
-
+import android.app.NotificationManager
+import android.content.Context
+import org.openedx.core.system.NotificationDisplayManager
+import org.openedx.core.system.NotificationDisplayManagerImpl
 val appModule = module {
 
     single { Config(get()) }
@@ -108,6 +111,10 @@ val appModule = module {
     single { AppCookieManager(get(), get()) }
     single { ReviewManagerFactory.create(get()) }
     single { CalendarManager(get(), get(), get()) }
+    single { androidApplication().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
+    single<NotificationDisplayManager> {
+        NotificationDisplayManagerImpl(get<NotificationManager>())
+    }
 
     single { ImageProcessor(get()) }
 

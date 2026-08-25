@@ -113,6 +113,14 @@ fun CourseOutlineScreen(
             }
         },
         onSubSectionClick = { subSectionBlock ->
+            if (!viewModel.isResumeButtonVisible(uiState)) {
+                viewModel.showCourseStartedNotification(
+                    context,
+                    "",
+                    "",
+                    false
+                )
+            }
             if (viewModel.isCourseNestedListEnabled) {
                 viewModel.courseSubSectionUnit[subSectionBlock.id]?.let { unit ->
                     viewModel.logUnitDetailViewedEvent(

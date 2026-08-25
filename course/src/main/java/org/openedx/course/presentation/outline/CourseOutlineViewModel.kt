@@ -1,6 +1,7 @@
 package org.openedx.course.presentation.outline
 
 import android.content.Context
+import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -49,6 +50,7 @@ import org.openedx.course.presentation.CourseAnalyticsEvent
 import org.openedx.course.presentation.CourseAnalyticsKey
 import org.openedx.course.presentation.CourseRouter
 import org.openedx.core.R as CoreR
+import org.openedx.core.system.NotificationDisplayManager
 
 class CourseOutlineViewModel(
     val courseId: String,
@@ -65,6 +67,7 @@ class CourseOutlineViewModel(
     coreAnalytics: CoreAnalytics,
     downloadDao: DownloadDao,
     workerController: DownloadWorkerController,
+    private val notificationDisplayManager: NotificationDisplayManager,
 ) : BaseDownloadViewModel(
     courseId,
     downloadDao,
@@ -467,6 +470,52 @@ class CourseOutlineViewModel(
                 put(CourseAnalyticsKey.SCREEN_NAME.key, CourseAnalyticsKey.COURSE_DASHBOARD.key)
             }
         )
+    }
+
+    fun showCourseStartedNotification(
+        context: Context,
+        notificationTitle: String,
+        notificationSubtitle: String,
+        isModuleCompleted: Boolean
+    ) {
+        viewModelScope.launch {
+            if (!notificationDisplayManager.areNotificationsEnabled(context)) return@launch
+
+            val channelId = resourceManager.getString(R.string.course_notification_channel_id)
+            val channelName = resourceManager.getString(R.string.course_notification_channel_name)
+
+            val courseName = (_uiState.value as? CourseOutlineUIState.CourseData)
+                ?.courseStructure?.name ?: "Course"
+
+            val (notificationContentTitle, notificationContentText) = if (isModuleCompleted) {
+                notificationTitle to notificationSubtitle
+            } else {
+                null to resourceManager.getString(
+                    R.string.course_notification_started_message,
+                    courseName
+                )
+            }
+
+            notificationDisplayManager.showNotification(
+                context = context,
+                channelId = channelId,
+                channelName = channelName,
+                notificationId = System.currentTimeMillis().toInt(),
+                title = notificationContentTitle,
+                content = notificationContentText,
+                smallIconResId = R.drawable.course_ic_task_alt,
+                priority = NotificationCompat.PRIORITY_HIGH
+            )
+        }
+    }
+
+    fun isResumeButtonVisible(uiState: CourseOutlineUIState): Boolean {
+        return if (uiState is CourseOutlineUIState.CourseData) {
+            val hasResumeComponent = uiState.resumeComponent != null
+            hasResumeComponent
+        } else {
+            false
+        }
     }
 
     companion object {

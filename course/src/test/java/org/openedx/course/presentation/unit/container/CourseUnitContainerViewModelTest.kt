@@ -36,6 +36,7 @@ import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.IAPNotifier
 import org.openedx.core.utils.Logger
+import org.openedx.course.data.storage.CoursePreferences
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.CourseAnalytics
 import java.net.UnknownHostException
@@ -56,6 +57,9 @@ class CourseUnitContainerViewModelTest {
     private val corePreferences = mockk<CorePreferences>()
     private val iapNotifier = mockk<IAPNotifier>()
     private val networkConnection = mockk<NetworkConnection>()
+
+    private val coursePreferences = mockk<CoursePreferences>()
+
 
     private val assignmentProgress = AssignmentProgress(
         assignmentType = "Homework",
@@ -211,8 +215,10 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
-                iapNotifier
+                iapNotifier,
+
             )
 
         coEvery { interactor.getCourseStructure(any()) } throws UnknownHostException()
@@ -239,6 +245,7 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
                 iapNotifier
             )
@@ -267,6 +274,7 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
                 iapNotifier
             )
@@ -297,6 +305,7 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
                 iapNotifier
             )
@@ -325,6 +334,7 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
                 iapNotifier
             )
@@ -355,6 +365,7 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
                 iapNotifier
             )
@@ -385,6 +396,7 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
                 iapNotifier
             )
@@ -415,6 +427,7 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
                 iapNotifier
             )
@@ -445,6 +458,7 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
                 iapNotifier
             )
@@ -475,6 +489,7 @@ class CourseUnitContainerViewModelTest {
                 notifier,
                 analytics,
                 corePreferences,
+                coursePreferences,
                 networkConnection,
                 iapNotifier
             )

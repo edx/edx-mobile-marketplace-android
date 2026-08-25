@@ -5,4 +5,6 @@ interface CoursePreferences {
     fun isCalendarSyncEventsDialogShown(courseName: String): Boolean
     fun markPLSBannerDismissed(courseId: String, bannerType: String)
     fun canShowPLSBanner(courseId: String, bannerType: String): Boolean
+    fun isModuleCompletionNotificationShown(moduleId: String): Boolean
+    fun setModuleCompletionNotificationShown(moduleId: String)
 }

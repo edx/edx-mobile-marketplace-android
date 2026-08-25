@@ -524,12 +524,11 @@ val screenModule = module {
             iapInteractor = get(),
             resourceManager = get(),
             iapNotifier = get(),
-            config = get(),
-            featureManager = get(),
             appData = get(),
             corePreferences = get(),
             analytics = get(),
             appContext = androidContext()
+            iapPreferences = get(),
         )
     }
     viewModel { (descendants: List<String>) ->

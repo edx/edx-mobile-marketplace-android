@@ -6,6 +6,7 @@ import org.openedx.app.BuildConfig
 import org.openedx.auth.data.model.AuthType
 import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.AppThemeMode
@@ -24,10 +25,14 @@ import org.openedx.whatsnew.data.storage.WhatsNewPreferences
 import java.util.concurrent.TimeUnit
 
 class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences,
-    WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences {
+    WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences,
+    IAPPreferences {
 
     private val sharedPreferences =
         context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE)
+
+    private val iapSharedPreferences =
+        context.getSharedPreferences(IAP_PREFS_NAME, Context.MODE_PRIVATE)
 
     private fun saveString(key: String, value: String) {
         sharedPreferences.edit().apply {
@@ -250,6 +255,23 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         set(value) = saveBoolean(KEY_DATADOG_ENABLED, value)
         get() = getBoolean(KEY_DATADOG_ENABLED, defValue = true) // default: enabled
 
+    override fun incrementPreviewCount(courseId: String): Int {
+        if (courseId.isEmpty()) return 0
+        val newValue = iapSharedPreferences.getInt(courseId, 0) + 1
+        iapSharedPreferences.edit().putInt(courseId, newValue).apply()
+        return newValue
+    }
+
+    override fun getPreviewCount(courseId: String): Int {
+        if (courseId.isEmpty()) return 0
+        return iapSharedPreferences.getInt(courseId, 0)
+    }
+
+    override fun clearPreviewCount(courseId: String) {
+        if (courseId.isEmpty()) return
+        iapSharedPreferences.edit().remove(courseId).apply()
+    }
+
     companion object {
         private const val ACCESS_TOKEN = "access_token"
         private const val REFRESH_TOKEN = "refresh_token"
@@ -272,5 +294,6 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val PLS_BANNER_SHOWN = "pls_banner_shown"
         private const val APP_THEME_MODE = "app_theme_mode"
         private const val KEY_DATADOG_ENABLED = "datadog_enabled"
+        private const val IAP_PREFS_NAME = "iap_preferences"
     }
 }

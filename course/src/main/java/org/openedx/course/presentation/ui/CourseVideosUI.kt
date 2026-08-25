@@ -123,6 +123,17 @@ fun CourseVideosScreen(
             viewModel.switchCourseSections(block.id)
         },
         onSubSectionClick = { subSectionBlock ->
+            val uiStateValue = uiState
+            if (uiStateValue is CourseVideosUIState.CourseData) {
+                if (!viewModel.isResumeButtonVisible(uiStateValue)) {  // Use the function here
+                    courseOutlineViewModel.showCourseStartedNotification(
+                        context = context,
+                        notificationTitle = "",
+                        notificationSubtitle = "",
+                        isModuleCompleted = false
+                    )
+                }
+            }
             viewModel.courseSubSectionUnit[subSectionBlock.id]?.let { unit ->
                 viewModel.sequentialClickedEvent(
                     unit.blockId,

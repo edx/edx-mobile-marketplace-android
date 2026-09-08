@@ -183,11 +183,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         binding.playerView?.resizeMode =
             AspectRatioFrameLayout.RESIZE_MODE_FILL
 
-        viewModel.exoPlayer?.let { player ->
-            val controller = ExoPlayerController(player)
-            pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
-        }
-
         viewModel.exoPlayer?.addListener(object : Player.Listener {
 
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -313,11 +308,20 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             return
         }
+        viewModel.exoPlayer?.let { player ->
+            val controller = ExoPlayerController(player)
+            pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
+        }
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
     }
 
     override fun onPause() {
         super.onPause()
+        viewModel.exoPlayer?.let { player ->
+            val controller = ExoPlayerController(player)
+            pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (requireActivity().isInPictureInPictureMode) {
                 requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -738,7 +742,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             showReplayAction()
             return
         }
-        pipViewModel.loadPipActions(requireContext(), player.isPlaying)
+        val isPlaying = pipViewModel.pipState.value.isPlaying
+        pipViewModel.loadPipActions(requireContext(), isPlaying)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             requireActivity().isInPictureInPictureMode
         ) {

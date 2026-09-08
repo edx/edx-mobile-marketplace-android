@@ -308,20 +308,14 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             return
         }
-        viewModel.exoPlayer?.let { player ->
-            val controller = ExoPlayerController(player)
-            pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
-        }
+        registerExoplayerController()
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
     }
 
     override fun onPause() {
         super.onPause()
-        viewModel.exoPlayer?.let { player ->
-            val controller = ExoPlayerController(player)
-            pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
-        }
+        registerExoplayerController()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (requireActivity().isInPictureInPictureMode) {
                 requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -815,6 +809,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             "Enable Picture-in-Picture in app settings to use PiP",
             Toast.LENGTH_LONG
         ).show()
+    }
+
+    private fun registerExoplayerController() {
+        viewModel.exoPlayer?.let { player ->
+            val controller = ExoPlayerController(player)
+            pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
+        }
     }
 }
 

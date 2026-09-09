@@ -12,6 +12,8 @@ import org.openedx.auth.presentation.logistration.LogistrationViewModel
 import org.openedx.auth.presentation.restore.RestorePasswordViewModel
 import org.openedx.auth.presentation.signin.SignInViewModel
 import org.openedx.auth.presentation.signup.SignUpViewModel
+import org.openedx.core.ExoPlayerFactory
+import org.openedx.core.ExoPlayerFactoryImpl
 import org.openedx.core.Validator
 import org.openedx.core.data.repository.iap.IAPRepository
 import org.openedx.core.domain.interactor.IAPInteractor
@@ -386,7 +388,7 @@ val screenModule = module {
             courseId = courseId,
             blockId = blockId,
             title = title,
-            context = get(),
+            context = androidContext(),
             preferencesManager = get(),
             castManager = get(),
             courseRepository = get(),
@@ -397,17 +399,12 @@ val screenModule = module {
         )
     }
 
-    // PiP Architecture - Data Layer
     single { PipPlayerRepository() }
-    factory { PipBroadcastReceiverManager(get(), get()) }
-
-    // PiP Architecture - Domain Layer
-    factory { PipInteractor(get()) }
-
-    // PiP Architecture - Presentation Layer
+    single { PipBroadcastReceiverManager( get(),get()) }
+    single { PipInteractor(get()) }
+    single<ExoPlayerFactory> { ExoPlayerFactoryImpl() }
     viewModel { PipViewModel(get()) }
-
-    viewModel { (courseId: String, courseTitle: String, enrollmentMode: String) ->
+        viewModel { (courseId: String, courseTitle: String, enrollmentMode: String) ->
         CourseDatesViewModel(
             courseId,
             courseTitle,

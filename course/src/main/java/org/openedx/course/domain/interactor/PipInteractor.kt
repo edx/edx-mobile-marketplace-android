@@ -1,5 +1,9 @@
 package org.openedx.course.domain.interactor
 
+import android.app.RemoteAction
+import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import kotlinx.coroutines.flow.StateFlow
 import org.openedx.course.data.repository.PipPlayerRepository
 import org.openedx.course.data.repository.player.PlayerController
@@ -44,5 +48,14 @@ class PipInteractor(
     }
 
     fun hasPlayer(): Boolean = repository.controller != null
+
+    fun retryPlayback() {
+        repository.retryPlayback()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun buildPipActions(context: Context, isPlaying: Boolean): List<RemoteAction> {
+        return repository.buildPipActions(context, isPlaying)
+    }
 
 }

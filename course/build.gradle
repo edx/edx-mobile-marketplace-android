@@ -73,8 +73,7 @@ dependencies {
     implementation "androidx.media3:media3-exoplayer:$media3_version"
     implementation "androidx.media3:media3-session:$media3_version"
     implementation "me.saket.extendedspans:extendedspans:$extented_spans_version"
-    implementation 'androidx.compose.foundation:foundation-layout:1.10.6'
-
+    implementation "androidx.compose.foundation:foundation-layout:$compose_version"
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'

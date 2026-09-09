@@ -15,7 +15,8 @@ class PipBroadcastReceiverManager(
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
-            when (intent?.action) {
+            val action = intent?.action
+            when (action) {
                 ACTION_PLAY -> {
                     pipPlayerRepository.play()
                     pipPlayerRepository.updatePlaybackState(isPlaying = true, isEnded = false)
@@ -36,19 +37,32 @@ class PipBroadcastReceiverManager(
 
     fun register() {
         if (isRegistered) return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            ContextCompat.registerReceiver(
-                context,
-                receiver,
-                IntentFilter().apply {
-                    addAction(ACTION_PLAY)
-                    addAction(ACTION_PAUSE)
-                    addAction(ACTION_FORWARD)
-                    addAction(ACTION_REWIND)
-                },
-                ContextCompat.RECEIVER_EXPORTED,
-            )
+        try {
+            val intentFilter = IntentFilter().apply {
+                addAction(ACTION_PLAY)
+                addAction(ACTION_PAUSE)
+                addAction(ACTION_FORWARD)
+                addAction(ACTION_REWIND)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                ContextCompat.registerReceiver(
+                    context,
+                    receiver,
+                    intentFilter,
+                    ContextCompat.RECEIVER_EXPORTED,
+                )
+            } else {
+                ContextCompat.registerReceiver(
+                    context,
+                    receiver,
+                    intentFilter,
+                    ContextCompat.RECEIVER_NOT_EXPORTED
+                )
+            }
             isRegistered = true
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -57,7 +71,6 @@ class PipBroadcastReceiverManager(
         try {
             context.unregisterReceiver(receiver)
         } catch (_: IllegalArgumentException) {
-            // Already unregistered
         }
         isRegistered = false
     }

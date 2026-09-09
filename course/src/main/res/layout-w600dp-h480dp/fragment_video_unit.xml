@@ -5,22 +5,14 @@
     android:layout_height="match_parent"
     android:background="@color/background"
     android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:id="@+id/rootLayout">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:maxWidth="560dp"
         android:minWidth="560dp">
 
-        <androidx.compose.ui.platform.ComposeView
-            android:id="@+id/cv_video_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="24dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView"
@@ -33,7 +25,7 @@
             app:layout_constraintDimensionRatio="W,9:16"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cv_video_title">
+            app:layout_constraintTop_toTopOf="parent">
 
             <androidx.media3.ui.PlayerView
                 android:id="@+id/player_view"
@@ -41,7 +33,20 @@
                 android:layout_height="100dp"
                 android:background="@android:color/black"
                 app:resize_mode="fit"
-                app:surface_type="texture_view" />
+                app:surface_type="texture_view">
+
+                <ImageButton
+                    android:id="@+id/pip_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|top"
+                    android:layout_marginEnd="30dp"
+                    android:layout_marginTop="30dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/picture_in_picture"
+                    android:src="@drawable/ic_pip"
+                    app:tint="@android:color/white" />
+            </androidx.media3.ui.PlayerView>
 
             <ImageView
                 android:id="@+id/doubleSpeedBadge"

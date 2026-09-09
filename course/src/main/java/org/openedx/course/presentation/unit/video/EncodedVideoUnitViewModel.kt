@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.media3.cast.CastPlayer
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -54,7 +55,6 @@ import org.openedx.course.module.CastManager
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 
-@SuppressLint("StaticFieldLeak")
 @androidx.annotation.OptIn(UnstableApi::class)
 class EncodedVideoUnitViewModel(
     courseId: String,
@@ -91,6 +91,8 @@ class EncodedVideoUnitViewModel(
     private var currentWindow = 0
     private var playbackPosition = 0L
     private var wasFullscreen = false
+
+    private var resumeAfterFocusGain = false
 
     init {
         transcriptObject.asFlow().distinctUntilChanged().mapNotNull {
@@ -178,6 +180,18 @@ class EncodedVideoUnitViewModel(
                 ?.language ?: ""
             _state.update { it.copy(selectedLanguage = selectedLanguage) }
         }
+
+        override fun onEvents(
+            player: Player,
+            events: Player.Events
+        ) {
+            if (events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED)) {
+
+                if (!player.playWhenReady && player.playbackState == Player.STATE_READY) {
+                    resumeAfterFocusGain = true
+                }
+            }
+        }
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -237,7 +251,6 @@ class EncodedVideoUnitViewModel(
         if (state.value.activePlayerType != PlayerType.CHROME_CAST) {
             exoPlayer?.removeListener(exoPlayerListener)
         }
-//        exoPlayer?.pause()
         stopUpdatingVideoTime()
     }
 
@@ -247,14 +260,13 @@ class EncodedVideoUnitViewModel(
             playbackPosition = player.currentPosition
             currentWindow = player.currentMediaItemIndex
             playWhenReady = player.playWhenReady
-            player.pause()
         }
     }
 
     private fun initPlayer() {
         val selector = applyTrackSelector(isSubtitlesDisabled = true)
         val renderersFactory = DefaultRenderersFactory(context)
-            .setEnableDecoderFallback(true) // Use software if hardware fails
+            .setEnableDecoderFallback(true)
         exoPlayer = ExoPlayer.Builder(
             context,
             renderersFactory,
@@ -264,32 +276,21 @@ class EncodedVideoUnitViewModel(
             DefaultBandwidthMeter.getSingletonInstance(context),
             DefaultAnalyticsCollector(Clock.DEFAULT),
         ).build().apply {
-            setPlaybackSpeed(preferencesManager.videoSettings.videoPlaybackSpeed.speedValue)
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                .build()
 
-            // Build and set the media source once
+            setAudioAttributes(audioAttributes, true)
+            setPlaybackSpeed(preferencesManager.videoSettings.videoPlaybackSpeed.speedValue)
             val mediaSource = buildMediaSource(videoUrl)
             setMediaSource(mediaSource)
-
-            // Restore playback position and playWhenReady from saved state
             seekTo(playbackPosition)
             playWhenReady = false
 
         }
         _state.update { it.copy(activePlayerType = PlayerType.EXO_REGULAR) }
         logVideoLoadedEvent(videoUrl)
-    }
-
-    fun onFragmentVisible() {
-        if (!isPlayerPrepared) {
-            exoPlayer?.prepare()
-            exoPlayer?.playWhenReady = true
-            isPlayerPrepared = true
-        }
-    }
-
-    fun onFragmentHidden() {
-        exoPlayer?.playWhenReady = false
-        exoPlayer?.pause()
     }
 
     private fun buildMediaSource(videoUrl: String): MediaSource {

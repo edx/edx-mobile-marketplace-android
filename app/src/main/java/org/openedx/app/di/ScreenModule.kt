@@ -11,6 +11,8 @@ import org.openedx.auth.presentation.logistration.LogistrationViewModel
 import org.openedx.auth.presentation.restore.RestorePasswordViewModel
 import org.openedx.auth.presentation.signin.SignInViewModel
 import org.openedx.auth.presentation.signup.SignUpViewModel
+import org.openedx.core.ExoPlayerFactory
+import org.openedx.core.ExoPlayerFactoryImpl
 import org.openedx.core.Validator
 import org.openedx.core.data.repository.iap.IAPRepository
 import org.openedx.core.domain.interactor.IAPInteractor
@@ -31,9 +33,13 @@ import org.openedx.course.presentation.unit.html.HtmlUnitViewModel
 import org.openedx.course.presentation.unit.unlockcontent.UnlockContentViewModel
 import org.openedx.course.presentation.unit.video.BaseVideoViewModel
 import org.openedx.course.presentation.unit.video.EncodedVideoUnitViewModel
+import org.openedx.course.presentation.unit.video.PipViewModel
 import org.openedx.course.presentation.unit.video.VideoUnitViewModel
 import org.openedx.course.presentation.unit.video.VideoViewModel
 import org.openedx.course.presentation.videos.CourseVideoViewModel
+import org.openedx.course.data.repository.PipBroadcastReceiverManager
+import org.openedx.course.data.repository.PipPlayerRepository
+import org.openedx.course.domain.interactor.PipInteractor
 import org.openedx.course.settings.download.DownloadQueueViewModel
 import org.openedx.courses.presentation.AllEnrolledCoursesViewModel
 import org.openedx.courses.presentation.DashboardGalleryViewModel
@@ -387,7 +393,7 @@ val screenModule = module {
             courseId = courseId,
             blockId = blockId,
             title = title,
-            context = get(),
+            context = androidContext(),
             preferencesManager = get(),
             castManager = get(),
             courseRepository = get(),
@@ -397,7 +403,13 @@ val screenModule = module {
             courseAnalytics = get(),
         )
     }
-    viewModel { (courseId: String, courseTitle: String, enrollmentMode: String) ->
+
+    single { PipPlayerRepository() }
+    single { PipBroadcastReceiverManager( get(),get()) }
+    single { PipInteractor(get()) }
+    single<ExoPlayerFactory> { ExoPlayerFactoryImpl() }
+    viewModel { PipViewModel(get()) }
+        viewModel { (courseId: String, courseTitle: String, enrollmentMode: String) ->
         CourseDatesViewModel(
             courseId,
             courseTitle,

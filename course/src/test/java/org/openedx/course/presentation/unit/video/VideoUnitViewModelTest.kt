@@ -9,6 +9,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -25,7 +27,9 @@ import org.junit.rules.TestRule
 import org.openedx.core.module.TranscriptManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
+import org.openedx.core.system.notifier.CourseCompletionSet
 import org.openedx.core.system.notifier.CourseVideoPositionChanged
+import org.openedx.core.utils.Logger
 import org.openedx.course.data.repository.CourseRepository
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
@@ -48,91 +52,11 @@ class VideoUnitViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-    }
+        }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
-    }
-
-    @Test
-    fun `markBlockCompleted exception`() = runTest {
-        val viewModel = VideoUnitViewModel(
-            "",
-            "",
-            courseRepository,
-            notifier,
-            networkConnection,
-            transcriptManager,
-            courseAnalytics
-        )
-        coEvery {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        } throws Exception()
-        every {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        } returns Unit
-        viewModel.markBlockCompleted("")
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        }
-    }
-
-    @Test
-    fun `markBlockCompleted success`() = runTest {
-        val viewModel = VideoUnitViewModel(
-            "",
-            "",
-            courseRepository,
-            notifier,
-            networkConnection,
-            transcriptManager,
-            courseAnalytics,
-        )
-        coEvery {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        } returns Unit
-        every {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        } returns Unit
-        viewModel.markBlockCompleted("")
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) {
-            courseRepository.markBlocksCompletion(
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) {
-            courseAnalytics.logEvent(
-                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
-                any()
-            )
-        }
     }
 
     @Test
@@ -164,5 +88,147 @@ class VideoUnitViewModelTest {
         advanceUntilIdle()
 
         assert(viewModel.currentVideoTime.value == 10L)
+    }
+
+    @Test
+    fun `markBlockCompleted success`() = runTest {
+        val viewModel = VideoUnitViewModel(
+            courseId = "test_course",
+            blockId = "test_block",
+            courseRepository,
+            notifier,
+            networkConnection,
+            transcriptManager,
+            courseAnalytics,
+        )
+        coEvery {
+            courseRepository.markBlocksCompletion(
+                any(),
+                any()
+            )
+        } returns Unit
+        every {
+            courseAnalytics.logEvent(
+                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+                any()
+            )
+        } returns Unit
+        coEvery { notifier.send(any<CourseCompletionSet>()) } returns Unit
+
+        viewModel.markBlockCompleted("test_block")
+        advanceUntilIdle()
+
+        // Verify completion was marked
+        coVerify(exactly = 1) {
+            courseRepository.markBlocksCompletion(
+                "test_course",
+                listOf("test_block")
+            )
+        }
+        // Verify analytics event was logged
+        verify(exactly = 1) {
+            courseAnalytics.logEvent(
+                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+                any()
+            )
+        }
+        // Verify notifier was sent
+        coVerify(exactly = 1) {
+            notifier.send(any<CourseCompletionSet>())
+        }
+    }
+
+    @Test
+    fun `markBlockCompleted exception handling`() = runTest {
+        val viewModel = VideoUnitViewModel(
+            courseId = "test_course",
+            blockId = "test_block",
+            courseRepository,
+            notifier,
+            networkConnection,
+            transcriptManager,
+            courseAnalytics,
+        )
+        coEvery {
+            courseRepository.markBlocksCompletion(
+                any(),
+                any()
+            )
+        } throws Exception("Network error")
+        every {
+            courseAnalytics.logEvent(
+                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+                any()
+            )
+        } returns Unit
+
+        viewModel.markBlockCompleted("test_block")
+        advanceUntilIdle()
+
+        // Verify completion was attempted
+        coVerify(exactly = 1) {
+            courseRepository.markBlocksCompletion(
+                "test_course",
+                listOf("test_block")
+            )
+        }
+        // Verify analytics event was still logged before exception
+        verify(exactly = 1) {
+            courseAnalytics.logEvent(
+                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+                any()
+            )
+        }
+        // Verify notifier was NOT sent due to exception
+        coVerify(exactly = 0) {
+            notifier.send(any<CourseCompletionSet>())
+        }
+    }
+
+    @Test
+    fun `markBlockCompleted idempotency`() = runTest {
+        val viewModel = VideoUnitViewModel(
+            courseId = "test_course",
+            blockId = "test_block",
+            courseRepository,
+            notifier,
+            networkConnection,
+            transcriptManager,
+            courseAnalytics,
+        )
+        coEvery {
+            courseRepository.markBlocksCompletion(
+                any(),
+                any()
+            )
+        } returns Unit
+        every {
+            courseAnalytics.logEvent(
+                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+                any()
+            )
+        } returns Unit
+        coEvery { notifier.send(any<CourseCompletionSet>()) } returns Unit
+
+        // Call markBlockCompleted twice
+        viewModel.markBlockCompleted("test_block")
+        advanceUntilIdle()
+        viewModel.markBlockCompleted("test_block")
+        advanceUntilIdle()
+
+        // Verify API was called only once (not twice)
+        coVerify(exactly = 1) {
+            courseRepository.markBlocksCompletion(
+                "test_course",
+                listOf("test_block")
+            )
+        }
+        // Verify analytics was logged only once
+        verify(exactly = 1) {
+            courseAnalytics.logEvent(
+                CourseAnalyticsEvent.VIDEO_COMPLETED.eventName,
+                any()
+            )
+        }
     }
 }

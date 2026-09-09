@@ -158,6 +158,8 @@ dependencies {
     implementation project(path: ':whatsnew')
     implementation project(path: ':notifications')
     implementation project(path: ':featuremanagement')
+    implementation "androidx.media3:media3-session:$media3_version"
+    implementation "androidx.media3:media3-exoplayer:$media3_version"
 
     ksp "androidx.room:room-compiler:$room_version"
 

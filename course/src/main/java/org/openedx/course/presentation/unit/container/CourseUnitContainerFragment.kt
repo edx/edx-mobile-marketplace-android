@@ -1,5 +1,7 @@
 package org.openedx.course.presentation.unit.container
 
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.LayoutInflater
@@ -18,10 +20,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.bundleOf
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.cast.framework.CastButtonFactory
@@ -52,6 +56,7 @@ import org.openedx.course.presentation.ui.NavigationUnitsButtons
 import org.openedx.course.presentation.ui.SubSectionUnitsList
 import org.openedx.course.presentation.ui.SubSectionUnitsTitle
 import org.openedx.course.presentation.ui.VerticalPageIndicator
+import org.openedx.course.presentation.unit.video.PipViewModel
 
 
 class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_container) {
@@ -59,6 +64,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     private val binding: FragmentCourseUnitContainerBinding
         get() = _binding!!
     private var _binding: FragmentCourseUnitContainerBinding? = null
+    private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
 
     private val viewModel by viewModel<CourseUnitContainerViewModel> {
         parametersOf(
@@ -181,7 +187,10 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             componentId = ""
         }
 
-        binding.cvNavigationBar.setContent {
+        binding.cvNavigationBar?.setContent {
+            NavigationBar()
+        }
+        binding.topCvNavigationBar?.setContent {
             NavigationBar()
         }
 
@@ -223,6 +232,33 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             }
             binding.cvCount.isVisible = true
         }
+
+        pipViewModel.buttonVisibility.observe(viewLifecycleOwner) { visible ->
+            binding.btnBack.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.rightControls?.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.subSectionUnitsTitle.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.horizontalProgress.visibility = if (visible) View.VISIBLE else View.GONE
+            binding.cvCount.visibility = if (visible) View.VISIBLE else View.GONE
+
+            val isLandscape =
+                resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            updateNavigationBarsVisibility(isVisible = visible, isLandscape = isLandscape)
+
+            binding.mediaRouteButton.isVisible = visible &&
+                    viewModel.getCurrentBlock().type == BlockType.VIDEO &&
+                    viewModel.getCurrentBlock().studentViewData?.encodedVideos?.hasNonYoutubeVideo == true
+            if (!visible) {
+                binding.subSectionUnitsBg.visibility = View.GONE
+                binding.subSectionUnitsList.visibility = View.GONE
+            }
+
+            val containerParams =
+                binding.viewPager.layoutParams as ConstraintLayout.LayoutParams
+            containerParams.bottomMargin =
+                if (visible) (requireActivity() as InsetHolder).bottomInset else 0
+            binding.viewPager.layoutParams = containerParams
+        }
+
 
         binding.btnBack.setContent {
             val title = if (viewModel.isCourseExpandableSectionsEnabled) {
@@ -499,6 +535,87 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 ARG_MODE to mode
             )
             return fragment
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        if (_binding == null || !isAdded) return
+
+        // While in PIP mode the buttonVisibility observer governs visibility —
+        // applying a ConstraintSet here would reset views back to VISIBLE.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            requireActivity().isInPictureInPictureMode
+        ) return
+
+        val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
+
+        // ── 1. Re-apply the root ConstraintSet from the correct qualifier variant.
+        //       Deferred with post{} so it never runs inside an in-progress layout
+        //       pass (which would throw "requestLayout() improperly called").
+        binding.root.post {
+            if (_binding == null) return@post
+            try {
+                val configContext = requireContext().createConfigurationContext(newConfig)
+                val rootConstraintSet = ConstraintSet()
+                rootConstraintSet.clone(configContext, R.layout.fragment_course_unit_container)
+                rootConstraintSet.applyTo(binding.root)
+            } catch (_: Exception) {
+                // Silently ignore: layout may be detached during transition
+            }
+        }
+
+        // ── 2. Fix viewPager margins immediately (safe — just LayoutParams, no layout pass).
+        //       viewPager lives inside a nested ConstraintLayout not covered by applyTo(root).
+        //       In landscape it has 48 dp side margins; clear them in portrait.
+        (binding.viewPager.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+            if (isLandscape) {
+                params.marginStart = 48.dpToPx()
+                params.marginEnd   = 48.dpToPx()
+                params.topMargin   = 8.dpToPx()
+            } else {
+                params.marginStart = 0
+                params.marginEnd   = 0
+                params.topMargin   = 0
+            }
+            binding.viewPager.layoutParams = params
+        }
+
+        // ── 3. Adjust mediaRouteButton / topCvNavigationBar margins per orientation.
+        (binding.mediaRouteButton.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+            params.marginEnd = if (isLandscape) 40.dpToPx() else 20.dpToPx()
+            params.topMargin = if (isLandscape) 20.dpToPx() else 15.dpToPx()
+            binding.mediaRouteButton.layoutParams = params
+        }
+        (binding.topCvNavigationBar?.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+            params.topMargin = if (isLandscape) 10.dpToPx() else 0.dpToPx()
+            binding.topCvNavigationBar?.layoutParams = params
+        }
+
+        if (_binding == null) return
+
+        updateNavigationBarsVisibility(
+            isVisible = pipViewModel.buttonVisibility.value != false,
+            isLandscape = isLandscape,
+        )
+    }
+
+    private fun updateNavigationBarsVisibility(isVisible: Boolean, isLandscape: Boolean) {
+        if (!isVisible) {
+            binding.cvNavigationBar.visibility = View.GONE
+            binding.topCvNavigationBar?.visibility = View.GONE
+            return
+        }
+
+        if (isLandscape) {
+            binding.cvNavigationBar.visibility = View.GONE
+            binding.topCvNavigationBar?.visibility = View.VISIBLE
+        } else {
+            binding.cvNavigationBar.visibility = View.VISIBLE
+            binding.topCvNavigationBar?.visibility = View.GONE
         }
     }
 }

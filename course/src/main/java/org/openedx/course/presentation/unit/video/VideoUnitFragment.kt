@@ -1,32 +1,43 @@
 package org.openedx.course.presentation.unit.video
 
+import android.app.PendingIntent
+import android.app.PictureInPictureParams
+import android.app.RemoteAction
 import android.content.res.Configuration
+import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.Bundle
+import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
-import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.annotation.OptIn
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.ComposeView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaSession
 import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.window.layout.WindowMetricsCalculator
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.extension.computeWindowSizeClasses
-import org.openedx.core.extension.dpToPixel
 import org.openedx.core.extension.objectToString
 import org.openedx.core.extension.stringToObject
 import org.openedx.core.presentation.dialog.appreview.AppReviewManager
@@ -37,15 +48,21 @@ import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.utils.LocaleUtils
 import org.openedx.course.R
+import org.openedx.course.data.repository.PipBroadcastReceiverManager
+import org.openedx.course.data.repository.player.ExoPlayerController
 import org.openedx.course.databinding.FragmentVideoUnitBinding
+import org.openedx.course.domain.model.PipPlayerType
 import org.openedx.course.presentation.ui.VideoSubtitles
 import org.openedx.course.presentation.ui.VideoTitle
 import org.openedx.course.presentation.ui.enableLongPressDoubleSpeed
-import kotlin.math.roundToInt
 
 class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
-
-    private val binding by viewBinding(FragmentVideoUnitBinding::bind)
+    private var pictureInPictureParamsBuilder: PictureInPictureParams.Builder? = null
+    private var mediaSession: MediaSession? = null
+    private var cvVideoTitle: ComposeView? = null
+    private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
+    private val pipReceiverManager: PipBroadcastReceiverManager by inject()
+    val binding by viewBinding(FragmentVideoUnitBinding::bind)
     private val viewModel by viewModel<EncodedVideoUnitViewModel> {
         parametersOf(
             requireArguments().getString(ARG_COURSE_ID, ""),
@@ -54,12 +71,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         )
     }
     private val appReviewManager by inject<AppReviewManager> { parametersOf(requireActivity()) }
-
     private var windowSize: WindowSize? = null
+    private val constraintContainer: ConstraintLayout
+        get() = binding.rootLayout as ConstraintLayout
+    private var lastVideoAspectRatio: Rational? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        retainInstance = true
         windowSize = computeWindowSizeClasses()
         lifecycle.addObserver(viewModel)
         requireArguments().apply {
@@ -67,24 +85,56 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             viewModel.transcripts = stringToObject<Map<String, String>>(
                 getString(ARG_TRANSCRIPT_URL, "")
             ) ?: emptyMap()
-            viewModel.isDownloaded = getBoolean(ARG_DOWNLOADED)
         }
         viewModel.downloadSubtitles()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            pictureInPictureParamsBuilder = PictureInPictureParams.Builder()
+        }
+
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @OptIn(UnstableApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        attachPlayerToView()
-
-
-        binding.cvVideoTitle?.setContent {
-            OpenEdXTheme {
-                VideoTitle(text = viewModel.title)
+        pipViewModel.pipActions.observe(viewLifecycleOwner) { actions ->
+            if (actions.isNotEmpty()) {
+                pictureInPictureParamsBuilder?.setActions(actions)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireActivity().isInPictureInPictureMode
+                ) {
+                    requireActivity().setPictureInPictureParams(
+                        pictureInPictureParamsBuilder!!.build()
+                    )
+                }
             }
         }
-
+        pipViewModel.pipState
+            .onEach {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireActivity().isInPictureInPictureMode
+                ) {
+                    updatePipActions()
+                }
+            }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+        binding.pipBtn.isVisible = true
+        updateLayoutForOrientation()
+        cvVideoTitle = ComposeView(requireContext()).apply {
+            id = View.generateViewId()
+            layoutParams = ConstraintLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            setContent {
+                OpenEdXTheme {
+                    VideoTitle(text = viewModel.title)
+                }
+            }
+        }
+        constraintContainer.addView(cvVideoTitle)
+        updateLayoutForOrientation()
         binding.connectionError.setContent {
             OpenEdXTheme {
                 ConnectionErrorView {
@@ -93,7 +143,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
             }
         }
-
         binding.subtitles.setContent {
             OpenEdXTheme {
                 val state = rememberLazyListState()
@@ -106,13 +155,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     showSubtitleLanguage = viewModel.transcripts.size > 1,
                     currentIndex = currentIndex,
                     onTranscriptClick = {
-                        binding.playerView.player?.apply {
+                        binding.playerView?.player?.apply {
                             seekTo(it.start.mseconds.toLong())
                             play()
                         }
                     },
                     onSettingsClick = {
-                        binding.playerView.player?.pause()
+                        binding.playerView?.player?.pause()
                         val dialog = SelectBottomDialogFragment.newInstance(
                             LocaleUtils.getLanguages(viewModel.transcripts.keys.toList())
                         )
@@ -124,30 +173,82 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 )
             }
         }
-
+        setupMediaSession()
         binding.connectionError.isVisible =
             !viewModel.hasInternetConnection && !viewModel.isDownloaded
+        binding.pipBtn.setOnClickListener {
+            enablePipMode()
 
-        val orientation = resources.configuration.orientation
-        val windowMetrics =
-            WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(requireActivity())
-        val currentBounds = windowMetrics.bounds
-        val layoutParams = binding.playerView.layoutParams as FrameLayout.LayoutParams
-        if (orientation == Configuration.ORIENTATION_PORTRAIT || windowSize?.isTablet == true) {
-            val width = currentBounds.width() - requireContext().dpToPixel(32)
-            val minHeight = requireContext().dpToPixel(194).roundToInt()
-            val height = (width / 16f * 9f).roundToInt()
-            layoutParams.height = if (windowSize?.isTablet == true) {
-                requireContext().dpToPixel(320).roundToInt()
-            } else if (height < minHeight) {
-                minHeight
-            } else {
-                height
+        }
+        binding.playerView?.resizeMode =
+            AspectRatioFrameLayout.RESIZE_MODE_FILL
+
+        viewModel.exoPlayer?.addListener(object : Player.Listener {
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireActivity().isInPictureInPictureMode
+                ) {
+                    when (playbackState) {
+                        Player.STATE_READY -> {
+                            viewModel.exoPlayer?.let { player ->
+                                if (!player.isPlaying) {
+                                    player.play()
+                                }
+                            }
+                            updatePipActions()
+                        }
+                        Player.STATE_ENDED -> {
+                            pipViewModel.updatePlaybackState(isPlaying = false, isEnded = true)
+                            showReplayAction()
+                        }
+                    }
+                }
+            }
+
+            override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val aspect =
+                        if (videoSize.height > 0) Rational(videoSize.width, videoSize.height)
+                        else Rational(16, 9)
+                    lastVideoAspectRatio = aspect
+                    pictureInPictureParamsBuilder?.setAspectRatio(aspect)
+
+                    if (requireActivity().isInPictureInPictureMode) {
+                        requireActivity().setPictureInPictureParams(
+                            pictureInPictureParamsBuilder!!.build()
+                        )
+
+                    }
+                }
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                pipViewModel.updatePlaybackState(isPlaying)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireActivity().isInPictureInPictureMode
+                ) {
+                    updatePipActions()
+                }
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireActivity().isInPictureInPictureMode
+                ) {
+                    retryPlayback()
+                }
+            }
+
+
+        })
+        lifecycleScope.launchWhenStarted {
+            pipViewModel.pipEvent.collect { event ->
+                if (event is PipUiEvent.PipModeRequested && isAdded) {
+                    enablePipMode()
+                }
             }
         }
-
-        binding.playerView.layoutParams = layoutParams
-
         viewModel.state.onEach {
             when {
                 it.activePlayerType == PlayerType.EXO_REGULAR -> {
@@ -165,238 +266,123 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 }
             }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
-
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.state.collect {
+                if (viewModel.hasInternetConnection &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    requireActivity().isInPictureInPictureMode
+                ) {
+                    retryPlayback()
+                }
+            }
+        }
         enableLongPressDoubleSpeed()
-        adjustLayoutForOrientation()
-        moveVideoAndTitleSideBySide()
-        resetControllerAfterLayoutChange()
     }
 
     @OptIn(UnstableApi::class)
     private fun updatePlayerType(player: Player?) {
         with(binding.playerView) {
-            this.player = null
-            this.player = player
-            this.setShowNextButton(false)
-            this.setShowPreviousButton(false)
-            this.controllerHideOnTouch = false
-            this.setFullscreenButtonClickListener {
+            this?.player = null
+            this?.player = player
+            this?.setShowNextButton(false)
+            this?.setShowPreviousButton(false)
+            this?.controllerHideOnTouch = false
+            this?.setFullscreenButtonClickListener {
                 if (viewModel.enterFullscreen()) {
                     VideoFullScreenFragment.newInstance()
-                        .show(childFragmentManager, VideoFullScreenFragment.TAG)
-                }
+                        .show(childFragmentManager, VideoFullScreenFragment.TAG)                }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        pipReceiverManager.register()
     }
 
     override fun onResume() {
         super.onResume()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            requireActivity().isInPictureInPictureMode
+        ) {
+            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            return
+        }
+        registerExoplayerController()
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        attachPlayerToView()
+
     }
 
-    @UnstableApi
     override fun onPause() {
-        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        if (!requireActivity().isChangingConfigurations) {
-            viewModel.exoPlayer?.apply {
-                playWhenReady = false
-                pause()
-            }
-            viewModel.getCastPlayer()?.pause()
-        }
-
         super.onPause()
+        registerExoplayerController()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (requireActivity().isInPictureInPictureMode) {
+                requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                return
+            }
+        }
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onStop() {
         super.onStop()
-        if (!requireActivity().isChangingConfigurations) {
-            viewModel.exoPlayer?.apply {
-                playWhenReady = false
-                pause()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (requireActivity().isInPictureInPictureMode) {
+                pipReceiverManager.register()
+                viewModel.exoPlayer?.let { player ->
+                    if (player.isPlaying) {
+                        android.util.Log.d("PipMode", "Playback continuing in background during device lock")
+                    }
+                }
+                return
             }
+            pipReceiverManager.unregister()
+        } else {
+            pipReceiverManager.unregister()
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+            requireActivity().isInPictureInPictureMode
+        ) {
+            return
+        }
+
+        binding.playerView?.player?.let { player ->
+            if (player.isPlaying) player.pause()
         }
     }
-
-
-    /*@UnstableApi
-    override fun setMenuVisibility(menuVisible: Boolean) {
-        super.setMenuVisibility(menuVisible)
-        if (menuVisible) {
-            viewModel.onFragmentVisible()
-        } else {
-            viewModel.onFragmentHidden()
-        }
-    }*/
 
     @UnstableApi
     override fun onDestroy() {
         if (!requireActivity().isChangingConfigurations) {
             viewModel.releasePlayers()
+            pipViewModel.unregisterPlayer()
         }
+        mediaSession?.release()
+        mediaSession = null
         super.onDestroy()
     }
-    @OptIn(UnstableApi::class)
-    private fun attachPlayerToView() {
-        binding.playerView.apply {
-            player = null
-            player = viewModel.exoPlayer
-            controllerAutoShow = true
-            controllerHideOnTouch = false
-            showController()
-        }
-    }
 
-    private fun adjustLayoutForOrientation() {
-        val orientation = resources.configuration.orientation
-        val isTablet = windowSize?.isTablet == true
-        val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE && !isTablet
-
-        binding.root.apply {
-            if (this is LinearLayout) {
-                this.orientation = if (isLandscape) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
-
-                // Safe update for playerView
-                (binding.playerView?.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
-                    if (isLandscape) {
-                        params.width = 0
-                        params.height = LinearLayout.LayoutParams.MATCH_PARENT
-                        params.weight = 2f
-                    } else {
-                        params.width = LinearLayout.LayoutParams.MATCH_PARENT
-                        params.height = LinearLayout.LayoutParams.WRAP_CONTENT
-                        params.weight = 0f
-                    }
-                    binding.playerView?.layoutParams = params
-                }
-
-                // Safe update for cvVideoTitle
-                (binding.cvVideoTitle?.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
-                    if (isLandscape) {
-                        params.width = 0
-                        params.height = LinearLayout.LayoutParams.MATCH_PARENT
-                        params.weight = 1f
-                    } else {
-                        params.width = LinearLayout.LayoutParams.MATCH_PARENT
-                        params.height = LinearLayout.LayoutParams.WRAP_CONTENT
-                        params.weight = 0f
-                    }
-                    binding.cvVideoTitle?.layoutParams = params
-                }
-            }
-        }
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        moveVideoAndTitleSideBySide()
-        resetControllerAfterLayoutChange()
-    }
-
-    @OptIn(UnstableApi::class)
-    private fun moveVideoAndTitleSideBySide() {
-        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE &&
-                windowSize?.isTablet != true
-
-        val rootParent = binding.playerView.parent as? ViewGroup ?: return
-
-        if (isLandscape) {
-            // Create horizontal container if not exists
-            var horizontalLayout = rootParent.findViewWithTag<LinearLayout>("horizontal_container")
-            if (horizontalLayout == null) {
-                horizontalLayout = LinearLayout(requireContext()).apply {
-                    tag = "horizontal_container"
-                    orientation = LinearLayout.HORIZONTAL
-                    layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT
-                    )
-                }
-                // Add to root parent
-                safeAddView(rootParent, horizontalLayout)
-            } else {
-                horizontalLayout.removeAllViews()
-            }
-
-            // Video with weight 2
-            binding.playerView?.let { player ->
-                (player.parent as? ViewGroup)?.removeView(player)
-                player.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                player.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 2f)
-                horizontalLayout.addView(player)
-            }
-
-            // Title / subtitles with weight 1
-            binding.cvVideoTitle?.let { title ->
-                (title.parent as? ViewGroup)?.removeView(title)
-                title.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
-                horizontalLayout.addView(title)
-            }
-
-        } else {
-            // Portrait: remove horizontal layout if exists
-            val horizontalLayout = rootParent.findViewWithTag<LinearLayout>("horizontal_container")
-            if (horizontalLayout != null) {
-                horizontalLayout.removeAllViews()
-                rootParent.removeView(horizontalLayout)
-
-                binding.playerView?.let { player ->
-                    player.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                    player.layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    )
-                    safeAddView(rootParent, player)
-                }
-
-                binding.cvVideoTitle?.let { title ->
-                    title.layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    )
-                    safeAddView(rootParent, title)
-                }
-            }
-        }
-    }
-
-    // Safe add view helper
-    private fun safeAddView(parent: ViewGroup, child: View) {
-        (child.parent as? ViewGroup)?.removeView(child)
-        parent.addView(child)
-    }
-
-    @OptIn(UnstableApi::class)
-    private fun resetControllerAfterLayoutChange() {
-        binding.playerView.apply {
-            hideController()
-            post {
-                controllerAutoShow = true
-                controllerHideOnTouch = false
-                showController()
-            }
-        }
-    }
     @UnstableApi
     private fun showVideoControllerIndefinitely(show: Boolean) {
         if (show) {
             binding.playerView.controllerAutoShow = false
-            binding.playerView.controllerShowTimeoutMs =0
-            binding.playerView.controllerHideOnTouch = true
+            binding.playerView?.controllerShowTimeoutMs = 0
+            binding.playerView?.controllerHideOnTouch = true
         } else {
-            binding.playerView.controllerAutoShow = true
-            binding.playerView.controllerShowTimeoutMs = 1000
-            binding.playerView.controllerHideOnTouch = false
+            binding.playerView?.controllerAutoShow = true
+            binding.playerView?.controllerShowTimeoutMs = 1000
+            binding.playerView?.controllerHideOnTouch = false
         }
-        binding.playerView.showController()
+        binding.playerView?.showController()
     }
 
     private fun enableLongPressDoubleSpeed() {
-        binding.playerView.enableLongPressDoubleSpeed(
+        binding.playerView?.enableLongPressDoubleSpeed(
             player = viewModel.exoPlayer!!,
             scope = viewLifecycleOwner.lifecycleScope,
-            onBadgeVisibilityChange = { binding.doubleSpeedBadge.isVisible = it },
+            onBadgeVisibilityChange = { binding.doubleSpeedBadge?.isVisible = it },
         )
     }
 
@@ -428,5 +414,416 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             return fragment
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class)
+    private fun enablePipMode() {
+        if (!pipViewModel.isPipPermissionGranted(requireContext())) {
+            showPipDisabledMessage()
+            return
+        }
+        viewModel.exoPlayer?.let { player ->
+            val controller = ExoPlayerController(player)
+            pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
+        }
+        binding.subtitles.isVisible = false
+        cvVideoTitle?.isVisible = false
+        binding.pipBtn.isVisible = false
+        pipViewModel.updateButtonVisibility(false)
+        binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        binding.playerView?.useController = false
+        val cs = ConstraintSet()
+        cs.clone(constraintContainer)
+        cs.setDimensionRatio(binding.cardView.id, null)
+        cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
+        cs.constrainHeight(binding.cardView.id, ConstraintSet.WRAP_CONTENT)
+        cs.applyTo(constraintContainer)
+        resetConstraintsForPip()
+        lastVideoAspectRatio?.let { pictureInPictureParamsBuilder?.setAspectRatio(it) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            pictureInPictureParamsBuilder?.setSeamlessResizeEnabled(true)
+        }
+        updatePipActions()
+        pictureInPictureParamsBuilder?.build()?.let {
+            requireActivity().enterPictureInPictureMode(it)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class)
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        if (isInPictureInPictureMode) {
+            pipViewModel.enterPipMode()
+            binding.subtitles.isVisible = false
+            binding.pipBtn.isVisible = false
+            binding.playerView?.useController = false
+            pipViewModel.updateButtonVisibility(false)
+            cvVideoTitle?.visibility = View.GONE
+            clearAllMarginsAndConstraints()
+            binding.cardView.radius = 0f
+            updatePipActions()
+            (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
+                width = FrameLayout.LayoutParams.MATCH_PARENT
+                height = FrameLayout.LayoutParams.WRAP_CONTENT
+            }
+            binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            resetConstraintsForPip()
+            lastVideoAspectRatio?.let { ar ->
+                pictureInPictureParamsBuilder?.setAspectRatio(ar)
+                requireActivity().setPictureInPictureParams(
+                    pictureInPictureParamsBuilder!!.build()
+                )
+            }
+
+        } else {
+            pipViewModel.exitPipMode()
+            binding.playerView?.player?.let { player ->
+                if (player.isPlaying) player.pause()
+            }
+            restoreNormalUI()
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun restoreNormalUI() {
+        (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
+            width = FrameLayout.LayoutParams.MATCH_PARENT
+            height = FrameLayout.LayoutParams.MATCH_PARENT
+        }
+        binding.playerView?.requestLayout()
+        binding.subtitles.isVisible = true
+        binding.pipBtn.isVisible = true
+        binding.playerView?.useController = true
+        binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        binding.playerView?.showController()
+        cvVideoTitle?.visibility = View.VISIBLE
+        pipViewModel.updateButtonVisibility(true)
+        binding.cardView.radius =
+            resources.getDimension(R.dimen.video_corner_radius)
+        clearAllMarginsAndConstraints()
+        binding.rootLayout?.post {
+            updateLayoutForOrientation()
+        }
+    }
+
+    private fun clearAllMarginsAndConstraints() {
+        val cardParams = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
+        cardParams.marginStart = 0
+        cardParams.marginEnd = 0
+        cardParams.topMargin = 0
+        cardParams.bottomMargin = 0
+        binding.cardView.layoutParams = cardParams
+        val subtitleParams = binding.subtitles.layoutParams as ConstraintLayout.LayoutParams
+        subtitleParams.marginStart = 0
+        subtitleParams.marginEnd = 0
+        subtitleParams.topMargin = 0
+        subtitleParams.bottomMargin = 0
+        binding.subtitles.layoutParams = subtitleParams
+        binding.cardView.requestLayout()
+        binding.subtitles.requestLayout()
+        binding.rootLayout?.requestLayout()
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun updateLayoutForOrientation() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            requireActivity().isInPictureInPictureMode
+        ) {
+            return
+        }
+        val titleView = cvVideoTitle ?: return
+        clearAllMarginsAndConstraints()
+        val isLandscape =
+            resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        val constraintSet = androidx.constraintlayout.widget.ConstraintSet()
+        constraintSet.clone(constraintContainer)
+        val playerHeight = resources.getDimensionPixelSize(R.dimen.player_height)
+        val playerMarginH = resources.getDimensionPixelSize(R.dimen.video_margin_horizontal)
+        val subtitleMarginH = resources.getDimensionPixelSize(R.dimen.subtitle_margin_horizontal)
+        val subtitleMarginBottom = resources.getDimensionPixelSize(R.dimen.subtitle_margin_bottom)
+        val subtitleMarginTop = resources.getDimensionPixelSize(R.dimen.subtitle_margin_top)
+        constraintSet.clear(binding.cardView.id)
+        constraintSet.clear(binding.subtitles.id)
+        constraintSet.clear(titleView.id)
+
+        if (isLandscape) {
+            constraintSet.setVisibility(titleView.id, ConstraintSet.GONE)
+            constraintSet.connect(
+                titleView.id, ConstraintSet.TOP,
+                ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0
+            )
+            constraintSet.connect(
+                titleView.id, ConstraintSet.START,
+                ConstraintSet.PARENT_ID, ConstraintSet.START, 0
+            )
+            constraintSet.connect(
+                titleView.id, ConstraintSet.END,
+                ConstraintSet.PARENT_ID, ConstraintSet.END, 0
+            )
+            constraintSet.constrainWidth(titleView.id, 0)
+            constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
+
+            constraintSet.connect(
+                binding.cardView.id,
+                ConstraintSet.START,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.START,
+                8
+            )
+            constraintSet.connect(
+                binding.cardView.id,
+                ConstraintSet.TOP,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.TOP,
+                0
+            )
+            constraintSet.connect(
+                binding.cardView.id,
+                ConstraintSet.BOTTOM,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.BOTTOM,
+                0
+            )
+
+            constraintSet.constrainWidth(binding.cardView.id, 0)
+            constraintSet.constrainPercentWidth(binding.cardView.id, 0.60f)
+            constraintSet.constrainHeight(binding.cardView.id, playerHeight)
+            constraintSet.setDimensionRatio(binding.cardView.id, "20:9")
+            binding.playerView?.resizeMode =
+                AspectRatioFrameLayout.RESIZE_MODE_FILL
+            constraintSet.connect(
+                binding.subtitles.id,
+                ConstraintSet.START,
+                binding.cardView.id,
+                ConstraintSet.END,
+                70
+            )
+            constraintSet.connect(
+                binding.subtitles.id,
+                ConstraintSet.END,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.END,
+                subtitleMarginH
+            )
+            constraintSet.connect(
+                binding.subtitles.id,
+                ConstraintSet.TOP,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.TOP,
+                subtitleMarginH
+            )
+            constraintSet.connect(
+                binding.subtitles.id,
+                ConstraintSet.BOTTOM,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.BOTTOM,
+                80
+            )
+
+            constraintSet.constrainWidth(binding.subtitles.id, 0)
+            constraintSet.constrainPercentWidth(binding.subtitles.id, 0.35f)
+
+            binding.pipBtn.visibility = View.GONE
+
+        } else {
+            constraintSet.setVisibility(titleView.id, ConstraintSet.VISIBLE)
+            constraintSet.connect(
+                titleView.id, ConstraintSet.TOP,
+                ConstraintSet.PARENT_ID, ConstraintSet.TOP, 16
+            )
+            constraintSet.connect(
+                titleView.id, ConstraintSet.START,
+                ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH
+            )
+            constraintSet.connect(
+                titleView.id, ConstraintSet.END,
+                ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH
+            )
+            constraintSet.constrainWidth(titleView.id, 0)
+            constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
+
+            constraintSet.connect(
+                binding.cardView.id, ConstraintSet.TOP,
+                titleView.id, ConstraintSet.BOTTOM, 16
+            )
+            constraintSet.connect(
+                binding.cardView.id, ConstraintSet.START,
+                ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH
+            )
+            constraintSet.connect(
+                binding.cardView.id, ConstraintSet.END,
+                ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH
+            )
+            constraintSet.constrainWidth(binding.cardView.id, 0)
+            constraintSet.constrainHeight(binding.cardView.id, playerHeight)
+            constraintSet.setDimensionRatio(binding.cardView.id, null)
+            binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+
+            constraintSet.connect(
+                binding.subtitles.id,
+                ConstraintSet.TOP,
+                binding.cardView.id,
+                ConstraintSet.BOTTOM,
+                subtitleMarginTop
+            )
+            constraintSet.connect(
+                binding.subtitles.id,
+                ConstraintSet.START,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.START,
+                subtitleMarginH
+            )
+            constraintSet.connect(
+                binding.subtitles.id,
+                ConstraintSet.END,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.END,
+                subtitleMarginH
+            )
+            constraintSet.connect(
+                binding.subtitles.id,
+                ConstraintSet.BOTTOM,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.BOTTOM,
+                subtitleMarginBottom
+            )
+
+            constraintSet.constrainWidth(binding.subtitles.id, 0)
+            constraintSet.constrainHeight(binding.subtitles.id, 0)
+
+            binding.pipBtn.visibility = View.VISIBLE
+        }
+
+        constraintSet.applyTo(constraintContainer)
+
+        binding.rootLayout.post {
+            binding.rootLayout.requestLayout()
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        binding.rootLayout.postDelayed({
+            updateLayoutForOrientation()
+        }, 100)
+
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun setupMediaSession() {
+        viewModel.exoPlayer?.let { player ->
+            mediaSession = MediaSession.Builder(requireContext(), player)
+                .setId("video_session_${System.currentTimeMillis()}")
+                .build()
+        }
+    }
+    private fun retryPlayback() {
+        pipViewModel.retryPlayback()
+    }
+
+    private fun seekBy(millis: Long) {
+        viewModel.exoPlayer?.let {
+            val position = it.currentPosition + millis
+            it.seekTo(position.coerceAtLeast(0))
+        }
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class)
+    private fun updatePipActions() {
+        val player = viewModel.exoPlayer ?: return
+        if (player.playbackState == Player.STATE_ENDED) {
+            showReplayAction()
+            return
+        }
+        val isPlaying = pipViewModel.pipState.value.isPlaying
+        pipViewModel.loadPipActions(requireContext(), isPlaying)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            requireActivity().isInPictureInPictureMode
+        ) {
+            requireActivity().setPictureInPictureParams(
+                pictureInPictureParamsBuilder!!.build()
+            )
+        }
+    }
+
+    private fun resetConstraintsForPip() {
+        val set = ConstraintSet()
+        set.clone(constraintContainer)
+
+        set.clear(binding.cardView.id)
+        set.connect(
+            binding.cardView.id, ConstraintSet.TOP,
+            ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0
+        )
+        set.connect(
+            binding.cardView.id, ConstraintSet.START,
+            ConstraintSet.PARENT_ID, ConstraintSet.START, 0
+        )
+        set.connect(
+            binding.cardView.id, ConstraintSet.END,
+            ConstraintSet.PARENT_ID, ConstraintSet.END, 0
+        )
+        set.connect(
+            binding.cardView.id, ConstraintSet.BOTTOM,
+            ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0
+        )
+
+        set.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
+        set.constrainHeight(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
+
+        set.setDimensionRatio(binding.cardView.id, null)
+
+        set.applyTo(constraintContainer)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun showReplayAction() {
+        if (!requireActivity().isInPictureInPictureMode) return
+        if (pictureInPictureParamsBuilder == null) return
+
+        val replayIntent = PendingIntent.getBroadcast(
+            requireContext(),
+            105,
+            android.content.Intent(PipBroadcastReceiverManager.ACTION_PLAY),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val replayAction = RemoteAction(
+            Icon.createWithResource(requireContext(), R.drawable.ic_play),
+            "Replay",
+            "Replay Video",
+            replayIntent
+        )
+
+        pictureInPictureParamsBuilder?.setActions(listOf(replayAction))
+
+        requireActivity().setPictureInPictureParams(
+            pictureInPictureParamsBuilder!!.build()
+        )
+    }
+
+    private fun showPipDisabledMessage() {
+        Toast.makeText(
+            requireContext(),
+            "Enable Picture-in-Picture in app settings to use PiP",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
+    private fun registerExoplayerController() {
+        viewModel.exoPlayer?.let { player ->
+            val controller = ExoPlayerController(player)
+            pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
+        }
+    }
 }
+
+
+
+
+
+
+
+
 

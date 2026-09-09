@@ -45,4 +45,9 @@
     <string name="course_accessibility_stop_downloading_course_section">Зупинити завантаження секції курсу</string>
     <string name="course_accessibility_section_completed">Секція завершена</string>
     <string name="course_accessibility_section_uncompleted">Секція не завершена</string>
+    <string name="picture_in_picture">Картинка в картинці</string>
+    <string name="course_pip_play">Відтворити</string>
+    <string name="course_pip_pause">Пауза</string>
+    <string name="course_pip_rewind">Назад</string>
+    <string name="course_pip_forward">Вперед</string>
 </resources>

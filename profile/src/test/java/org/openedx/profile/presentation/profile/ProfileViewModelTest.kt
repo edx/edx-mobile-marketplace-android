@@ -20,6 +20,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -29,6 +31,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.domain.model.AgreementUrls
 import org.openedx.core.domain.model.ProfileImage
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
@@ -53,6 +56,7 @@ class ProfileViewModelTest {
     private val notifier = mockk<ProfileNotifier>()
     private val analytics = mockk<ProfileAnalytics>()
     private val router = mockk<ProfileRouter>()
+    private val subscriptionAlertBanner = mockk<SubscriptionAlertBanner>(relaxed = true)
 
     private val account = Account(
         username = "",
@@ -85,6 +89,7 @@ class ProfileViewModelTest {
         every { config.getFeedbackEmailAddress() } returns ""
         every { config.getAgreement(Locale.current.language) } returns AgreementUrls()
         every { config.getFaqUrl() } returns ""
+        every { analytics.logEvent(any(), any()) } returns Unit
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
@@ -101,7 +106,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBanner,
         )
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } throws UnknownHostException()
@@ -121,7 +127,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBanner,
         )
         coEvery { interactor.getCachedAccount() } returns account
         coEvery { interactor.getAccount() } throws UnknownHostException()
@@ -141,7 +148,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBanner,
         )
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } throws Exception()
@@ -161,7 +169,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBanner,
         )
         coEvery { interactor.getCachedAccount() } returns null
         coEvery { interactor.getAccount() } returns account
@@ -180,7 +189,8 @@ class ProfileViewModelTest {
             resourceManager,
             notifier,
             analytics,
-            router
+            router,
+            subscriptionAlertBanner,
         )
         coEvery { interactor.getCachedAccount() } returns null
         every { notifier.notifier } returns flow { emit(AccountUpdated()) }
@@ -192,5 +202,55 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 2) { interactor.getAccount() }
+    }
+
+    @Test
+    fun `onResume refreshes subscription banner visibility state`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
+        every { analytics.logEvent(any(), any()) } returns Unit
+        coEvery { interactor.getCachedAccount() } returns null
+        coEvery { interactor.getAccount() } returns account
+
+        val viewModel = ProfileViewModel(
+            interactor,
+            resourceManager,
+            notifier,
+            analytics,
+            router,
+            subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        val lifecycleOwner = mockk<LifecycleOwner>()
+        viewModel.onResume(lifecycleOwner)
+
+        assertTrue(viewModel.isSubscriptionBannerVisible.value)
+    }
+
+    @Test
+    fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
+        every { subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.PROFILE) } returns Unit
+        every { analytics.logEvent(any(), any()) } returns Unit
+        coEvery { interactor.getCachedAccount() } returns null
+        coEvery { interactor.getAccount() } returns account
+
+        val viewModel = ProfileViewModel(
+            interactor,
+            resourceManager,
+            notifier,
+            analytics,
+            router,
+            subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.dismissSubscriptionBanner()
+
+        assertFalse(viewModel.isSubscriptionBannerVisible.value)
     }
 }

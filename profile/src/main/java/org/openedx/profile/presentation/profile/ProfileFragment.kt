@@ -34,6 +34,7 @@ class ProfileFragment : Fragment() {
             OpenEdXTheme {
                 val windowSize = rememberWindowSize()
                 val uiState by viewModel.uiState.collectAsState()
+                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val refreshing by viewModel.isUpdating.observeAsState(false)
 
@@ -42,6 +43,8 @@ class ProfileFragment : Fragment() {
                     uiState = uiState,
                     uiMessage = uiMessage,
                     refreshing = refreshing,
+                    isSubscriptionBannerVisible = isSubscriptionBannerVisible,
+                    subscriptionBannerUrl = viewModel.subscriptionBannerUrl,
                     onSettingsClick = {
                         viewModel.profileRouter.navigateToSettings(requireActivity().supportFragmentManager)
                     },
@@ -54,6 +57,12 @@ class ProfileFragment : Fragment() {
                             }
                             ProfileViewAction.SwipeRefresh -> {
                                 viewModel.updateAccount()
+                            }
+                            ProfileViewAction.DismissSubscriptionBanner -> {
+                                viewModel.dismissSubscriptionBanner()
+                            }
+                            is ProfileViewAction.SubscriptionBannerCtaClick -> {
+                                viewModel.subscriptionBannerCtaClicked(action.url)
                             }
                         }
                     }

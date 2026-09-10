@@ -1,6 +1,5 @@
 package org.openedx.core.module.subscriptionBanner
 
-import android.util.Log
 import org.openedx.core.config.DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.SubscriptionBannerStorage
@@ -39,8 +38,11 @@ class SubscriptionAlertBanner(
 
         val shownSessions = storage.getSubscriptionBannerScreenSessionCount(screen.key)
 
-        val currentAppSession = storage.getSubscriptionBannerSessionCount().coerceAtLeast(1)
+        if (shownSessions >= maxSessions) {
+            return false
+        }
 
+        val currentAppSession = storage.getSubscriptionBannerSessionCount().coerceAtLeast(1)
         val lastSeenAppSession = storage.getSubscriptionBannerScreenLastSeenAppSession(screen.key)
 
         if (currentAppSession > lastSeenAppSession) {

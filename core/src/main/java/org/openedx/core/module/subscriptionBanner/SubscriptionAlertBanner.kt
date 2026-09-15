@@ -24,6 +24,10 @@ class SubscriptionAlertBanner(
             return false
         }
 
+        if (corePreferences.user == null) {
+            return false
+        }
+
         if (storage.isSubscriptionBannerDismissed(screen.key)) {
             return false
         }

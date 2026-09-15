@@ -73,6 +73,7 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
             remove(USER)
             remove(ACCOUNT)
             remove(EXPIRES_IN)
+            remove(SUBSCRIPTION_BANNER_SESSION_COUNT)
         }.apply()
     }
 

@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
-import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -81,6 +80,8 @@ import org.openedx.discovery.R
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
 import org.openedx.discovery.presentation.catalog.WebViewLink
 import org.openedx.core.R as CoreR
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 
 class WebViewDiscoveryFragment : Fragment() {
 
@@ -296,80 +297,88 @@ private fun WebViewDiscoveryScreen(
                 onBackClick = onBackClick,
             )
 
-            if (isSubscriptionBannerVisible) {
-                val searchTabWidth by remember(key1 = windowSize) {
-                    mutableStateOf(
-                        windowSize.windowSizeValue(
-                            expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
-                            compact = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                if (isSubscriptionBannerVisible) {
+                    val searchTabWidth by remember(key1 = windowSize) {
+                        mutableStateOf(
+                            windowSize.windowSizeValue(
+                                expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
+                                compact = Modifier.fillMaxWidth()
+                            )
                         )
-                    )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .padding(start = 24.dp, end = 24.dp)
+                            .then(searchTabWidth)
+                    ) {
+                        SubscriptionBanner(
+                            visible = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            url = subscriptionBannerUrl,
+                            onDismiss = onDismissSubscriptionBanner,
+                            onCtaClick = onSubscriptionBannerCtaClick,
+                        )
+                    }
                 }
-                Box(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(start = 24.dp, end = 24.dp)
-                        .then(searchTabWidth)
-                ) {
-                    SubscriptionBanner(
-                        visible = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        url = subscriptionBannerUrl,
-                        onDismiss = onDismissSubscriptionBanner,
-                        onCtaClick = onSubscriptionBannerCtaClick,
-                    )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Surface {
-                Box(
-                    modifier = modifierScreenWidth
-                        .fillMaxHeight()
-                        .background(Color.White),
-                    contentAlignment = Alignment.TopCenter
-                ) {
+                Surface {
+                    Box(
+                        modifier = modifierScreenWidth
+                            .fillMaxHeight()
+                            .background(Color.White),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
 
-                    if ((uiState is WebViewUIState.Error).not()) {
-                        if (hasInternetConnection) {
-                            if (cookiesReady) {
+                        if ((uiState is WebViewUIState.Error).not()) {
+                            if (hasInternetConnection) {
+                                if (cookiesReady) {
 
-                                DiscoveryWebView(
-                                    contentUrl = contentUrl,
-                                    uriScheme = uriScheme,
-                                    userAgent = userAgent,
-                                    isPreLogin = isPreLogin,
-                                    onWebPageLoaded = {
-                                        if ((uiState is WebViewUIState.Error).not()) {
-                                            onWebViewUIAction(WebViewUIAction.WEB_PAGE_LOADED)
-                                        }
-                                    },
-                                    onWebPageUpdated = onWebPageUpdated,
-                                    onUriClick = onUriClick,
-                                    onWebPageLoadError = {
-                                        onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
-                                    },
-                                    onRefreshSessionCookie = onRefreshSessionCookie,
-                                )
+                                    DiscoveryWebView(
+                                        contentUrl = contentUrl,
+                                        uriScheme = uriScheme,
+                                        userAgent = userAgent,
+                                        isPreLogin = isPreLogin,
+                                        onWebPageLoaded = {
+                                            if ((uiState is WebViewUIState.Error).not()) {
+                                                onWebViewUIAction(WebViewUIAction.WEB_PAGE_LOADED)
+                                            }
+                                        },
+                                        onWebPageUpdated = onWebPageUpdated,
+                                        onUriClick = onUriClick,
+                                        onWebPageLoadError = {
+                                            onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
+                                        },
+                                        onRefreshSessionCookie = onRefreshSessionCookie,
+                                    )
+                                }
+                            } else {
+                                onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
                             }
-                        } else {
-                            onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
                         }
-                    }
-                    if (uiState is WebViewUIState.Error) {
-                        FullScreenErrorView(errorType = uiState.errorType) {
-                            onWebViewUIAction(WebViewUIAction.RELOAD_WEB_PAGE)
+                        if (uiState is WebViewUIState.Error) {
+                            FullScreenErrorView(errorType = uiState.errorType) {
+                                onWebViewUIAction(WebViewUIAction.RELOAD_WEB_PAGE)
+                            }
                         }
-                    }
-                    if (uiState is WebViewUIState.Loading && hasInternetConnection) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .zIndex(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                        if (uiState is WebViewUIState.Loading && hasInternetConnection) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .zIndex(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                            }
                         }
                     }
                 }

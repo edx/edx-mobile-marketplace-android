@@ -75,7 +75,6 @@ class NativeDiscoveryViewModel(
     private var isLoading = false
 
     init {
-        refreshSubscriptionBannerVisibility()
         getCoursesList()
         collectAppUpgradeEvent()
     }

@@ -53,7 +53,6 @@ class ProfileViewModel(
         get() = subscriptionAlertBanner.getBannerUrl()
 
     init {
-        refreshSubscriptionBannerVisibility()
         getAccount()
     }
 

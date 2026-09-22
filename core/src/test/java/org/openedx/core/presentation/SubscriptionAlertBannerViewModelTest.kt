@@ -29,6 +29,7 @@ class SubscriptionAlertBannerViewModelTest {
         )
         every { appConfig.subscriptionBannerConfig } returns bannerConfig
         every { corePreferences.appConfig } returns appConfig
+        every { corePreferences.user } returns mockk()
     }
 
     @Before

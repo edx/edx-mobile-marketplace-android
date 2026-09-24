@@ -1,28 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    android:gravity="center"
     android:orientation="vertical"
     android:id="@+id/rootLayout">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
+        android:id="@+id/innerConstraintLayout"
+        android:layout_width="560dp"
         android:layout_height="match_parent"
-        android:minWidth="560dp">
-
+        android:minWidth="560dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:contentDescription="@string/course_accessibility_video_player"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp"
-            app:layout_constraintDimensionRatio="W,9:16"
+            app:layout_constraintDimensionRatio="W,9:20"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -30,7 +32,7 @@
             <androidx.media3.ui.PlayerView
                 android:id="@+id/player_view"
                 android:layout_width="560dp"
-                android:layout_height="100dp"
+                android:layout_height="300dp"
                 android:background="@android:color/black"
                 app:resize_mode="fit"
                 app:surface_type="texture_view">
@@ -41,7 +43,6 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="end|top"
                     android:layout_marginEnd="30dp"
-                    android:layout_marginTop="30dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/picture_in_picture"
                     android:src="@drawable/ic_pip"
@@ -94,4 +95,5 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
+

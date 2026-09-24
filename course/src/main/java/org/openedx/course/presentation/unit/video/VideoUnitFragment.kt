@@ -75,7 +75,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private val constraintContainer: ConstraintLayout
         get() = binding.rootLayout as ConstraintLayout
     private var lastVideoAspectRatio: Rational? = null
-
+    private var isPipModeRequested = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         windowSize = computeWindowSizeClasses()
@@ -244,8 +244,19 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         })
         lifecycleScope.launchWhenStarted {
             pipViewModel.pipEvent.collect { event ->
-                if (event is PipUiEvent.PipModeRequested && isAdded) {
-                    enablePipMode()
+                when (event) {
+                    is PipUiEvent.PipModeRequested -> {
+                        isPipModeRequested = true
+                        if (isAdded) {
+                            enablePipMode()
+                        }
+
+                        if (isAdded&&binding.playerView.player!!.isPlaying) {
+                            enablePipMode()
+                        }
+
+                    }
+                    else -> {}
                 }
             }
         }
@@ -320,6 +331,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             if (requireActivity().isInPictureInPictureMode) {
                 requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 return
+            }
+            if (!pipViewModel.pipState.value.isPipMode && !isPipModeRequested) {
+                binding.playerView?.player?.let { player ->
+                    if (player.isPlaying) player.pause()
+                }
             }
         }
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -454,6 +470,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
         if (isInPictureInPictureMode) {
+            isPipModeRequested = false
             pipViewModel.enterPipMode()
             binding.subtitles.isVisible = false
             binding.pipBtn.isVisible = false
@@ -477,6 +494,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
 
         } else {
+            isPipModeRequested = false
             pipViewModel.exitPipMode()
             binding.playerView?.player?.let { player ->
                 if (player.isPlaying) player.pause()
@@ -818,12 +836,3 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 }
-
-
-
-
-
-
-
-
-

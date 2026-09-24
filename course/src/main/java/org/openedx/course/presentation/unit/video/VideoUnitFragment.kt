@@ -451,7 +451,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         cs.clone(constraintContainer)
         cs.setDimensionRatio(binding.cardView.id, null)
         cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
-        cs.constrainHeight(binding.cardView.id, ConstraintSet.WRAP_CONTENT)
+        cs.constrainHeight(binding.cardView.id, 400)
         cs.applyTo(constraintContainer)
 
         resetConstraintsForPip()
@@ -511,7 +511,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
             (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
                 width = FrameLayout.LayoutParams.MATCH_PARENT
-                height = FrameLayout.LayoutParams.WRAP_CONTENT
+                height = 400
             }
 
             binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
@@ -543,7 +543,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private fun restoreNormalUI() {
         (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
             width = FrameLayout.LayoutParams.MATCH_PARENT
-            height = FrameLayout.LayoutParams.MATCH_PARENT
+            height = 400
         }
         binding.playerView?.requestLayout()
         binding.subtitles.isVisible = true
@@ -824,7 +824,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         )
 
         set.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
-        set.constrainHeight(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
+        set.constrainHeight(binding.cardView.id, 400)
 
         set.setDimensionRatio(binding.cardView.id, null)
 

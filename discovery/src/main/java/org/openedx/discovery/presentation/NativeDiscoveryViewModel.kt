@@ -34,7 +34,6 @@ class NativeDiscoveryViewModel(
     private val analytics: DiscoveryAnalytics,
     private val appNotifier: AppNotifier,
     private val corePreferences: CorePreferences,
-    private val subscriptionAlertBanner: SubscriptionAlertBanner,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -42,7 +41,6 @@ class NativeDiscoveryViewModel(
     val apiHostUrl get() = config.getApiHostURL()
     val isUserLoggedIn get() = corePreferences.user != null
     val canShowBackButton get() = config.isPreLoginExperienceEnabled() && !isUserLoggedIn
-    val subscriptionBannerUrl: String get() = subscriptionAlertBanner.getBannerUrl()
 
     private val _uiState = MutableLiveData<DiscoveryUIState>(DiscoveryUIState.Loading)
     val uiState: LiveData<DiscoveryUIState>
@@ -69,7 +67,7 @@ class NativeDiscoveryViewModel(
 
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
-
+    private var isScreenCurrentlyVisible = false
     private var page = 1
     private val coursesList = mutableListOf<Course>()
     private var isLoading = false
@@ -81,8 +79,12 @@ class NativeDiscoveryViewModel(
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
-        refreshSubscriptionBannerVisibility()
     }
+
+    override fun onPause(owner: LifecycleOwner) {
+        super.onPause(owner)
+    }
+
 
     private fun loadCoursesInternal(
         username: String? = null,
@@ -124,6 +126,7 @@ class NativeDiscoveryViewModel(
             }
         }
     }
+
 
     fun getCoursesList(
         username: String? = null,
@@ -216,53 +219,7 @@ class NativeDiscoveryViewModel(
         )
     }
 
-    fun refreshSubscriptionBannerVisibility() {
-        val wasVisible = _isSubscriptionBannerVisible.value
-        val isVisible = subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY)
-        _isSubscriptionBannerVisible.value = isVisible
-        if (isVisible && !wasVisible) {
-            val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
-            analytics.logEvent(
-                DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.eventName,
-                buildMap {
-                    put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.biValue)
-                    put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
-                    put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
-                    put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
-                    put(DiscoveryAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
-                }
-            )
-        }
-    }
 
-    fun dismissSubscriptionBanner() {
-        val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
-        analytics.logEvent(
-            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.eventName,
-            buildMap {
-                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.biValue)
-                put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
-                put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
-                put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
-                put(DiscoveryAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
-            }
-        )
-        subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
-        _isSubscriptionBannerVisible.value = false
-    }
-
-    fun onSubscriptionBannerCtaClicked(url: String) {
-        if (url.isBlank()) return
-        analytics.logEvent(
-            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED.eventName,
-            buildMap {
-                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED.biValue)
-                put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
-                put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
-                put(DiscoveryAnalyticsKey.URL.key, url)
-            }
-        )
-    }
 
     companion object {
         private const val TAG = "NativeDiscoveryViewModel"

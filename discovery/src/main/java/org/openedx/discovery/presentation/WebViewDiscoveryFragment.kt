@@ -82,6 +82,7 @@ import org.openedx.discovery.presentation.catalog.WebViewLink
 import org.openedx.core.R as CoreR
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.LaunchedEffect
 
 class WebViewDiscoveryFragment : Fragment() {
 
@@ -109,7 +110,9 @@ class WebViewDiscoveryFragment : Fragment() {
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.hasInternetConnection)
                 }
-
+                LaunchedEffect(Unit) {
+                    viewModel.refreshSubscriptionBannerVisibility()
+                }
                 WebViewDiscoveryScreen(
                     windowSize = windowSize,
                     uiState = uiState,

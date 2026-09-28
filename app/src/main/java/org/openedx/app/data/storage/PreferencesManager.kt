@@ -322,6 +322,15 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         iapSharedPreferences.edit().remove(courseId).apply()
     }
 
+    override fun getSubscriptionBannerMaxReachedSession(screenKey: String): Int =
+        getInt(subscriptionBannerMaxReachedSessionKey(screenKey))
+
+    override fun setSubscriptionBannerMaxReachedSession(screenKey: String, value: Int) =
+        saveInt(subscriptionBannerMaxReachedSessionKey(screenKey), value)
+
+    private fun subscriptionBannerMaxReachedSessionKey(screenKey: String): String =
+        "${SUBSCRIPTION_BANNER_MAX_REACHED_SESSION}_${screenKey}_${currentUserKey()}"
+
     companion object {
         private const val ACCESS_TOKEN = "access_token"
         private const val REFRESH_TOKEN = "refresh_token"
@@ -339,6 +348,7 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val APP_CONFIG = "app_config"
         private const val RESET_APP_DIRECTORY = "reset_app_directory"
         private const val LAST_SIGN_IN_TYPE = "last_sign_in_type"
+
         private const val NOTIFICATIONS_CONFIGURATION = "notifications_configuration"
         private const val NOTIFICATIONS_PRIMER_CONFIGURATION = "notifications_primer_configuration"
         private const val PLS_BANNER_SHOWN = "pls_banner_shown"
@@ -348,6 +358,7 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val SUBSCRIPTION_BANNER_SCREEN_SESSION_COUNT = "subscription_banner_screen_session_count_v3"
         private const val SUBSCRIPTION_BANNER_SCREEN_LAST_SEEN_SESSION = "subscription_banner_screen_last_seen_session_v3"
         private const val SUBSCRIPTION_BANNER_DISMISS_COUNT = "subscription_banner_dismiss_count_v1"
+        private const val SUBSCRIPTION_BANNER_MAX_REACHED_SESSION = "subscription_banner_max_reached_session_v1"
         private const val SUBSCRIPTION_BANNER_DISMISSED = "subscription_banner_dismissed_v2"
         private const val GUEST_USER = "guest"
         private const val IAP_PREFS_NAME = "iap_preferences"

@@ -75,7 +75,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private val constraintContainer: ConstraintLayout
         get() = binding.rootLayout as ConstraintLayout
     private var lastVideoAspectRatio: Rational? = null
-    private var isPipModeRequested = false
+
+    private var savedConstraintState: Bundle? = null
+    private var savedCardViewParams: ConstraintLayout.LayoutParams? = null
+    private var savedSubtitleParams: ConstraintLayout.LayoutParams? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         windowSize = computeWindowSizeClasses()
@@ -244,14 +248,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         })
         lifecycleScope.launchWhenStarted {
             pipViewModel.pipEvent.collect { event ->
-                when (event) {
-                    is PipUiEvent.PipModeRequested -> {
-                        isPipModeRequested = true
-                        if (isAdded) {
-                            enablePipMode()
-                        }
-                    }
-                    else -> {}
+                if (event is PipUiEvent.PipModeRequested && isAdded) {
+                    enablePipMode()
                 }
             }
         }
@@ -326,11 +324,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             if (requireActivity().isInPictureInPictureMode) {
                 requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 return
-            }
-            if (!pipViewModel.pipState.value.isPipMode && !isPipModeRequested) {
-                binding.playerView?.player?.let { player ->
-                    if (player.isPlaying) player.pause()
-                }
             }
         }
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -426,66 +419,105 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 
+    private fun isTablet(): Boolean {
+        return windowSize?.isTablet == true
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class)
     private fun enablePipMode() {
         if (!pipViewModel.isPipPermissionGranted(requireContext())) {
-            isPipModeRequested = false
             showPipDisabledMessage()
             return
         }
+
+        // Save the exact current state BEFORE making any changes
+        saveConstraintState()
 
         viewModel.exoPlayer?.let { player ->
             val controller = ExoPlayerController(player)
             pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
         }
-
         binding.subtitles.isVisible = false
         cvVideoTitle?.isVisible = false
         binding.pipBtn.isVisible = false
         pipViewModel.updateButtonVisibility(false)
-        binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView?.useController = false
 
-        val cs = ConstraintSet()
-        cs.clone(constraintContainer)
-        cs.setDimensionRatio(binding.cardView.id, null)
-        cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
-        cs.constrainHeight(binding.cardView.id, 400)
-        cs.applyTo(constraintContainer)
-
-        resetConstraintsForPip()
-
-        lastVideoAspectRatio?.let {
-            pictureInPictureParamsBuilder?.setAspectRatio(it)
-        }
-
+        lastVideoAspectRatio?.let { pictureInPictureParamsBuilder?.setAspectRatio(it) }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             pictureInPictureParamsBuilder?.setSeamlessResizeEnabled(true)
         }
-
         updatePipActions()
+        pictureInPictureParamsBuilder?.build()?.let {
+            requireActivity().enterPictureInPictureMode(it)
+        }
+    }
 
-        val params = pictureInPictureParamsBuilder?.build()
-
-        if (params == null) {
-            isPipModeRequested = false
-            restoreNormalUI()
-            return
+    private fun saveConstraintState() {
+        // Save cardView layout params with all properties
+        val cardParams = binding.cardView.layoutParams as? ConstraintLayout.LayoutParams
+        if (cardParams != null) {
+            savedCardViewParams = ConstraintLayout.LayoutParams(cardParams)
         }
 
-        isPipModeRequested = true
-
-        try {
-            val entered = requireActivity().enterPictureInPictureMode(params)
-            if (!entered && !requireActivity().isInPictureInPictureMode) {
-                isPipModeRequested = false
-                restoreNormalUI()
-            }
-        } catch (exception: IllegalStateException) {
-            isPipModeRequested = false
-            restoreNormalUI()
+        // Save subtitles layout params
+        val subParams = binding.subtitles.layoutParams as? ConstraintLayout.LayoutParams
+        if (subParams != null) {
+            savedSubtitleParams = ConstraintLayout.LayoutParams(subParams)
         }
+
+        // Save player layout params
+        savedPlayerLayoutParams = (binding.playerView?.layoutParams as? FrameLayout.LayoutParams)?.let {
+            FrameLayout.LayoutParams(it)
+        }
+    }
+
+    private var savedPlayerLayoutParams: FrameLayout.LayoutParams? = null
+
+
+    @OptIn(UnstableApi::class)
+    private fun restoreSavedConstraintState() {
+        // Restore cardView parameters first
+        savedCardViewParams?.let {
+            val newParams = ConstraintLayout.LayoutParams(it)
+            binding.cardView.layoutParams = newParams
+        }
+
+        // Restore subtitles parameters
+        savedSubtitleParams?.let {
+            val newParams = ConstraintLayout.LayoutParams(it)
+            binding.subtitles.layoutParams = newParams
+        }
+
+        // Restore player layout params
+        savedPlayerLayoutParams?.let {
+            val newParams = FrameLayout.LayoutParams(it)
+            binding.playerView?.layoutParams = newParams
+        }
+
+        // Restore CardView padding to default
+        binding.cardView.setPadding(0, 0, 0, 0)
+
+        // Restore UI visibility and properties
+        binding.subtitles.isVisible = true
+        binding.pipBtn.isVisible = true
+        binding.playerView?.useController = true
+        binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        binding.playerView?.showController()
+        cvVideoTitle?.visibility = View.VISIBLE
+        pipViewModel.updateButtonVisibility(true)
+        binding.cardView.radius = resources.getDimension(R.dimen.video_corner_radius)
+
+        // Request layout refresh
+        binding.rootLayout?.post {
+            binding.rootLayout?.requestLayout()
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun restoreNormalUI() {
+        // This is now handled by restoreSavedConstraintState
     }
 
 
@@ -493,28 +525,47 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
-
         if (isInPictureInPictureMode) {
-            // Successful PiP transition.
-            isPipModeRequested = false
-
             pipViewModel.enterPipMode()
             binding.subtitles.isVisible = false
             binding.pipBtn.isVisible = false
             binding.playerView?.useController = false
             pipViewModel.updateButtonVisibility(false)
             cvVideoTitle?.visibility = View.GONE
-
-            clearAllMarginsAndConstraints()
             binding.cardView.radius = 0f
-            updatePipActions()
 
-            (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
-                width = FrameLayout.LayoutParams.MATCH_PARENT
-                height = 400
+            // CRITICAL: Remove ALL padding and margins from CardView
+            binding.cardView.setPadding(0, 0, 0, 0)
+
+            // Update CardView layout params - remove all margins
+            (binding.cardView.layoutParams as ConstraintLayout.LayoutParams).apply {
+                width = ConstraintLayout.LayoutParams.MATCH_PARENT
+                height = ConstraintLayout.LayoutParams.MATCH_PARENT
+                marginStart = 0
+                marginEnd = 0
+                topMargin = 0
+                bottomMargin = 0
+                leftMargin = 0
+                rightMargin = 0
+                binding.cardView.layoutParams = this
             }
 
+            // Set player to fill CardView completely
+            binding.playerView?.layoutParams = (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
+                width = FrameLayout.LayoutParams.MATCH_PARENT
+                height = FrameLayout.LayoutParams.MATCH_PARENT
+                marginStart = 0
+                marginEnd = 0
+                topMargin = 0
+                bottomMargin = 0
+                leftMargin = 0
+                rightMargin = 0
+            }
             binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+
+            updatePipActions()
+
+            // Apply PIP constraints to fill entire screen
             resetConstraintsForPip()
 
             lastVideoAspectRatio?.let { ar ->
@@ -523,43 +574,44 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     pictureInPictureParamsBuilder!!.build()
                 )
             }
+
         } else {
-            isPipModeRequested = false
-
             pipViewModel.exitPipMode()
-
             binding.playerView?.player?.let { player ->
-                if (player.isPlaying) {
-                    player.pause()
-                }
+                if (player.isPlaying) player.pause()
             }
-
-            restoreNormalUI()
+            // Restore to exact previous state
+            restoreSavedConstraintState()
         }
     }
 
+    private fun resetConstraintsForPip() {
+        val set = ConstraintSet()
+        set.clone(constraintContainer)
 
-    @OptIn(UnstableApi::class)
-    private fun restoreNormalUI() {
-        (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
-            width = FrameLayout.LayoutParams.MATCH_PARENT
-            height = 400
-        }
+        // Clear all constraints on cardView
+        set.clear(binding.cardView.id)
+
+        // Connect to all edges with ZERO spacing
+        set.connect(binding.cardView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0)
+        set.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 0)
+        set.connect(binding.cardView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 0)
+        set.connect(binding.cardView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0)
+
+        // Fill entire screen
+        set.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
+        set.constrainHeight(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
+
+        // IMPORTANT: Remove dimension ratio to allow proper aspect ratio scaling
+        set.setDimensionRatio(binding.cardView.id, null)
+
+        set.applyTo(constraintContainer)
+
+        // Force layout pass
+        binding.cardView.requestLayout()
         binding.playerView?.requestLayout()
-        binding.subtitles.isVisible = true
-        binding.pipBtn.isVisible = true
-        binding.playerView?.useController = true
-        binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-        binding.playerView?.showController()
-        cvVideoTitle?.visibility = View.VISIBLE
-        pipViewModel.updateButtonVisibility(true)
-        binding.cardView.radius =
-            resources.getDimension(R.dimen.video_corner_radius)
-        clearAllMarginsAndConstraints()
-        binding.rootLayout?.post {
-            updateLayoutForOrientation()
-        }
     }
+
 
     private fun clearAllMarginsAndConstraints() {
         val cardParams = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
@@ -801,35 +853,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 
-    private fun resetConstraintsForPip() {
-        val set = ConstraintSet()
-        set.clone(constraintContainer)
-
-        set.clear(binding.cardView.id)
-        set.connect(
-            binding.cardView.id, ConstraintSet.TOP,
-            ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0
-        )
-        set.connect(
-            binding.cardView.id, ConstraintSet.START,
-            ConstraintSet.PARENT_ID, ConstraintSet.START, 0
-        )
-        set.connect(
-            binding.cardView.id, ConstraintSet.END,
-            ConstraintSet.PARENT_ID, ConstraintSet.END, 0
-        )
-        set.connect(
-            binding.cardView.id, ConstraintSet.BOTTOM,
-            ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0
-        )
-
-        set.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
-        set.constrainHeight(binding.cardView.id, 400)
-
-        set.setDimensionRatio(binding.cardView.id, null)
-
-        set.applyTo(constraintContainer)
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showReplayAction() {
@@ -872,3 +895,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 }
+
+
+
+
+
+
+
+

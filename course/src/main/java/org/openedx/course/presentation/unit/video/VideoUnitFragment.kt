@@ -103,6 +103,10 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            updateAutoPipForOrientation()
+        }
+
         pipViewModel.pipActions.observe(viewLifecycleOwner) { actions ->
             if (actions.isNotEmpty()) {
                 pictureInPictureParamsBuilder?.setActions(actions)
@@ -427,6 +431,10 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class)
     private fun enablePipMode() {
+        if (isLandscape()) {
+            return
+        }
+
         if (!pipViewModel.isPipPermissionGranted(requireContext())) {
             showPipDisabledMessage()
             return
@@ -968,6 +976,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         super.onConfigurationChanged(newConfig)
         binding.rootLayout.postDelayed({
             updateLayoutForOrientation()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                !requireActivity().isInPictureInPictureMode
+            ) {
+                updateAutoPipForOrientation()
+            }
         }, 100)
 
     }
@@ -1050,6 +1063,23 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
         }
     }
+
+    private fun isLandscape(): Boolean {
+        return resources.configuration.orientation ==
+                Configuration.ORIENTATION_LANDSCAPE
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun updateAutoPipForOrientation() {
+        val params = PictureInPictureParams.Builder()
+            .setAutoEnterEnabled(!isLandscape())
+            .setSeamlessResizeEnabled(true)
+            .build()
+
+        requireActivity().setPictureInPictureParams(params)
+    }
+
+
 }
 
 

@@ -17,6 +17,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.Clock
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -283,21 +284,28 @@ class EncodedVideoUnitViewModel(
 
             setAudioAttributes(audioAttributes, true)
             setPlaybackSpeed(preferencesManager.videoSettings.videoPlaybackSpeed.speedValue)
-            val mediaSource = buildMediaSource(videoUrl)
-            setMediaSource(mediaSource)
+            setMediaSource(buildMediaSource(getMediaItem()))
             seekTo(playbackPosition)
             playWhenReady = false
-
         }
         _state.update { it.copy(activePlayerType = PlayerType.EXO_REGULAR) }
         logVideoLoadedEvent(videoUrl)
     }
 
-    private fun buildMediaSource(videoUrl: String): MediaSource {
-        val uri = videoUrl.toUri()
-        return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context))
-            .createMediaSource(MediaItem.fromUri(uri))
+    private fun buildMediaSource(mediaItem: MediaItem): MediaSource {
+        val dataSourceFactory = DefaultDataSource.Factory(context)
+        return if (isHlsUrl(videoUrl)) {
+            HlsMediaSource.Factory(dataSourceFactory)
+                .setAllowChunklessPreparation(true)
+                .createMediaSource(mediaItem)
+        } else {
+            ProgressiveMediaSource.Factory(dataSourceFactory)
+                .createMediaSource(mediaItem)
+        }
     }
+
+    private fun isHlsUrl(url: String): Boolean =
+        Util.inferContentType(url.toUri()) == C.CONTENT_TYPE_HLS
 
     private fun getActivePlayer(): Player? {
         return if (state.value.activePlayerType == PlayerType.CHROME_CAST) {
@@ -380,17 +388,7 @@ class EncodedVideoUnitViewModel(
             exoPlayer?.playWhenReady = true
             return
         }
-        if (videoUrl.endsWith(HLS_EXT)) {
-            val factory = DefaultDataSource.Factory(context)
-            val mediaSource: HlsMediaSource =
-                HlsMediaSource.Factory(factory).createMediaSource(mediaItem)
-            exoPlayer?.setMediaSource(mediaSource, getCurrentVideoTime())
-        } else {
-            exoPlayer?.setMediaItem(
-                mediaItem,
-                getCurrentVideoTime()
-            )
-        }
+        exoPlayer?.setMediaSource(buildMediaSource(mediaItem), getCurrentVideoTime())
     }
 
     fun releasePlayers() {
@@ -402,7 +400,7 @@ class EncodedVideoUnitViewModel(
 
     private fun getMediaItem() = MediaItem.Builder().setMediaMetadata(movieMetadata)
         .setUri(videoUrl)
-        .setMimeType(if (videoUrl.endsWith(HLS_EXT)) MimeTypes.APPLICATION_M3U8 else VIDEO_MIME_TYPE)
+        .setMimeType(if (isHlsUrl(videoUrl)) MimeTypes.APPLICATION_M3U8 else VIDEO_MIME_TYPE)
         .build()
 
     fun getCastPlayer(): CastPlayer? = castManager.castPlayer

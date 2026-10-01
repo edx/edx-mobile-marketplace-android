@@ -216,13 +216,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                         if (videoSize.height > 0) Rational(videoSize.width, videoSize.height)
                         else Rational(16, 9)
                     lastVideoAspectRatio = aspect
-                    pictureInPictureParamsBuilder?.setAspectRatio(aspect)
-
-                    if (requireActivity().isInPictureInPictureMode) {
-                        requireActivity().setPictureInPictureParams(
-                            pictureInPictureParamsBuilder!!.build()
-                        )
-
+                    
+                    // Only set aspect ratio if NOT in PIP mode
+                    // In PIP mode, we want to fill the entire available space
+                    if (!requireActivity().isInPictureInPictureMode) {
+                        pictureInPictureParamsBuilder?.setAspectRatio(aspect)
                     }
                 }
             }
@@ -455,6 +453,19 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     }
 
     private fun saveConstraintState() {
+        // Find and save innerConstraintLayout if it exists (for w600dp-h480dp layout)
+        val rootView = binding.rootLayout
+        if (rootView.childCount > 0) {
+            val firstChild = rootView.getChildAt(0)
+            if (firstChild is ConstraintLayout && firstChild.id != binding.cardView.id) {
+                innerConstraintLayout = firstChild
+                val innerParams = firstChild.layoutParams as? ConstraintLayout.LayoutParams
+                if (innerParams != null) {
+                    savedInnerLayoutParams = ConstraintLayout.LayoutParams(innerParams)
+                }
+            }
+        }
+
         // Save cardView layout params with all properties
         val cardParams = binding.cardView.layoutParams as? ConstraintLayout.LayoutParams
         if (cardParams != null) {
@@ -474,10 +485,20 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     }
 
     private var savedPlayerLayoutParams: FrameLayout.LayoutParams? = null
+    private var savedInnerLayoutParams: ConstraintLayout.LayoutParams? = null
+    private var innerConstraintLayout: ConstraintLayout? = null
 
 
     @OptIn(UnstableApi::class)
     private fun restoreSavedConstraintState() {
+        // Restore inner constraint layout parameters if they were saved
+        innerConstraintLayout?.let {
+            savedInnerLayoutParams?.let { params ->
+                val newParams = ConstraintLayout.LayoutParams(params)
+                it.layoutParams = newParams
+            }
+        }
+
         // Restore cardView parameters first
         savedCardViewParams?.let {
             val newParams = ConstraintLayout.LayoutParams(it)
@@ -499,15 +520,15 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         // Restore CardView padding to default
         binding.cardView.setPadding(0, 0, 0, 0)
 
-        // Restore UI visibility and properties
-        binding.subtitles.isVisible = true
-        binding.pipBtn.isVisible = true
-        binding.playerView?.useController = true
-        binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-        binding.playerView?.showController()
-        cvVideoTitle?.visibility = View.VISIBLE
-        pipViewModel.updateButtonVisibility(true)
-        binding.cardView.radius = resources.getDimension(R.dimen.video_corner_radius)
+         // Restore UI visibility and properties
+         binding.subtitles.isVisible = true
+         binding.pipBtn.isVisible = true
+         binding.playerView?.useController = true
+         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+         binding.playerView?.showController()
+         cvVideoTitle?.visibility = View.VISIBLE
+         pipViewModel.updateButtonVisibility(true)
+         binding.cardView.radius = resources.getDimension(R.dimen.video_corner_radius)
 
         // Request layout refresh
         binding.rootLayout?.post {
@@ -533,6 +554,24 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             pipViewModel.updateButtonVisibility(false)
             cvVideoTitle?.visibility = View.GONE
             binding.cardView.radius = 0f
+
+            // Ensure rootLayout has no padding
+            binding.rootLayout?.setPadding(0, 0, 0, 0)
+
+            // If innerConstraintLayout exists (for tablet layouts), expand it to fill the screen
+            innerConstraintLayout?.let { layout ->
+                (layout.layoutParams as ConstraintLayout.LayoutParams).apply {
+                    width = ConstraintLayout.LayoutParams.MATCH_PARENT
+                    height = ConstraintLayout.LayoutParams.MATCH_PARENT
+                    marginStart = 0
+                    marginEnd = 0
+                    topMargin = 0
+                    bottomMargin = 0
+                    leftMargin = 0
+                    rightMargin = 0
+                    layout.layoutParams = this
+                }
+            }
 
             // CRITICAL: Remove ALL padding and margins from CardView
             binding.cardView.setPadding(0, 0, 0, 0)
@@ -561,19 +600,30 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 leftMargin = 0
                 rightMargin = 0
             }
-            binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            // Use RESIZE_MODE_FILL to stretch video to fill entire PIP view without white bars
+            binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
 
             updatePipActions()
 
             // Apply PIP constraints to fill entire screen
             resetConstraintsForPip()
 
-            lastVideoAspectRatio?.let { ar ->
-                pictureInPictureParamsBuilder?.setAspectRatio(ar)
+            // Reset PIP params builder to clear any previously set aspect ratio
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                pictureInPictureParamsBuilder = PictureInPictureParams.Builder()
+                // Build params WITHOUT aspect ratio to allow full screen filling
                 requireActivity().setPictureInPictureParams(
                     pictureInPictureParamsBuilder!!.build()
                 )
             }
+            
+            // Post delayed layout refresh to ensure PIP window is properly sized
+            binding.rootLayout?.postDelayed({
+                binding.rootLayout?.requestLayout()
+                innerConstraintLayout?.requestLayout()
+                binding.cardView.requestLayout()
+                binding.playerView?.requestLayout()
+            }, 100)
 
         } else {
             pipViewModel.exitPipMode()
@@ -598,18 +648,29 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         set.connect(binding.cardView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 0)
         set.connect(binding.cardView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0)
 
-        // Fill entire screen
+        // Fill entire screen without any margins
         set.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
         set.constrainHeight(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
 
-        // IMPORTANT: Remove dimension ratio to allow proper aspect ratio scaling
+        // IMPORTANT: Remove dimension ratio to allow proper filling without aspect ratio constraints
         set.setDimensionRatio(binding.cardView.id, null)
 
         set.applyTo(constraintContainer)
 
-        // Force layout pass
+        // Ensure root layout has no padding
+        binding.rootLayout?.setPadding(0, 0, 0, 0)
+        
+        // Force multiple layout passes to ensure proper sizing
         binding.cardView.requestLayout()
         binding.playerView?.requestLayout()
+        binding.rootLayout?.requestLayout()
+        
+        // Post a delayed layout refresh to ensure constraints are fully applied
+        binding.rootLayout?.post {
+            binding.cardView.requestLayout()
+            binding.playerView?.requestLayout()
+            binding.rootLayout?.requestLayout()
+        }
     }
 
 

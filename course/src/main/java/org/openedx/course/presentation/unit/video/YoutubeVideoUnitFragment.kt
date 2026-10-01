@@ -90,6 +90,15 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
     private var _playerUiController: DefaultPlayerUiController? = null
     private var ignoringNextOrientation = false
 
+    // PIP mode state variables
+    private var savedCardViewParams: ConstraintLayout.LayoutParams? = null
+    private var savedSubtitleParams: ConstraintLayout.LayoutParams? = null
+    private var savedInnerLayoutParams: ConstraintLayout.LayoutParams? = null
+    private var savedPlayerViewParams: ViewGroup.LayoutParams? = null
+    private var innerYoutubeConstraintLayout: ConstraintLayout? = null
+    private var savedConstraintSet: ConstraintSet? = null
+    private var savedOrientation: Int = Configuration.ORIENTATION_PORTRAIT
+
 
 
 
@@ -123,13 +132,12 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         }
 
         val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-        if(isLandscape) {
-            binding.pipBtn?.isVisible = false
-
+        val isTablet = windowSize?.isTablet == true
+        if(isLandscape&&!isTablet) {
+            binding.pipBtn.isVisible = false
         }
         else{
-            binding.pipBtn?.isVisible = true
+            binding.pipBtn.isVisible = true
         }
 
 
@@ -144,7 +152,10 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                     requireActivity().isInPictureInPictureMode
                 ) {
-                    updatePipActions()
+                    // Always update PIP actions when state changes
+                    binding.rootLayout.post {
+                        updatePipActions()
+                    }
                 }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
@@ -217,9 +228,9 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         binding.connectionError.isVisible = !viewModel.hasInternetConnection
 
-        binding.pipBtn?.isVisible = true
+        binding.pipBtn.isVisible = true
 
-        binding.pipBtn?.setOnClickListener {
+        binding.pipBtn.setOnClickListener {
             enablePipMode()
         }
 
@@ -362,6 +373,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
     override fun onStart() {
         super.onStart()
+        // Register receiver early to ensure it's ready for PIP actions
         pipReceiverManager.register()
     }
 
@@ -422,87 +434,19 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             return
         }
 
-        val pipParams = PictureInPictureParams.Builder()
-            .setAspectRatio(Rational(16, 9))
-            .build()
+        // Save the exact current state BEFORE making any changes
+        saveConstraintState()
 
-        requireActivity().enterPictureInPictureMode(pipParams)
-        resetConstraintsForPip()
-        binding.youtubePlayerView.post {
-            updatePipActions()
-        }
-    }
+        try {
+            // Ensure receiver is registered before entering PIP mode
+            pipReceiverManager.register()
 
-
-    @OptIn(UnstableApi::class)
-    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
-        if (isInPictureInPictureMode) {
-            pipViewModel.enterPipMode()
-            _playerUiController?.let { controller ->
-                controller.rootView.visibility = View.GONE
-            }
-            binding.subtitles.isVisible = false
-            binding.pipBtn?.isVisible = false
-            pipViewModel.updateButtonVisibility(false)
-            binding.cvVideoTitle?.visibility = View.GONE
-            clearAllMarginsAndConstraints()
-
-            binding.cardView.radius = 0f
-            resetConstraintsForPip()
-            val params = binding.cardView.layoutParams
-            params.width = ViewGroup.LayoutParams.MATCH_PARENT
-            params.height = ViewGroup.LayoutParams.WRAP_CONTENT
-            binding.cardView.layoutParams = params
-
-            binding.cardView.post {
-                val ratio = ConstraintSet()
-                ratio.clone(binding.rootLayout as ConstraintLayout)
-                ratio.setDimensionRatio(binding.cardView.id, "16:9")
-                ratio.applyTo(binding.rootLayout as ConstraintLayout)
+            // Register the player with the ViewModel so actions work
+            ytController?.let { controller ->
+                pipViewModel.registerPlayer(controller, PipPlayerType.YOUTUBE)
             }
 
-        } else {
-            pipViewModel.exitPipMode()
-            _playerUiController?.let { controller ->
-                controller.rootView.visibility = View.VISIBLE
-                binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
-            }
-            binding.subtitles.visibility = View.VISIBLE
-            pipViewModel.updateButtonVisibility(true)
-
-            clearAllMarginsAndConstraints()
-
-            binding.cardView.radius = resources.getDimension(R.dimen.card_corner_radius)
-
-            (binding.youtubePlayerView.layoutParams as FrameLayout.LayoutParams).apply {
-                width = FrameLayout.LayoutParams.MATCH_PARENT
-                height = FrameLayout.LayoutParams.MATCH_PARENT
-            }
-
-            _playerUiController?.let { controller ->
-                controller.rootView.visibility = View.VISIBLE
-                binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
-            }
-            binding.rootLayout.post {
-                updateLayoutForOrientation()
-            }
-        }
-    }
-
-    private fun isInPipMode(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            requireActivity().isInPictureInPictureMode
-        } else {
-            false
-        }
-    }
-
-    @OptIn(UnstableApi::class)
-    private fun updatePipActions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-            requireActivity().isInPictureInPictureMode
-        ) {
+            // Build PIP params WITH actions BEFORE entering PIP mode
             val pipState = pipViewModel.pipState.value
             val showPlay = !pipState.isPlaying
 
@@ -525,9 +469,16 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 Intent(PipBroadcastReceiverManager.ACTION_PAUSE)
             }
 
+            // Use unique request IDs from PipBroadcastReceiverManager
+            val requestId = if (showPlay) {
+                PipBroadcastReceiverManager.REQUEST_PLAY
+            } else {
+                PipBroadcastReceiverManager.REQUEST_PAUSE
+            }
+
             val pendingIntent = PendingIntent.getBroadcast(
                 requireContext(),
-                0,
+                requestId,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
@@ -539,12 +490,315 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 pendingIntent
             )
 
-            val params = PictureInPictureParams.Builder()
+            // Create params WITH actions
+            val pipParams = PictureInPictureParams.Builder()
                 .setAspectRatio(Rational(16, 9))
                 .setActions(listOf(action))
                 .build()
 
-            requireActivity().setPictureInPictureParams(params)
+            requireActivity().enterPictureInPictureMode(pipParams)
+        } catch (e: Exception) {
+            android.util.Log.e("YoutubeVideoUnit", "Error entering PIP mode", e)
+        }
+    }
+
+    private fun saveConstraintState() {
+        try {
+            // Save current orientation
+            savedOrientation = resources.configuration.orientation
+
+            // Find and save innerConstraintLayout if it exists (for w600dp-h480dp layout)
+            val rootView = binding.root
+            if (rootView is ViewGroup && rootView.childCount > 0) {
+                val firstChild = rootView.getChildAt(0)
+                if (firstChild is ConstraintLayout && firstChild.id != binding.cardView.id) {
+                    innerYoutubeConstraintLayout = firstChild
+                    val innerParams = firstChild.layoutParams as? ConstraintLayout.LayoutParams
+                    if (innerParams != null) {
+                        savedInnerLayoutParams = ConstraintLayout.LayoutParams(innerParams)
+                    }
+                }
+            }
+
+            // Save FULL constraint set from target layout
+            val targetLayout = innerYoutubeConstraintLayout ?: (binding.rootLayout as? ConstraintLayout)
+            if (targetLayout is ConstraintLayout) {
+                savedConstraintSet = ConstraintSet()
+                savedConstraintSet!!.clone(targetLayout)
+            }
+
+            // Save cardView layout params with all properties
+            val cardParams = binding.cardView.layoutParams as? ConstraintLayout.LayoutParams
+            if (cardParams != null) {
+                savedCardViewParams = ConstraintLayout.LayoutParams(cardParams)
+            }
+
+            // Save subtitles layout params
+            val subParams = binding.subtitles.layoutParams as? ConstraintLayout.LayoutParams
+            if (subParams != null) {
+                savedSubtitleParams = ConstraintLayout.LayoutParams(subParams)
+            }
+
+            // Save playerView layout params safely only if they're valid
+            binding.youtubePlayerView.layoutParams?.let { params ->
+                if (params.width > 0 && params.height > 0) {
+                    savedPlayerViewParams = ViewGroup.LayoutParams(params.width, params.height)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("YoutubeVideoUnit", "Error saving constraint state", e)
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun restoreSavedConstraintState() {
+        try {
+            // Restore inner constraint layout parameters if they were saved
+            innerYoutubeConstraintLayout?.let {
+                savedInnerLayoutParams?.let { params ->
+                    val newParams = ConstraintLayout.LayoutParams(params)
+                    it.layoutParams = newParams
+                }
+            }
+
+            // Restore cardView parameters
+            savedCardViewParams?.let {
+                val newParams = ConstraintLayout.LayoutParams(it)
+                binding.cardView.layoutParams = newParams
+            }
+
+            // Restore subtitles parameters
+            savedSubtitleParams?.let {
+                val newParams = ConstraintLayout.LayoutParams(it)
+                binding.subtitles.layoutParams = newParams
+            }
+
+            // Restore playerView layout params safely
+            savedPlayerViewParams?.let { params ->
+                if (params.width > 0 && params.height > 0) {
+                    binding.youtubePlayerView.layoutParams = ViewGroup.LayoutParams(params.width, params.height)
+                }
+            }
+
+            // Restore CardView padding to default
+            binding.cardView.setPadding(0, 0, 0, 0)
+            binding.youtubePlayerView.setPadding(0, 0, 0, 0)
+
+            // Restore UI visibility and properties - CRITICAL
+            binding.subtitles.visibility = View.VISIBLE
+            binding.pipBtn.visibility = View.VISIBLE
+            binding.cvVideoTitle.visibility = View.VISIBLE
+            binding.cardView.radius = resources.getDimension(R.dimen.card_corner_radius)
+
+            // Show player UI controller - CRITICAL for play/pause buttons
+            _playerUiController?.let { controller ->
+                controller.rootView.visibility = View.VISIBLE
+                binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
+            }
+
+            // Explicitly ensure player view is visible
+            binding.youtubePlayerView.visibility = View.VISIBLE
+
+            // Update button visibility
+            pipViewModel.updateButtonVisibility(true)
+
+            // Request layout refresh but don't override with orientation constraints
+            binding.rootLayout.post {
+                binding.rootLayout.requestLayout()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("YoutubeVideoUnit", "Error restoring constraint state", e)
+        }
+    }
+
+
+    @OptIn(UnstableApi::class)
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        if (isInPictureInPictureMode) {
+            pipViewModel.enterPipMode()
+            // Keep controller visible so play/pause buttons show
+            // Do NOT hide the controller rootView
+            binding.subtitles.visibility = View.GONE
+            binding.pipBtn.visibility = View.GONE
+            pipViewModel.updateButtonVisibility(false)
+            binding.cvVideoTitle.visibility = View.GONE
+            binding.cardView.radius = 0f
+
+            // Ensure ALL layouts have no padding
+            binding.rootLayout.setPadding(0, 0, 0, 0)
+            if (innerYoutubeConstraintLayout != null) {
+                innerYoutubeConstraintLayout!!.setPadding(0, 0, 0, 0)
+            }
+
+            // If innerConstraintLayout exists (for tablet layouts), expand it to fill the screen
+            innerYoutubeConstraintLayout?.let { layout ->
+                (layout.layoutParams as ConstraintLayout.LayoutParams).apply {
+                    width = ConstraintLayout.LayoutParams.MATCH_PARENT
+                    height = ConstraintLayout.LayoutParams.MATCH_PARENT
+                    marginStart = 0
+                    marginEnd = 0
+                    topMargin = 0
+                    bottomMargin = 0
+                    leftMargin = 0
+                    rightMargin = 0
+                    layout.layoutParams = this
+                }
+            }
+
+            // CRITICAL: Remove ALL padding and margins from CardView
+            binding.cardView.setPadding(0, 0, 0, 0)
+
+            // Update CardView layout params - remove all margins
+            (binding.cardView.layoutParams as ConstraintLayout.LayoutParams).apply {
+                width = ConstraintLayout.LayoutParams.MATCH_PARENT
+                height = ConstraintLayout.LayoutParams.MATCH_PARENT
+                marginStart = 0
+                marginEnd = 0
+                topMargin = 0
+                bottomMargin = 0
+                leftMargin = 0
+                rightMargin = 0
+                binding.cardView.layoutParams = this
+            }
+
+            // CRITICAL: Remove padding and margins from playerView to fill cardView completely
+            binding.youtubePlayerView.setPadding(0, 0, 0, 0)
+            binding.youtubePlayerView.layoutParams = binding.youtubePlayerView.layoutParams?.apply {
+                width = ViewGroup.LayoutParams.MATCH_PARENT
+                height = ViewGroup.LayoutParams.MATCH_PARENT
+            }
+
+            // Apply PIP constraints to fill entire screen
+            resetConstraintsForPip()
+
+            // Post delayed layout refresh to ensure PIP window is properly sized
+            binding.rootLayout.postDelayed({
+                binding.rootLayout.requestLayout()
+                innerYoutubeConstraintLayout?.requestLayout()
+                binding.cardView.requestLayout()
+                binding.youtubePlayerView.requestLayout()
+
+                // Update PIP actions after layout is complete
+                updatePipActions()
+            }, 150)
+
+        } else {
+            pipViewModel.exitPipMode()
+            try {
+                // Show the controller again - CRITICAL for play/pause buttons
+                _playerUiController?.let { controller ->
+                    controller.rootView.visibility = View.VISIBLE
+                    binding.youtubePlayerView.setCustomPlayerUi(controller.rootView)
+                }
+
+                // Ensure player view is visible
+                binding.youtubePlayerView.visibility = View.VISIBLE
+
+                // Restore to exact previous state BEFORE any visibility changes
+                restoreSavedConstraintState()
+
+                // IMPORTANT: Restore constraint set AND reapply orientation-specific layout
+                // This ensures video returns to proper size with correct orientation
+                binding.rootLayout.postDelayed({
+                    try {
+                        val targetLayout = innerYoutubeConstraintLayout ?: (binding.rootLayout as? ConstraintLayout)
+                        if (targetLayout is ConstraintLayout && savedConstraintSet != null) {
+                            // First restore the saved constraint set
+                            savedConstraintSet!!.applyTo(targetLayout)
+                            android.util.Log.d("YoutubeVideoUnit", "Constraint set restored")
+                        }
+
+                        // Then immediately reapply orientation layout to ensure proper sizing
+                        binding.rootLayout.post {
+                            updateLayoutForOrientation()
+                        }
+
+                        // Force layout refresh
+                        binding.rootLayout.requestLayout()
+                        binding.cardView.requestLayout()
+                        binding.youtubePlayerView.requestLayout()
+                        targetLayout?.requestLayout()
+
+                        android.util.Log.d("YoutubeVideoUnit", "Layout refresh and orientation update completed")
+                    } catch (e: Exception) {
+                        android.util.Log.e("YoutubeVideoUnit", "Error restoring constraints", e)
+                    }
+                }, 250)
+            } catch (e: Exception) {
+                android.util.Log.e("YoutubeVideoUnit", "Error exiting PIP mode", e)
+            }
+        }
+    }
+
+    private fun isInPipMode(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            requireActivity().isInPictureInPictureMode
+        } else {
+            false
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun updatePipActions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            requireActivity().isInPictureInPictureMode
+        ) {
+            try {
+                val pipState = pipViewModel.pipState.value
+                val isPlaying = pipState.isPlaying
+                val showPlay = !isPlaying
+
+                val iconRes = if (showPlay) {
+                    R.drawable.ic_play
+                } else {
+                    R.drawable.ic_pause
+                }
+
+                val title = getString(
+                    if (showPlay)
+                        androidx.media3.ui.R.string.exo_controls_play_description
+                    else
+                        androidx.media3.ui.R.string.exo_controls_pause_description
+                )
+
+                val intent = if (showPlay) {
+                    Intent(PipBroadcastReceiverManager.ACTION_PLAY)
+                } else {
+                    Intent(PipBroadcastReceiverManager.ACTION_PAUSE)
+                }
+
+                // Use unique request IDs from PipBroadcastReceiverManager
+                val requestId = if (showPlay) {
+                    PipBroadcastReceiverManager.REQUEST_PLAY
+                } else {
+                    PipBroadcastReceiverManager.REQUEST_PAUSE
+                }
+
+                val pendingIntent = PendingIntent.getBroadcast(
+                    requireContext(),
+                    requestId,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+
+                val action = RemoteAction(
+                    Icon.createWithResource(requireContext(), iconRes),
+                    title,
+                    title,
+                    pendingIntent
+                )
+
+                val pipParams = PictureInPictureParams.Builder()
+                    .setAspectRatio(Rational(16, 9))
+                    .setActions(listOf(action))
+                    .build()
+
+                requireActivity().setPictureInPictureParams(pipParams)
+                android.util.Log.d("YoutubeVideoUnit", "PIP actions updated: showPlay=$showPlay, requestId=$requestId")
+            } catch (e: Exception) {
+                android.util.Log.e("YoutubeVideoUnit", "Error updating PIP actions", e)
+            }
         }
     }
 
@@ -563,43 +817,43 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         }
     }
 
-    private fun clearAllMarginsAndConstraints() {
-        val cardParams = binding.cardView.layoutParams as ConstraintLayout.LayoutParams
-        cardParams.marginStart = 0
-        cardParams.marginEnd = 0
-        cardParams.topMargin = 0
-        cardParams.bottomMargin = 0
-        binding.cardView.layoutParams = cardParams
-
-        val subtitleParams = binding.subtitles.layoutParams as ConstraintLayout.LayoutParams
-        subtitleParams.marginStart = 0
-        subtitleParams.marginEnd = 0
-        subtitleParams.topMargin = 0
-        subtitleParams.bottomMargin = 0
-        binding.subtitles.layoutParams = subtitleParams
-
-        binding.cardView.requestLayout()
-        binding.subtitles.requestLayout()
-        binding.rootLayout.requestLayout()
-    }
-
     private fun updateLayoutForOrientation() {
-
-
         if (_binding == null) return
         if (isInPipMode()) return
 
         val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val isTablet = windowSize?.isTablet == true
 
         binding.cvVideoTitle?.visibility = if (isLandscape) View.GONE else View.VISIBLE
+
+        // Use inner ConstraintLayout if it exists (for w600dp-h480dp), otherwise use rootLayout
+        val targetLayout: ConstraintLayout? = if (innerYoutubeConstraintLayout != null) {
+            innerYoutubeConstraintLayout
+        } else {
+            binding.rootLayout
+        }
+
+        if (targetLayout == null) return
+
         val constraintSet = ConstraintSet()
-        constraintSet.clone(binding.rootLayout as ConstraintLayout)
+        constraintSet.clone(targetLayout)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             requireActivity().isInPictureInPictureMode
         ) return
 
-        val playerHeight = resources.getDimensionPixelSize(R.dimen.player_height)
+        val playerHeight = if (isTablet) {
+            250 // dp for tablet
+        } else {
+            resources.getDimensionPixelSize(R.dimen.player_height)
+        }
+
+        val playerWidth = if (isTablet) {
+            560 // dp for tablet
+        } else {
+            0 // Use constraint width for mobile
+        }
+
         val playerMarginH = resources.getDimensionPixelSize(R.dimen.video_margin_horizontal)
         val subtitleMarginH = resources.getDimensionPixelSize(R.dimen.subtitle_margin_horizontal)
         val subtitleMarginBottom = resources.getDimensionPixelSize(R.dimen.subtitle_margin_bottom)
@@ -612,27 +866,57 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
         constraintSet.clear(binding.subtitles.id)
 
         if (isLandscape) {
+            // MOBILE ONLY: Side-by-side layout in landscape
+            if (!isTablet) {
+                constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 8)
+                constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0)
+                constraintSet.connect(binding.cardView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0)
 
-            constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 8)
-            constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0)
-            constraintSet.connect(binding.cardView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0)
+                constraintSet.constrainWidth(binding.cardView.id, 0)
+                constraintSet.constrainPercentWidth(binding.cardView.id, 0.65f)
+                constraintSet.constrainHeight(binding.cardView.id, playerHeight)
+                constraintSet.setDimensionRatio(binding.cardView.id, "20:9")
 
-            constraintSet.constrainWidth(binding.cardView.id, 0)
-            constraintSet.constrainPercentWidth(binding.cardView.id, 0.65f)
-            constraintSet.constrainHeight(binding.cardView.id, playerHeight)
-            constraintSet.setDimensionRatio(binding.cardView.id, "20:9")
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.START, binding.cardView.id, ConstraintSet.END, 70)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, subtitleMarginH)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, subtitleMarginH)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 80)
 
-            constraintSet.connect(binding.subtitles.id, ConstraintSet.START, binding.cardView.id, ConstraintSet.END, 70)
-            constraintSet.connect(binding.subtitles.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, subtitleMarginH)
-            constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, subtitleMarginH)
-            constraintSet.connect(binding.subtitles.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 80)
+                constraintSet.constrainWidth(binding.subtitles.id, 0)
+                constraintSet.constrainPercentWidth(binding.subtitles.id, 0.35f)
+                binding.pipBtn.visibility = View.GONE
+            } else {
+                // TABLET LANDSCAPE: Keep portrait-style stacked layout
+                binding.cvVideoTitle?.let { titleView ->
+                    constraintSet.clear(titleView.id)
+                    constraintSet.connect(titleView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, titleMarginTop)
+                    constraintSet.connect(titleView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, titleMarginH)
+                    constraintSet.connect(titleView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, titleMarginH)
+                    constraintSet.constrainWidth(titleView.id, 0)
+                    constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
+                }
 
-            constraintSet.constrainWidth(binding.subtitles.id, 0)
-            constraintSet.constrainPercentWidth(binding.subtitles.id, 0.35f)
-            binding.pipBtn?.visibility = View.GONE
+                constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, binding.cvVideoTitle.id, ConstraintSet.BOTTOM, titleToVideoMargin)
+                constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH)
+                constraintSet.connect(binding.cardView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH)
+
+                // For tablet: use fixed dimensions (560dp width, 250dp height)
+                constraintSet.constrainWidth(binding.cardView.id, (560 * resources.displayMetrics.density).toInt())
+                constraintSet.constrainHeight(binding.cardView.id, (300 * resources.displayMetrics.density).toInt())
+                constraintSet.setDimensionRatio(binding.cardView.id, null) // Remove ratio constraint for fixed dimensions
+
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, binding.cardView.id, ConstraintSet.BOTTOM, subtitleMarginTop)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, subtitleMarginH)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, subtitleMarginH)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, subtitleMarginBottom)
+
+                constraintSet.constrainWidth(binding.subtitles.id, 0)
+                constraintSet.constrainHeight(binding.subtitles.id, 0)
+                binding.pipBtn.visibility = View.INVISIBLE
+            }
 
         } else {
-
+            // PORTRAIT MODE: Same for both mobile and tablet
             binding.cvVideoTitle?.let { titleView ->
                 constraintSet.clear(titleView.id)
                 constraintSet.connect(titleView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, titleMarginTop)
@@ -642,13 +926,21 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
             }
 
-            constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, binding.cvVideoTitle!!.id, ConstraintSet.BOTTOM, titleToVideoMargin)
+            constraintSet.connect(binding.cardView.id, ConstraintSet.TOP, binding.cvVideoTitle.id, ConstraintSet.BOTTOM, titleToVideoMargin)
             constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH)
             constraintSet.connect(binding.cardView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH)
 
-            constraintSet.constrainWidth(binding.cardView.id, 0)
-            constraintSet.constrainHeight(binding.cardView.id, playerHeight)
-            constraintSet.setDimensionRatio(binding.cardView.id, "16:9")
+            if (isTablet) {
+                // For tablet: use fixed dimensions (560dp width, 250dp height)
+                constraintSet.constrainWidth(binding.cardView.id, (560 * resources.displayMetrics.density).toInt())
+                constraintSet.constrainHeight(binding.cardView.id, (300 * resources.displayMetrics.density).toInt())
+                constraintSet.setDimensionRatio(binding.cardView.id, null) // Remove ratio constraint for fixed dimensions
+            } else {
+                // For mobile: keep original behavior (constraint width and height based on playerHeight)
+                constraintSet.constrainWidth(binding.cardView.id, 0)
+                constraintSet.constrainHeight(binding.cardView.id, playerHeight)
+                constraintSet.setDimensionRatio(binding.cardView.id, "16:9")
+            }
 
             constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, binding.cardView.id, ConstraintSet.BOTTOM, subtitleMarginTop)
             constraintSet.connect(binding.subtitles.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, subtitleMarginH)
@@ -657,20 +949,31 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
             constraintSet.constrainWidth(binding.subtitles.id, 0)
             constraintSet.constrainHeight(binding.subtitles.id, 0)
-            binding.pipBtn?.visibility = View.VISIBLE
+            binding.pipBtn.visibility = View.VISIBLE
 
         }
 
-        constraintSet.applyTo(binding.root as ConstraintLayout)
+        constraintSet.applyTo(targetLayout)
 
         binding.rootLayout.post { binding.rootLayout.requestLayout() }
     }
 
     private fun resetConstraintsForPip() {
+        // Use inner ConstraintLayout if it exists (for w600dp-h480dp), otherwise use rootLayout
+        val targetLayout: ConstraintLayout? = if (innerYoutubeConstraintLayout != null) {
+            innerYoutubeConstraintLayout
+        } else {
+            binding.rootLayout
+        }
+
+        if (targetLayout == null) return
+
         val set = ConstraintSet()
-        set.clone(binding.rootLayout as ConstraintLayout)
+        set.clone(targetLayout)
 
         set.clear(binding.cardView.id)
+
+        // Connect to all edges with ZERO spacing - CRITICAL for no white bars
         set.connect(
             binding.cardView.id, ConstraintSet.TOP,
             ConstraintSet.PARENT_ID, ConstraintSet.TOP, 0
@@ -688,12 +991,19 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0
         )
 
+        // Fill entire screen without any margins
         set.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
         set.constrainHeight(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
 
+        // Remove dimension ratio to allow full screen filling without white bars
         set.setDimensionRatio(binding.cardView.id, null)
 
-        set.applyTo(binding.rootLayout as ConstraintLayout)
+        set.applyTo(targetLayout)
+
+        // Force immediate layout pass
+        binding.cardView.requestLayout()
+        binding.youtubePlayerView.requestLayout()
+        targetLayout.requestLayout()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -714,6 +1024,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             Toast.LENGTH_LONG
         ).show()
     }
+
 }
 
 

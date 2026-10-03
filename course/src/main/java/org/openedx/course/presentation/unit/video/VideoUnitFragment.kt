@@ -63,6 +63,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private var cvVideoTitle: ComposeView? = null
     private val pipViewModel: PipViewModel by viewModel(ownerProducer = { requireActivity() })
     private val pipReceiverManager: PipBroadcastReceiverManager by inject()
+
+    private var isPipModeRequested = false
+
     val binding by viewBinding(FragmentVideoUnitBinding::bind)
     private val viewModel by viewModel<EncodedVideoUnitViewModel> {
         parametersOf(
@@ -103,9 +106,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            updateAutoPipForOrientation()
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//            updateAutoPipForOrientation()
+//        }
 
         pipViewModel.pipActions.observe(viewLifecycleOwner) { actions ->
             if (actions.isNotEmpty()) {
@@ -223,7 +226,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                         if (videoSize.height > 0) Rational(videoSize.width, videoSize.height)
                         else Rational(16, 9)
                     lastVideoAspectRatio = aspect
-                    
+
                     // Only set aspect ratio if NOT in PIP mode
                     // In PIP mode, we want to fill the entire available space
                     if (!requireActivity().isInPictureInPictureMode) {
@@ -253,8 +256,14 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         })
         lifecycleScope.launchWhenStarted {
             pipViewModel.pipEvent.collect { event ->
-                if (event is PipUiEvent.PipModeRequested && isAdded) {
-                    enablePipMode()
+                when (event) {
+                    is PipUiEvent.PipModeRequested -> {
+                        isPipModeRequested = true
+                        if (isAdded) {
+                            enablePipMode()
+                        }
+                    }
+                    else -> {}
                 }
             }
         }
@@ -319,7 +328,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
         registerExoplayerController()
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
     }
 
     override fun onPause() {
@@ -329,6 +337,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             if (requireActivity().isInPictureInPictureMode) {
                 requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 return
+            }
+            if (!pipViewModel.pipState.value.isPipMode && !isPipModeRequested) {
+                binding.playerView?.player?.let { player ->
+                    if (player.isPlaying) player.pause()
+                }
             }
         }
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -533,15 +546,15 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         // Restore CardView padding to default
         binding.cardView.setPadding(0, 0, 0, 0)
 
-         // Restore UI visibility and properties
-         binding.subtitles.isVisible = true
-         binding.pipBtn.isVisible = true
-         binding.playerView?.useController = true
-         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
-         binding.playerView?.showController()
-         cvVideoTitle?.visibility = View.VISIBLE
-         pipViewModel.updateButtonVisibility(true)
-         binding.cardView.radius = resources.getDimension(R.dimen.video_corner_radius)
+        // Restore UI visibility and properties
+        binding.subtitles.isVisible = true
+        binding.pipBtn.isVisible = true
+        binding.playerView?.useController = true
+        binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+        binding.playerView?.showController()
+        cvVideoTitle?.visibility = View.VISIBLE
+        pipViewModel.updateButtonVisibility(true)
+        binding.cardView.radius = resources.getDimension(R.dimen.video_corner_radius)
 
         // Request layout refresh
         binding.rootLayout?.post {
@@ -560,6 +573,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
         if (isInPictureInPictureMode) {
+            isPipModeRequested = false
             pipViewModel.enterPipMode()
             binding.subtitles.isVisible = false
             binding.pipBtn.isVisible = false
@@ -629,7 +643,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     pictureInPictureParamsBuilder!!.build()
                 )
             }
-            
+
             // Post delayed layout refresh to ensure PIP window is properly sized
             binding.rootLayout?.postDelayed({
                 binding.rootLayout?.requestLayout()
@@ -639,6 +653,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }, 100)
 
         } else {
+            isPipModeRequested = false
+
             pipViewModel.exitPipMode()
             binding.playerView?.player?.let { player ->
                 if (player.isPlaying) player.pause()
@@ -672,12 +688,12 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
         // Ensure root layout has no padding
         binding.rootLayout?.setPadding(0, 0, 0, 0)
-        
+
         // Force multiple layout passes to ensure proper sizing
         binding.cardView.requestLayout()
         binding.playerView?.requestLayout()
         binding.rootLayout?.requestLayout()
-        
+
         // Post a delayed layout refresh to ensure constraints are fully applied
         binding.rootLayout?.post {
             binding.cardView.requestLayout()
@@ -768,7 +784,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     ConstraintSet.END,
                     ConstraintSet.PARENT_ID,
                     ConstraintSet.END,
-                    225
+                    240
                 )
 
                 constraintSet.constrainWidth(
@@ -874,11 +890,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 )
                 constraintSet.connect(
                     titleView.id, ConstraintSet.START,
-                    ConstraintSet.PARENT_ID, ConstraintSet.START, 190
+                    ConstraintSet.PARENT_ID, ConstraintSet.START, 170
                 )
                 constraintSet.connect(
                     titleView.id, ConstraintSet.END,
-                    ConstraintSet.PARENT_ID, ConstraintSet.END, 185
+                    ConstraintSet.PARENT_ID, ConstraintSet.END, 175
                 )
                 constraintSet.connect(
                     binding.cardView.id, ConstraintSet.TOP,
@@ -979,7 +995,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                 !requireActivity().isInPictureInPictureMode
             ) {
-                updateAutoPipForOrientation()
+               // updateAutoPipForOrientation()
             }
         }, 100)
 
@@ -1081,6 +1097,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
 
 }
+
 
 
 

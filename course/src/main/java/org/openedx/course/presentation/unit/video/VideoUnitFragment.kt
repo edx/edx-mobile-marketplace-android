@@ -106,10 +106,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            updateAutoPipForOrientation()
-//        }
-
         pipViewModel.pipActions.observe(viewLifecycleOwner) { actions ->
             if (actions.isNotEmpty()) {
                 pictureInPictureParamsBuilder?.setActions(actions)
@@ -1084,17 +1080,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         return resources.configuration.orientation ==
                 Configuration.ORIENTATION_LANDSCAPE
     }
-
-    @RequiresApi(Build.VERSION_CODES.S)
-    private fun updateAutoPipForOrientation() {
-        val params = PictureInPictureParams.Builder()
-            .setAutoEnterEnabled(!isLandscape())
-            .setSeamlessResizeEnabled(true)
-            .build()
-
-        requireActivity().setPictureInPictureParams(params)
-    }
-
 
 }
 

@@ -75,7 +75,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private val constraintContainer: ConstraintLayout
         get() = binding.rootLayout as ConstraintLayout
     private var lastVideoAspectRatio: Rational? = null
-
+    private var isPipModeRequested = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         windowSize = computeWindowSizeClasses()
@@ -244,8 +244,14 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         })
         lifecycleScope.launchWhenStarted {
             pipViewModel.pipEvent.collect { event ->
-                if (event is PipUiEvent.PipModeRequested && isAdded) {
-                    enablePipMode()
+                when (event) {
+                    is PipUiEvent.PipModeRequested -> {
+                        isPipModeRequested = true
+                        if (isAdded) {
+                            enablePipMode()
+                        }
+                    }
+                    else -> {}
                 }
             }
         }
@@ -320,6 +326,11 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             if (requireActivity().isInPictureInPictureMode) {
                 requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 return
+            }
+            if (!pipViewModel.pipState.value.isPipMode && !isPipModeRequested) {
+                binding.playerView?.player?.let { player ->
+                    if (player.isPlaying) player.pause()
+                }
             }
         }
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -419,71 +430,114 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     @OptIn(UnstableApi::class)
     private fun enablePipMode() {
         if (!pipViewModel.isPipPermissionGranted(requireContext())) {
+            isPipModeRequested = false
             showPipDisabledMessage()
             return
         }
+
         viewModel.exoPlayer?.let { player ->
             val controller = ExoPlayerController(player)
             pipViewModel.registerPlayer(controller, PipPlayerType.EXOPLAYER)
         }
+
         binding.subtitles.isVisible = false
         cvVideoTitle?.isVisible = false
         binding.pipBtn.isVisible = false
         pipViewModel.updateButtonVisibility(false)
         binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
         binding.playerView?.useController = false
+
         val cs = ConstraintSet()
         cs.clone(constraintContainer)
         cs.setDimensionRatio(binding.cardView.id, null)
         cs.constrainWidth(binding.cardView.id, ConstraintSet.MATCH_CONSTRAINT)
         cs.constrainHeight(binding.cardView.id, ConstraintSet.WRAP_CONTENT)
         cs.applyTo(constraintContainer)
+
         resetConstraintsForPip()
-        lastVideoAspectRatio?.let { pictureInPictureParamsBuilder?.setAspectRatio(it) }
+
+        lastVideoAspectRatio?.let {
+            pictureInPictureParamsBuilder?.setAspectRatio(it)
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             pictureInPictureParamsBuilder?.setSeamlessResizeEnabled(true)
         }
+
         updatePipActions()
-        pictureInPictureParamsBuilder?.build()?.let {
-            requireActivity().enterPictureInPictureMode(it)
+
+        val params = pictureInPictureParamsBuilder?.build()
+
+        if (params == null) {
+            isPipModeRequested = false
+            restoreNormalUI()
+            return
+        }
+
+        isPipModeRequested = true
+
+        try {
+            val entered = requireActivity().enterPictureInPictureMode(params)
+            if (!entered && !requireActivity().isInPictureInPictureMode) {
+                isPipModeRequested = false
+                restoreNormalUI()
+            }
+        } catch (exception: IllegalStateException) {
+            isPipModeRequested = false
+            restoreNormalUI()
         }
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class)
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+
         if (isInPictureInPictureMode) {
+            // Successful PiP transition.
+            isPipModeRequested = false
+
             pipViewModel.enterPipMode()
             binding.subtitles.isVisible = false
             binding.pipBtn.isVisible = false
             binding.playerView?.useController = false
             pipViewModel.updateButtonVisibility(false)
             cvVideoTitle?.visibility = View.GONE
+
             clearAllMarginsAndConstraints()
             binding.cardView.radius = 0f
             updatePipActions()
+
             (binding.playerView?.layoutParams as FrameLayout.LayoutParams).apply {
                 width = FrameLayout.LayoutParams.MATCH_PARENT
                 height = FrameLayout.LayoutParams.WRAP_CONTENT
             }
+
             binding.playerView?.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             resetConstraintsForPip()
+
             lastVideoAspectRatio?.let { ar ->
                 pictureInPictureParamsBuilder?.setAspectRatio(ar)
                 requireActivity().setPictureInPictureParams(
                     pictureInPictureParamsBuilder!!.build()
                 )
             }
-
         } else {
+            isPipModeRequested = false
+
             pipViewModel.exitPipMode()
+
             binding.playerView?.player?.let { player ->
-                if (player.isPlaying) player.pause()
+                if (player.isPlaying) {
+                    player.pause()
+                }
             }
+
             restoreNormalUI()
         }
     }
+
 
     @OptIn(UnstableApi::class)
     private fun restoreNormalUI() {
@@ -818,12 +872,3 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
     }
 }
-
-
-
-
-
-
-
-
-

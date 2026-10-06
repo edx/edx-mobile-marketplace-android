@@ -635,18 +635,8 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         if (!isVisible) {
             binding.cvNavigationBar.visibility = View.GONE
             binding.topCvNavigationBar?.visibility = View.GONE
-//            (binding.viewPager.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-//                params.topMargin = 0
-//                binding.viewPager.layoutParams = params
-//            }
             return
         }
-//        else{
-//            (binding.viewPager.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-//                params.topMargin = 24.dpToPx()
-//                binding.viewPager.layoutParams = params
-//            }
-//        }
 
         if (isLandscape) {
             binding.cvNavigationBar.visibility = View.GONE

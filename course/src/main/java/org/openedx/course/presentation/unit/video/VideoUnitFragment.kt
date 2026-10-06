@@ -653,8 +653,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }, 100)
 
         } else {
-            isPipModeRequested = false
-
             pipViewModel.exitPipMode()
             binding.playerView?.player?.let { player ->
                 if (player.isPlaying) player.pause()

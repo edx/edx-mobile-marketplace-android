@@ -106,10 +106,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            updateAutoPipForOrientation()
-//        }
-
         pipViewModel.pipActions.observe(viewLifecycleOwner) { actions ->
             if (actions.isNotEmpty()) {
                 pictureInPictureParamsBuilder?.setActions(actions)
@@ -774,7 +770,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     ConstraintSet.START,
                     ConstraintSet.PARENT_ID,
                     ConstraintSet.START,
-                    250
+                    resources.getDimensionPixelSize(R.dimen.tablet_video_title_landscape_start_margin)
                 )
 
                 constraintSet.connect(
@@ -782,7 +778,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                     ConstraintSet.END,
                     ConstraintSet.PARENT_ID,
                     ConstraintSet.END,
-                    240
+                    resources.getDimensionPixelSize(R.dimen.tablet_video_title_landscape_end_margin)
                 )
 
                 constraintSet.constrainWidth(
@@ -888,11 +884,13 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 )
                 constraintSet.connect(
                     titleView.id, ConstraintSet.START,
-                    ConstraintSet.PARENT_ID, ConstraintSet.START, 170
+                    ConstraintSet.PARENT_ID, ConstraintSet.START,
+                    resources.getDimensionPixelSize(R.dimen.tablet_video_title_portrait_start_margin)
                 )
                 constraintSet.connect(
                     titleView.id, ConstraintSet.END,
-                    ConstraintSet.PARENT_ID, ConstraintSet.END, 175
+                    ConstraintSet.PARENT_ID, ConstraintSet.END,
+                    resources.getDimensionPixelSize(R.dimen.tablet_video_title_portrait_end_margin)
                 )
                 constraintSet.connect(
                     binding.cardView.id, ConstraintSet.TOP,
@@ -1081,16 +1079,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
     private fun isLandscape(): Boolean {
         return resources.configuration.orientation ==
                 Configuration.ORIENTATION_LANDSCAPE
-    }
-
-    @RequiresApi(Build.VERSION_CODES.S)
-    private fun updateAutoPipForOrientation() {
-        val params = PictureInPictureParams.Builder()
-            .setAutoEnterEnabled(!isLandscape())
-            .setSeamlessResizeEnabled(true)
-            .build()
-
-        requireActivity().setPictureInPictureParams(params)
     }
 
 

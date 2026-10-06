@@ -51,7 +51,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.drawable.Icon
-import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintSet
@@ -848,12 +847,6 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             resources.getDimensionPixelSize(R.dimen.player_height)
         }
 
-        val playerWidth = if (isTablet) {
-            560 // dp for tablet
-        } else {
-            0 // Use constraint width for mobile
-        }
-
         val playerMarginH = resources.getDimensionPixelSize(R.dimen.video_margin_horizontal)
         val subtitleMarginH = resources.getDimensionPixelSize(R.dimen.subtitle_margin_horizontal)
         val subtitleMarginBottom = resources.getDimensionPixelSize(R.dimen.subtitle_margin_bottom)
@@ -892,7 +885,7 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                     constraintSet.connect(titleView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, titleMarginTop)
                     constraintSet.connect(binding.cvVideoTitle.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, titleMarginH)
                     constraintSet.connect(binding.cvVideoTitle.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, titleMarginH)
-                    constraintSet.constrainWidth(titleView.id, 830)
+                    constraintSet.constrainWidth(titleView.id, resources.getDimensionPixelSize(R.dimen.video_title_width_tablet_landscape))
                     constraintSet.constrainHeight(titleView.id, ConstraintSet.WRAP_CONTENT)
                 }
 
@@ -900,9 +893,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 constraintSet.connect(binding.cardView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, playerMarginH)
                 constraintSet.connect(binding.cardView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH)
 
-                // For tablet: use fixed dimensions (560dp width, 250dp height)
-                constraintSet.constrainWidth(binding.cardView.id, (560 * resources.displayMetrics.density).toInt())
-                constraintSet.constrainHeight(binding.cardView.id, (300 * resources.displayMetrics.density).toInt())
+                constraintSet.constrainWidth(binding.cardView.id, resources.getDimensionPixelSize(R.dimen.tablet_video_player_width))
+                constraintSet.constrainHeight(binding.cardView.id, resources.getDimensionPixelSize(R.dimen.tablet_video_player_height))
                 constraintSet.setDimensionRatio(binding.cardView.id, null) // Remove ratio constraint for fixed dimensions
 
                 constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, binding.cardView.id, ConstraintSet.BOTTOM, subtitleMarginTop)
@@ -932,13 +924,12 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             constraintSet.connect(binding.cardView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, playerMarginH)
 
             if (isTablet) {
-                // For tablet: use fixed dimensions (560dp width, 250dp height)
                 constraintSet.constrainWidth(binding.cardView.id, (560 * resources.displayMetrics.density).toInt())
                 constraintSet.constrainHeight(binding.cardView.id, (300 * resources.displayMetrics.density).toInt())
                 constraintSet.setDimensionRatio(binding.cardView.id, null) // Remove ratio constraint for fixed dimensions
 
-                constraintSet.connect(binding.cvVideoTitle.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 180)
-                constraintSet.connect(binding.cvVideoTitle.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 170)
+                constraintSet.connect(binding.cvVideoTitle.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, resources.getDimensionPixelSize(R.dimen.tablet_video_title_start_margin))
+                constraintSet.connect(binding.cvVideoTitle.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, resources.getDimensionPixelSize(R.dimen.tablet_video_title_end_margin))
             } else {
                 // For mobile: keep original behavior (constraint width and height based on playerHeight)
                 constraintSet.constrainWidth(binding.cardView.id, 0)

@@ -28,6 +28,12 @@
     <dimen name="tablet_video_player_height">300dp</dimen>
     <dimen name="tablet_video_title_start_margin">130dp</dimen>
     <dimen name="tablet_video_title_end_margin">125dp</dimen>
+    <dimen name="tablet_video_title_landscape_start_margin">250dp</dimen>
+    <dimen name="tablet_video_title_landscape_end_margin">240dp</dimen>
+    <dimen name="tablet_video_title_portrait_start_margin">170px</dimen>
+    <dimen name="tablet_video_title_portrait_end_margin">175px</dimen>
+    <dimen name="video_margin_potrait">16px</dimen>
+
 
 
 </resources>

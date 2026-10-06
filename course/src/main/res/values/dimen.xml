@@ -23,6 +23,11 @@
     <dimen name="video_title_margin_top">8dp</dimen>
     <dimen name="video_title_margin_horizontal">24dp</dimen>
     <dimen name="video_title_to_video_margin">8dp</dimen>
+    <dimen name="video_title_width_tablet_landscape">830px</dimen>
+    <dimen name="tablet_video_player_width">560dp</dimen>
+    <dimen name="tablet_video_player_height">300dp</dimen>
+    <dimen name="tablet_video_title_start_margin">180dp</dimen>
+    <dimen name="tablet_video_title_end_margin">170dp</dimen>
 
 
 </resources>

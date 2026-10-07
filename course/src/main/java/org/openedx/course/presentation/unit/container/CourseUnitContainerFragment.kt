@@ -25,7 +25,6 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.cast.framework.CastButtonFactory
@@ -39,10 +38,12 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.BlockType
+import org.openedx.core.extension.computeWindowSizeClasses
 import org.openedx.core.extension.serializable
 import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.InsetHolder
+import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.course.R
@@ -80,6 +81,11 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     private lateinit var adapter: CourseUnitContainerAdapter
 
     private var lastClickTime = 0L
+
+    private var windowSize: WindowSize? = null
+
+
+
 
     private val onPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
@@ -138,6 +144,9 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             }
         }
     }
+
+    fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
+
     // End workaround
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -146,6 +155,8 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         componentId = requireArguments().getString(ARG_COMPONENT_ID, "")
         viewModel.loadBlocks(requireArguments().serializable(ARG_MODE)!!, componentId)
         viewModel.courseUnitContainerShowedEvent()
+        windowSize = computeWindowSizeClasses()
+
     }
 
     override fun onCreateView(
@@ -239,6 +250,19 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             binding.subSectionUnitsTitle.visibility = if (visible) View.VISIBLE else View.GONE
             binding.horizontalProgress.visibility = if (visible) View.VISIBLE else View.GONE
             binding.cvCount.visibility = if (visible) View.VISIBLE else View.GONE
+
+            if(visible&&isTablet()){
+                (binding.viewPager.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+                    params.topMargin = 24.dpToPx()
+                    binding.viewPager.layoutParams = params
+                }
+            }
+            else{
+                (binding.viewPager.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+                    params.topMargin = 0
+                    binding.viewPager.layoutParams = params
+                }
+            }
 
             val isLandscape =
                 resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -550,9 +574,6 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         ) return
 
         val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-        fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
-
         // ── 1. Re-apply the root ConstraintSet from the correct qualifier variant.
         //       Deferred with post{} so it never runs inside an in-progress layout
         //       pass (which would throw "requestLayout() improperly called").
@@ -599,11 +620,18 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
 
         updateNavigationBarsVisibility(
             isVisible = pipViewModel.buttonVisibility.value != false,
-            isLandscape = isLandscape,
+            isLandscape = isLandscape
         )
     }
+    private fun isTablet(): Boolean {
+        return windowSize?.isTablet == true
+    }
 
-    private fun updateNavigationBarsVisibility(isVisible: Boolean, isLandscape: Boolean) {
+
+    private fun updateNavigationBarsVisibility(
+        isVisible: Boolean,
+        isLandscape: Boolean,
+    ) {
         if (!isVisible) {
             binding.cvNavigationBar.visibility = View.GONE
             binding.topCvNavigationBar?.visibility = View.GONE
@@ -613,6 +641,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         if (isLandscape) {
             binding.cvNavigationBar.visibility = View.GONE
             binding.topCvNavigationBar?.visibility = View.VISIBLE
+
         } else {
             binding.cvNavigationBar.visibility = View.VISIBLE
             binding.topCvNavigationBar?.visibility = View.GONE

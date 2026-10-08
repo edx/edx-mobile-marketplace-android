@@ -639,7 +639,13 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         }
 
         if (isLandscape) {
-            binding.cvNavigationBar.visibility = View.GONE
+            if(isTablet()){
+                binding.cvNavigationBar.visibility = View.VISIBLE
+
+            }
+            else{
+                binding.cvNavigationBar.visibility = View.GONE
+            }
             binding.topCvNavigationBar?.visibility = View.VISIBLE
 
         } else {

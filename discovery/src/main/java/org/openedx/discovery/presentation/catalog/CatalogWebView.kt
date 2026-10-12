@@ -47,11 +47,40 @@ fun CatalogWebViewScreen(
                     super.onPageCommitVisible(view, url)
 
                     view?.evaluateJavascript("""
-                    (function() {
-                        const text = document.body.innerText || "";
-                        return text.includes("Page not found") || text.includes("404");
-                    })();
-                    """
+    (function() {
+        // Hide the Xpert chatbot floating button
+        var style = document.createElement('style');
+        style.textContent = `
+            #xpert_chatbot__floating-action-btn { display: none !important; }
+            [class*="xpert"], 
+            [id*="xpert"],
+            [class*="chatbot"],
+            [id*="chatbot"] { display: none !important; }
+        `;
+        (document.head || document.documentElement).appendChild(style);
+
+        // Also remove chatbot elements by checking text content
+        var elements = document.querySelectorAll('*');
+        elements.forEach(function(el) {
+            if (el.textContent && el.textContent.includes("I'm xpert")) {
+                el.style.display = 'none';
+            }
+        });
+
+        // Set up the trigger function for the chatbot
+        window.__triggerXpertChatbotAction = function() {
+            var btn = document.getElementById('xpert_chatbot__floating-action-btn');
+            if (btn) { btn.click(); }
+        };
+        
+        // Notify the native side
+        window.webkit.messageHandlers.xpertChatbotReady.postMessage('');
+        
+        // Check for 404 page
+        const text = document.body.innerText || "";
+        return text.includes("Page not found") || text.includes("404");
+    })();
+    """
                     ) { result ->
                         if (result == "true") {
                             onWebPageLoadError()

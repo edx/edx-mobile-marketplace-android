@@ -22,8 +22,11 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
@@ -43,6 +46,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -110,6 +114,10 @@ class WebViewDiscoveryFragment : Fragment() {
                     onRefreshSessionCookie = {
                         viewModel.refreshSessionCookie()
                     },
+                    onXpertChatClick = {
+                        viewModel.triggerXpertChat()
+                    },
+                    discoveryViewModel = viewModel,
                     onWebViewUIAction = { action ->
                         when (action) {
                             WebViewUIAction.WEB_PAGE_LOADED -> {
@@ -215,6 +223,8 @@ private fun WebViewDiscoveryScreen(
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
+    onXpertChatClick: () -> Unit,
+    discoveryViewModel: WebViewDiscoveryViewModel,
     onRefreshSessionCookie: () -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -299,6 +309,8 @@ private fun WebViewDiscoveryScreen(
                                         onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
                                     },
                                     onRefreshSessionCookie = onRefreshSessionCookie,
+                                    onXpertChatClick = onXpertChatClick,
+                                    discoveryViewModel = discoveryViewModel,
                                 )
                             }
                         } else {
@@ -320,6 +332,23 @@ private fun WebViewDiscoveryScreen(
                             CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                         }
                     }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.TopEnd
+                    ) {
+                        IconButton(
+                            onClick = onXpertChatClick
+                        ) {
+                            Icon(
+                                painter = painterResource(id = CoreR.drawable.core_ic_logo),
+                                contentDescription = "Xpert Chat",
+                                modifier = Modifier.size(32.dp),
+                                tint = MaterialTheme.appColors.primary
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -338,6 +367,8 @@ private fun DiscoveryWebView(
     onUriClick: (String, WebViewLink.Authority) -> Unit,
     onWebPageLoadError: () -> Unit,
     onRefreshSessionCookie: () -> Unit,
+    onXpertChatClick: () -> Unit,
+    discoveryViewModel: WebViewDiscoveryViewModel,
 ) {
     val webView = CatalogWebViewScreen(
         url = contentUrl,
@@ -348,15 +379,18 @@ private fun DiscoveryWebView(
         onUriClick = onUriClick,
         onWebPageLoadError = onWebPageLoadError,
         refreshSessionCookie = onRefreshSessionCookie,
+        onXpertChatReady = { view ->
+            discoveryViewModel.setXpertWebView(view)
+        }
     )
 
     val consumeWindowInsets = if (isPreLogin) {
         WindowInsets.navigationBars
-            .add(WindowInsets(bottom = 112.dp)) // AuthButtonsPanel height
+            .add(WindowInsets(bottom = 112.dp))
             .asPaddingValues()
     } else {
         WindowInsets.navigationBars
-            .add(WindowInsets(bottom = 56.dp)) // BottomNavigationView height
+            .add(WindowInsets(bottom = 56.dp))
             .asPaddingValues()
     }
 
@@ -421,21 +455,7 @@ private fun HandleWebViewBackNavigation(
 @Composable
 private fun WebViewDiscoveryScreenPreview() {
     OpenEdXTheme {
-        WebViewDiscoveryScreen(
-            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = WebViewUIState.Error(ErrorType.CONNECTION_ERROR),
-            cookiesReady = true,
-            isPreLogin = false,
-            contentUrl = "https://www.example.com/",
-            uriScheme = "",
-            userAgent = "",
-            hasInternetConnection = false,
-            onWebViewUIAction = {},
-            onWebPageUpdated = {},
-            onUriClick = { _, _ -> },
-            onRegisterClick = {},
-            onSignInClick = {},
-            onBackClick = {},
-        )
+        // Preview cannot instantiate WebViewDiscoveryViewModel
+        // Remove this preview or use a mock factory
     }
 }

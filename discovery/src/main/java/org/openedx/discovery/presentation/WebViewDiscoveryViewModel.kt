@@ -1,5 +1,6 @@
 package org.openedx.discovery.presentation
 
+import android.webkit.WebView
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -146,5 +147,25 @@ class WebViewDiscoveryViewModel(
                 put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
             }
         )
+    }
+
+    private var _xpertWebView: WebView? = null
+
+    fun setXpertWebView(webView: WebView) {
+        _xpertWebView = webView
+    }
+
+    fun triggerXpertChat() {
+        _xpertWebView?.evaluateJavascript(
+            """
+        (function() {
+            if (window.__triggerXpertChatbotAction) {
+                window.__triggerXpertChatbotAction();
+            }
+        })();
+        """
+        ) { result ->
+            logger.d({ "Xpert chat triggered: $result" })
+        }
     }
 }

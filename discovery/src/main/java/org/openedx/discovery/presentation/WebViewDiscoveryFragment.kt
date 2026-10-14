@@ -356,12 +356,10 @@ private fun DiscoveryHeader(
     // Read dimensions from resources
     val xpertIconButtonSize = dimensionResource(id = R.dimen.xpert_icon_button_size)
     val xpertIconSize = dimensionResource(id = R.dimen.xpert_icon_size)
-    val titlePadding = dimensionResource(id = R.dimen.discovery_header_title_padding)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp)
     ) {
         // Back button on the left
         if (isPreLogin) {
@@ -383,8 +381,7 @@ private fun DiscoveryHeader(
         // Title - truly centered
         Text(
             modifier = Modifier
-                .align(Alignment.Center)
-                .padding(horizontal = titlePadding),
+                .align(Alignment.Center),
             text = label,
             color = MaterialTheme.appColors.textDark,
             style = MaterialTheme.appTypography.titleMedium,

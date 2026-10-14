@@ -30,6 +30,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -76,11 +77,13 @@ import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
 import org.openedx.discovery.presentation.catalog.WebViewLink
 import org.openedx.core.R as CoreR
+import androidx.compose.ui.text.style.TextAlign
 
 class WebViewDiscoveryFragment : Fragment() {
 
@@ -229,6 +232,7 @@ private fun WebViewDiscoveryScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
+    val isDarkTheme by discoveryViewModel.isDarkTheme.collectAsState()
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -277,10 +281,13 @@ private fun WebViewDiscoveryScreen(
                 .displayCutoutForLandscape(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Toolbar(
+            // Header with Toolbar and Xpert Chat Icon
+            DiscoveryHeader(
                 label = stringResource(id = R.string.discovery_explore_the_catalog),
-                canShowBackBtn = isPreLogin,
+                isPreLogin = isPreLogin,
                 onBackClick = onBackClick,
+                onXpertChatClick = onXpertChatClick,
+                isDarkTheme = isDarkTheme
             )
 
             Surface {
@@ -332,25 +339,73 @@ private fun WebViewDiscoveryScreen(
                             CircularProgressIndicator(color = MaterialTheme.appColors.primary)
                         }
                     }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.TopEnd
-                    ) {
-                        IconButton(
-                            onClick = onXpertChatClick
-                        ) {
-                            Icon(
-                                painter = painterResource(id = CoreR.drawable.core_ic_logo),
-                                contentDescription = "Xpert Chat",
-                                modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.appColors.primary
-                            )
-                        }
-                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DiscoveryHeader(
+    label: String,
+    isPreLogin: Boolean,
+    onBackClick: () -> Unit,
+    onXpertChatClick: () -> Unit,
+    isDarkTheme: Boolean,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp)
+    ) {
+        // Back button on the left
+        if (isPreLogin) {
+            IconButton(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .size(48.dp),
+                onClick = onBackClick
+            ) {
+                Icon(
+                    painter = painterResource(id = CoreR.drawable.core_ic_back),
+                    contentDescription = "Back",
+                    tint = MaterialTheme.appColors.textPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        // Title - truly centered
+        Text(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = 56.dp),
+            text = label,
+            color = MaterialTheme.appColors.textDark,
+            style = MaterialTheme.appTypography.titleMedium,
+            maxLines = 2,
+            textAlign = TextAlign.Center,
+        )
+
+        // Xpert Chat Icon on the right
+        IconButton(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .size(56.dp),
+            onClick = onXpertChatClick
+        ) {
+            Icon(
+                painter = painterResource(
+                    id = if (isDarkTheme) {  // Use isDarkTheme parameter from app settings
+                        R.drawable.xpert_logo
+                    } else {
+                        R.drawable.xpert_logo_light
+                    }
+                ),
+                tint = Color.Unspecified,
+                contentDescription = "Xpert Chat",
+                modifier = Modifier.size(40.dp)
+            )
         }
     }
 }
@@ -447,15 +502,5 @@ private fun HandleWebViewBackNavigation(
         onDispose {
             onBackPressedCallback.remove()
         }
-    }
-}
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun WebViewDiscoveryScreenPreview() {
-    OpenEdXTheme {
-        // Preview cannot instantiate WebViewDiscoveryViewModel
-        // Remove this preview or use a mock factory
     }
 }

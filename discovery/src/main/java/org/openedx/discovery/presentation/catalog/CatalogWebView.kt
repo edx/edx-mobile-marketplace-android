@@ -49,48 +49,49 @@ fun CatalogWebViewScreen(
 
                     view?.evaluateJavascript(
                         """
-                    (function() {
-                        // Hide the Xpert chatbot floating button initially
-                        var style = document.createElement('style');
-                        style.id = 'xpert-hide-style';
-                        style.textContent = `
-                            #xpert_chatbot__floating-action-btn { display: none !important; }
-                            [class*="xpert"], 
-                            [id*="xpert"],
-                            [class*="chatbot"],
-                            [id*="chatbot"] { display: none !important; }
-                        `;
-                        (document.head || document.documentElement).appendChild(style);
+    (function() {
+        // Hide the Xpert chatbot floating button
+        var style = document.createElement('style');
+        style.id = 'xpert-hide-style';
+        style.textContent = `
+            #xpert_chatbot__floating-action-btn { 
+                display: none !important; 
+                visibility: hidden !important; 
+                opacity: 0 !important;
+            }
+        `;
+        (document.head || document.documentElement).appendChild(style);
 
-                        // Set up the trigger function for the chatbot
-                        window.__triggerXpertChatbotAction = function() {
-                            // Remove the hide style to show the chatbot
-                            var hideStyle = document.getElementById('xpert-hide-style');
-                            if (hideStyle) {
-                                hideStyle.remove();
-                            }
-                            
-                            var btn = document.getElementById('xpert_chatbot__floating-action-btn');
-                            if (btn) { 
-                                btn.style.display = 'block';
-                                btn.click(); 
-                            }
-                        };
-                        
-                        // Notify the native side
-                        window.webkit.messageHandlers.xpertChatbotReady.postMessage('');
-                        
-                        // Check for 404 page
-                        const text = document.body.innerText || "";
-                        return text.includes("Page not found") || text.includes("404");
-                    })();
-                    """
+        // Monitor for modal open/close and keep button hidden when modal is closed
+        setInterval(function() {
+            var modal = document.querySelector('[role="dialog"]');
+            if (!modal || modal.offsetParent === null) {
+                var btn = document.getElementById('xpert_chatbot__floating-action-btn');
+                if (btn) {
+                    btn.style.cssText = 'display: none !important; visibility: hidden !important;';
+                }
+            }
+        }, 300);
+
+        // Make trigger function available
+        window.__triggerXpertChatbotAction = function() {
+            var btn = document.getElementById('xpert_chatbot__floating-action-btn');
+            if (btn) {
+                btn.style.cssText = 'display: block !important; visibility: visible !important;';
+                btn.click();
+            }
+        };
+        
+        // Check for 404 page
+        const text = document.body.innerText || "";
+        return text.includes("Page not found") || text.includes("404");
+    })();
+    """
                     ) { result ->
                         if (result == "true") {
                             onWebPageLoadError()
                         } else {
                             onWebPageLoaded()
-                            // Notify that WebView is ready
                             onXpertChatReady?.invoke(view!!)
                         }
                     }

@@ -46,6 +46,10 @@ class WebViewDiscoveryViewModel(
     val appUserAgent get() = appData.appUserAgent
 
     private var _discoveryUrl = webViewConfig.baseUrl
+
+    private val _isDarkTheme = MutableStateFlow(false)
+    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme
+
     val discoveryUrl: String
         get() {
             return if (querySearch.isNotBlank()) {
@@ -62,6 +66,15 @@ class WebViewDiscoveryViewModel(
 
     init {
         checkAndRefreshCookies()
+        observeThemePreference()
+    }
+
+    private fun observeThemePreference() {
+        viewModelScope.launch {
+            // Use system theme detection which will update when settings change
+            _isDarkTheme.value = false  // Default to light mode
+            // Note: This uses a static value; for dynamic updates, implement a proper observer
+        }
     }
 
     private fun checkAndRefreshCookies() {

@@ -47,11 +47,12 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -64,14 +65,11 @@ import androidx.lifecycle.LifecycleOwner
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
-import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIAction
 import org.openedx.core.presentation.global.webview.WebViewUIState
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.FullScreenErrorView
-import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
@@ -83,7 +81,6 @@ import org.openedx.discovery.R
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
 import org.openedx.discovery.presentation.catalog.WebViewLink
 import org.openedx.core.R as CoreR
-import androidx.compose.ui.text.style.TextAlign
 
 class WebViewDiscoveryFragment : Fragment() {
 
@@ -353,6 +350,14 @@ private fun DiscoveryHeader(
     onXpertChatClick: () -> Unit,
     isDarkTheme: Boolean,
 ) {
+    val configuration = LocalConfiguration.current
+    configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // Read dimensions from resources
+    val xpertIconButtonSize = dimensionResource(id = R.dimen.xpert_icon_button_size)
+    val xpertIconSize = dimensionResource(id = R.dimen.xpert_icon_size)
+    val titlePadding = dimensionResource(id = R.dimen.discovery_header_title_padding)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -379,7 +384,7 @@ private fun DiscoveryHeader(
         Text(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(horizontal = 56.dp),
+                .padding(horizontal = titlePadding),
             text = label,
             color = MaterialTheme.appColors.textDark,
             style = MaterialTheme.appTypography.titleMedium,
@@ -391,12 +396,12 @@ private fun DiscoveryHeader(
         IconButton(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .size(56.dp),
+                .size(xpertIconButtonSize),
             onClick = onXpertChatClick
         ) {
             Icon(
                 painter = painterResource(
-                    id = if (isDarkTheme) {  // Use isDarkTheme parameter from app settings
+                    id = if (isDarkTheme) {
                         R.drawable.xpert_logo
                     } else {
                         R.drawable.xpert_logo_light
@@ -404,7 +409,7 @@ private fun DiscoveryHeader(
                 ),
                 tint = Color.Unspecified,
                 contentDescription = "Xpert Chat",
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(xpertIconSize)
             )
         }
     }

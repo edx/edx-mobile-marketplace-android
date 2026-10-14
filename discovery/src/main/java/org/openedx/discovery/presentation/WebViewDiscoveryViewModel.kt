@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
@@ -70,10 +71,37 @@ class WebViewDiscoveryViewModel(
     }
 
     private fun observeThemePreference() {
+
+        updateThemeMode()
+
         viewModelScope.launch {
-            // Use system theme detection which will update when settings change
-            _isDarkTheme.value = false  // Default to light mode
-            // Note: This uses a static value; for dynamic updates, implement a proper observer
+            while (true) {
+                updateThemeMode()
+                kotlinx.coroutines.delay(1000) // Check every second
+            }
+        }
+    }
+
+    private fun updateThemeMode() {
+
+        val themeMode = corePreferences.appThemeMode
+
+        val isDarkModeActive = when (themeMode) {
+            AppThemeMode.DARK -> {
+                true
+            }
+
+            AppThemeMode.LIGHT -> {
+                false
+            }
+
+            AppThemeMode.MATCH_DEVICE -> {
+                true
+            }
+        }
+
+        if (_isDarkTheme.value != isDarkModeActive) {
+            _isDarkTheme.value = isDarkModeActive
         }
     }
 

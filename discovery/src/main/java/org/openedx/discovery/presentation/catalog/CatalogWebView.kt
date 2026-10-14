@@ -49,44 +49,56 @@ fun CatalogWebViewScreen(
 
                     view?.evaluateJavascript(
                         """
-    (function() {
-        // Hide the Xpert chatbot floating button
-        var style = document.createElement('style');
-        style.id = 'xpert-hide-style';
-        style.textContent = `
-            #xpert_chatbot__floating-action-btn { 
-                display: none !important; 
-                visibility: hidden !important; 
-                opacity: 0 !important;
-            }
-        `;
-        (document.head || document.documentElement).appendChild(style);
-
-        // Monitor for modal open/close and keep button hidden when modal is closed
-        setInterval(function() {
-            var modal = document.querySelector('[role="dialog"]');
-            if (!modal || modal.offsetParent === null) {
-                var btn = document.getElementById('xpert_chatbot__floating-action-btn');
-                if (btn) {
-                    btn.style.cssText = 'display: none !important; visibility: hidden !important;';
-                }
-            }
-        }, 300);
-
-        // Make trigger function available
-        window.__triggerXpertChatbotAction = function() {
+(function() {
+    // Hide the Xpert chatbot floating button
+    var style = document.createElement('style');
+    style.id = 'xpert-hide-style';
+    style.textContent = `
+        #xpert_chatbot__floating-action-btn { 
+            display: none !important; 
+            visibility: hidden !important; 
+            opacity: 0 !important;
+        }
+        /* Hide Xpert greeting message */
+        [class*="xpert"][class*="greeting"],
+        [class*="xpert"][class*="welcome"],
+        [class*="xpert"][class*="message"],
+        .xpert-greeting,
+        .xpert-welcome-message,
+        #xpert-greeting,
+        #xpert-welcome { 
+            display: none !important; 
+            visibility: hidden !important; 
+            opacity: 0 !important;
+        }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+    
+    // Monitor for modal open/close and keep button hidden when modal is closed
+    setInterval(function() {
+        var modal = document.querySelector('[role="dialog"]');
+        if (!modal || modal.offsetParent === null) {
             var btn = document.getElementById('xpert_chatbot__floating-action-btn');
             if (btn) {
-                btn.style.cssText = 'display: block !important; visibility: visible !important;';
-                btn.click();
+                btn.style.cssText = 'display: none !important; visibility: hidden !important;';
             }
-        };
-        
-        // Check for 404 page
-        const text = document.body.innerText || "";
-        return text.includes("Page not found") || text.includes("404");
-    })();
-    """
+        }
+    }, 300);
+
+    // Make trigger function available
+    window.__triggerXpertChatbotAction = function() {
+        var btn = document.getElementById('xpert_chatbot__floating-action-btn');
+        if (btn) {
+            btn.style.cssText = 'display: block !important; visibility: visible !important;';
+            btn.click();
+        }
+    };
+    
+    // Check for 404 page
+    const text = document.body.innerText || "";
+    return text.includes("Page not found") || text.includes("404");
+})();
+"""
                     ) { result ->
                         if (result == "true") {
                             onWebPageLoadError()
@@ -95,11 +107,11 @@ fun CatalogWebViewScreen(
                             onXpertChatReady?.invoke(view!!)
                         }
                     }
+
                 }
 
                 override fun shouldOverrideUrlLoading(
-                    view: WebView?,
-                    request: WebResourceRequest?
+                    view: WebView?, request: WebResourceRequest?
                 ): Boolean {
                     val clickUrl = request?.url?.toString() ?: ""
                     if (handleRecognizedLink(clickUrl)) {
@@ -113,16 +125,13 @@ fun CatalogWebViewScreen(
                     val link = WebViewLink.parse(clickUrl, uriScheme) ?: return false
 
                     return when (link.authority) {
-                        linkAuthority.COURSE_INFO,
-                        linkAuthority.PROGRAM_INFO,
-                        linkAuthority.ENROLLED_PROGRAM_INFO -> {
+                        linkAuthority.COURSE_INFO, linkAuthority.PROGRAM_INFO, linkAuthority.ENROLLED_PROGRAM_INFO -> {
                             val pathId = link.params[WebViewLink.Param.PATH_ID] ?: ""
                             onUriClick(pathId, link.authority)
                             true
                         }
 
-                        linkAuthority.ENROLL,
-                        linkAuthority.ENROLLED_COURSE_INFO -> {
+                        linkAuthority.ENROLL, linkAuthority.ENROLLED_COURSE_INFO -> {
                             val courseId = link.params[WebViewLink.Param.COURSE_ID] ?: ""
                             onUriClick(courseId, link.authority)
                             true
@@ -138,9 +147,7 @@ fun CatalogWebViewScreen(
                 }
 
                 override fun onReceivedError(
-                    view: WebView,
-                    request: WebResourceRequest,
-                    error: WebResourceError
+                    view: WebView, request: WebResourceRequest, error: WebResourceError
                 ) {
                     if (request.url.toString() == view.url) {
                         onWebPageLoadError()

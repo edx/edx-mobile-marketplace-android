@@ -123,7 +123,7 @@ class CourseInfoViewModel(
                     return@launch
                 }
 
-                if (iapConfig?.isEnabled == false) {
+                if (iapConfig?.isEnabled != true) {
                     interactor.enrollInACourse(courseId)
                     courseEnrollSuccessEvent(courseId)
                     notifier.send(CourseDashboardUpdate())

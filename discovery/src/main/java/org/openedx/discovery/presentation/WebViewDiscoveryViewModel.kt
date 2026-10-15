@@ -80,7 +80,6 @@ class WebViewDiscoveryViewModel(
         viewModelScope.launch {
             while (isActive) {
                 updateThemeMode()
-                delay(1000)
             }
         }
     }

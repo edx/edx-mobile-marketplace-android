@@ -1,11 +1,15 @@
 package org.openedx.discovery.presentation
 
 import android.webkit.WebView
+import androidx.compose.runtime.snapshotFlow
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
@@ -71,17 +75,15 @@ class WebViewDiscoveryViewModel(
     }
 
     private fun observeThemePreference() {
-
         updateThemeMode()
 
         viewModelScope.launch {
-            while (true) {
+            while (isActive) {
                 updateThemeMode()
-                kotlinx.coroutines.delay(1000) // Check every second
+                delay(1000)
             }
         }
     }
-
     private fun updateThemeMode() {
 
         val themeMode = corePreferences.appThemeMode

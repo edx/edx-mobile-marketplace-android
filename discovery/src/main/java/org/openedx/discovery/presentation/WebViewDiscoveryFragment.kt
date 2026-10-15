@@ -353,7 +353,6 @@ private fun DiscoveryHeader(
     val configuration = LocalConfiguration.current
     configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // Read dimensions from resources
     val xpertIconButtonSize = dimensionResource(id = R.dimen.xpert_icon_button_size)
     val xpertIconSize = dimensionResource(id = R.dimen.xpert_icon_size)
 
@@ -361,7 +360,6 @@ private fun DiscoveryHeader(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        // Back button on the left
         if (isPreLogin) {
             IconButton(
                 modifier = Modifier
@@ -378,7 +376,6 @@ private fun DiscoveryHeader(
             }
         }
 
-        // Title - truly centered
         Text(
             modifier = Modifier
                 .align(Alignment.Center),
@@ -389,7 +386,6 @@ private fun DiscoveryHeader(
             textAlign = TextAlign.Center,
         )
 
-        // Xpert Chat Icon on the right
         IconButton(
             modifier = Modifier
                 .align(Alignment.CenterEnd)

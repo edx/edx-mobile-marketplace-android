@@ -1,5 +1,4 @@
 <resources>
-    <!-- Discovery Header - Xpert Icon Dimensions (Portrait) -->
     <dimen name="xpert_icon_button_size">80dp</dimen>
     <dimen name="xpert_icon_size">60dp</dimen>
     <dimen name="discovery_header_title_padding">56dp</dimen>

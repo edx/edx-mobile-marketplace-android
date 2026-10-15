@@ -80,7 +80,13 @@ class WebViewDiscoveryViewModel(
     }
 
     fun updateThemeMode() {
-        val isDarkModeActive = corePreferences.appThemeMode != AppThemeMode.LIGHT
+        val isDarkModeActive = when (corePreferences.appThemeMode) {
+            AppThemeMode.DARK -> true
+            AppThemeMode.LIGHT -> false
+            AppThemeMode.MATCH_DEVICE -> {
+                false
+            }
+        }
         if (_isDarkTheme.value != isDarkModeActive) {
             _isDarkTheme.value = isDarkModeActive
         }
@@ -90,7 +96,6 @@ class WebViewDiscoveryViewModel(
         super.onResume(owner)
         updateThemeMode()
     }
-
 
     private fun checkAndRefreshCookies() {
         viewModelScope.launch {
@@ -179,7 +184,7 @@ class WebViewDiscoveryViewModel(
 
     private var _xpertWebView: WebView? = null
 
-    fun setXpertWebView(webView: WebView) {
+    fun setXpertWebView(webView: WebView?) {
         _xpertWebView = webView
     }
 
@@ -195,5 +200,9 @@ class WebViewDiscoveryViewModel(
         ) { result ->
             logger.d({ "Xpert chat triggered: $result" })
         }
+    }
+
+    fun clearXpertWebView() {
+        _xpertWebView = null
     }
 }

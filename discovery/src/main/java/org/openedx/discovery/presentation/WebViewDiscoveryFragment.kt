@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -353,21 +354,24 @@ private fun DiscoveryHeader(
     onXpertChatClick: () -> Unit,
     isDarkTheme: Boolean,
 ) {
-    val configuration = LocalConfiguration.current
-    configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
     val xpertIconButtonSize = dimensionResource(id = R.dimen.xpert_icon_button_size)
     val xpertIconSize = dimensionResource(id = R.dimen.xpert_icon_size)
+    val headerTitleSize = dimensionResource(id = R.dimen.header_title_size)
+
+    // Use actual Compose theme to determine if dark mode is active
+    val isComposeDarkMode = MaterialTheme.colors.isLight.not()
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .height(headerTitleSize),
+        contentAlignment = Alignment.Center
     ) {
         if (isPreLogin) {
             IconButton(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .size(48.dp),
+                    .size(headerTitleSize),
                 onClick = onBackClick
             ) {
                 Icon(
@@ -380,8 +384,6 @@ private fun DiscoveryHeader(
         }
 
         Text(
-            modifier = Modifier
-                .align(Alignment.Center),
             text = label,
             color = MaterialTheme.appColors.textDark,
             style = MaterialTheme.appTypography.titleMedium,
@@ -397,7 +399,7 @@ private fun DiscoveryHeader(
         ) {
             Icon(
                 painter = painterResource(
-                    id = if (isDarkTheme) {
+                    id = if (isComposeDarkMode) {
                         R.drawable.xpert_logo
                     } else {
                         R.drawable.xpert_logo_light
@@ -459,6 +461,13 @@ private fun DiscoveryWebView(
             webView
         }
     )
+
+    // Clear WebView reference when composition is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            discoveryViewModel.clearXpertWebView()
+        }
+    }
 
     HandleWebViewBackNavigation(webView = webView)
 }

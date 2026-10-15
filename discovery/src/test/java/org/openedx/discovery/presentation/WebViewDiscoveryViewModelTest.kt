@@ -192,7 +192,7 @@ class WebViewDiscoveryViewModelTest {
     }
 
     @Test
-    fun `updateThemeMode sets isDarkTheme to true when theme mode is MATCH_DEVICE`() = runTest {
+    fun `updateThemeMode sets isDarkTheme to false when theme mode is MATCH_DEVICE`() = runTest {
         every { corePreferences.appThemeMode } returns AppThemeMode.MATCH_DEVICE
 
         val viewModel = WebViewDiscoveryViewModel(
@@ -208,11 +208,12 @@ class WebViewDiscoveryViewModelTest {
 
         advanceUntilIdle()
 
-        assertTrue(viewModel.isDarkTheme.value)
+        // MATCH_DEVICE defaults to false in ViewModel; Compose will override based on system theme
+        assertFalse(viewModel.isDarkTheme.value)
     }
 
     @Test
-    fun `onResume updates theme when preference changes`() = runTest {
+    fun `onResume updates theme from LIGHT to DARK`() = runTest {
         every { corePreferences.appThemeMode } returns AppThemeMode.LIGHT
 
         val viewModel = WebViewDiscoveryViewModel(
@@ -237,6 +238,62 @@ class WebViewDiscoveryViewModelTest {
         viewModel.onResume(lifecycleOwner)
 
         // Verify theme updated
+        assertTrue(viewModel.isDarkTheme.value)
+    }
+
+    @Test
+    fun `onResume updates theme from DARK to LIGHT`() = runTest {
+        every { corePreferences.appThemeMode } returns AppThemeMode.DARK
+
+        val viewModel = WebViewDiscoveryViewModel(
+            querySearch = "",
+            appData = appData,
+            config = config,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            router = router,
+            analytics = analytics,
+            appCookieManager = appCookieManager,
+        )
+
+        advanceUntilIdle()
+        assertTrue(viewModel.isDarkTheme.value)
+
+        // Change the mock to return LIGHT
+        every { corePreferences.appThemeMode } returns AppThemeMode.LIGHT
+
+        // Simulate onResume
+        val lifecycleOwner = mockk<LifecycleOwner>()
+        viewModel.onResume(lifecycleOwner)
+
+        // Verify theme updated
+        assertFalse(viewModel.isDarkTheme.value)
+    }
+
+    @Test
+    fun `onResume updates theme from MATCH_DEVICE to DARK`() = runTest {
+        every { corePreferences.appThemeMode } returns AppThemeMode.MATCH_DEVICE
+
+        val viewModel = WebViewDiscoveryViewModel(
+            querySearch = "",
+            appData = appData,
+            config = config,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            router = router,
+            analytics = analytics,
+            appCookieManager = appCookieManager,
+        )
+
+        advanceUntilIdle()
+        assertFalse(viewModel.isDarkTheme.value)
+
+        // Change the mock to return DARK
+        every { corePreferences.appThemeMode } returns AppThemeMode.DARK
+
+        val lifecycleOwner = mockk<LifecycleOwner>()
+        viewModel.onResume(lifecycleOwner)
+
         assertTrue(viewModel.isDarkTheme.value)
     }
 }

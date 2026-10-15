@@ -3,6 +3,7 @@ package org.openedx.discovery.presentation
 import android.webkit.WebView
 import androidx.compose.runtime.snapshotFlow
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,35 +77,20 @@ class WebViewDiscoveryViewModel(
 
     private fun observeThemePreference() {
         updateThemeMode()
-
-        viewModelScope.launch {
-            while (isActive) {
-                updateThemeMode()
-            }
-        }
     }
-    private fun updateThemeMode() {
 
-        val themeMode = corePreferences.appThemeMode
-
-        val isDarkModeActive = when (themeMode) {
-            AppThemeMode.DARK -> {
-                true
-            }
-
-            AppThemeMode.LIGHT -> {
-                false
-            }
-
-            AppThemeMode.MATCH_DEVICE -> {
-                true
-            }
-        }
-
+    fun updateThemeMode() {
+        val isDarkModeActive = corePreferences.appThemeMode != AppThemeMode.LIGHT
         if (_isDarkTheme.value != isDarkModeActive) {
             _isDarkTheme.value = isDarkModeActive
         }
     }
+
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        updateThemeMode()
+    }
+
 
     private fun checkAndRefreshCookies() {
         viewModelScope.launch {

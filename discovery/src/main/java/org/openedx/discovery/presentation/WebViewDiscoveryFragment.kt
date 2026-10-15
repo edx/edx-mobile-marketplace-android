@@ -192,7 +192,10 @@ class WebViewDiscoveryFragment : Fragment() {
             }
         }
     }
-
+    override fun onResume() {
+        super.onResume()
+        viewModel.updateThemeMode()
+    }
     companion object {
 
         private const val ARG_SEARCH_QUERY = "query_search"
@@ -501,4 +504,5 @@ private fun HandleWebViewBackNavigation(
             onBackPressedCallback.remove()
         }
     }
+
 }

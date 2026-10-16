@@ -125,13 +125,16 @@ fun CatalogWebViewScreen(
                     val link = WebViewLink.parse(clickUrl, uriScheme) ?: return false
 
                     return when (link.authority) {
-                        linkAuthority.COURSE_INFO, linkAuthority.PROGRAM_INFO, linkAuthority.ENROLLED_PROGRAM_INFO -> {
+                        linkAuthority.COURSE_INFO,
+                        linkAuthority.PROGRAM_INFO,
+                        linkAuthority.ENROLLED_PROGRAM_INFO -> {
                             val pathId = link.params[WebViewLink.Param.PATH_ID] ?: ""
                             onUriClick(pathId, link.authority)
                             true
                         }
 
-                        linkAuthority.ENROLL, linkAuthority.ENROLLED_COURSE_INFO -> {
+                        linkAuthority.ENROLL,
+                        linkAuthority.ENROLLED_COURSE_INFO -> {
                             val courseId = link.params[WebViewLink.Param.COURSE_ID] ?: ""
                             onUriClick(courseId, link.authority)
                             true

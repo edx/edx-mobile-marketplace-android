@@ -22,6 +22,7 @@ import org.openedx.core.presentation.dialog.selectorbottomsheet.SelectDialogView
 import org.openedx.core.presentation.iap.IAPViewModel
 import org.openedx.core.presentation.settings.video.VideoQualityViewModel
 import org.openedx.core.ui.WindowSize
+import org.openedx.learn.presentation.LearnViewModel
 import org.openedx.course.data.repository.CourseRepository
 import org.openedx.course.domain.interactor.CourseInteractor
 import org.openedx.course.presentation.container.CourseContainerViewModel
@@ -65,7 +66,6 @@ import org.openedx.discussion.presentation.search.DiscussionSearchThreadViewMode
 import org.openedx.discussion.presentation.threads.DiscussionAddThreadViewModel
 import org.openedx.discussion.presentation.threads.DiscussionThreadsViewModel
 import org.openedx.discussion.presentation.topics.DiscussionTopicsViewModel
-import org.openedx.learn.presentation.LearnViewModel
 import org.openedx.profile.data.repository.ProfileRepository
 import org.openedx.profile.domain.interactor.ProfileInteractor
 import org.openedx.profile.domain.model.Account
@@ -195,10 +195,22 @@ val screenModule = module {
 
     factory { DiscoveryRepository(get(), get(), get()) }
     factory { DiscoveryInteractor(get()) }
-    viewModel { NativeDiscoveryViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel {
+        NativeDiscoveryViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+        )
+    }
     viewModel { (querySearch: String) ->
         WebViewDiscoveryViewModel(
             querySearch,
+            get(),
             get(),
             get(),
             get(),
@@ -218,6 +230,7 @@ val screenModule = module {
             notifier = get(),
             analytics = get(),
             profileRouter = get(),
+            subscriptionAlertBanner = get(),
         )
     }
     viewModel { (account: Account) -> EditProfileViewModel(get(), get(), get(), get(), account) }

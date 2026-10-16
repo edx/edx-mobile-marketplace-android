@@ -11,6 +11,7 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -41,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -51,11 +52,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
@@ -64,6 +67,7 @@ import org.openedx.core.presentation.global.webview.WebViewUIAction
 import org.openedx.core.presentation.global.webview.WebViewUIState
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.FullScreenErrorView
+import org.openedx.core.ui.SubscriptionBanner
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -84,6 +88,11 @@ class WebViewDiscoveryFragment : Fragment() {
         parametersOf(requireArguments().getString(ARG_SEARCH_QUERY, ""))
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lifecycle.addObserver(viewModel)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -95,14 +104,18 @@ class WebViewDiscoveryFragment : Fragment() {
                 val windowSize = rememberWindowSize()
                 val uiState by viewModel.uiState.collectAsState()
                 val cookiesReady by viewModel.cookiesReady.collectAsState()
+                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
                 var hasInternetConnection by remember {
                     mutableStateOf(viewModel.hasInternetConnection)
                 }
+
                 WebViewDiscoveryScreen(
                     windowSize = windowSize,
                     uiState = uiState,
                     cookiesReady = cookiesReady,
                     isPreLogin = viewModel.isPreLogin,
+                    isSubscriptionBannerVisible = isSubscriptionBannerVisible,
+                    subscriptionBannerUrl = viewModel.subscriptionBannerUrl,
                     contentUrl = viewModel.discoveryUrl,
                     uriScheme = viewModel.uriScheme,
                     userAgent = viewModel.appUserAgent,
@@ -179,6 +192,12 @@ class WebViewDiscoveryFragment : Fragment() {
                     },
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStackImmediate()
+                    },
+                    onDismissSubscriptionBanner = {
+                        viewModel.dismissSubscriptionBanner()
+                    },
+                    onSubscriptionBannerCtaClick = { url ->
+                        viewModel.onSubscriptionBannerCtaClicked(url)
                     }
                 )
             }
@@ -205,6 +224,8 @@ private fun WebViewDiscoveryScreen(
     uiState: WebViewUIState,
     cookiesReady: Boolean,
     isPreLogin: Boolean,
+    isSubscriptionBannerVisible: Boolean,
+    subscriptionBannerUrl: String = "",
     contentUrl: String,
     uriScheme: String,
     userAgent: String,
@@ -216,6 +237,8 @@ private fun WebViewDiscoveryScreen(
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
     onRefreshSessionCookie: () -> Unit = {},
+    onDismissSubscriptionBanner: () -> Unit = {},
+    onSubscriptionBannerCtaClick: (String) -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
@@ -273,6 +296,33 @@ private fun WebViewDiscoveryScreen(
                 onBackClick = onBackClick,
             )
 
+            if (isSubscriptionBannerVisible) {
+                val searchTabWidth by remember(key1 = windowSize) {
+                    mutableStateOf(
+                        windowSize.windowSizeValue(
+                            expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
+                            compact = Modifier.fillMaxWidth()
+                        )
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .padding(start = 24.dp, end = 24.dp)
+                        .then(searchTabWidth)
+                ) {
+                    SubscriptionBanner(
+                        visible = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        url = subscriptionBannerUrl,
+                        onDismiss = onDismissSubscriptionBanner,
+                        onCtaClick = onSubscriptionBannerCtaClick,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Surface {
                 Box(
                     modifier = modifierScreenWidth
@@ -280,9 +330,11 @@ private fun WebViewDiscoveryScreen(
                         .background(Color.White),
                     contentAlignment = Alignment.TopCenter
                 ) {
+
                     if ((uiState is WebViewUIState.Error).not()) {
                         if (hasInternetConnection) {
                             if (cookiesReady) {
+
                                 DiscoveryWebView(
                                     contentUrl = contentUrl,
                                     uriScheme = uriScheme,
@@ -426,6 +478,7 @@ private fun WebViewDiscoveryScreenPreview() {
             uiState = WebViewUIState.Error(ErrorType.CONNECTION_ERROR),
             cookiesReady = true,
             isPreLogin = false,
+            isSubscriptionBannerVisible = true,
             contentUrl = "https://www.example.com/",
             uriScheme = "",
             userAgent = "",

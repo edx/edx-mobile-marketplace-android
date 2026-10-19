@@ -48,7 +48,7 @@ class CourseInfoViewModel(
     private val notifier: DiscoveryNotifier,
     private val resourceManager: ResourceManager,
     private val analytics: DiscoveryAnalytics,
-    corePreferences: CorePreferences,
+    private val corePreferences: CorePreferences,
     private val appCookieManager: AppCookieManager,
 ) : BaseViewModel() {
     private val logger = Logger(TAG)
@@ -102,6 +102,9 @@ class CourseInfoViewModel(
     fun enrollInACourse(courseId: String) {
         viewModelScope.launch {
             _showAlert.emit(false)
+
+            val iapConfig = (corePreferences.appConfig?.iapConfig)
+
             try {
                 val isCourseEnrolled = withContext(Dispatchers.IO) {
                     interactor.getCourseDetails(courseId)
@@ -120,18 +123,28 @@ class CourseInfoViewModel(
                     return@launch
                 }
 
-                interactor.enrollInACourse(courseId)
-                courseEnrollSuccessEvent(courseId)
-                notifier.send(CourseDashboardUpdate())
-                _uiMessage.emit(
-                    UIMessage.ToastMessage(resourceManager.getString(R.string.discovery_enrolled_successfully))
-                )
-                _uiState.update {
-                    it.copy(
-                        hadEnrollment = AtomicReference(false),
-                        enrollmentSuccess = AtomicReference(courseId)
+                if (iapConfig?.isEnabled != true) {
+                    interactor.enrollInACourse(courseId)
+                    courseEnrollSuccessEvent(courseId)
+                    notifier.send(CourseDashboardUpdate())
+                    _uiMessage.emit(
+                        UIMessage.ToastMessage(resourceManager.getString(R.string.discovery_enrolled_successfully))
                     )
+                    _uiState.update {
+                        it.copy(
+                            hadEnrollment = AtomicReference(false),
+                            enrollmentSuccess = AtomicReference(courseId)
+                        )
+                    }
+                } else if (iapConfig?.isEnabled == true) {
+                    _uiState.update {
+                        it.copy(
+                            hadEnrollment = AtomicReference(false),
+                            enrollmentSuccess = AtomicReference(courseId)
+                        )
+                    }
                 }
+
             } catch (e: Exception) {
                 logger.e(throwable = e, metadata = mapOf("courseId" to courseId))
                 if (e.isInternetError()) {

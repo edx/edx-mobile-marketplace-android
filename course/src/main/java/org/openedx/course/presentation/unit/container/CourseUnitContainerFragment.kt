@@ -14,10 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -25,7 +24,9 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.cast.framework.CastButtonFactory
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +45,7 @@ import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.InsetHolder
 import org.openedx.core.ui.WindowSize
+import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.course.R
@@ -90,12 +92,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     private val onPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             super.onPageSelected(position)
-            val blocks = viewModel.getUnitBlocks()
-            blocks.getOrNull(position)?.let { currentBlock ->
-                val encodedVideo = currentBlock.studentViewData?.encodedVideos
-                binding.mediaRouteButton.isVisible = currentBlock.type == BlockType.VIDEO
-                        && encodedVideo?.hasNonYoutubeVideo == true
-            }
+            updateCastButtonVisibility()
         }
     }
 
@@ -179,10 +176,25 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         binding.mediaRouteButton.setAlwaysVisible(true)
         CastButtonFactory.setUpMediaRouteButton(requireContext(), binding.mediaRouteButton)
 
+        binding.loadError.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        binding.loadError.setContent {
+            OpenEdXTheme {
+                val error by viewModel.loadError.collectAsState()
+                error?.let {
+                    FullScreenErrorView(
+                        errorType = it,
+                        onReloadClick = viewModel::retryLoading,
+                    )
+                }
+            }
+        }
+
         initViewPager()
         if (savedInstanceState == null && componentId.isEmpty()) {
             val currentBlockIndex = viewModel.getUnitBlocks().indexOfFirst {
-                viewModel.getCurrentBlock().id == it.id
+                viewModel.getCurrentBlock()?.id == it.id
             }
             if (currentBlockIndex != -1) {
                 binding.viewPager.currentItem = currentBlockIndex
@@ -268,9 +280,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
             updateNavigationBarsVisibility(isVisible = visible, isLandscape = isLandscape)
 
-            binding.mediaRouteButton.isVisible = visible &&
-                    viewModel.getCurrentBlock().type == BlockType.VIDEO &&
-                    viewModel.getCurrentBlock().studentViewData?.encodedVideos?.hasNonYoutubeVideo == true
+            updateCastButtonVisibility()
             if (!visible) {
                 binding.subSectionUnitsBg.visibility = View.GONE
                 binding.subSectionUnitsList.visibility = View.GONE
@@ -294,7 +304,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             } else {
                 val index by viewModel.indexInContainer.observeAsState(0)
                 val descendantsBlocks by viewModel.descendantsBlocks.collectAsState()
-                descendantsBlocks[index].displayName
+                descendantsBlocks.getOrNull(index)?.displayName ?: ""
             }
 
             CourseUnitToolbar(
@@ -362,6 +372,29 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             fragment.listener = dialogListener
         }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.isLoading.collect { loading ->
+                        binding.loadingIndicator.isVisible = loading
+                        // Build the pager only after the ViewModel has finished selecting the index.
+                        if (!loading && viewModel.loadError.value == null) {
+                            initViewPagerIfNeeded()
+                        }
+                        updateLoadVisibility()
+                    }
+                }
+                launch {
+                    viewModel.loadError.collect {
+                        updateLoadVisibility()
+                    }
+                }
+                viewModel.descendantsBlocks.collect {
+                    updateCastButtonVisibility()
+                }
+            }
+        }
+
         viewModel.refreshComponent.onEach { refresh ->
             if (refresh) {
                 val currentComponentIndex = binding.viewPager.currentItem
@@ -371,11 +404,33 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             }
         }
             .flowOn(Dispatchers.Main)
-            .launchIn(lifecycleScope)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    private fun updateLoadVisibility() {
+        val ready = !viewModel.isLoading.value && viewModel.loadError.value == null
+        binding.loadError.isVisible =
+            !viewModel.isLoading.value && viewModel.loadError.value != null
+        binding.viewPager.isVisible = ready
+        val controlsVisible = ready && pipViewModel.buttonVisibility.value != false
+        updateNavigationBarsVisibility(
+            isVisible = controlsVisible,
+            isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+        )
+        updateCastButtonVisibility()
+    }
+
+    private fun updateCastButtonVisibility() {
+        val block = viewModel.getUnitBlocks().getOrNull(binding.viewPager.currentItem)
+        binding.mediaRouteButton.isVisible =
+            !viewModel.isLoading.value && viewModel.loadError.value == null &&
+            pipViewModel.buttonVisibility.value != false &&
+            block?.type == BlockType.VIDEO &&
+            block.studentViewData?.encodedVideos?.hasNonYoutubeVideo == true
     }
 
     private fun dismissIAPDialog() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             delay(1000) // Delay to ensure the screen refresh is complete
             val iapDialogFragment = requireActivity()
                 .supportFragmentManager
@@ -400,19 +455,6 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         _binding = null
     }
 
-    private fun updateNavigationButtons(updatedData: (String, Boolean, Boolean) -> Unit) {
-        val hasPrevBlock: Boolean = !viewModel.isFirstIndexInContainer
-        val hasNextBlock: Boolean
-        val nextButtonText = if (viewModel.isLastIndexInContainer) {
-            hasNextBlock = false
-            getString(R.string.course_navigation_finish)
-        } else {
-            hasNextBlock = true
-            getString(R.string.course_navigation_next)
-        }
-        updatedData(nextButtonText, hasPrevBlock, hasNextBlock)
-    }
-
     private fun restrictDoubleClick(): Boolean {
         if (SystemClock.elapsedRealtime() - lastClickTime < 500) {
             return true
@@ -421,7 +463,19 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         return false
     }
 
+    private fun initViewPagerIfNeeded() {
+        val blocks = viewModel.getUnitBlocks()
+        if (adapter.blocks.isEmpty() && blocks.isNotEmpty()) {
+            initViewPager()
+            val index = viewModel.indexInContainer.value ?: 0
+            if (index in blocks.indices) {
+                binding.viewPager.setCurrentItem(index, false)
+            }
+        }
+    }
+
     private fun initViewPager() {
+        binding.viewPager.unregisterOnPageChangeCallback(onPageChangeCallback)
         if (!viewModel.isCourseUnitProgressEnabled) {
             binding.viewPager.orientation = ViewPager2.ORIENTATION_VERTICAL
         }
@@ -432,7 +486,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         binding.viewPager.registerOnPageChangeCallback(onPageChangeCallback)
     }
 
-    private fun handlePrevClick(buttonChanged: (String, Boolean, Boolean) -> Unit) {
+    private fun handlePrevClick() {
         if (!restrictDoubleClick()) {
             val block = viewModel.moveToPrevBlock()
             if (block != null) {
@@ -440,15 +494,12 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 if (!block.type.isContainer()) {
                     val prevIndex = binding.viewPager.currentItem - 1
                     binding.viewPager.setCurrentItem(prevIndex, true)
-                    updateNavigationButtons { next, hasPrev, hasNext ->
-                        buttonChanged(next, hasPrev, hasNext)
-                    }
                 }
             }
         }
     }
 
-    private fun handleNextClick(buttonChanged: (String, Boolean, Boolean) -> Unit) {
+    private fun handleNextClick() {
         if (!restrictDoubleClick()) {
             val block = viewModel.moveToNextBlock()
             if (block != null) {
@@ -456,9 +507,6 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 if (!block.type.isContainer()) {
                     val nextIndex = binding.viewPager.currentItem + 1
                     binding.viewPager.setCurrentItem(nextIndex, true)
-                    updateNavigationButtons { next, hasPrev, hasNext ->
-                        buttonChanged(next, hasPrev, hasNext)
-                    }
                 }
             } else {
                 val currentVerticalBlock = viewModel.getCurrentVerticalBlock()
@@ -499,20 +547,16 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     @Composable
     private fun NavigationBar() {
         OpenEdXTheme {
-            var nextButtonText by rememberSaveable {
-                mutableStateOf(viewModel.nextButtonText)
-            }
-            var hasNextBlock by rememberSaveable {
-                mutableStateOf(viewModel.hasNextBlock)
-            }
-            var hasPrevBlock by rememberSaveable {
-                mutableStateOf(viewModel.hasNextBlock)
-            }
+            val blocks by viewModel.descendantsBlocks.collectAsState()
+            val index by viewModel.indexInContainer.observeAsState(0)
 
-            updateNavigationButtons { next, hasPrev, hasNext ->
-                nextButtonText = next
-                hasPrevBlock = hasPrev
-                hasNextBlock = hasNext
+            val isLastIndex = index >= blocks.lastIndex
+            val hasPrevBlock = index > 0
+            val hasNextBlock = !isLastIndex
+            val nextButtonText = if (isLastIndex) {
+                stringResource(R.string.course_navigation_finish)
+            } else {
+                stringResource(R.string.course_navigation_next)
             }
 
             NavigationUnitsButtons(
@@ -520,20 +564,8 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 nextButtonText = nextButtonText,
                 hasNextBlock = hasNextBlock,
                 isVerticalNavigation = !viewModel.isCourseUnitProgressEnabled,
-                onPrevClick = {
-                    handlePrevClick { next, hasPrev, hasNext ->
-                        nextButtonText = next
-                        hasPrevBlock = hasPrev
-                        hasNextBlock = hasNext
-                    }
-                },
-                onNextClick = {
-                    handleNextClick { next, hasPrev, hasNext ->
-                        nextButtonText = next
-                        hasPrevBlock = hasPrev
-                        hasNextBlock = hasNext
-                    }
-                }
+                onPrevClick = { handlePrevClick() },
+                onNextClick = { handleNextClick() }
             )
         }
     }
@@ -584,6 +616,8 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 val rootConstraintSet = ConstraintSet()
                 rootConstraintSet.clone(configContext, R.layout.fragment_course_unit_container)
                 rootConstraintSet.applyTo(binding.root)
+                // applyTo resets navigation bars to VISIBLE, so re-apply the load state.
+                updateLoadVisibility()
             } catch (_: Exception) {
                 // Silently ignore: layout may be detached during transition
             }
@@ -632,7 +666,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         isVisible: Boolean,
         isLandscape: Boolean,
     ) {
-        if (!isVisible) {
+        if (!isVisible || viewModel.isLoading.value || viewModel.loadError.value != null) {
             binding.cvNavigationBar.visibility = View.GONE
             binding.topCvNavigationBar?.visibility = View.GONE
             return

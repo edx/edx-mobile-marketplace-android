@@ -21,12 +21,16 @@ class AnalyticsManager(
     config: Config,
     firebaseAnalytics: FirebaseAnalytics,
     segmentAnalytics: SegmentAnalytics,
-    datadogAnalytics: DatadogAnalytics,
+    private val datadogAnalytics: DatadogAnalytics,
 ) : AppAnalytics, AppReviewAnalytics, AuthAnalytics, CoreAnalytics, CourseAnalytics,
     DashboardAnalytics, DiscoveryAnalytics, DiscussionAnalytics, ProfileAnalytics,
     WhatsNewAnalytics, IAPAnalytics, NotificationsAnalytics {
 
     private val services: ArrayList<Analytics> = arrayListOf()
+
+    override fun logError(message: String, throwable: Throwable, attributes: Map<String, Any?>) {
+        datadogAnalytics.logError(message, throwable, attributes)
+    }
 
     init {
         // Initialise all the analytics libraries here

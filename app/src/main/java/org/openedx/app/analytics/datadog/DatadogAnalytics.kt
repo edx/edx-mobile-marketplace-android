@@ -7,6 +7,7 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumActionType
+import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.webview.WebViewTracking
 import com.datadog.android.core.configuration.Configuration
@@ -115,6 +116,11 @@ class DatadogAnalytics(
 
     override fun logEvent(eventName: String, params: Map<String, Any?>) {
         logDatadogEvent(eventName, params)
+    }
+
+    fun logError(message: String, throwable: Throwable, attributes: Map<String, Any?>) {
+        if (!config.getDatadogConfig().enabled || !corePreferences.isDatadogEnabled) return
+        GlobalRumMonitor.get().addError(message, RumErrorSource.SOURCE, throwable, attributes)
     }
 
     override fun logScreenEvent(screenName: String, params: Map<String, Any?>) {

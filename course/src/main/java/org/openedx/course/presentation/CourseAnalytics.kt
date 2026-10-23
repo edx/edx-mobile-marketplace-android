@@ -1,6 +1,8 @@
 package org.openedx.course.presentation
 
 interface CourseAnalytics {
+    fun logError(message: String, throwable: Throwable, attributes: Map<String, Any?>)
+
     fun sequentialClickedEvent(
         courseId: String,
         courseName: String,

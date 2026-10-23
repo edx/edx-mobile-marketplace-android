@@ -18,15 +18,20 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,10 +48,12 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -59,19 +66,17 @@ import androidx.lifecycle.LifecycleOwner
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import org.openedx.core.presentation.dialog.alert.ActionDialogFragment
-import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIAction
 import org.openedx.core.presentation.global.webview.WebViewUIState
 import org.openedx.core.ui.AuthButtonsPanel
 import org.openedx.core.ui.FullScreenErrorView
-import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
-import org.openedx.core.ui.WindowType
 import org.openedx.core.ui.displayCutoutForLandscape
 import org.openedx.core.ui.rememberWindowSize
 import org.openedx.core.ui.statusBarsInset
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
+import org.openedx.core.ui.theme.appTypography
 import org.openedx.core.ui.windowSizeValue
 import org.openedx.discovery.R
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
@@ -110,6 +115,10 @@ class WebViewDiscoveryFragment : Fragment() {
                     onRefreshSessionCookie = {
                         viewModel.refreshSessionCookie()
                     },
+                    onXpertChatClick = {
+                        viewModel.triggerXpertChat()
+                    },
+                    discoveryViewModel = viewModel,
                     onWebViewUIAction = { action ->
                         when (action) {
                             WebViewUIAction.WEB_PAGE_LOADED -> {
@@ -184,7 +193,10 @@ class WebViewDiscoveryFragment : Fragment() {
             }
         }
     }
-
+    override fun onResume() {
+        super.onResume()
+        viewModel.updateThemeMode()
+    }
     companion object {
 
         private const val ARG_SEARCH_QUERY = "query_search"
@@ -215,10 +227,13 @@ private fun WebViewDiscoveryScreen(
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
+    onXpertChatClick: () -> Unit,
+    discoveryViewModel: WebViewDiscoveryViewModel,
     onRefreshSessionCookie: () -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
     val configuration = LocalConfiguration.current
+    val isDarkTheme by discoveryViewModel.isDarkTheme.collectAsState()
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -267,10 +282,13 @@ private fun WebViewDiscoveryScreen(
                 .displayCutoutForLandscape(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Toolbar(
+            // Header with Toolbar and Xpert Chat Icon
+            DiscoveryHeader(
                 label = stringResource(id = R.string.discovery_explore_the_catalog),
-                canShowBackBtn = isPreLogin,
+                isPreLogin = isPreLogin,
                 onBackClick = onBackClick,
+                onXpertChatClick = onXpertChatClick,
+                isDarkTheme = isDarkTheme
             )
 
             Surface {
@@ -299,6 +317,8 @@ private fun WebViewDiscoveryScreen(
                                         onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
                                     },
                                     onRefreshSessionCookie = onRefreshSessionCookie,
+                                    onXpertChatClick = onXpertChatClick,
+                                    discoveryViewModel = discoveryViewModel,
                                 )
                             }
                         } else {
@@ -327,6 +347,73 @@ private fun WebViewDiscoveryScreen(
 }
 
 @Composable
+private fun DiscoveryHeader(
+    label: String,
+    isPreLogin: Boolean,
+    onBackClick: () -> Unit,
+    onXpertChatClick: () -> Unit,
+    isDarkTheme: Boolean,
+) {
+    val xpertIconButtonSize = dimensionResource(id = R.dimen.xpert_icon_button_size)
+    val xpertIconSize = dimensionResource(id = R.dimen.xpert_icon_size)
+    val headerTitleSize = dimensionResource(id = R.dimen.header_title_size)
+
+    // Use actual Compose theme to determine if dark mode is active
+    val isComposeDarkMode = MaterialTheme.colors.isLight.not()
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(headerTitleSize),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isPreLogin) {
+            IconButton(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .size(headerTitleSize),
+                onClick = onBackClick
+            ) {
+                Icon(
+                    painter = painterResource(id = CoreR.drawable.core_ic_back),
+                    contentDescription = "Back",
+                    tint = MaterialTheme.appColors.textPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        Text(
+            text = label,
+            color = MaterialTheme.appColors.textDark,
+            style = MaterialTheme.appTypography.titleMedium,
+            maxLines = 2,
+            textAlign = TextAlign.Center,
+        )
+
+        IconButton(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .size(xpertIconButtonSize),
+            onClick = onXpertChatClick
+        ) {
+            Icon(
+                painter = painterResource(
+                    id = if (isComposeDarkMode) {
+                        R.drawable.xpert_logo
+                    } else {
+                        R.drawable.xpert_logo_light
+                    }
+                ),
+                tint = Color.Unspecified,
+                contentDescription = "Xpert Chat",
+                modifier = Modifier.size(xpertIconSize)
+            )
+        }
+    }
+}
+
+@Composable
 @SuppressLint("SetJavaScriptEnabled")
 private fun DiscoveryWebView(
     contentUrl: String,
@@ -338,6 +425,8 @@ private fun DiscoveryWebView(
     onUriClick: (String, WebViewLink.Authority) -> Unit,
     onWebPageLoadError: () -> Unit,
     onRefreshSessionCookie: () -> Unit,
+    onXpertChatClick: () -> Unit,
+    discoveryViewModel: WebViewDiscoveryViewModel,
 ) {
     val webView = CatalogWebViewScreen(
         url = contentUrl,
@@ -348,15 +437,18 @@ private fun DiscoveryWebView(
         onUriClick = onUriClick,
         onWebPageLoadError = onWebPageLoadError,
         refreshSessionCookie = onRefreshSessionCookie,
+        onXpertChatReady = { view ->
+            discoveryViewModel.setXpertWebView(view)
+        }
     )
 
     val consumeWindowInsets = if (isPreLogin) {
         WindowInsets.navigationBars
-            .add(WindowInsets(bottom = 112.dp)) // AuthButtonsPanel height
+            .add(WindowInsets(bottom = 112.dp))
             .asPaddingValues()
     } else {
         WindowInsets.navigationBars
-            .add(WindowInsets(bottom = 56.dp)) // BottomNavigationView height
+            .add(WindowInsets(bottom = 56.dp))
             .asPaddingValues()
     }
 
@@ -369,6 +461,13 @@ private fun DiscoveryWebView(
             webView
         }
     )
+
+    // Clear WebView reference when composition is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            discoveryViewModel.clearXpertWebView()
+        }
+    }
 
     HandleWebViewBackNavigation(webView = webView)
 }
@@ -414,28 +513,5 @@ private fun HandleWebViewBackNavigation(
             onBackPressedCallback.remove()
         }
     }
-}
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun WebViewDiscoveryScreenPreview() {
-    OpenEdXTheme {
-        WebViewDiscoveryScreen(
-            windowSize = WindowSize(WindowType.Compact, WindowType.Compact),
-            uiState = WebViewUIState.Error(ErrorType.CONNECTION_ERROR),
-            cookiesReady = true,
-            isPreLogin = false,
-            contentUrl = "https://www.example.com/",
-            uriScheme = "",
-            userAgent = "",
-            hasInternetConnection = false,
-            onWebViewUIAction = {},
-            onWebPageUpdated = {},
-            onUriClick = { _, _ -> },
-            onRegisterClick = {},
-            onSignInClick = {},
-            onBackClick = {},
-        )
-    }
 }

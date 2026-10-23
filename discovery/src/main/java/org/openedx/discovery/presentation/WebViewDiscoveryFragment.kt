@@ -3,6 +3,7 @@ package org.openedx.discovery.presentation
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -152,18 +153,26 @@ class WebViewDiscoveryFragment : Fragment() {
                             WebViewLink.Authority.EXTERNAL -> {
                                 context?.let { ctx ->
                                     activity?.let { act ->
-                                        ActionDialogFragment.newInstance(
-                                            title = ctx.getString(CoreR.string.core_leaving_the_app),
-                                            message = ctx.getString(
-                                                CoreR.string.core_leaving_the_app_message,
-                                                ctx.getString(CoreR.string.platform_name)
-                                            ),
-                                            url = param,
-                                            source = DiscoveryAnalyticsScreen.DISCOVERY.screenName
-                                        ).show(
-                                            act.supportFragmentManager,
-                                            ActionDialogFragment::class.simpleName
-                                        )
+                                        view?.post {
+                                            if (isAdded && !isDetached) {
+                                                try {
+                                                    ActionDialogFragment.newInstance(
+                                                        title = ctx.getString(CoreR.string.core_leaving_the_app),
+                                                        message = ctx.getString(
+                                                            CoreR.string.core_leaving_the_app_message,
+                                                            ctx.getString(CoreR.string.platform_name)
+                                                        ),
+                                                        url = param,
+                                                        source = DiscoveryAnalyticsScreen.DISCOVERY.screenName
+                                                    ).show(
+                                                        act.supportFragmentManager,
+                                                        ActionDialogFragment::class.simpleName
+                                                    )
+                                                } catch (e: IllegalStateException) {
+                                                    Log.e("WebViewDiscovery", "Failed to show dialog", e)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }

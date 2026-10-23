@@ -197,7 +197,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireActivity().isInPictureInPictureMode
+                    isAdded && requireActivity().isInPictureInPictureMode
                 ) {
                     when (playbackState) {
                         Player.STATE_READY -> {
@@ -217,7 +217,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
 
             override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isAdded) {
                     val aspect =
                         if (videoSize.height > 0) Rational(videoSize.width, videoSize.height)
                         else Rational(16, 9)
@@ -234,7 +234,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 pipViewModel.updatePlaybackState(isPlaying)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireActivity().isInPictureInPictureMode
+                    isAdded && requireActivity().isInPictureInPictureMode
                 ) {
                     updatePipActions()
                 }
@@ -242,7 +242,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
 
             override fun onPlayerError(error: PlaybackException) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireActivity().isInPictureInPictureMode
+                    isAdded && requireActivity().isInPictureInPictureMode
                 ) {
                     retryPlayback()
                 }
@@ -444,6 +444,15 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             return
         }
 
+        if (!pipViewModel.isPipSupported(requireContext())) {
+            Toast.makeText(
+                requireContext(),
+                "This device doesn't support Picture-in-Picture mode",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
         if (!pipViewModel.isPipPermissionGranted(requireContext())) {
             showPipDisabledMessage()
             return
@@ -467,8 +476,17 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             pictureInPictureParamsBuilder?.setSeamlessResizeEnabled(true)
         }
         updatePipActions()
-        pictureInPictureParamsBuilder?.build()?.let {
-            requireActivity().enterPictureInPictureMode(it)
+        try {
+            pictureInPictureParamsBuilder?.build()?.let {
+                requireActivity().enterPictureInPictureMode(it)
+            }
+        } catch (e: IllegalStateException) {
+            android.util.Log.e("PipMode", "Device doesn't support PIP", e)
+            Toast.makeText(
+                requireContext(),
+                "This device doesn't support Picture-in-Picture mode",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

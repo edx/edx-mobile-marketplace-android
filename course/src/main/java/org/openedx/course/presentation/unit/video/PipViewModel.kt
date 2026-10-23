@@ -87,14 +87,6 @@ class PipViewModel(
         }
     }
 
-    // --- PiP Actions ---
-
-    fun handleAction(action: PipAction) {
-        viewModelScope.launch {
-            pipInteractor.handleAction(action)
-        }
-    }
-
     fun retryPlayback() {
         viewModelScope.launch {
             pipInteractor.retryPlayback()
@@ -111,12 +103,10 @@ class PipViewModel(
         )
         return mode == AppOpsManager.MODE_ALLOWED
     }
+
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getPipActions(context: Context, isPlaying: Boolean) {
-        viewModelScope.launch {
-            val actions = pipInteractor.buildPipActions(context, isPlaying)
-            // Emit or store actions as needed
-        }
+    fun isPipSupported(context: Context): Boolean {
+        return context.packageManager.hasSystemFeature("android.software.picture_in_picture")
     }
 }
 

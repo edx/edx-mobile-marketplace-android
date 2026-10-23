@@ -189,7 +189,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             }
         }
         if (componentId.isEmpty().not()) {
-            lifecycleScope.launch(Dispatchers.Main) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                 viewModel.indexInContainer.value?.let { index ->
                     binding.viewPager.setCurrentItem(index, true)
                 }

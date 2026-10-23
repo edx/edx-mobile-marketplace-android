@@ -6,15 +6,20 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -32,6 +37,7 @@ import org.openedx.core.domain.model.CoursewareAccess
 import org.openedx.core.domain.model.EnrollmentDetails
 import org.openedx.core.domain.model.IAPConfig
 import org.openedx.core.presentation.course.CourseViewMode
+import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseNotifier
 import org.openedx.core.system.notifier.IAPNotifier
@@ -189,6 +195,7 @@ class CourseUnitContainerViewModelTest {
 
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
+        every { analytics.logError(any(), any(), any()) } returns Unit
     }
 
     @After
@@ -337,7 +344,7 @@ class CourseUnitContainerViewModelTest {
 
         coVerify(exactly = 0) { interactor.getCourseStructure("") }
         coVerify(exactly = 1) { interactor.getCourseStructureForVideos("") }
-        assert(viewModel.getCurrentBlock().id == "id")
+        assertEquals("id", viewModel.getCurrentBlock()?.id)
     }
 
     @Test
@@ -487,5 +494,156 @@ class CourseUnitContainerViewModelTest {
 
         coVerify(exactly = 0) { interactor.getCourseStructure(any()) }
         coVerify(exactly = 1) { interactor.getCourseStructureForVideos(any()) }
+    }
+
+    @Test
+    fun `current block is null while the course structure is loading`() = runTest {
+        val viewModel = createViewModel()
+        val response = CompletableDeferred<CourseStructure>()
+        coEvery { interactor.getCourseStructure(any(), any()) } coAnswers { response.await() }
+
+        assertNull(viewModel.getCurrentBlock())
+        viewModel.loadBlocks(CourseViewMode.FULL, "id1")
+        runCurrent()
+        assertNull(viewModel.getCurrentBlock())
+        assertEquals(true, viewModel.isLoading.value)
+
+        response.complete(courseStructure)
+        advanceUntilIdle()
+
+        assertEquals("id1", viewModel.getCurrentBlock()?.id)
+        assertEquals(listOf("id2", "id1"), viewModel.getUnitBlocks().map { it.id })
+        assertEquals(1, viewModel.indexInContainer.value)
+        assertEquals(false, viewModel.isLoading.value)
+        assertNull(viewModel.loadError.value)
+    }
+
+    @Test
+    fun `current block remains null after a failed load`() = runTest {
+        val viewModel = createViewModel()
+        val error = UnknownHostException()
+        coEvery { interactor.getCourseStructure(any(), any()) } throws error
+
+        viewModel.loadBlocks(CourseViewMode.FULL)
+        advanceUntilIdle()
+
+        assertNull(viewModel.getCurrentBlock())
+        assertEquals(false, viewModel.isLoading.value)
+        assertEquals(ErrorType.CONNECTION_ERROR, viewModel.loadError.value)
+        verify(exactly = 1) {
+            analytics.logError(
+                "Course unit loading failed",
+                error,
+                match { it["unit_id"] == "id" && it["mode"] == "FULL" },
+            )
+        }
+    }
+
+    @Test
+    fun `current block remains null when the course has no blocks`() = runTest {
+        val viewModel = createViewModel()
+        coEvery { interactor.getCourseStructure(any(), any()) } returns courseStructure.copy(
+            blockData = emptyList(),
+        )
+
+        viewModel.loadBlocks(CourseViewMode.FULL)
+        advanceUntilIdle()
+
+        assertNull(viewModel.getCurrentBlock())
+        assertEquals(ErrorType.UNKNOWN_ERROR, viewModel.loadError.value)
+    }
+
+    @Test
+    fun `retry clears the error and loads the originally requested component`() = runTest {
+        val viewModel = createViewModel()
+        coEvery { interactor.getCourseStructure(any(), any()) } throws UnknownHostException()
+        viewModel.loadBlocks(CourseViewMode.FULL, "id1")
+        advanceUntilIdle()
+        assertEquals(ErrorType.CONNECTION_ERROR, viewModel.loadError.value)
+
+        coEvery { interactor.getCourseStructure(any(), any()) } returns courseStructure
+        viewModel.retryLoading()
+        assertEquals(true, viewModel.isLoading.value)
+        assertNull(viewModel.loadError.value)
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.isLoading.value)
+        assertNull(viewModel.loadError.value)
+        assertEquals("id1", viewModel.getCurrentBlock()?.id)
+        coVerify { interactor.getCourseStructure("", true) }
+    }
+
+    @Test
+    fun `current block follows the index within the unit rather than the course`() = runTest {
+        val viewModel = createViewModel()
+        coEvery { interactor.getCourseStructure(any(), any()) } returns courseStructure
+
+        viewModel.loadBlocks(CourseViewMode.FULL)
+        advanceUntilIdle()
+
+        assertEquals("id2", viewModel.getCurrentBlock()?.id)
+        assertEquals("id1", viewModel.moveToNextBlock()?.id)
+        assertEquals("id1", viewModel.getCurrentBlock()?.id)
+    }
+
+    @Test
+    fun `superseded failed load does not overwrite the newer successful load`() = runTest {
+        val viewModel = createViewModel()
+        val staleResponse = CompletableDeferred<CourseStructure>()
+        val latestResponse = CompletableDeferred<CourseStructure>()
+        coEvery { interactor.getCourseStructure("", false) } coAnswers { staleResponse.await() }
+        coEvery { interactor.getCourseStructure("", true) } coAnswers { latestResponse.await() }
+
+        viewModel.loadBlocks(CourseViewMode.FULL, "id1")
+        runCurrent()
+        viewModel.retryLoading()
+        runCurrent()
+
+        latestResponse.complete(courseStructure)
+        runCurrent()
+        assertEquals(false, viewModel.isLoading.value)
+        assertEquals("id1", viewModel.getCurrentBlock()?.id)
+
+        staleResponse.completeExceptionally(UnknownHostException())
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.isLoading.value)
+        assertNull(viewModel.loadError.value)
+        assertEquals("id1", viewModel.getCurrentBlock()?.id)
+    }
+
+    @Test
+    fun `superseded successful load does not clear loading while the newer load is pending`() =
+        runTest {
+            val viewModel = createViewModel()
+            val staleResponse = CompletableDeferred<CourseStructure>()
+            val latestResponse = CompletableDeferred<CourseStructure>()
+            coEvery { interactor.getCourseStructure("", false) } coAnswers { staleResponse.await() }
+            coEvery { interactor.getCourseStructure("", true) } coAnswers { latestResponse.await() }
+
+            viewModel.loadBlocks(CourseViewMode.FULL, "id1")
+            runCurrent()
+            viewModel.retryLoading()
+            runCurrent()
+
+            staleResponse.complete(courseStructure)
+            advanceUntilIdle()
+            assertEquals(true, viewModel.isLoading.value)
+            assertNull(viewModel.getCurrentBlock())
+
+            latestResponse.complete(courseStructure)
+            advanceUntilIdle()
+            assertEquals(false, viewModel.isLoading.value)
+            assertEquals("id1", viewModel.getCurrentBlock()?.id)
+        }
+
+    private fun createViewModel(): CourseUnitContainerViewModel {
+        every { notifier.notifier } returns MutableSharedFlow()
+        every { iapNotifier.notifier } returns MutableSharedFlow()
+        every { corePreferences.appConfig.iapConfig } returns iapConfig
+        return CourseUnitContainerViewModel(
+            "", "id", config, interactor, notifier, analytics,
+            corePreferences, networkConnection, iapNotifier,
+        )
     }
 }

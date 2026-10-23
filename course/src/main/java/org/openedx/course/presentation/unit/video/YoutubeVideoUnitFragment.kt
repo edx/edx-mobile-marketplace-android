@@ -304,6 +304,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             override fun onReady(youTubePlayer: YouTubePlayer) {
                 super.onReady(youTubePlayer)
 
+                if (_binding == null) return
+
                 _youTubePlayer = youTubePlayer
 
                 ytController = YouTubePlayerController(youTubePlayer)

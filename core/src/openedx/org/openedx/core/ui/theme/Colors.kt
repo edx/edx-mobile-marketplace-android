@@ -167,3 +167,10 @@ val dark_highlight_discussion_response = dark_card_view_background
 
 val dark_certificate_preview_headline = Color(0xFF3C68FF)
 val dark_certificate_preview_message = Color.Black
+
+val light_subscription_banner_background = light_primary_card_info_background
+
+val dark_subscription_banner_background = dark_primary_card_info_background
+
+val dark_banner_stroke = dark_text_field_border
+

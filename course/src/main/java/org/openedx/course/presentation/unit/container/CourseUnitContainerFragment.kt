@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -25,7 +26,9 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.cast.framework.CastButtonFactory
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +47,7 @@ import org.openedx.core.presentation.course.CourseViewMode
 import org.openedx.core.presentation.dialog.IAPDialogFragment
 import org.openedx.core.presentation.global.InsetHolder
 import org.openedx.core.ui.WindowSize
+import org.openedx.core.ui.FullScreenErrorView
 import org.openedx.core.ui.theme.OpenEdXTheme
 import org.openedx.core.ui.theme.appColors
 import org.openedx.course.R
@@ -90,12 +94,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     private val onPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             super.onPageSelected(position)
-            val blocks = viewModel.getUnitBlocks()
-            blocks.getOrNull(position)?.let { currentBlock ->
-                val encodedVideo = currentBlock.studentViewData?.encodedVideos
-                binding.mediaRouteButton.isVisible = currentBlock.type == BlockType.VIDEO
-                        && encodedVideo?.hasNonYoutubeVideo == true
-            }
+            updateCastButtonVisibility()
         }
     }
 
@@ -179,10 +178,25 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         binding.mediaRouteButton.setAlwaysVisible(true)
         CastButtonFactory.setUpMediaRouteButton(requireContext(), binding.mediaRouteButton)
 
+        binding.loadError.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        binding.loadError.setContent {
+            OpenEdXTheme {
+                val error by viewModel.loadError.collectAsState()
+                error?.let {
+                    FullScreenErrorView(
+                        errorType = it,
+                        onReloadClick = viewModel::retryLoading,
+                    )
+                }
+            }
+        }
+
         initViewPager()
         if (savedInstanceState == null && componentId.isEmpty()) {
             val currentBlockIndex = viewModel.getUnitBlocks().indexOfFirst {
-                viewModel.getCurrentBlock().id == it.id
+                viewModel.getCurrentBlock()?.id == it.id
             }
             if (currentBlockIndex != -1) {
                 binding.viewPager.currentItem = currentBlockIndex
@@ -268,9 +282,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
                 resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
             updateNavigationBarsVisibility(isVisible = visible, isLandscape = isLandscape)
 
-            binding.mediaRouteButton.isVisible = visible &&
-                    viewModel.getCurrentBlock().type == BlockType.VIDEO &&
-                    viewModel.getCurrentBlock().studentViewData?.encodedVideos?.hasNonYoutubeVideo == true
+            updateCastButtonVisibility()
             if (!visible) {
                 binding.subSectionUnitsBg.visibility = View.GONE
                 binding.subSectionUnitsList.visibility = View.GONE
@@ -294,7 +306,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             } else {
                 val index by viewModel.indexInContainer.observeAsState(0)
                 val descendantsBlocks by viewModel.descendantsBlocks.collectAsState()
-                descendantsBlocks[index].displayName
+                descendantsBlocks.getOrNull(index)?.displayName ?: ""
             }
 
             CourseUnitToolbar(
@@ -362,6 +374,32 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             fragment.listener = dialogListener
         }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.isLoading.collect { loading ->
+                        binding.loadingIndicator.isVisible = loading
+                        updateLoadVisibility()
+                    }
+                }
+                launch {
+                    viewModel.loadError.collect {
+                        updateLoadVisibility()
+                    }
+                }
+                viewModel.descendantsBlocks.collect { blocks ->
+                    if (adapter.blocks.isEmpty() && blocks.isNotEmpty()) {
+                        initViewPager()
+                        val index = viewModel.indexInContainer.value ?: 0
+                        if (index in blocks.indices) {
+                            binding.viewPager.setCurrentItem(index, false)
+                        }
+                    }
+                    updateCastButtonVisibility()
+                }
+            }
+        }
+
         viewModel.refreshComponent.onEach { refresh ->
             if (refresh) {
                 val currentComponentIndex = binding.viewPager.currentItem
@@ -371,11 +409,33 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
             }
         }
             .flowOn(Dispatchers.Main)
-            .launchIn(lifecycleScope)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    private fun updateLoadVisibility() {
+        val ready = !viewModel.isLoading.value && viewModel.loadError.value == null
+        binding.loadError.isVisible =
+            !viewModel.isLoading.value && viewModel.loadError.value != null
+        binding.viewPager.isVisible = ready
+        val controlsVisible = ready && pipViewModel.buttonVisibility.value != false
+        updateNavigationBarsVisibility(
+            isVisible = controlsVisible,
+            isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+        )
+        updateCastButtonVisibility()
+    }
+
+    private fun updateCastButtonVisibility() {
+        val block = viewModel.getUnitBlocks().getOrNull(binding.viewPager.currentItem)
+        binding.mediaRouteButton.isVisible =
+            !viewModel.isLoading.value && viewModel.loadError.value == null &&
+            pipViewModel.buttonVisibility.value != false &&
+            block?.type == BlockType.VIDEO &&
+            block.studentViewData?.encodedVideos?.hasNonYoutubeVideo == true
     }
 
     private fun dismissIAPDialog() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             delay(1000) // Delay to ensure the screen refresh is complete
             val iapDialogFragment = requireActivity()
                 .supportFragmentManager
@@ -422,6 +482,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
     }
 
     private fun initViewPager() {
+        binding.viewPager.unregisterOnPageChangeCallback(onPageChangeCallback)
         if (!viewModel.isCourseUnitProgressEnabled) {
             binding.viewPager.orientation = ViewPager2.ORIENTATION_VERTICAL
         }
@@ -632,7 +693,7 @@ class CourseUnitContainerFragment : Fragment(R.layout.fragment_course_unit_conta
         isVisible: Boolean,
         isLandscape: Boolean,
     ) {
-        if (!isVisible) {
+        if (!isVisible || viewModel.isLoading.value || viewModel.loadError.value != null) {
             binding.cvNavigationBar.visibility = View.GONE
             binding.topCvNavigationBar?.visibility = View.GONE
             return

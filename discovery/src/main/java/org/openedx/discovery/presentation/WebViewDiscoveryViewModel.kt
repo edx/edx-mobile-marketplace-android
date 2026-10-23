@@ -69,13 +69,13 @@ class WebViewDiscoveryViewModel(
         get() = networkConnection.isOnline()
 
     init {
-        refreshSubscriptionBannerVisibility()
         checkAndRefreshCookies()
     }
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
         refreshSubscriptionBannerVisibility()
+        subscriptionAlertBanner.recordScreenVisit(SubscriptionAlertBanner.Screen.DISCOVERY)
     }
 
     fun refreshSubscriptionBannerVisibility() {

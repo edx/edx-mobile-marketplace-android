@@ -481,7 +481,8 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
                 requireActivity().enterPictureInPictureMode(it)
             }
         } catch (e: IllegalStateException) {
-            android.util.Log.e("PipMode", "Device doesn't support PIP", e)
+            isPipModeRequested = false
+            restoreSavedConstraintState()
             Toast.makeText(
                 requireContext(),
                 "This device doesn't support Picture-in-Picture mode",

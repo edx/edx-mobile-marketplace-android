@@ -39,8 +39,8 @@ android {
         applicationId = appId
         minSdk = 24
         targetSdk = 36
-        versionCode =  6003001
-        versionName =  "6.3.1"
+        versionCode =  6004002
+        versionName =  "6.4.2"
 
         resourceConfigurations += ["en", "uk"]
 
@@ -158,6 +158,8 @@ dependencies {
     implementation project(path: ':whatsnew')
     implementation project(path: ':notifications')
     implementation project(path: ':featuremanagement')
+    implementation "androidx.media3:media3-session:$media3_version"
+    implementation "androidx.media3:media3-exoplayer:$media3_version"
 
     ksp "androidx.room:room-compiler:$room_version"
 

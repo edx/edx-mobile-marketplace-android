@@ -1,13 +1,9 @@
 package org.openedx.discovery.presentation
 
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
@@ -17,7 +13,6 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
-import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -45,9 +40,6 @@ class NativeDiscoveryViewModel(
     private val _uiState = MutableLiveData<DiscoveryUIState>(DiscoveryUIState.Loading)
     val uiState: LiveData<DiscoveryUIState>
         get() = _uiState
-
-    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
-    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
 
     private val _uiMessage = SingleEventLiveData<UIMessage>()
     val uiMessage: LiveData<UIMessage>

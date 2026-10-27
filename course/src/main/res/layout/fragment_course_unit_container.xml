@@ -12,16 +12,35 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.mediarouter.app.MediaRouteButton
-        android:id="@+id/mediaRouteButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+    <LinearLayout
+        android:id="@+id/rightControls"
+        android:layout_width="wrap_content"
+        android:layout_height="120dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:layout_marginEnd="12dp"
-        android:layout_marginBottom="12dp"
-        android:mediaRouteTypes="user"
-        app:layout_constraintBottom_toBottomOf="@+id/btnBack"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/btnBack"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack"
+        app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- MediaRouteButton -->
+        <androidx.mediarouter.app.MediaRouteButton
+            android:id="@+id/mediaRouteButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="15dp"
+            android:mediaRouteTypes="user" />
+
+        <!-- ComposeView -->
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/top_cv_navigationBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:elevation="4dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/subSectionUnitsTitle"
         android:layout_width="match_parent"
@@ -70,7 +89,6 @@
             android:id="@+id/viewPager"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -90,7 +108,6 @@
         android:layout_height="0dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="84dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

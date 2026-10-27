@@ -22,7 +22,15 @@
         android:mediaRouteTypes="user"
         app:layout_constraintBottom_toBottomOf="@+id/btnBack"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/cv_navigationBar" />
+        app:layout_constraintEnd_toStartOf="@+id/top_cv_navigationBar" />
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/top_cv_navigationBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/subSectionUnitsTitle"
@@ -42,11 +50,12 @@
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/cv_navigationBar"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"

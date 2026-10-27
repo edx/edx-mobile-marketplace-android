@@ -77,7 +77,9 @@ object LocaleUtils {
         .toList()
 
     fun getDisplayLanguage(languageCode: String): String {
-        return Locale.Builder().setLanguage(languageCode).build().getDisplayLanguage(defaultLocale)
+        return Locale.forLanguageTag(languageCode.replace('_', '-'))
+            .getDisplayLanguage(defaultLocale)
+            .ifEmpty { languageCode }
     }
 
 }

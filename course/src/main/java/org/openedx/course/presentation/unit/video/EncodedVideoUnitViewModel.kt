@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.media3.cast.CastPlayer
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -16,6 +17,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.Clock
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -54,7 +56,6 @@ import org.openedx.course.module.CastManager
 import org.openedx.course.presentation.CourseAnalytics
 import org.openedx.course.presentation.CourseAnalyticsEvent
 
-@SuppressLint("StaticFieldLeak")
 @androidx.annotation.OptIn(UnstableApi::class)
 class EncodedVideoUnitViewModel(
     courseId: String,
@@ -91,6 +92,8 @@ class EncodedVideoUnitViewModel(
     private var currentWindow = 0
     private var playbackPosition = 0L
     private var wasFullscreen = false
+
+    private var resumeAfterFocusGain = false
 
     init {
         transcriptObject.asFlow().distinctUntilChanged().mapNotNull {
@@ -178,6 +181,18 @@ class EncodedVideoUnitViewModel(
                 ?.language ?: ""
             _state.update { it.copy(selectedLanguage = selectedLanguage) }
         }
+
+        override fun onEvents(
+            player: Player,
+            events: Player.Events
+        ) {
+            if (events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED)) {
+
+                if (!player.playWhenReady && player.playbackState == Player.STATE_READY) {
+                    resumeAfterFocusGain = true
+                }
+            }
+        }
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -237,7 +252,6 @@ class EncodedVideoUnitViewModel(
         if (state.value.activePlayerType != PlayerType.CHROME_CAST) {
             exoPlayer?.removeListener(exoPlayerListener)
         }
-//        exoPlayer?.pause()
         stopUpdatingVideoTime()
     }
 
@@ -247,14 +261,13 @@ class EncodedVideoUnitViewModel(
             playbackPosition = player.currentPosition
             currentWindow = player.currentMediaItemIndex
             playWhenReady = player.playWhenReady
-            player.pause()
         }
     }
 
     private fun initPlayer() {
         val selector = applyTrackSelector(isSubtitlesDisabled = true)
         val renderersFactory = DefaultRenderersFactory(context)
-            .setEnableDecoderFallback(true) // Use software if hardware fails
+            .setEnableDecoderFallback(true)
         exoPlayer = ExoPlayer.Builder(
             context,
             renderersFactory,
@@ -264,39 +277,35 @@ class EncodedVideoUnitViewModel(
             DefaultBandwidthMeter.getSingletonInstance(context),
             DefaultAnalyticsCollector(Clock.DEFAULT),
         ).build().apply {
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                .build()
+
+            setAudioAttributes(audioAttributes, true)
             setPlaybackSpeed(preferencesManager.videoSettings.videoPlaybackSpeed.speedValue)
-
-            // Build and set the media source once
-            val mediaSource = buildMediaSource(videoUrl)
-            setMediaSource(mediaSource)
-
-            // Restore playback position and playWhenReady from saved state
+            setMediaSource(buildMediaSource(getMediaItem()))
             seekTo(playbackPosition)
             playWhenReady = false
-
         }
         _state.update { it.copy(activePlayerType = PlayerType.EXO_REGULAR) }
         logVideoLoadedEvent(videoUrl)
     }
 
-    fun onFragmentVisible() {
-        if (!isPlayerPrepared) {
-            exoPlayer?.prepare()
-            exoPlayer?.playWhenReady = true
-            isPlayerPrepared = true
+    private fun buildMediaSource(mediaItem: MediaItem): MediaSource {
+        val dataSourceFactory = DefaultDataSource.Factory(context)
+        return if (isHlsUrl(videoUrl)) {
+            HlsMediaSource.Factory(dataSourceFactory)
+                .setAllowChunklessPreparation(true)
+                .createMediaSource(mediaItem)
+        } else {
+            ProgressiveMediaSource.Factory(dataSourceFactory)
+                .createMediaSource(mediaItem)
         }
     }
 
-    fun onFragmentHidden() {
-        exoPlayer?.playWhenReady = false
-        exoPlayer?.pause()
-    }
-
-    private fun buildMediaSource(videoUrl: String): MediaSource {
-        val uri = videoUrl.toUri()
-        return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context))
-            .createMediaSource(MediaItem.fromUri(uri))
-    }
+    private fun isHlsUrl(url: String): Boolean =
+        Util.inferContentType(url.toUri()) == C.CONTENT_TYPE_HLS
 
     private fun getActivePlayer(): Player? {
         return if (state.value.activePlayerType == PlayerType.CHROME_CAST) {
@@ -379,17 +388,7 @@ class EncodedVideoUnitViewModel(
             exoPlayer?.playWhenReady = true
             return
         }
-        if (videoUrl.endsWith(HLS_EXT)) {
-            val factory = DefaultDataSource.Factory(context)
-            val mediaSource: HlsMediaSource =
-                HlsMediaSource.Factory(factory).createMediaSource(mediaItem)
-            exoPlayer?.setMediaSource(mediaSource, getCurrentVideoTime())
-        } else {
-            exoPlayer?.setMediaItem(
-                mediaItem,
-                getCurrentVideoTime()
-            )
-        }
+        exoPlayer?.setMediaSource(buildMediaSource(mediaItem), getCurrentVideoTime())
     }
 
     fun releasePlayers() {
@@ -401,7 +400,7 @@ class EncodedVideoUnitViewModel(
 
     private fun getMediaItem() = MediaItem.Builder().setMediaMetadata(movieMetadata)
         .setUri(videoUrl)
-        .setMimeType(if (videoUrl.endsWith(HLS_EXT)) MimeTypes.APPLICATION_M3U8 else VIDEO_MIME_TYPE)
+        .setMimeType(if (isHlsUrl(videoUrl)) MimeTypes.APPLICATION_M3U8 else VIDEO_MIME_TYPE)
         .build()
 
     fun getCastPlayer(): CastPlayer? = castManager.castPlayer

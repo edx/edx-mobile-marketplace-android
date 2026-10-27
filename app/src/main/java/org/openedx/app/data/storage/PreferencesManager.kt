@@ -8,6 +8,7 @@ import org.openedx.core.data.model.User
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
+import org.openedx.core.data.storage.SubscriptionBannerStorage
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.domain.model.VideoPlaybackSpeed
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit
 
 class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences,
     WhatsNewPreferences, InAppReviewPreferences, CoursePreferences, NotificationsPreferences,
+    SubscriptionBannerStorage,
     IAPPreferences {
 
     private val sharedPreferences =
@@ -247,6 +249,61 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         set(value) = saveBoolean(KEY_DATADOG_ENABLED, value)
         get() = getBoolean(KEY_DATADOG_ENABLED, defValue = true) // default: enabled
 
+
+    private fun saveInt(key: String, value: Int) {
+        sharedPreferences.edit().apply {
+            putInt(key, value)
+        }.apply()
+    }
+
+    private fun getInt(key: String, defValue: Int = 0): Int {
+        return sharedPreferences.getInt(key, defValue)
+    }
+
+    override fun getSubscriptionBannerSessionCount(): Int =
+        getInt(SUBSCRIPTION_BANNER_SESSION_COUNT)
+
+    override fun setSubscriptionBannerSessionCount(value: Int) =
+        saveInt(SUBSCRIPTION_BANNER_SESSION_COUNT, value)
+
+    override fun getSubscriptionBannerScreenSessionCount(screenKey: String): Int =
+        getInt(subscriptionBannerScreenSessionKey(screenKey))
+
+    override fun setSubscriptionBannerScreenSessionCount(screenKey: String, value: Int) =
+        saveInt(subscriptionBannerScreenSessionKey(screenKey), value)
+
+    override fun getSubscriptionBannerScreenLastSeenAppSession(screenKey: String): Int =
+        getInt(subscriptionBannerScreenLastSeenSessionKey(screenKey))
+
+    override fun setSubscriptionBannerScreenLastSeenAppSession(screenKey: String, value: Int) =
+        saveInt(subscriptionBannerScreenLastSeenSessionKey(screenKey), value)
+
+    override fun getSubscriptionBannerDismissCount(screenKey: String): Int =
+        getInt(subscriptionBannerDismissCountKey(screenKey))
+
+    override fun setSubscriptionBannerDismissCount(screenKey: String, value: Int) =
+        saveInt(subscriptionBannerDismissCountKey(screenKey), value)
+
+    override fun isSubscriptionBannerDismissed(screenKey: String): Boolean =
+        getBoolean(subscriptionBannerDismissedKey(screenKey))
+
+    override fun setSubscriptionBannerDismissed(screenKey: String, dismissed: Boolean) =
+        saveBoolean(subscriptionBannerDismissedKey(screenKey), dismissed)
+
+    private fun subscriptionBannerScreenSessionKey(screenKey: String): String =
+        "${SUBSCRIPTION_BANNER_SCREEN_SESSION_COUNT}_${screenKey}_${currentUserKey()}"
+
+    private fun subscriptionBannerScreenLastSeenSessionKey(screenKey: String): String =
+        "${SUBSCRIPTION_BANNER_SCREEN_LAST_SEEN_SESSION}_${screenKey}_${currentUserKey()}"
+
+    private fun subscriptionBannerDismissCountKey(screenKey: String): String =
+        "${SUBSCRIPTION_BANNER_DISMISS_COUNT}_${screenKey}_${currentUserKey()}"
+
+    private fun subscriptionBannerDismissedKey(screenKey: String): String =
+        "${SUBSCRIPTION_BANNER_DISMISSED}_${screenKey}_${currentUserKey()}"
+
+    private fun currentUserKey(): String =
+        user?.id?.toString().takeUnless { it.isNullOrBlank() } ?: GUEST_USER
     override fun incrementPreviewCount(courseId: String): Int {
         if (courseId.isEmpty()) return 0
         val newValue = iapSharedPreferences.getInt(courseId, 0) + 1
@@ -286,6 +343,12 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
         private const val PLS_BANNER_SHOWN = "pls_banner_shown"
         private const val APP_THEME_MODE = "app_theme_mode"
         private const val KEY_DATADOG_ENABLED = "datadog_enabled"
+        private const val SUBSCRIPTION_BANNER_SESSION_COUNT = "subscription_banner_session_count_v2"
+        private const val SUBSCRIPTION_BANNER_SCREEN_SESSION_COUNT = "subscription_banner_screen_session_count_v3"
+        private const val SUBSCRIPTION_BANNER_SCREEN_LAST_SEEN_SESSION = "subscription_banner_screen_last_seen_session_v3"
+        private const val SUBSCRIPTION_BANNER_DISMISS_COUNT = "subscription_banner_dismiss_count_v1"
+        private const val SUBSCRIPTION_BANNER_DISMISSED = "subscription_banner_dismissed_v2"
+        private const val GUEST_USER = "guest"
         private const val IAP_PREFS_NAME = "iap_preferences"
     }
 }

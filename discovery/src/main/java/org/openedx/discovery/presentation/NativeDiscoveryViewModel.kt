@@ -69,15 +69,6 @@ class NativeDiscoveryViewModel(
         collectAppUpgradeEvent()
     }
 
-    override fun onResume(owner: LifecycleOwner) {
-        super.onResume(owner)
-    }
-
-    override fun onPause(owner: LifecycleOwner) {
-        super.onPause(owner)
-    }
-
-
     private fun loadCoursesInternal(
         username: String? = null,
         organization: String? = null

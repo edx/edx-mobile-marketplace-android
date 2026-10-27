@@ -17,6 +17,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -26,6 +28,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Pagination
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -50,6 +53,7 @@ class NativeDiscoveryViewModelTest {
     private val analytics = mockk<DiscoveryAnalytics>()
     private val appNotifier = mockk<AppNotifier>()
     private val corePreferences = mockk<CorePreferences>()
+    private val subscriptionAlertBanner = mockk<SubscriptionAlertBanner>(relaxed = true)
 
     private val noInternet = "Slow or no internet connection"
     private val somethingWrong = "Something went wrong"
@@ -63,6 +67,7 @@ class NativeDiscoveryViewModelTest {
         every { corePreferences.user } returns null
         every { config.getApiHostURL() } returns "http://localhost:8000"
         every { config.isPreLoginExperienceEnabled() } returns false
+        every { analytics.logEvent(any(), any()) } returns Unit
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
@@ -81,7 +86,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws UnknownHostException()
@@ -106,7 +112,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws Exception()
@@ -130,7 +137,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns false
         coEvery { interactor.getCoursesListFromCache() } returns emptyList()
@@ -153,7 +161,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -183,7 +192,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -214,7 +224,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws UnknownHostException()
@@ -239,7 +250,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws Exception()
@@ -264,7 +276,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -295,7 +308,8 @@ class NativeDiscoveryViewModelTest {
             resourceManager,
             analytics,
             appNotifier,
-            corePreferences
+            corePreferences,
+            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -315,6 +329,57 @@ class NativeDiscoveryViewModelTest {
         assert(viewModel.isUpdating.value == false)
         assert(viewModel.canLoadMore.value == false)
         assert(viewModel.uiState.value is DiscoveryUIState.Courses)
+    }
+
+    @Test
+    fun `onResume refreshes subscription banner visibility state`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
+        every { networkConnection.isOnline() } returns false
+        coEvery { interactor.getCoursesListFromCache() } returns emptyList()
+
+        val viewModel = NativeDiscoveryViewModel(
+            config,
+            networkConnection,
+            interactor,
+            resourceManager,
+            analytics,
+            appNotifier,
+            corePreferences,
+            subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.onResume(mockk())
+
+        assertTrue(viewModel.isSubscriptionBannerVisible.value)
+    }
+
+    @Test
+    fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
+        every { subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY) } returns Unit
+        every { networkConnection.isOnline() } returns false
+        coEvery { interactor.getCoursesListFromCache() } returns emptyList()
+
+        val viewModel = NativeDiscoveryViewModel(
+            config,
+            networkConnection,
+            interactor,
+            resourceManager,
+            analytics,
+            appNotifier,
+            corePreferences,
+            subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        viewModel.dismissSubscriptionBanner()
+
+        assertFalse(viewModel.isSubscriptionBannerVisible.value)
     }
 
 }

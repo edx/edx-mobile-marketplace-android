@@ -13,6 +13,7 @@ import org.openedx.core.BaseViewModel
 import org.openedx.core.R
 import org.openedx.core.UIMessage
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.utils.Logger
 import org.openedx.profile.domain.interactor.ProfileInteractor
@@ -28,13 +29,17 @@ class ProfileViewModel(
     private val resourceManager: ResourceManager,
     private val notifier: ProfileNotifier,
     private val analytics: ProfileAnalytics,
-    val profileRouter: ProfileRouter
+    val profileRouter: ProfileRouter,
+    private val subscriptionAlertBanner: SubscriptionAlertBanner,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
 
     private val _uiState: MutableStateFlow<ProfileUIState> = MutableStateFlow(ProfileUIState.Loading)
     internal val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
+
+    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
 
     private val _uiMessage = MutableLiveData<UIMessage>()
     val uiMessage: LiveData<UIMessage>
@@ -44,7 +49,11 @@ class ProfileViewModel(
     val isUpdating: LiveData<Boolean>
         get() = _isUpdating
 
+    val subscriptionBannerUrl: String
+        get() = subscriptionAlertBanner.getBannerUrl()
+
     init {
+        refreshSubscriptionBannerVisibility()
         getAccount()
     }
 
@@ -59,6 +68,28 @@ class ProfileViewModel(
         }
     }
 
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        refreshSubscriptionBannerVisibility()
+    }
+
+    fun refreshSubscriptionBannerVisibility() {
+        val wasVisible = _isSubscriptionBannerVisible.value
+        val isVisible = subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE)
+        _isSubscriptionBannerVisible.value = isVisible
+        if (isVisible && !wasVisible) {
+            val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE)
+            logProfileEvent(
+                event = ProfileAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED,
+                params = buildMap {
+                    put(ProfileAnalyticsKey.SCREEN_NAME.key, PROFILE_SCREEN_NAME)
+                    put(ProfileAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                    put(ProfileAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
+                }
+            )
+        }
+    }
+
     private fun getAccount() {
         _uiState.value = ProfileUIState.Loading
         viewModelScope.launch {
@@ -67,14 +98,10 @@ class ProfileViewModel(
                 if (cachedAccount == null) {
                     _uiState.value = ProfileUIState.Loading
                 } else {
-                    _uiState.value = ProfileUIState.Data(
-                        account = cachedAccount
-                    )
+                    _uiState.value = ProfileUIState.Data(account = cachedAccount)
                 }
                 val account = interactor.getAccount()
-                _uiState.value = ProfileUIState.Data(
-                    account = account
-                )
+                _uiState.value = ProfileUIState.Data(account = account)
             } catch (e: Exception) {
                 logger.e(throwable = e)
                 if (e.isInternetError()) {
@@ -97,10 +124,7 @@ class ProfileViewModel(
 
     fun profileEditClicked(fragmentManager: FragmentManager) {
         (uiState.value as? ProfileUIState.Data)?.let { data ->
-            profileRouter.navigateToEditProfile(
-                fragmentManager,
-                data.account
-            )
+            profileRouter.navigateToEditProfile(fragmentManager, data.account)
         }
         logProfileEvent(ProfileAnalyticsEvent.EDIT_CLICKED)
     }
@@ -119,7 +143,33 @@ class ProfileViewModel(
         )
     }
 
+    fun dismissSubscriptionBanner() {
+        val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.PROFILE)
+        logProfileEvent(
+            event = ProfileAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED,
+            params = buildMap {
+                put(ProfileAnalyticsKey.SCREEN_NAME.key, PROFILE_SCREEN_NAME)
+                put(ProfileAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                put(ProfileAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
+            }
+        )
+        subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.PROFILE)
+        _isSubscriptionBannerVisible.value = false
+    }
+
+    fun subscriptionBannerCtaClicked(url: String) {
+        if (url.isBlank()) return
+        logProfileEvent(
+            event = ProfileAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED,
+            params = buildMap {
+                put(ProfileAnalyticsKey.SCREEN_NAME.key, PROFILE_SCREEN_NAME)
+                put(ProfileAnalyticsKey.URL.key, url)
+            }
+        )
+    }
+
     companion object {
         private const val TAG = "ProfileViewModel"
+        private const val PROFILE_SCREEN_NAME = "Profile"
     }
 }

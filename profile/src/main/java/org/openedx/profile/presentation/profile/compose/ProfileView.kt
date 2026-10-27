@@ -23,8 +23,6 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -39,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import org.openedx.core.UIMessage
 import org.openedx.core.ui.HandleUIMessage
 import org.openedx.core.ui.OpenEdXOutlinePrimaryButton
+import org.openedx.core.ui.SubscriptionBanner
 import org.openedx.core.ui.Toolbar
 import org.openedx.core.ui.WindowSize
 import org.openedx.core.ui.WindowType
@@ -61,6 +60,8 @@ internal fun ProfileView(
     uiState: ProfileUIState,
     uiMessage: UIMessage?,
     refreshing: Boolean,
+    isSubscriptionBannerVisible: Boolean,
+    subscriptionBannerUrl: String = "",
     onAction: (ProfileViewAction) -> Unit,
     onSettingsClick: () -> Unit,
 ) {
@@ -68,54 +69,50 @@ internal fun ProfileView(
 
     val pullRefreshState = rememberPullRefreshState(
         refreshing = refreshing,
-        onRefresh = { onAction(ProfileViewAction.SwipeRefresh) })
+        onRefresh = { onAction(ProfileViewAction.SwipeRefresh) }
+    )
+
+    val contentWidth = remember(windowSize) {
+        windowSize.windowSizeValue(
+            expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
+            compact = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        )
+    }
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .semantics {
-                testTagsAsResourceId = true
-            },
+            .semantics { testTagsAsResourceId = true },
         scaffoldState = scaffoldState
     ) { paddingValues ->
 
-        val contentWidth by remember(key1 = windowSize) {
-            mutableStateOf(
-                windowSize.windowSizeValue(
-                    expanded = Modifier.widthIn(Dp.Unspecified, 420.dp),
-                    compact = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                )
-            )
-        }
-
         HandleUIMessage(uiMessage = uiMessage, scaffoldState = scaffoldState)
 
-        Column(
+        Box(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
                 .statusBarsInset()
-                .displayCutoutForLandscape(),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .displayCutoutForLandscape()
         ) {
-            Toolbar(
-                label = stringResource(id = CoreR.string.core_profile),
-                canShowSettingsIcon = true,
-                onSettingsClick = onSettingsClick
-            )
-
-            Surface(
-                color = MaterialTheme.appColors.background
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier.pullRefresh(pullRefreshState),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Column(
+                Toolbar(
+                    label = stringResource(id = CoreR.string.core_profile),
+                    canShowSettingsIcon = true,
+                    onSettingsClick = onSettingsClick
+                )
+
+                Surface(color = MaterialTheme.appColors.background) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .fillMaxSize()
+                            .pullRefresh(pullRefreshState),
+                        contentAlignment = Alignment.TopCenter
                     ) {
                         when (uiState) {
                             is ProfileUIState.Loading -> {
@@ -129,36 +126,46 @@ internal fun ProfileView(
 
                             is ProfileUIState.Data -> {
                                 Column(
-                                    Modifier
+                                    modifier = Modifier
                                         .fillMaxHeight()
                                         .then(contentWidth)
                                         .verticalScroll(rememberScrollState()),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(24.dp)
                                 ) {
-                                    Spacer(modifier = Modifier.height(12.dp))
+                                    if (isSubscriptionBannerVisible) {
+                                        SubscriptionBanner(
+                                            visible = true,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            url = subscriptionBannerUrl,
+                                            onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) },
+                                            onCtaClick = { onAction(ProfileViewAction.SubscriptionBannerCtaClick(it)) },
+                                        )
+                                    }
                                     ProfileTopic(
                                         image = uiState.account.profileImage.imageUrlFull,
                                         title = uiState.account.name,
                                         subtitle = "@${uiState.account.username}"
                                     )
+
                                     ProfileInfoSection(uiState.account)
+
                                     OpenEdXOutlinePrimaryButton(
-                                        text = stringResource(id = R.string.profile_edit_profile),
-                                        onClick = {
-                                            onAction(ProfileViewAction.EditAccountClick)
-                                        },
+                                        text = stringResource(R.string.profile_edit_profile),
+                                        onClick = { onAction(ProfileViewAction.EditAccountClick) }
                                     )
+
                                     Spacer(modifier = Modifier.height(12.dp))
                                 }
                             }
                         }
+
+                        PullRefreshIndicator(
+                            refreshing,
+                            pullRefreshState,
+                            Modifier.align(Alignment.TopCenter)
+                        )
                     }
-                    PullRefreshIndicator(
-                        refreshing,
-                        pullRefreshState,
-                        Modifier.align(Alignment.TopCenter)
-                    )
                 }
             }
         }
@@ -177,12 +184,12 @@ private fun ProfileScreenPreview() {
             uiState = mockUiState,
             uiMessage = null,
             refreshing = false,
+            isSubscriptionBannerVisible = true,
             onAction = {},
             onSettingsClick = {},
         )
     }
 }
-
 
 @Preview(name = "NEXUS_9_Light", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(name = "NEXUS_9_Dark", device = Devices.NEXUS_9, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -194,6 +201,7 @@ private fun ProfileScreenTabletPreview() {
             uiState = mockUiState,
             uiMessage = null,
             refreshing = false,
+            isSubscriptionBannerVisible = true,
             onAction = {},
             onSettingsClick = {},
         )
@@ -207,4 +215,6 @@ private val mockUiState = ProfileUIState.Data(
 internal interface ProfileViewAction {
     object EditAccountClick : ProfileViewAction
     object SwipeRefresh : ProfileViewAction
+    object DismissSubscriptionBanner : ProfileViewAction
+    data class SubscriptionBannerCtaClick(val url: String) : ProfileViewAction
 }

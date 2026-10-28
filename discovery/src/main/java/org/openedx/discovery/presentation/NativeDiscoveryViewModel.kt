@@ -34,7 +34,6 @@ class NativeDiscoveryViewModel(
     private val analytics: DiscoveryAnalytics,
     private val appNotifier: AppNotifier,
     private val corePreferences: CorePreferences,
-    private val subscriptionAlertBanner: SubscriptionAlertBanner,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -42,7 +41,6 @@ class NativeDiscoveryViewModel(
     val apiHostUrl get() = config.getApiHostURL()
     val isUserLoggedIn get() = corePreferences.user != null
     val canShowBackButton get() = config.isPreLoginExperienceEnabled() && !isUserLoggedIn
-    val subscriptionBannerUrl: String get() = subscriptionAlertBanner.getBannerUrl()
 
     private val _uiState = MutableLiveData<DiscoveryUIState>(DiscoveryUIState.Loading)
     val uiState: LiveData<DiscoveryUIState>
@@ -75,7 +73,6 @@ class NativeDiscoveryViewModel(
     private var isLoading = false
 
     init {
-        refreshSubscriptionBannerVisibility()
         getCoursesList()
         collectAppUpgradeEvent()
     }

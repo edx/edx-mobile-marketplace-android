@@ -5,6 +5,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -25,6 +26,7 @@ import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.AppCookieManager
 import org.openedx.core.system.connection.NetworkConnection
+import org.openedx.core.utils.Logger
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WebViewDiscoveryViewModelTest {
@@ -47,6 +49,8 @@ class WebViewDiscoveryViewModelTest {
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         every { networkConnection.isOnline() } returns true
+        mockkConstructor(Logger::class)
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
 
     @After
@@ -150,6 +154,8 @@ class WebViewDiscoveryViewModelTest {
     fun `onResume refreshes subscription banner visibility state`() = runTest {
         every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
         every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
 
         val viewModel = WebViewDiscoveryViewModel(
             querySearch = "",
@@ -173,6 +179,8 @@ class WebViewDiscoveryViewModelTest {
     fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
         every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
         every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
 
         val viewModel = WebViewDiscoveryViewModel(
             querySearch = "",

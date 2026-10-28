@@ -1,16 +1,22 @@
 package org.openedx.discovery.presentation
 
+import android.webkit.WebView
+import androidx.compose.runtime.snapshotFlow
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
+import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.presentation.global.webview.WebViewUIState
@@ -54,6 +60,10 @@ class WebViewDiscoveryViewModel(
     val appUserAgent get() = appData.appUserAgent
 
     private var _discoveryUrl = webViewConfig.baseUrl
+
+    private val _isDarkTheme = MutableStateFlow(false)
+    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme
+
     val discoveryUrl: String
         get() {
             return if (querySearch.isNotBlank()) {
@@ -71,10 +81,29 @@ class WebViewDiscoveryViewModel(
     init {
         refreshSubscriptionBannerVisibility()
         checkAndRefreshCookies()
+        observeThemePreference()
+    }
+
+    private fun observeThemePreference() {
+        updateThemeMode()
+    }
+
+    fun updateThemeMode() {
+        val isDarkModeActive = when (corePreferences.appThemeMode) {
+            AppThemeMode.DARK -> true
+            AppThemeMode.LIGHT -> false
+            AppThemeMode.MATCH_DEVICE -> {
+                false
+            }
+        }
+        if (_isDarkTheme.value != isDarkModeActive) {
+            _isDarkTheme.value = isDarkModeActive
+        }
     }
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
+        updateThemeMode()
         refreshSubscriptionBannerVisibility()
         subscriptionAlertBanner.recordScreenVisit(SubscriptionAlertBanner.Screen.DISCOVERY)
     }
@@ -183,6 +212,26 @@ class WebViewDiscoveryViewModel(
         )
     }
 
+    private var _xpertWebView: WebView? = null
+
+    fun setXpertWebView(webView: WebView?) {
+        _xpertWebView = webView
+    }
+
+    fun triggerXpertChat() {
+        _xpertWebView?.evaluateJavascript(
+            """
+        (function() {
+            if (window.__triggerXpertChatbotAction) {
+                window.__triggerXpertChatbotAction();
+            }
+        })();
+        """
+        ) { result ->
+            logger.d({ "Xpert chat triggered: $result" })
+        }
+    }
+
     fun dismissSubscriptionBanner() {
         val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
         analytics.logEvent(
@@ -210,5 +259,9 @@ class WebViewDiscoveryViewModel(
                 put(DiscoveryAnalyticsKey.URL.key, url)
             }
         )
+}
+
+    fun clearXpertWebView() {
+        _xpertWebView = null
     }
 }

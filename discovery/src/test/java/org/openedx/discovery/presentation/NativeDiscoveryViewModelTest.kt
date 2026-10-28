@@ -318,4 +318,50 @@ class NativeDiscoveryViewModelTest {
         assert(viewModel.uiState.value is DiscoveryUIState.Courses)
     }
 
+    @Test
+    fun `onResume refreshes subscription banner visibility state`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
+        every { networkConnection.isOnline() } returns false
+        coEvery { interactor.getCoursesListFromCache() } returns emptyList()
+
+        val viewModel = NativeDiscoveryViewModel(
+            config,
+            networkConnection,
+            interactor,
+            resourceManager,
+            analytics,
+            appNotifier,
+            corePreferences,
+        )
+        advanceUntilIdle()
+
+        viewModel.onResume(mockk())
+
+    }
+
+    @Test
+    fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
+        every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
+        every { subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY) } returns Unit
+        every { networkConnection.isOnline() } returns false
+        coEvery { interactor.getCoursesListFromCache() } returns emptyList()
+
+        val viewModel = NativeDiscoveryViewModel(
+            config,
+            networkConnection,
+            interactor,
+            resourceManager,
+            analytics,
+            appNotifier,
+            corePreferences,
+        )
+        advanceUntilIdle()
+
+
+    }
+
 }

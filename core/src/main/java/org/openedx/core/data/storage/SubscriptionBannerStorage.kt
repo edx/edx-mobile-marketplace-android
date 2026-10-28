@@ -11,5 +11,7 @@ interface SubscriptionBannerStorage {
     fun setSubscriptionBannerDismissCount(screenKey: String, value: Int)
     fun isSubscriptionBannerDismissed(screenKey: String): Boolean
     fun setSubscriptionBannerDismissed(screenKey: String, dismissed: Boolean)
+    fun getSubscriptionBannerMaxReachedSession(screenKey: String): Int
+    fun setSubscriptionBannerMaxReachedSession(screenKey: String, value: Int)
 }
 

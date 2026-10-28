@@ -3,9 +3,11 @@ package org.openedx.app
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
@@ -32,6 +34,7 @@ import org.openedx.core.utils.Logger
 import org.openedx.profile.presentation.ProfileRouter
 import org.openedx.whatsnew.WhatsNewManager
 import org.openedx.whatsnew.presentation.whatsnew.WhatsNewFragment
+import org.openedx.course.presentation.unit.video.PipViewModel
 
 class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
 
@@ -56,9 +59,8 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
     private var _insetTop = 0
     private var _insetBottom = 0
     private var _insetCutout = 0
-
     private var _windowSize = WindowSize(WindowType.Compact, WindowType.Compact)
-
+    private val pipViewModel by viewModel<PipViewModel>()
     private val branchCallback =
         BranchUniversalReferralInitListener { branchUniversalObject, _, error ->
             if (branchUniversalObject?.contentMetadata?.customMetadata != null) {
@@ -85,6 +87,7 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         // Do nothing – fragments & player remain alive
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()
@@ -195,6 +198,12 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        pipViewModel.requestPipMode()
+    }
+
     private fun addFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .add(R.id.container, fragment)
@@ -234,6 +243,10 @@ class AppActivity : AppCompatActivity(), InsetHolder, WindowSizeHolder {
         val deepLink = DeepLink(data.toStringMap())
         viewModel.handleDiscussionNotification(deepLink)
         viewModel.makeExternalRoute(supportFragmentManager, deepLink)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 
     companion object {

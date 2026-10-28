@@ -2,7 +2,7 @@
 
 Modern vision of the mobile application for the Open edX platform from Raccoon Gang.
 
-[Documentation](Documentation/Documentation.md)
+[Documentation](Documentation.md)
 
 ## Building
 
@@ -14,7 +14,7 @@ Modern vision of the mobile application for the Open edX platform from Raccoon G
 
 3. Choose ``openedx-app-android``.
 
-4. Configure `config_settings.yaml` inside `default_config` and `config.yaml` inside sub directories to point to your Open edX configuration. [Configuration Documentation](./Documentation/ConfigurationManagement.md)
+4. Configure `config_settings.yaml` inside `default_config` and `config.yaml` inside sub directories to point to your Open edX configuration. [Configuration Documentation](ConfigurationManagement.md)
 
 5. Select the build variant ``develop``, ``stage``, or ``prod``.
 
@@ -64,7 +64,7 @@ Once the resource is both 100% translated and reviewed the [Transifex integratio
 ## API
 This project targets on the latest Open edX release and rely on the relevant mobile APIs.
 
-If your platform version is older than December 2023, please follow the instructions to use the [API Plugin](./Documentation/APIs_Compatibility.md).
+If your platform version is older than December 2023, please follow the instructions to use the [API Plugin](APIs_Compatibility.md).
 
 ## License
 

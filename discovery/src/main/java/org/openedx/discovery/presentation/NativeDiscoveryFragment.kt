@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,11 +96,6 @@ class NativeDiscoveryFragment : Fragment() {
         lifecycle.addObserver(viewModel)
     }
 
-    override fun onResume() {
-        super.onResume()
-        Toast.makeText(context, "NativeDiscoveryFragment Resumed", Toast.LENGTH_SHORT).show()
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -116,6 +110,7 @@ class NativeDiscoveryFragment : Fragment() {
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
+                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
                 val appUpgradeEvent by viewModel.appUpgradeEvent.observeAsState()
                 val wasUpdateDialogClosed by remember { wasUpdateDialogClosed }
                 val querySearch = arguments?.getString(ARG_SEARCH_QUERY, "") ?: ""
@@ -130,6 +125,8 @@ class NativeDiscoveryFragment : Fragment() {
                     hasInternetConnection = viewModel.hasInternetConnection,
                     canShowBackButton = viewModel.canShowBackButton,
                     isUserLoggedIn = viewModel.isUserLoggedIn,
+                    isSubscriptionBannerVisible = isSubscriptionBannerVisible,
+                    subscriptionBannerUrl = viewModel.subscriptionBannerUrl,
                     appUpgradeParameters = AppUpdateState.AppUpgradeParameters(
                         appUpgradeEvent = appUpgradeEvent,
                         wasUpdateDialogClosed = wasUpdateDialogClosed,
@@ -180,7 +177,13 @@ class NativeDiscoveryFragment : Fragment() {
                     },
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStackImmediate()
-                    }
+                    },
+                    onDismissSubscriptionBanner = {
+                        viewModel.dismissSubscriptionBanner()
+                    },
+                    onSubscriptionBannerCtaClick = { url ->
+                        viewModel.onSubscriptionBannerCtaClicked(url)
+                    },
                 )
                 LaunchedEffect(uiState) {
                     if (querySearch.isNotEmpty()) {
@@ -207,7 +210,6 @@ class NativeDiscoveryFragment : Fragment() {
 }
 
 
-
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 internal fun DiscoveryScreen(
@@ -220,6 +222,8 @@ internal fun DiscoveryScreen(
     hasInternetConnection: Boolean,
     canShowBackButton: Boolean,
     isUserLoggedIn: Boolean,
+    isSubscriptionBannerVisible: Boolean,
+    subscriptionBannerUrl: String,
     appUpgradeParameters: AppUpdateState.AppUpgradeParameters,
     onSearchClick: () -> Unit,
     onSwipeRefresh: () -> Unit,
@@ -229,6 +233,8 @@ internal fun DiscoveryScreen(
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
+    onDismissSubscriptionBanner: () -> Unit,
+    onSubscriptionBannerCtaClick: (String) -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
@@ -336,7 +342,22 @@ internal fun DiscoveryScreen(
                     onBackClick = onBackClick,
                 )
 
-
+                if (isSubscriptionBannerVisible) {
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .padding(horizontal = 24.dp)
+                            .then(searchTabWidth)
+                    ) {
+                        SubscriptionBanner(
+                            visible = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            url = subscriptionBannerUrl,
+                            onDismiss = onDismissSubscriptionBanner,
+                            onCtaClick = onSubscriptionBannerCtaClick,
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
                 StaticSearchBar(
@@ -527,10 +548,13 @@ private fun DiscoveryScreenPreview() {
             refreshing = false,
             hasInternetConnection = true,
             isUserLoggedIn = false,
+            isSubscriptionBannerVisible = true,
+            subscriptionBannerUrl = "",
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
             onSignInClick = {},
             onRegisterClick = {},
             onBackClick = {},
+            onDismissSubscriptionBanner = {},
             canShowBackButton = false
         )
     }
@@ -567,10 +591,13 @@ private fun DiscoveryScreenTabletPreview() {
             refreshing = false,
             hasInternetConnection = true,
             isUserLoggedIn = true,
+            isSubscriptionBannerVisible = true,
+            subscriptionBannerUrl = "",
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
             onSignInClick = {},
             onRegisterClick = {},
             onBackClick = {},
+            onDismissSubscriptionBanner = {},
             canShowBackButton = false
         )
     }

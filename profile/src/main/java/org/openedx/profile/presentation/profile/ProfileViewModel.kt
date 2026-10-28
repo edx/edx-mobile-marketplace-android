@@ -53,6 +53,7 @@ class ProfileViewModel(
         get() = subscriptionAlertBanner.getBannerUrl()
 
     init {
+        refreshSubscriptionBannerVisibility()
         getAccount()
     }
 
@@ -70,7 +71,6 @@ class ProfileViewModel(
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
         refreshSubscriptionBannerVisibility()
-        subscriptionAlertBanner.recordScreenVisit(SubscriptionAlertBanner.Screen.PROFILE)
     }
 
     fun refreshSubscriptionBannerVisibility() {

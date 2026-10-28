@@ -1,9 +1,7 @@
 package org.openedx.core.presentation
 
-import android.util.Log
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -31,13 +29,10 @@ class SubscriptionAlertBannerViewModelTest {
         )
         every { appConfig.subscriptionBannerConfig } returns bannerConfig
         every { corePreferences.appConfig } returns appConfig
-        every { corePreferences.user } returns mockk()
     }
 
     @Before
     fun setUp() {
-        mockkStatic(Log::class)
-        every { Log.d(any(), any()) } returns 0
         viewModel = SubscriptionAlertBanner(corePreferences, storage)
     }
 
@@ -54,9 +49,11 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
         every { storage.getSubscriptionBannerScreenSessionCount("discovery") } returns 0
         every { storage.getSubscriptionBannerSessionCount() } returns 1
-        every { storage.getSubscriptionBannerMaxReachedSession("discovery") } returns 0
+        every { storage.getSubscriptionBannerScreenLastSeenAppSession("discovery") } returns 0
 
         assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
+        verify { storage.setSubscriptionBannerScreenSessionCount("discovery", 1) }
+        verify { storage.setSubscriptionBannerScreenLastSeenAppSession("discovery", 1) }
     }
 
     @Test
@@ -65,9 +62,11 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
         every { storage.getSubscriptionBannerScreenSessionCount("discovery") } returns 0
         every { storage.getSubscriptionBannerSessionCount() } returns 0
-        every { storage.getSubscriptionBannerMaxReachedSession("discovery") } returns 0
+        every { storage.getSubscriptionBannerScreenLastSeenAppSession("discovery") } returns 0
 
         assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
+        verify { storage.setSubscriptionBannerScreenSessionCount("discovery", 1) }
+        verify { storage.setSubscriptionBannerScreenLastSeenAppSession("discovery", 1) }
     }
 
     @Test
@@ -84,9 +83,11 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
         every { storage.getSubscriptionBannerScreenSessionCount("discovery") } returns 2
         every { storage.getSubscriptionBannerSessionCount() } returns 3
-        every { storage.getSubscriptionBannerMaxReachedSession("discovery") } returns 0
+        every { storage.getSubscriptionBannerScreenLastSeenAppSession("discovery") } returns 2
 
         assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
+        verify { storage.setSubscriptionBannerScreenSessionCount("discovery", 3) }
+        verify { storage.setSubscriptionBannerScreenLastSeenAppSession("discovery", 3) }
     }
 
     @Test
@@ -95,7 +96,7 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
         every { storage.getSubscriptionBannerScreenSessionCount("discovery") } returns 4
         every { storage.getSubscriptionBannerSessionCount() } returns 5
-        every { storage.getSubscriptionBannerMaxReachedSession("discovery") } returns 4
+        every { storage.getSubscriptionBannerScreenLastSeenAppSession("discovery") } returns 4
 
         assertFalse(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
     }
@@ -106,9 +107,11 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.isSubscriptionBannerDismissed("discovery") } returns false
         every { storage.getSubscriptionBannerScreenSessionCount("discovery") } returns 3
         every { storage.getSubscriptionBannerSessionCount() } returns 4
-        every { storage.getSubscriptionBannerMaxReachedSession("discovery") } returns 0
+        every { storage.getSubscriptionBannerScreenLastSeenAppSession("discovery") } returns 3
 
         assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
+        verify { storage.setSubscriptionBannerScreenSessionCount("discovery", 4) }
+        verify { storage.setSubscriptionBannerScreenLastSeenAppSession("discovery", 4) }
     }
 
     @Test
@@ -120,42 +123,65 @@ class SubscriptionAlertBannerViewModelTest {
         every { storage.getSubscriptionBannerScreenSessionCount("profile") } returns 1
         every { storage.isSubscriptionBannerDismissed("profile") } returns false
         every { storage.getSubscriptionBannerSessionCount() } returns 2
-        every { storage.getSubscriptionBannerMaxReachedSession("profile") } returns 0
+        every { storage.getSubscriptionBannerScreenLastSeenAppSession("profile") } returns 1
 
         assertFalse(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
         assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.PROFILE))
     }
 
     @Test
-    fun `recordScreenVisit increments session count`() {
+    fun `dismiss increments dismiss count for correct screen`() {
         config(maxSessions = 4)
-        every { storage.getSubscriptionBannerScreenSessionCount("discovery") } returns 1
-        every { storage.getSubscriptionBannerSessionCount() } returns 2
-        every { storage.getSubscriptionBannerScreenLastSeenAppSession("discovery") } returns 1
-
-        viewModel.recordScreenVisit(SubscriptionAlertBanner.Screen.DISCOVERY)
-
-        verify { storage.setSubscriptionBannerScreenLastSeenAppSession("discovery", 2) }
-        verify { storage.setSubscriptionBannerScreenSessionCount("discovery", 2) }
-    }
-
-    @Test
-    fun `dismiss marks banner as dismissed for correct screen`() {
-        config(maxSessions = 4)
+        every { storage.getSubscriptionBannerDismissCount("discovery") } returns 2
 
         viewModel.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
 
+        verify { storage.setSubscriptionBannerDismissCount("discovery", 3) }
+        verify { storage.setSubscriptionBannerDismissed("discovery", true) }
+    }
+
+    @Test
+    fun `dismiss does not increment dismiss count above max`() {
+        config(maxSessions = 4)
+        every { storage.getSubscriptionBannerDismissCount("discovery") } returns 4
+
+        viewModel.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
+
+        verify(exactly = 0) { storage.setSubscriptionBannerDismissCount("discovery", any()) }
         verify { storage.setSubscriptionBannerDismissed("discovery", true) }
     }
 
     @Test
     fun `dismiss profile only affects profile`() {
         config(maxSessions = 4)
+        every { storage.getSubscriptionBannerDismissCount("profile") } returns 1
 
         viewModel.dismiss(SubscriptionAlertBanner.Screen.PROFILE)
 
-        verify { storage.setSubscriptionBannerDismissed("profile", true) }
-        verify(exactly = 0) { storage.setSubscriptionBannerDismissed("discovery", any()) }
+        verify { storage.setSubscriptionBannerDismissCount("profile", 2) }
+        verify(exactly = 0) { storage.setSubscriptionBannerDismissCount("discovery", any()) }
+    }
+
+    @Test
+    fun `isBannerVisible returns true when not dismissed and below max count`() {
+        config(maxSessions = 4)
+        every { storage.isSubscriptionBannerDismissed("discovery") } returns false
+        every { storage.getSubscriptionBannerScreenSessionCount("discovery") } returns 2
+        every { storage.getSubscriptionBannerSessionCount() } returns 2
+        every { storage.getSubscriptionBannerScreenLastSeenAppSession("discovery") } returns 2
+
+        assertTrue(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
+        verify(exactly = 0) { storage.setSubscriptionBannerScreenSessionCount(any(), any()) }
+        verify(exactly = 0) { storage.setSubscriptionBannerScreenLastSeenAppSession(any(), any()) }
+    }
+
+    @Test
+    fun `dismiss once keeps banner hidden regardless of session count`() {
+        config(maxSessions = 4)
+        every { storage.getSubscriptionBannerDismissCount("discovery") } returns 1
+        every { storage.isSubscriptionBannerDismissed("discovery") } returns true
+
+        assertFalse(viewModel.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY))
     }
 
     @Test

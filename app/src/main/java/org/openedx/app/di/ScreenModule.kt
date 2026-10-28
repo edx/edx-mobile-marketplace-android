@@ -197,6 +197,7 @@ val screenModule = module {
             get(),
             get(),
             get(),
+            get(),
         )
     }
     viewModel { (querySearch: String) ->

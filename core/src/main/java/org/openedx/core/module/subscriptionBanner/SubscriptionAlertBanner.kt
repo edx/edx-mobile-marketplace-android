@@ -19,39 +19,6 @@ class SubscriptionAlertBanner(
         PROFILE("profile"),
     }
 
-//    fun isBannerVisible(screen: Screen): Boolean {
-//        val bannerConfig = corePreferences.appConfig.subscriptionBannerConfig
-//        if (!bannerConfig.isEnabled) {
-//            return false
-//        }
-//
-//        if (corePreferences.user == null) {
-//            return false
-//        }
-//
-//        if (storage.isSubscriptionBannerDismissed(screen.key)) {
-//            return false
-//        }
-//
-//        val maxSessions = bannerConfig.maxSessions
-//            .takeIf { it > 0 }
-//            ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
-//
-//        Log.d("SubscriptionAlertBanner", "isBannerVisible: screen=${screen.key}, maxSessions=$maxSessions")
-//
-//        val shownSessions = storage.getSubscriptionBannerScreenSessionCount(screen.key)
-//
-//        // If banner has already been shown maxSessions times, hide it permanently
-//        if (shownSessions >= maxSessions) {
-//            Log.d("SubscriptionAlertBanner", "isBannerVisible: screen=${screen.key}, shownSessions=$shownSessions, maxSessions=$maxSessions, returning false")
-//            return false
-//        }
-//
-//        // Always show banner unless we've reached max sessions
-//        return true
-//    }
-
-
     fun isBannerVisible(screen: Screen): Boolean {
         val bannerConfig = corePreferences.appConfig.subscriptionBannerConfig
         if (!bannerConfig.isEnabled) return false
@@ -100,47 +67,6 @@ class SubscriptionAlertBanner(
             Log.d("SubscriptionAlertBanner", "recordScreenVisit: screen=${screen.key}, already visited in this app session (lastTracked=$lastTrackedSession, current=$currentAppSession)")
         }
     }
-
-
-//    fun recordScreenVisit(screen: Screen) {
-//        val maxSessions = corePreferences.appConfig.subscriptionBannerConfig.maxSessions
-//            .takeIf { it > 0 }
-//            ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
-//
-//        val shownSessions = storage.getSubscriptionBannerScreenSessionCount(screen.key)
-//
-//        // Only increment if we haven't reached max sessions
-//        if (shownSessions < maxSessions) {
-//            val updated = shownSessions + 1
-//            Log.d("SubscriptionAlertBanner", "recordScreenVisit: screen=${screen.key}, shownSessions=$shownSessions, updated=$updated")
-//            storage.setSubscriptionBannerScreenSessionCount(screen.key, updated)
-//        }
-//    }
-
-//    fun recordScreenVisit(screen: Screen) {
-//        val maxSessions = corePreferences.appConfig.subscriptionBannerConfig.maxSessions
-//            .takeIf { it > 0 }
-//            ?: DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS
-//
-//        val shownSessions = storage.getSubscriptionBannerScreenSessionCount(screen.key)
-//
-//        // Only increment if we haven't reached max sessions
-//        if (shownSessions < maxSessions) {
-//            val currentAppSession = storage.getSubscriptionBannerSessionCount()
-//            val lastTrackedSession = storage.getSubscriptionBannerScreenLastSeenAppSession(screen.key)
-//                Log.d("SubscriptionAlertBanner", "recordScreenVisit: screen=${screen.key}, shownSessions=$shownSessions, lastTrackedSession=$lastTrackedSession, currentAppSession=$currentAppSession")
-//            // Only increment if this is a new app session (app was backgrounded and foregrounded again)
-//            if (lastTrackedSession < currentAppSession) {
-//                storage.setSubscriptionBannerScreenLastSeenAppSession(screen.key, currentAppSession)
-//                val updated = shownSessions + 1
-//                Log.d("SubscriptionAlertBanner", "recordScreenVisit: screen=${screen.key}, shownSessions=$shownSessions, updated=$updated, appSession=$currentAppSession")
-//                storage.setSubscriptionBannerScreenSessionCount(screen.key, updated)
-//            } else {
-//                Log.d("SubscriptionAlertBanner", "recordScreenVisit: screen=${screen.key}, already visited in this app session (lastTracked=$lastTrackedSession, current=$currentAppSession)")
-//            }
-//        }
-//    }
-
 
 
     fun dismiss(screen: Screen) {

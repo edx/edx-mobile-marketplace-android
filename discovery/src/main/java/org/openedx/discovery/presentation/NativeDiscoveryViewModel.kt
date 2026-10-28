@@ -17,7 +17,6 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
-import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -46,9 +45,6 @@ class NativeDiscoveryViewModel(
     val uiState: LiveData<DiscoveryUIState>
         get() = _uiState
 
-    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
-    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
-
     private val _uiMessage = SingleEventLiveData<UIMessage>()
     val uiMessage: LiveData<UIMessage>
         get() = _uiMessage
@@ -67,7 +63,6 @@ class NativeDiscoveryViewModel(
 
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
-    private var isScreenCurrentlyVisible = false
     private var page = 1
     private val coursesList = mutableListOf<Course>()
     private var isLoading = false
@@ -76,15 +71,6 @@ class NativeDiscoveryViewModel(
         getCoursesList()
         collectAppUpgradeEvent()
     }
-
-    override fun onResume(owner: LifecycleOwner) {
-        super.onResume(owner)
-    }
-
-    override fun onPause(owner: LifecycleOwner) {
-        super.onPause(owner)
-    }
-
 
     private fun loadCoursesInternal(
         username: String? = null,

@@ -7,7 +7,7 @@ const val DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS = 4
 data class SubscriptionBannerConfig(
 
     @SerializedName(value = "subscription_banner_enabled", alternate = ["SUBSCRIPTION_BANNER_ENABLED"])
-    val isEnabled: Boolean = false,
+    val isEnabled: Boolean = true,
 
     @SerializedName(value = "max_sessions", alternate = ["MAX_SESSIONS"])
     val maxSessions: Int = DEFAULT_SUBSCRIPTION_BANNER_MAX_SESSIONS,

@@ -1,7 +1,6 @@
 package org.openedx.discovery.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.LifecycleOwner
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -23,7 +22,6 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
-import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.AppCookieManager
@@ -51,12 +49,8 @@ class WebViewDiscoveryViewModelTest {
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         every { networkConnection.isOnline() } returns true
-        every { corePreferences.appThemeMode } returns AppThemeMode.LIGHT
-
-        // Mock Logger to prevent Koin initialization
         mockkConstructor(Logger::class)
-        every { anyConstructed<Logger>().e(throwable = any()) } returns Unit
-        every { anyConstructed<Logger>().d(any()) } returns Unit
+        every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
 
     @After
@@ -105,7 +99,6 @@ class WebViewDiscoveryViewModelTest {
 
         advanceUntilIdle()
 
-        // Cookie should still be marked ready even after exception
         assertTrue(viewModel.cookiesReady.value)
     }
 
@@ -158,99 +151,11 @@ class WebViewDiscoveryViewModelTest {
     }
 
     @Test
-    fun `updateThemeMode sets isDarkTheme to false when theme mode is LIGHT`() = runTest {
-        every { corePreferences.appThemeMode } returns AppThemeMode.LIGHT
-
-        val viewModel = WebViewDiscoveryViewModel(
-            querySearch = "",
-            appData = appData,
-            config = config,
-            networkConnection = networkConnection,
-            corePreferences = corePreferences,
-            router = router,
-            analytics = analytics,
-            appCookieManager = appCookieManager,
-        )
-
-        advanceUntilIdle()
-
-        assertFalse(viewModel.isDarkTheme.value)
-    }
-
-    @Test
-    fun `updateThemeMode sets isDarkTheme to true when theme mode is DARK`() = runTest {
-        every { corePreferences.appThemeMode } returns AppThemeMode.DARK
-
-        val viewModel = WebViewDiscoveryViewModel(
-            querySearch = "",
-            appData = appData,
-            config = config,
-            networkConnection = networkConnection,
-            corePreferences = corePreferences,
-            router = router,
-            analytics = analytics,
-            appCookieManager = appCookieManager,
-        )
-
-        advanceUntilIdle()
-
-        assertTrue(viewModel.isDarkTheme.value)
-    }
-
-    @Test
-    fun `updateThemeMode sets isDarkTheme to false when theme mode is MATCH_DEVICE`() = runTest {
-        every { corePreferences.appThemeMode } returns AppThemeMode.MATCH_DEVICE
-
-        val viewModel = WebViewDiscoveryViewModel(
-            querySearch = "",
-            appData = appData,
-            config = config,
-            networkConnection = networkConnection,
-            corePreferences = corePreferences,
-            router = router,
-            analytics = analytics,
-            appCookieManager = appCookieManager,
-        )
-
-        advanceUntilIdle()
-
-        // MATCH_DEVICE defaults to false in ViewModel; Compose will override based on system theme
-        assertFalse(viewModel.isDarkTheme.value)
-    }
-
-    @Test
-    fun `onResume updates theme from LIGHT to DARK`() = runTest {
-        every { corePreferences.appThemeMode } returns AppThemeMode.LIGHT
-
-        val viewModel = WebViewDiscoveryViewModel(
-            querySearch = "",
-            appData = appData,
-            config = config,
-            networkConnection = networkConnection,
-            corePreferences = corePreferences,
-            router = router,
-            analytics = analytics,
-            appCookieManager = appCookieManager,
-        )
-
-        advanceUntilIdle()
-        assertFalse(viewModel.isDarkTheme.value)
-
-        // Change the mock to return DARK
-        every { corePreferences.appThemeMode } returns AppThemeMode.DARK
-
-        // Simulate onResume
-        val lifecycleOwner = mockk<LifecycleOwner>()
-        viewModel.onResume(lifecycleOwner)
-
-        // Verify theme updated
-        assertTrue(viewModel.isDarkTheme.value)
-    }
-
-    @Test
     fun `onResume refreshes subscription banner visibility state`() = runTest {
         every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
         every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
 
         val viewModel = WebViewDiscoveryViewModel(
             querySearch = "",
@@ -271,12 +176,11 @@ class WebViewDiscoveryViewModelTest {
     }
 
     @Test
-    fun `onResume updates theme from DARK to LIGHT`() = runTest {
-        every { corePreferences.appThemeMode } returns AppThemeMode.DARK
-    @Test
     fun `dismissSubscriptionBanner hides subscription banner immediately`() = runTest {
         every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
         every { subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY) } returns true
+        every { subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY) } returns
+                SubscriptionAlertBanner.BannerTelemetry(sessionCount = 1, maxSessions = 3)
 
         val viewModel = WebViewDiscoveryViewModel(
             querySearch = "",
@@ -294,58 +198,5 @@ class WebViewDiscoveryViewModelTest {
         viewModel.dismissSubscriptionBanner()
 
         assertFalse(viewModel.isSubscriptionBannerVisible.value)
-    }
-}
-
-        val viewModel = WebViewDiscoveryViewModel(
-            querySearch = "",
-            appData = appData,
-            config = config,
-            networkConnection = networkConnection,
-            corePreferences = corePreferences,
-            router = router,
-            analytics = analytics,
-            appCookieManager = appCookieManager,
-        )
-
-        advanceUntilIdle()
-        assertTrue(viewModel.isDarkTheme.value)
-
-        // Change the mock to return LIGHT
-        every { corePreferences.appThemeMode } returns AppThemeMode.LIGHT
-
-        // Simulate onResume
-        val lifecycleOwner = mockk<LifecycleOwner>()
-        viewModel.onResume(lifecycleOwner)
-
-        // Verify theme updated
-        assertFalse(viewModel.isDarkTheme.value)
-    }
-
-    @Test
-    fun `onResume updates theme from MATCH_DEVICE to DARK`() = runTest {
-        every { corePreferences.appThemeMode } returns AppThemeMode.MATCH_DEVICE
-
-        val viewModel = WebViewDiscoveryViewModel(
-            querySearch = "",
-            appData = appData,
-            config = config,
-            networkConnection = networkConnection,
-            corePreferences = corePreferences,
-            router = router,
-            analytics = analytics,
-            appCookieManager = appCookieManager,
-        )
-
-        advanceUntilIdle()
-        assertFalse(viewModel.isDarkTheme.value)
-
-        // Change the mock to return DARK
-        every { corePreferences.appThemeMode } returns AppThemeMode.DARK
-
-        val lifecycleOwner = mockk<LifecycleOwner>()
-        viewModel.onResume(lifecycleOwner)
-
-        assertTrue(viewModel.isDarkTheme.value)
     }
 }

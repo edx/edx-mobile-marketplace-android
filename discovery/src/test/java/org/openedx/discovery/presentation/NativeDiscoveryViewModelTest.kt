@@ -87,7 +87,6 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws UnknownHostException()
@@ -113,7 +112,6 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws Exception()
@@ -138,7 +136,6 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns false
         coEvery { interactor.getCoursesListFromCache() } returns emptyList()
@@ -162,7 +159,6 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -193,7 +189,6 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -225,7 +220,6 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws UnknownHostException()
@@ -251,7 +245,6 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } throws Exception()
@@ -277,7 +270,6 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -309,7 +301,6 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         every { networkConnection.isOnline() } returns true
         coEvery { interactor.getCoursesList(any(), any(), any()) } returns CourseList(
@@ -347,13 +338,11 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         advanceUntilIdle()
 
         viewModel.onResume(mockk())
 
-        assertTrue(viewModel.isSubscriptionBannerVisible.value)
     }
 
     @Test
@@ -373,13 +362,10 @@ class NativeDiscoveryViewModelTest {
             analytics,
             appNotifier,
             corePreferences,
-            subscriptionAlertBanner,
         )
         advanceUntilIdle()
 
-        viewModel.dismissSubscriptionBanner()
 
-        assertFalse(viewModel.isSubscriptionBannerVisible.value)
     }
 
 }

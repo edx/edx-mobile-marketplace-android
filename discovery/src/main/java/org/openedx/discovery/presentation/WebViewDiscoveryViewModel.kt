@@ -104,11 +104,8 @@ class WebViewDiscoveryViewModel(
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
         updateThemeMode()
-    }
-
-    override fun onResume(owner: LifecycleOwner) {
-        super.onResume(owner)
         refreshSubscriptionBannerVisibility()
+        subscriptionAlertBanner.recordScreenVisit(SubscriptionAlertBanner.Screen.DISCOVERY)
     }
 
     fun refreshSubscriptionBannerVisibility() {
@@ -262,7 +259,6 @@ class WebViewDiscoveryViewModel(
                 put(DiscoveryAnalyticsKey.URL.key, url)
             }
         )
-    }
 }
 
     fun clearXpertWebView() {

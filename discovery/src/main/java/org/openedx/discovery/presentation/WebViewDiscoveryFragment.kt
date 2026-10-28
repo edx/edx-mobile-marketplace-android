@@ -87,6 +87,9 @@ import org.openedx.discovery.R
 import org.openedx.discovery.presentation.catalog.CatalogWebViewScreen
 import org.openedx.discovery.presentation.catalog.WebViewLink
 import org.openedx.core.R as CoreR
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.LaunchedEffect
 
 class WebViewDiscoveryFragment : Fragment() {
 
@@ -376,23 +379,21 @@ private fun WebViewDiscoveryScreen(
                                     discoveryViewModel = discoveryViewModel,
                                 )
                             }
-                        } else {
-                            onWebViewUIAction(WebViewUIAction.WEB_PAGE_ERROR)
                         }
-                    }
-                    if (uiState is WebViewUIState.Error) {
-                        FullScreenErrorView(errorType = uiState.errorType) {
-                            onWebViewUIAction(WebViewUIAction.RELOAD_WEB_PAGE)
+                        if (uiState is WebViewUIState.Error) {
+                            FullScreenErrorView(errorType = uiState.errorType) {
+                                onWebViewUIAction(WebViewUIAction.RELOAD_WEB_PAGE)
+                            }
                         }
-                    }
-                    if (uiState is WebViewUIState.Loading && hasInternetConnection) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .zIndex(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                        if (uiState is WebViewUIState.Loading && hasInternetConnection) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .zIndex(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = MaterialTheme.appColors.primary)
+                            }
                         }
                     }
                 }

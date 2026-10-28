@@ -127,6 +127,31 @@ class WebViewDiscoveryViewModel(
         }
     }
 
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        refreshSubscriptionBannerVisibility()
+        subscriptionAlertBanner.recordScreenVisit(SubscriptionAlertBanner.Screen.DISCOVERY)
+    }
+
+    fun refreshSubscriptionBannerVisibility() {
+        val wasVisible = _isSubscriptionBannerVisible.value
+        val isVisible = subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY)
+        _isSubscriptionBannerVisible.value = isVisible
+        if (isVisible && !wasVisible) {
+            val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
+            analytics.logEvent(
+                DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.eventName,
+                buildMap {
+                    put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.biValue)
+                    put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                    put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                    put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                    put(DiscoveryAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
+                }
+            )
+        }
+    }
+
     private fun checkAndRefreshCookies() {
         viewModelScope.launch {
             try {

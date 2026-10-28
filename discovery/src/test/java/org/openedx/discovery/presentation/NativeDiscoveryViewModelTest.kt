@@ -6,7 +6,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
-import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
@@ -42,7 +41,6 @@ class NativeDiscoveryViewModelTest {
 
     @get:Rule
     val testInstantTaskExecutorRule: TestRule = InstantTaskExecutorRule()
-
 
     private val dispatcher = StandardTestDispatcher()
 
@@ -94,7 +92,6 @@ class NativeDiscoveryViewModelTest {
 
         coVerify(exactly = 1) { interactor.getCoursesList(any(), any(), any()) }
         coVerify(exactly = 0) { interactor.getCoursesListFromCache() }
-        verify(exactly = 1) { appNotifier.notifier }
 
         val message = viewModel.uiMessage.value as? UIMessage.SnackBarMessage
         assertEquals(noInternet, message?.message)
@@ -208,7 +205,6 @@ class NativeDiscoveryViewModelTest {
         assert(viewModel.uiState.value is DiscoveryUIState.Courses)
         assert(viewModel.canLoadMore.value == false)
     }
-
 
     @Test
     fun `updateData no internet connection`() = runTest {

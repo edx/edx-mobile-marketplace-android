@@ -69,6 +69,7 @@ class WebViewDiscoveryViewModel(
         get() = networkConnection.isOnline()
 
     init {
+        refreshSubscriptionBannerVisibility()
         checkAndRefreshCookies()
     }
 

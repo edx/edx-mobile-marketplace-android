@@ -116,6 +116,7 @@ class NativeDiscoveryFragment : Fragment() {
                 val uiMessage by viewModel.uiMessage.observeAsState()
                 val canLoadMore by viewModel.canLoadMore.observeAsState(false)
                 val refreshing by viewModel.isUpdating.observeAsState(false)
+                val isSubscriptionBannerVisible by viewModel.isSubscriptionBannerVisible.collectAsState()
                 val appUpgradeEvent by viewModel.appUpgradeEvent.observeAsState()
                 val wasUpdateDialogClosed by remember { wasUpdateDialogClosed }
                 val querySearch = arguments?.getString(ARG_SEARCH_QUERY, "") ?: ""
@@ -130,6 +131,8 @@ class NativeDiscoveryFragment : Fragment() {
                     hasInternetConnection = viewModel.hasInternetConnection,
                     canShowBackButton = viewModel.canShowBackButton,
                     isUserLoggedIn = viewModel.isUserLoggedIn,
+                    isSubscriptionBannerVisible = isSubscriptionBannerVisible,
+                    subscriptionBannerUrl = viewModel.subscriptionBannerUrl,
                     appUpgradeParameters = AppUpdateState.AppUpgradeParameters(
                         appUpgradeEvent = appUpgradeEvent,
                         wasUpdateDialogClosed = wasUpdateDialogClosed,
@@ -220,6 +223,8 @@ internal fun DiscoveryScreen(
     hasInternetConnection: Boolean,
     canShowBackButton: Boolean,
     isUserLoggedIn: Boolean,
+    isSubscriptionBannerVisible: Boolean,
+    subscriptionBannerUrl: String,
     appUpgradeParameters: AppUpdateState.AppUpgradeParameters,
     onSearchClick: () -> Unit,
     onSwipeRefresh: () -> Unit,
@@ -229,6 +234,8 @@ internal fun DiscoveryScreen(
     onRegisterClick: () -> Unit,
     onSignInClick: () -> Unit,
     onBackClick: () -> Unit,
+    onDismissSubscriptionBanner: () -> Unit,
+    onSubscriptionBannerCtaClick: (String) -> Unit = {},
 ) {
     val scaffoldState = rememberScaffoldState()
     val scrollState = rememberLazyListState()
@@ -527,10 +534,13 @@ private fun DiscoveryScreenPreview() {
             refreshing = false,
             hasInternetConnection = true,
             isUserLoggedIn = false,
+            isSubscriptionBannerVisible = true,
+            subscriptionBannerUrl = "",
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
             onSignInClick = {},
             onRegisterClick = {},
             onBackClick = {},
+            onDismissSubscriptionBanner = {},
             canShowBackButton = false
         )
     }
@@ -567,10 +577,13 @@ private fun DiscoveryScreenTabletPreview() {
             refreshing = false,
             hasInternetConnection = true,
             isUserLoggedIn = true,
+            isSubscriptionBannerVisible = true,
+            subscriptionBannerUrl = "",
             appUpgradeParameters = AppUpdateState.AppUpgradeParameters(),
             onSignInClick = {},
             onRegisterClick = {},
             onBackClick = {},
+            onDismissSubscriptionBanner = {},
             canShowBackButton = false
         )
     }

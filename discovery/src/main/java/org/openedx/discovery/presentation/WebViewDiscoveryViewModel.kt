@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.domain.model.AppThemeMode
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.presentation.global.ErrorType
@@ -33,6 +34,7 @@ class WebViewDiscoveryViewModel(
     private val router: DiscoveryRouter,
     private val analytics: DiscoveryAnalytics,
     private val appCookieManager: AppCookieManager,
+    private val subscriptionAlertBanner: SubscriptionAlertBanner,
 ) : BaseViewModel() {
 
     private val logger = Logger("WebViewDiscoveryViewModel")
@@ -42,6 +44,12 @@ class WebViewDiscoveryViewModel(
 
     private val _cookiesReady = MutableStateFlow(false)
     val cookiesReady: StateFlow<Boolean> = _cookiesReady.asStateFlow()
+
+    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
+
+    val subscriptionBannerUrl: String
+        get() = subscriptionAlertBanner.getBannerUrl()
 
     val uriScheme: String get() = config.getUriScheme()
 
@@ -71,6 +79,7 @@ class WebViewDiscoveryViewModel(
         get() = networkConnection.isOnline()
 
     init {
+        refreshSubscriptionBannerVisibility()
         checkAndRefreshCookies()
         observeThemePreference()
     }
@@ -95,6 +104,30 @@ class WebViewDiscoveryViewModel(
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
         updateThemeMode()
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        refreshSubscriptionBannerVisibility()
+    }
+
+    fun refreshSubscriptionBannerVisibility() {
+        val wasVisible = _isSubscriptionBannerVisible.value
+        val isVisible = subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY)
+        _isSubscriptionBannerVisible.value = isVisible
+        if (isVisible && !wasVisible) {
+            val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
+            analytics.logEvent(
+                DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.eventName,
+                buildMap {
+                    put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.biValue)
+                    put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                    put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                    put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                    put(DiscoveryAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
+                }
+            )
+        }
     }
 
     private fun checkAndRefreshCookies() {
@@ -201,6 +234,36 @@ class WebViewDiscoveryViewModel(
             logger.d({ "Xpert chat triggered: $result" })
         }
     }
+
+    fun dismissSubscriptionBanner() {
+        val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
+        analytics.logEvent(
+            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.eventName,
+            buildMap {
+                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.biValue)
+                put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                put(DiscoveryAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
+            }
+        )
+        subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
+        _isSubscriptionBannerVisible.value = false
+    }
+
+    fun onSubscriptionBannerCtaClicked(url: String) {
+        if (url.isBlank()) return
+        analytics.logEvent(
+            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED.eventName,
+            buildMap {
+                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED.biValue)
+                put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                put(DiscoveryAnalyticsKey.URL.key, url)
+            }
+        )
+    }
+}
 
     fun clearXpertWebView() {
         _xpertWebView = null

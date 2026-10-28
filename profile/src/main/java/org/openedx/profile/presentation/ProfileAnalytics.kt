@@ -90,6 +90,18 @@ enum class ProfileAnalyticsEvent(val eventName: String, val biValue: String) {
         "Profile:App Theme Changed",
         "edx.bi.app.profile.app_theme.changed"
     ),
+    SUBSCRIPTION_BANNER_VIEWED(
+        "Subscription:Banner Viewed",
+        "edx.bi.app.subscription.banner.viewed"
+    ),
+    SUBSCRIPTION_BANNER_CTA_CLICKED(
+        "Subscription:Banner CTA Clicked",
+        "edx.bi.app.subscription.banner.cta.clicked"
+    ),
+    SUBSCRIPTION_BANNER_DISMISSED(
+        "Subscription:Banner Dismissed",
+        "edx.bi.app.subscription.banner.dismissed"
+    )
 }
 
 enum class ProfileAnalyticsKey(val key: String) {
@@ -103,5 +115,9 @@ enum class ProfileAnalyticsKey(val key: String) {
     FORCE("force"),
     FALSE("false"),
     NEW_MODE("new_mode"),
-    PREVIOUS_MODE("previous_mode")
+    PREVIOUS_MODE("previous_mode"),
+    SCREEN_NAME("screen_name"),
+    SESSION_COUNT("session_count"),
+    MAX_SESSIONS("max_sessions"),
+    URL("url"),
 }

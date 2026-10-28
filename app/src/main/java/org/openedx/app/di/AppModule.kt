@@ -39,6 +39,9 @@ import org.openedx.core.data.model.CourseStructureModel
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.data.storage.IAPPreferences
 import org.openedx.core.data.storage.InAppReviewPreferences
+import org.openedx.core.data.storage.SubscriptionBannerStorage
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
+import org.openedx.core.system.AppSessionTracker
 import org.openedx.core.module.DownloadWorkerController
 import org.openedx.core.module.TranscriptManager
 import org.openedx.core.module.billing.BillingProcessor
@@ -102,6 +105,10 @@ val appModule = module {
     single<InAppReviewPreferences> { get<PreferencesManager>() }
     single<CoursePreferences> { get<PreferencesManager>() }
     single<NotificationsPreferences> { get<PreferencesManager>() }
+    single<SubscriptionBannerStorage> { get<PreferencesManager>() }
+
+    single { AppSessionTracker(get<SubscriptionBannerStorage>()) }
+    single { SubscriptionAlertBanner(get<CorePreferences>(), get<SubscriptionBannerStorage>()) }
     single<IAPPreferences> { get<PreferencesManager>() }
 
     single { ResourceManager(get()) }

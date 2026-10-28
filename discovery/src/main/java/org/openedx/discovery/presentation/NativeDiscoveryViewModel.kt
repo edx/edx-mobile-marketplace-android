@@ -1,9 +1,13 @@
 package org.openedx.discovery.presentation
 
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
@@ -13,6 +17,7 @@ import org.openedx.core.UIMessage
 import org.openedx.core.config.Config
 import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.extension.isInternetError
+import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.system.ResourceManager
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.app.AppNotifier
@@ -29,6 +34,7 @@ class NativeDiscoveryViewModel(
     private val analytics: DiscoveryAnalytics,
     private val appNotifier: AppNotifier,
     private val corePreferences: CorePreferences,
+    private val subscriptionAlertBanner: SubscriptionAlertBanner,
 ) : BaseViewModel() {
 
     private val logger = Logger(TAG)
@@ -36,10 +42,14 @@ class NativeDiscoveryViewModel(
     val apiHostUrl get() = config.getApiHostURL()
     val isUserLoggedIn get() = corePreferences.user != null
     val canShowBackButton get() = config.isPreLoginExperienceEnabled() && !isUserLoggedIn
+    val subscriptionBannerUrl: String get() = subscriptionAlertBanner.getBannerUrl()
 
     private val _uiState = MutableLiveData<DiscoveryUIState>(DiscoveryUIState.Loading)
     val uiState: LiveData<DiscoveryUIState>
         get() = _uiState
+
+    private val _isSubscriptionBannerVisible = MutableStateFlow(false)
+    val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
 
     private val _uiMessage = SingleEventLiveData<UIMessage>()
     val uiMessage: LiveData<UIMessage>
@@ -65,8 +75,14 @@ class NativeDiscoveryViewModel(
     private var isLoading = false
 
     init {
+        refreshSubscriptionBannerVisibility()
         getCoursesList()
         collectAppUpgradeEvent()
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        refreshSubscriptionBannerVisibility()
     }
 
     private fun loadCoursesInternal(
@@ -197,6 +213,54 @@ class NativeDiscoveryViewModel(
                 put(DiscoveryAnalyticsKey.COURSE_ID.key, courseId)
                 put(DiscoveryAnalyticsKey.COURSE_NAME.key, courseTitle)
                 put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+            }
+        )
+    }
+
+    fun refreshSubscriptionBannerVisibility() {
+        val wasVisible = _isSubscriptionBannerVisible.value
+        val isVisible = subscriptionAlertBanner.isBannerVisible(SubscriptionAlertBanner.Screen.DISCOVERY)
+        _isSubscriptionBannerVisible.value = isVisible
+        if (isVisible && !wasVisible) {
+            val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
+            analytics.logEvent(
+                DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.eventName,
+                buildMap {
+                    put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_VIEWED.biValue)
+                    put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                    put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                    put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                    put(DiscoveryAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
+                }
+            )
+        }
+    }
+
+    fun dismissSubscriptionBanner() {
+        val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
+        analytics.logEvent(
+            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.eventName,
+            buildMap {
+                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_DISMISSED.biValue)
+                put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                put(DiscoveryAnalyticsKey.SESSION_COUNT.key, telemetry.sessionCount)
+                put(DiscoveryAnalyticsKey.MAX_SESSIONS.key, telemetry.maxSessions)
+            }
+        )
+        subscriptionAlertBanner.dismiss(SubscriptionAlertBanner.Screen.DISCOVERY)
+        _isSubscriptionBannerVisible.value = false
+    }
+
+    fun onSubscriptionBannerCtaClicked(url: String) {
+        if (url.isBlank()) return
+        analytics.logEvent(
+            DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED.eventName,
+            buildMap {
+                put(DiscoveryAnalyticsKey.NAME.key, DiscoveryAnalyticsEvent.SUBSCRIPTION_BANNER_CTA_CLICKED.biValue)
+                put(DiscoveryAnalyticsKey.CATEGORY.key, DiscoveryAnalyticsKey.DISCOVERY.key)
+                put(DiscoveryAnalyticsKey.SCREEN_NAME.key, DiscoveryAnalyticsScreen.DISCOVERY.screenName)
+                put(DiscoveryAnalyticsKey.URL.key, url)
             }
         )
     }

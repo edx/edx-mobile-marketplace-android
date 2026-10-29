@@ -674,6 +674,19 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             }
             // Restore to exact previous state
             restoreSavedConstraintState()
+            if (isTablet()) {
+                (binding.cardView.layoutParams as ConstraintLayout.LayoutParams).apply {
+                    width = ConstraintLayout.LayoutParams.MATCH_PARENT
+                    height = 450
+                    marginStart = 0
+                    marginEnd = 0
+                    topMargin = 0
+                    bottomMargin = 0
+                    leftMargin = 0
+                    rightMargin = 0
+                    binding.cardView.layoutParams = this
+                }
+            }
         }
     }
 

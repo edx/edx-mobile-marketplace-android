@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -21,9 +23,12 @@ import org.openedx.core.data.storage.CorePreferences
 import org.openedx.core.domain.model.Block
 import org.openedx.core.extension.clearAndAddAll
 import org.openedx.core.extension.indexOfFirstFromIndex
+import org.openedx.core.exception.NoCachedDataException
+import org.openedx.core.extension.isInternetError
 import org.openedx.core.module.db.DownloadModel
 import org.openedx.core.module.db.DownloadedState
 import org.openedx.core.presentation.course.CourseViewMode
+import org.openedx.core.presentation.global.ErrorType
 import org.openedx.core.system.connection.NetworkConnection
 import org.openedx.core.system.notifier.CourseDataUpdated
 import org.openedx.core.system.notifier.CourseNotifier
@@ -63,18 +68,6 @@ class CourseUnitContainerViewModel(
     private var currentVerticalIndex = 0
     private var currentSectionIndex = -1
 
-    val isFirstIndexInContainer: Boolean
-        get() {
-            return _descendantsBlocks.value.firstOrNull() ==
-                    _descendantsBlocks.value.getOrNull(currentIndex)
-        }
-
-    val isLastIndexInContainer: Boolean
-        get() {
-            return _descendantsBlocks.value.lastOrNull() ==
-                    _descendantsBlocks.value.getOrNull(currentIndex)
-        }
-
     private val _verticalBlockCounts = MutableLiveData<Int>()
     val verticalBlockCounts: LiveData<Int>
         get() = _verticalBlockCounts
@@ -93,8 +86,6 @@ class CourseUnitContainerViewModel(
     private val _refreshComponent = MutableSharedFlow<Boolean>()
     val refreshComponent = _refreshComponent.asSharedFlow()
 
-    var nextButtonText = ""
-    var hasNextBlock = false
 
     private var currentMode: CourseViewMode? = null
     private var currentComponentId = ""
@@ -103,12 +94,26 @@ class CourseUnitContainerViewModel(
     private val _descendantsBlocks = MutableStateFlow<List<Block>>(listOf())
     val descendantsBlocks = _descendantsBlocks.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading = _isLoading.asStateFlow()
+
+    private val _loadError = MutableStateFlow<ErrorType?>(null)
+    val loadError = _loadError.asStateFlow()
+
+    private var latestLoadRequestId = 0
+    private var loadJob: Job? = null
+
     val videoQuality
         get() = corePreferences.videoSettings.videoStreamingQuality
 
     fun loadBlocks(mode: CourseViewMode, componentId: String = "", isNeedRefresh: Boolean = false) {
         currentMode = mode
-        viewModelScope.launch {
+        currentComponentId = componentId
+        val requestId = ++latestLoadRequestId
+        loadJob?.cancel()
+        _isLoading.value = true
+        _loadError.value = null
+        loadJob = viewModelScope.launch {
             try {
                 val courseStructure = when (mode) {
                     CourseViewMode.FULL -> interactor.getCourseStructure(courseId, isNeedRefresh)
@@ -117,21 +122,49 @@ class CourseUnitContainerViewModel(
                         isNeedRefresh
                     )
                 }
+                // A newer request has superseded this one; it must not publish its results.
+                if (requestId != latestLoadRequestId) return@launch
                 val blocks = courseStructure.blockData
                 courseName = courseStructure.name
                 this@CourseUnitContainerViewModel.blocks.clearAndAddAll(blocks)
 
                 updateDescendantsBlocks(blocks)
+                check(_descendantsBlocks.value.isNotEmpty()) {
+                    "No components available for unit $unitId"
+                }
                 setupCurrentIndex(componentId)
                 if (isNeedRefresh) {
                     viewModelScope.launch {
                         _refreshComponent.emit(true)
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                logger.e(throwable = e)
+                if (requestId != latestLoadRequestId) return@launch
+                _loadError.value =
+                    if (e.isInternetError() || e is NoCachedDataException) {
+                        ErrorType.CONNECTION_ERROR
+                    } else {
+                        ErrorType.UNKNOWN_ERROR
+                    }
+                val metadata = mapOf(
+                    "course_id" to courseId,
+                    "unit_id" to unitId,
+                    "component_id" to componentId,
+                    "mode" to mode.name,
+                    "is_refresh" to isNeedRefresh,
+                )
+                logger.e(throwable = e, metadata = metadata)
+                analytics.logError("Course unit loading failed", e, metadata)
+            } finally {
+                if (requestId == latestLoadRequestId) _isLoading.value = false
             }
         }
+    }
+
+    fun retryLoading() {
+        currentMode?.let { loadBlocks(it, currentComponentId, isNeedRefresh = true) }
     }
 
     init {
@@ -159,6 +192,7 @@ class CourseUnitContainerViewModel(
     }
 
     private fun updateDescendantsBlocks(blocks: List<Block>) {
+        _descendantsBlocks.value = emptyList()
         blocks.forEach { block ->
             if (block.id == unitId) {
                 if (block.descendants.isNotEmpty() || block.isGated()) {
@@ -263,8 +297,9 @@ class CourseUnitContainerViewModel(
             .find { it.id == id && it.downloadedState == DownloadedState.DOWNLOADED }
     }
 
-    fun getCurrentBlock(): Block {
-        return blocks[currentIndex]
+    fun getCurrentBlock(): Block? {
+        return _descendantsBlocks.value.getOrNull(currentIndex)
+            ?: blocks.getOrNull(currentVerticalIndex)
     }
 
     fun moveToNextBlock(): Block? {

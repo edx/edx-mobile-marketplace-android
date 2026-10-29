@@ -1,9 +1,13 @@
 package org.openedx.discovery.presentation
 
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.openedx.core.BaseViewModel
@@ -59,7 +63,6 @@ class NativeDiscoveryViewModel(
 
     val hasInternetConnection: Boolean
         get() = networkConnection.isOnline()
-
     private var page = 1
     private val coursesList = mutableListOf<Course>()
     private var isLoading = false
@@ -109,6 +112,7 @@ class NativeDiscoveryViewModel(
             }
         }
     }
+
 
     fun getCoursesList(
         username: String? = null,
@@ -200,6 +204,8 @@ class NativeDiscoveryViewModel(
             }
         )
     }
+
+
 
     companion object {
         private const val TAG = "NativeDiscoveryViewModel"

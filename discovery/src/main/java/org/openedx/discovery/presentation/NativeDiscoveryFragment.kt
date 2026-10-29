@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -89,6 +90,16 @@ class NativeDiscoveryFragment : Fragment() {
     private val viewModel by viewModel<NativeDiscoveryViewModel>()
     private val router: DiscoveryRouter by inject()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lifecycle.addObserver(viewModel)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Toast.makeText(context, "NativeDiscoveryFragment Resumed", Toast.LENGTH_SHORT).show()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -167,7 +178,7 @@ class NativeDiscoveryFragment : Fragment() {
                     },
                     onBackClick = {
                         requireActivity().supportFragmentManager.popBackStackImmediate()
-                    },
+                    }
                 )
                 LaunchedEffect(uiState) {
                     if (querySearch.isNotEmpty()) {
@@ -192,6 +203,7 @@ class NativeDiscoveryFragment : Fragment() {
         }
     }
 }
+
 
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
@@ -321,6 +333,8 @@ internal fun DiscoveryScreen(
                     canShowBackBtn = canShowBackButton,
                     onBackClick = onBackClick,
                 )
+
+
 
                 Spacer(modifier = Modifier.height(16.dp))
                 StaticSearchBar(

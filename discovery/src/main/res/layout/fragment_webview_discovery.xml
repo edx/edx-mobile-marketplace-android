@@ -73,7 +73,7 @@
             android:id="@+id/banner_and_webview_container"
             android:tag="banner_and_webview_container"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
             <!-- Subscription Banner matching Profile screen exactly -->
@@ -140,8 +140,6 @@
         android:tag="auth_buttons_compose_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:paddingBottom="16dp"
         android:visibility="gone" />
 
 </LinearLayout>

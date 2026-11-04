@@ -113,7 +113,9 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             // In prelogin, apply navigation bar bottom padding so register and sign in buttons are never cut
             val authButtonsView = view.findViewWithTag<View>("auth_buttons_compose_view")
             if (viewModel.isPreLogin) {
-                authButtonsView?.updatePadding(bottom = navBarInset.bottom)
+                val extraPadding = (12 * resources.displayMetrics.density).toInt()
+                val bottomInset = maxOf(0, navBarInset.bottom - extraPadding)
+                authButtonsView?.updatePadding(bottom = bottomInset)
             } else {
                 authButtonsView?.updatePadding(bottom = 0)
             }
@@ -181,6 +183,19 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         if (frameHeight <= 0) return
 
         val isBannerVisible = viewModel.isSubscriptionBannerVisible.value && bannerLayout.isVisible
+        if (!isBannerVisible) {
+            container.updateLayoutParams {
+                height = frameHeight
+            }
+
+            webView.updateLayoutParams {
+                height = frameHeight
+            }
+
+            container.translationY = 0f
+            currentScrollOffset = 0
+            return
+        }
         val totalBannerHeight = if (isBannerVisible) {
             val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
             val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
@@ -192,9 +207,18 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         val clampedOffset = if (totalBannerHeight > 0) offset.coerceIn(0, totalBannerHeight) else 0
         currentScrollOffset = clampedOffset
 
-        val targetContainerHeight = frameHeight + totalBannerHeight
-        if (container.layoutParams.height != targetContainerHeight) {
-            container.updateLayoutParams { height = targetContainerHeight }
+        val targetContainerHeight = if (isBannerVisible) {
+            frameHeight + totalBannerHeight
+        } else {
+            frameHeight
+        }
+
+        container.updateLayoutParams {
+            height = targetContainerHeight
+        }
+
+        webView.updateLayoutParams {
+            height = frameHeight
         }
 
         val targetWebViewHeight = if (isXpertChatOpen) {
@@ -224,6 +248,10 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             webViewTrackingAnalytics = webViewTrackingAnalytics,
             onWebPageLoaded = {
                 viewModel.onWebPageLoaded()
+                view.post {
+                    applyScrollOffset(view, currentScrollOffset)
+                }
+
             },
             onWebPageUpdated = { url ->
                 viewModel.updateDiscoveryUrl(url)
@@ -242,7 +270,9 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             },
             onXpertChatStateChanged = { isOpen ->
                 isXpertChatOpen = isOpen
-                applyScrollOffset(view, currentScrollOffset)
+                view.post {
+                    applyScrollOffset(view, currentScrollOffset)
+                }
             }
         )
     }
@@ -443,21 +473,23 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 launch {
                     viewModel.isSubscriptionBannerVisible.collect { isVisible ->
                         bannerLayout?.visibility = if (isVisible) View.VISIBLE else View.GONE
-                        applyScrollOffset(view, currentScrollOffset)
-                        val frameHeight = contentFrame?.height ?: 0
-                        if (frameHeight > 0) {
-                            if (!isVisible) {
-                                container?.translationY = 0f
-                                container?.updateLayoutParams { height = frameHeight }
-                                webView?.updateLayoutParams { height = frameHeight }
-                            } else {
-                                val params = bannerLayout?.layoutParams as? ViewGroup.MarginLayoutParams
-                                val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
-                                val bannerH = (bannerLayout?.height ?: 0) + margins
-                                container?.updateLayoutParams { height = frameHeight + bannerH }
-                                webView?.updateLayoutParams { height = frameHeight }
-                            }
+                        view.post {
+                            applyScrollOffset(view, currentScrollOffset)
                         }
+//                        val frameHeight = contentFrame?.height ?: 0
+//                        if (frameHeight > 0) {
+//                            if (!isVisible) {
+//                                container?.translationY = 0f
+//                                container?.updateLayoutParams { height = frameHeight }
+//                                webView?.updateLayoutParams { height = frameHeight }
+//                            } else {
+//                                val params = bannerLayout?.layoutParams as? ViewGroup.MarginLayoutParams
+//                                val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
+//                                val bannerH = (bannerLayout?.height ?: 0) + margins
+//                                container?.updateLayoutParams { height = frameHeight + bannerH }
+//                                webView?.updateLayoutParams { height = frameHeight }
+//                            }
+//                        }
                     }
                 }
 

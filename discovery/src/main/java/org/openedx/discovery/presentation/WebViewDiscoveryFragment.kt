@@ -328,13 +328,7 @@ private fun WebViewDiscoveryScreen(
                 onXpertChatClick = onXpertChatClick,
                 isDarkTheme = isDarkTheme
             )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
+
                 if (isSubscriptionBannerVisible) {
                     val searchTabWidth by remember(key1 = windowSize) {
                         mutableStateOf(
@@ -415,7 +409,6 @@ private fun WebViewDiscoveryScreen(
             }
         }
     }
-}
 
 @Composable
 private fun DiscoveryHeader(

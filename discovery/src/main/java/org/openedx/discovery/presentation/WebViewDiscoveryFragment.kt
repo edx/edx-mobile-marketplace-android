@@ -163,7 +163,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                     onDismiss = { viewModel.dismissSubscriptionBanner() },
                     onCtaClick = { ctaUrl ->
                         viewModel.onSubscriptionBannerCtaClicked(ctaUrl)
-                        openExternalUrl(ctaUrl)
                     }
                 )
             }
@@ -307,7 +306,30 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             }
 
             WebViewLink.Authority.EXTERNAL -> {
-                openExternalUrl(param)
+                context?.let { ctx ->
+                    activity?.let { act ->
+                        view?.post {
+                            if (isAdded && !isDetached) {
+                                try {
+                                    ActionDialogFragment.newInstance(
+                                        title = ctx.getString(CoreR.string.core_leaving_the_app),
+                                        message = ctx.getString(
+                                            CoreR.string.core_leaving_the_app_message,
+                                            ctx.getString(CoreR.string.platform_name)
+                                        ),
+                                        url = param,
+                                        source = DiscoveryAnalyticsScreen.DISCOVERY.screenName
+                                    ).show(
+                                        act.supportFragmentManager,
+                                        ActionDialogFragment::class.simpleName
+                                    )
+                                } catch (e: IllegalStateException) {
+                                    Log.e("WebViewDiscovery", "Failed to show dialog", e)
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             else -> {}

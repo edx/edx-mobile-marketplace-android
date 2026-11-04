@@ -32,23 +32,78 @@ fun CatalogWebViewScreen(
     val webViewTrackingAnalytics = koinInject<WebViewTrackingAnalytics>()
     val webView = remember {
         WebView(context).apply {
-            webViewClient = object : DefaultWebViewClient(
-                context = context,
-                webView = this@apply,
+            configureCatalogWebView(
+                webView = this,
+                url = url,
+                uriScheme = uriScheme,
+                userAgent = userAgent,
+                isDarkTheme = isDarkTheme,
+                webViewTrackingAnalytics = webViewTrackingAnalytics,
                 isAllLinksExternal = isAllLinksExternal,
-                onUriClick = onUriClick,
+                onWebPageLoaded = onWebPageLoaded,
                 refreshSessionCookie = refreshSessionCookie,
-            ) {
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    url?.let { onWebPageUpdated(it) }
-                    super.onPageFinished(view, url)
-                }
+                onWebPageUpdated = onWebPageUpdated,
+                onUriClick = onUriClick,
+                onWebPageLoadError = onWebPageLoadError,
+                onXpertChatReady = onXpertChatReady,
+            )
+        }
+    }
+    return webView
+}
 
-                override fun onPageCommitVisible(view: WebView?, url: String?) {
-                    super.onPageCommitVisible(view, url)
+@SuppressLint("SetJavaScriptEnabled")
+fun configureCatalogWebView(
+    webView: WebView,
+    url: String,
+    uriScheme: String,
+    userAgent: String,
+    isDarkTheme: Boolean,
+    webViewTrackingAnalytics: WebViewTrackingAnalytics,
+    isAllLinksExternal: Boolean = false,
+    onWebPageLoaded: () -> Unit,
+    refreshSessionCookie: () -> Unit = {},
+    onWebPageUpdated: (String) -> Unit = {},
+    onUriClick: (String, linkAuthority) -> Unit,
+    onWebPageLoadError: () -> Unit,
+    onXpertChatReady: ((WebView) -> Unit)? = null,
+    onXpertChatStateChanged: ((Boolean) -> Unit)? = null,
+) {
+    val context = webView.context
 
-                    view?.evaluateJavascript(
-                        """
+    @Suppress("unused")
+    class XpertChatBridge {
+        @android.webkit.JavascriptInterface
+        fun onChatOpen() {
+            webView.post { onXpertChatStateChanged?.invoke(true) }
+        }
+
+        @android.webkit.JavascriptInterface
+        fun onChatClose() {
+            webView.post { onXpertChatStateChanged?.invoke(false) }
+        }
+    }
+
+    webView.addJavascriptInterface(XpertChatBridge(), "XpertChatBridge")
+
+    webView.apply {
+        webViewClient = object : DefaultWebViewClient(
+            context = context,
+            webView = this@apply,
+            isAllLinksExternal = isAllLinksExternal,
+            onUriClick = onUriClick,
+            refreshSessionCookie = refreshSessionCookie,
+        ) {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                url?.let { onWebPageUpdated(it) }
+                super.onPageFinished(view, url)
+            }
+
+            override fun onPageCommitVisible(view: WebView?, url: String?) {
+                super.onPageCommitVisible(view, url)
+
+                view?.evaluateJavascript(
+                    """
 (function() {
     // Hide the Xpert chatbot floating button
     var style = document.createElement('style');
@@ -74,10 +129,22 @@ fun CatalogWebViewScreen(
     `;
     (document.head || document.documentElement).appendChild(style);
     
-    // Monitor for modal open/close and keep button hidden when modal is closed
+    // Monitor for modal open/close and notify native bridge
+    var wasModalOpen = false;
     setInterval(function() {
         var modal = document.querySelector('[role="dialog"]');
-        if (!modal || modal.offsetParent === null) {
+        var isModalOpen = modal !== null && modal.offsetParent !== null;
+        if (isModalOpen !== wasModalOpen) {
+            wasModalOpen = isModalOpen;
+            if (window.XpertChatBridge) {
+                if (isModalOpen) {
+                    window.XpertChatBridge.onChatOpen();
+                } else {
+                    window.XpertChatBridge.onChatClose();
+                }
+            }
+        }
+        if (!isModalOpen) {
             var btn = document.getElementById('xpert_chatbot__floating-action-btn');
             if (btn) {
                 btn.style.cssText = 'display: none !important; visibility: hidden !important;';
@@ -99,81 +166,79 @@ fun CatalogWebViewScreen(
     return text.includes("Page not found") || text.includes("404");
 })();
 """
-                    ) { result ->
-                        if (result == "true") {
-                            onWebPageLoadError()
-                        } else {
-                            onWebPageLoaded()
-                            onXpertChatReady?.invoke(view!!)
-                        }
-                    }
-
-                }
-
-                override fun shouldOverrideUrlLoading(
-                    view: WebView?, request: WebResourceRequest?
-                ): Boolean {
-                    val clickUrl = request?.url?.toString() ?: ""
-                    if (handleRecognizedLink(clickUrl)) {
-                        return true
-                    }
-
-                    return super.shouldOverrideUrlLoading(view, request)
-                }
-
-                private fun handleRecognizedLink(clickUrl: String): Boolean {
-                    val link = WebViewLink.parse(clickUrl, uriScheme) ?: return false
-
-                    return when (link.authority) {
-                        linkAuthority.COURSE_INFO,
-                        linkAuthority.PROGRAM_INFO,
-                        linkAuthority.ENROLLED_PROGRAM_INFO -> {
-                            val pathId = link.params[WebViewLink.Param.PATH_ID] ?: ""
-                            onUriClick(pathId, link.authority)
-                            true
-                        }
-
-                        linkAuthority.ENROLL,
-                        linkAuthority.ENROLLED_COURSE_INFO -> {
-                            val courseId = link.params[WebViewLink.Param.COURSE_ID] ?: ""
-                            onUriClick(courseId, link.authority)
-                            true
-                        }
-
-                        linkAuthority.COURSE -> {
-                            onUriClick("", link.authority)
-                            true
-                        }
-
-                        else -> false
-                    }
-                }
-
-                override fun onReceivedError(
-                    view: WebView, request: WebResourceRequest, error: WebResourceError
-                ) {
-                    if (request.url.toString() == view.url) {
+                ) { result ->
+                    if (result == "true") {
                         onWebPageLoadError()
+                    } else {
+                        onWebPageLoaded()
+                        onXpertChatReady?.invoke(view)
                     }
-                    super.onReceivedError(view, request, error)
                 }
             }
 
-            with(settings) {
-                javaScriptEnabled = true
-                loadWithOverviewMode = true
-                builtInZoomControls = false
-                setSupportZoom(true)
-                loadsImagesAutomatically = true
-                domStorageEnabled = true
-                userAgentString = "$userAgentString $userAgent"
+            override fun shouldOverrideUrlLoading(
+                view: WebView?, request: WebResourceRequest?
+            ): Boolean {
+                val clickUrl = request?.url?.toString() ?: ""
+                if (handleRecognizedLink(clickUrl)) {
+                    return true
+                }
+
+                return super.shouldOverrideUrlLoading(view, request)
             }
-            isVerticalScrollBarEnabled = false
-            isHorizontalScrollBarEnabled = false
-            webViewTrackingAnalytics.enableWebViewTracking(this, url)
-            loadUrl(url)
-            applyDarkModeIfEnabled(isDarkTheme)
+
+            private fun handleRecognizedLink(clickUrl: String): Boolean {
+                val link = WebViewLink.parse(clickUrl, uriScheme) ?: return false
+
+                return when (link.authority) {
+                    linkAuthority.COURSE_INFO,
+                    linkAuthority.PROGRAM_INFO,
+                    linkAuthority.ENROLLED_PROGRAM_INFO -> {
+                        val pathId = link.params[WebViewLink.Param.PATH_ID] ?: ""
+                        onUriClick(pathId, link.authority)
+                        true
+                    }
+
+                    linkAuthority.ENROLL,
+                    linkAuthority.ENROLLED_COURSE_INFO -> {
+                        val courseId = link.params[WebViewLink.Param.COURSE_ID] ?: ""
+                        onUriClick(courseId, link.authority)
+                        true
+                    }
+
+                    linkAuthority.COURSE -> {
+                        onUriClick("", link.authority)
+                        true
+                    }
+
+                    else -> false
+                }
+            }
+
+            override fun onReceivedError(
+                view: WebView, request: WebResourceRequest, error: WebResourceError
+            ) {
+                if (request.url.toString() == view.url) {
+                    onWebPageLoadError()
+                }
+                super.onReceivedError(view, request, error)
+            }
         }
+
+        with(settings) {
+            javaScriptEnabled = true
+            loadWithOverviewMode = false
+            useWideViewPort = true
+            builtInZoomControls = false
+            setSupportZoom(false)
+            loadsImagesAutomatically = true
+            domStorageEnabled = true
+            userAgentString = "$userAgentString $userAgent"
+        }
+        isVerticalScrollBarEnabled = false
+        isHorizontalScrollBarEnabled = false
+        webViewTrackingAnalytics.enableWebViewTracking(this, url)
+        loadUrl(url)
+        applyDarkModeIfEnabled(isDarkTheme)
     }
-    return webView
 }

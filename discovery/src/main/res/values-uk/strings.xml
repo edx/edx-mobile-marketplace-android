@@ -19,4 +19,5 @@
 
     <!-- Accessibility -->
     <string name="discovery_accessibility_play_video">Відтворити відео</string>
+    <string name="xpert_chat">Чат Xpert</string>
 </resources>

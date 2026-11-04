@@ -22,4 +22,5 @@
 
     <!-- Accessibility -->
     <string name="discovery_accessibility_play_video">Play video</string>
+    <string name="xpert_chat">Xpert Chat</string>
 </resources>

@@ -126,6 +126,21 @@ fun configureCatalogWebView(
             visibility: hidden !important; 
             opacity: 0 !important;
         }
+        /* Ensure Xpert chat dialog is full screen and input is visible */
+        [role="dialog"] {
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            z-index: 999999 !important;
+        }
     `;
     (document.head || document.documentElement).appendChild(style);
     
@@ -134,6 +149,18 @@ fun configureCatalogWebView(
     setInterval(function() {
         var modal = document.querySelector('[role="dialog"]');
         var isModalOpen = modal !== null && modal.offsetParent !== null;
+        if (isModalOpen && modal) {
+            modal.style.setProperty('width', '100%', 'important');
+            modal.style.setProperty('height', '100%', 'important');
+            modal.style.setProperty('max-width', '100%', 'important');
+            modal.style.setProperty('max-height', '100%', 'important');
+            modal.style.setProperty('top', '0', 'important');
+            modal.style.setProperty('left', '0', 'important');
+            modal.style.setProperty('right', '0', 'important');
+            modal.style.setProperty('bottom', '0', 'important');
+            modal.style.setProperty('border-radius', '0', 'important');
+            modal.style.setProperty('margin', '0', 'important');
+        }
         if (isModalOpen !== wasModalOpen) {
             wasModalOpen = isModalOpen;
             if (window.XpertChatBridge) {

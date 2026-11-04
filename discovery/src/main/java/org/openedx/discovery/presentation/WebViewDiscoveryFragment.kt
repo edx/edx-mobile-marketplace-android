@@ -1,8 +1,10 @@
 package org.openedx.discovery.presentation
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -128,18 +130,8 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
         updateXpertChatIcon(btnXpertChat)
         btnXpertChat?.setOnClickListener {
-            // Prepare container for full screen chat before opening
-            val bannerLayout = view.findViewWithTag<View>("subscription_banner_layout")
-            val container = view.findViewWithTag<LinearLayout>("banner_and_webview_container")
-            val contentFrame = view.findViewWithTag<FrameLayout>("content_frame")
-            val webView = view.findViewWithTag<WebView>("discovery_webview")
-
-            bannerLayout?.visibility = View.GONE
-            container?.translationY = 0f
-            val frameHeight = contentFrame?.height ?: ViewGroup.LayoutParams.MATCH_PARENT
-            container?.updateLayoutParams { height = frameHeight }
-            webView?.updateLayoutParams { height = frameHeight }
-
+            isXpertChatOpen = true
+            applyScrollOffset(view, currentScrollOffset)
             viewModel.triggerXpertChat()
         }
     }
@@ -154,17 +146,68 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
     private fun setupSubscriptionBanner(view: View) {
         val bannerComposeView = view.findViewWithTag<ComposeView>("subscription_banner_layout") ?: return
         bannerComposeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+
+        val rawBannerUrl = viewModel.subscriptionBannerUrl.ifBlank { "https://www.edx.org" }
+        val bannerUrl = if (!rawBannerUrl.startsWith("http://") && !rawBannerUrl.startsWith("https://")) {
+            "https://$rawBannerUrl"
+        } else {
+            rawBannerUrl
+        }
+
         bannerComposeView.setContent {
             OpenEdXTheme {
                 SubscriptionBanner(
                     visible = true,
                     modifier = Modifier.fillMaxWidth(),
-                    url = viewModel.subscriptionBannerUrl,
+                    url = bannerUrl,
                     onDismiss = { viewModel.dismissSubscriptionBanner() },
-                    onCtaClick = { viewModel.onSubscriptionBannerCtaClicked(it) }
+                    onCtaClick = { ctaUrl ->
+                        viewModel.onSubscriptionBannerCtaClicked(ctaUrl)
+                        openExternalUrl(ctaUrl)
+                    }
                 )
             }
         }
+    }
+
+    private var currentScrollOffset = 0
+
+    private fun applyScrollOffset(view: View, offset: Int) {
+        val bannerLayout = view.findViewWithTag<View>("subscription_banner_layout") ?: return
+        val container = view.findViewWithTag<LinearLayout>("banner_and_webview_container") ?: return
+        val contentFrame = view.findViewWithTag<FrameLayout>("content_frame") ?: return
+        val webView = view.findViewWithTag<WebView>("discovery_webview") ?: return
+
+        val frameHeight = contentFrame.height
+        if (frameHeight <= 0) return
+
+        val isBannerVisible = viewModel.isSubscriptionBannerVisible.value && bannerLayout.isVisible
+        val totalBannerHeight = if (isBannerVisible) {
+            val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
+            val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
+            bannerLayout.height + margins
+        } else {
+            0
+        }
+
+        val clampedOffset = if (totalBannerHeight > 0) offset.coerceIn(0, totalBannerHeight) else 0
+        currentScrollOffset = clampedOffset
+
+        val targetContainerHeight = frameHeight + totalBannerHeight
+        if (container.layoutParams.height != targetContainerHeight) {
+            container.updateLayoutParams { height = targetContainerHeight }
+        }
+
+        val targetWebViewHeight = if (isXpertChatOpen) {
+            frameHeight - totalBannerHeight + clampedOffset
+        } else {
+            frameHeight
+        }
+        if (webView.layoutParams.height != targetWebViewHeight) {
+            webView.updateLayoutParams { height = targetWebViewHeight }
+        }
+
+        container.translationY = -clampedOffset.toFloat()
     }
 
     private fun setupWebView(view: View) {
@@ -199,7 +242,8 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 viewModel.setXpertWebView(readyWebView)
             },
             onXpertChatStateChanged = { isOpen ->
-                handleXpertChatStateChanged(view, isOpen)
+                isXpertChatOpen = isOpen
+                applyScrollOffset(view, currentScrollOffset)
             }
         )
     }
@@ -263,30 +307,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             }
 
             WebViewLink.Authority.EXTERNAL -> {
-                context?.let { ctx ->
-                    activity?.let { act ->
-                        view?.post {
-                            if (isAdded && !isDetached) {
-                                try {
-                                    ActionDialogFragment.newInstance(
-                                        title = ctx.getString(CoreR.string.core_leaving_the_app),
-                                        message = ctx.getString(
-                                            CoreR.string.core_leaving_the_app_message,
-                                            ctx.getString(CoreR.string.platform_name)
-                                        ),
-                                        url = param,
-                                        source = DiscoveryAnalyticsScreen.DISCOVERY.screenName
-                                    ).show(
-                                        act.supportFragmentManager,
-                                        ActionDialogFragment::class.simpleName
-                                    )
-                                } catch (e: IllegalStateException) {
-                                    Log.e("WebViewDiscovery", "Failed to show dialog", e)
-                                }
-                            }
-                        }
-                    }
-                }
+                openExternalUrl(param)
             }
 
             else -> {}
@@ -346,54 +367,45 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         )
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupSubscriptionBannerScrolling(view: View) {
         val webView = view.findViewWithTag<WebView>("discovery_webview") ?: return
         val bannerLayout = view.findViewWithTag<View>("subscription_banner_layout") ?: return
-        val container = view.findViewWithTag<LinearLayout>("banner_and_webview_container") ?: return
         val contentFrame = view.findViewWithTag<FrameLayout>("content_frame") ?: return
 
-        val updateHeightsAndScroll: (Int) -> Unit = { scrollY ->
-            if (!isXpertChatOpen) {
-                val frameHeight = contentFrame.height
-                if (frameHeight > 0) {
-                    val totalBannerHeight = if (bannerLayout.isVisible) {
-                        val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
-                        val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
-                        bannerLayout.height + margins
-                    } else {
-                        0
-                    }
-
-                    val targetContainerHeight = frameHeight + totalBannerHeight
-                    if (container.layoutParams.height != targetContainerHeight) {
-                        container.updateLayoutParams { height = targetContainerHeight }
-                    }
-
-                    if (webView.layoutParams.height != frameHeight) {
-                        webView.updateLayoutParams { height = frameHeight }
-                    }
-
-                    if (totalBannerHeight > 0) {
-                        val scrollOffset = scrollY.coerceIn(0, totalBannerHeight)
-                        container.translationY = -scrollOffset.toFloat()
-                    } else {
-                        container.translationY = 0f
-                    }
-                }
-            }
-        }
-
         contentFrame.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            updateHeightsAndScroll(webView.scrollY)
+            applyScrollOffset(view, currentScrollOffset)
         }
 
         webView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
-            updateHeightsAndScroll(scrollY)
+            if (!isXpertChatOpen) {
+                applyScrollOffset(view, scrollY)
+            }
         }
 
         bannerLayout.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            updateHeightsAndScroll(webView.scrollY)
+            applyScrollOffset(view, currentScrollOffset)
         }
+
+        var touchStartY = 0f
+        var initialOffset = 0
+
+        val touchListener = View.OnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    touchStartY = event.rawY
+                    initialOffset = currentScrollOffset
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val deltaY = touchStartY - event.rawY
+                    applyScrollOffset(view, initialOffset + deltaY.toInt())
+                }
+            }
+            false // Return false so webView and banner still receive click, tap, and text input events
+        }
+
+        bannerLayout.setOnTouchListener(touchListener)
+        webView.setOnTouchListener(touchListener)
     }
 
     private fun observeViewModel(view: View) {
@@ -409,6 +421,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 launch {
                     viewModel.isSubscriptionBannerVisible.collect { isVisible ->
                         bannerLayout?.visibility = if (isVisible) View.VISIBLE else View.GONE
+                        applyScrollOffset(view, currentScrollOffset)
                         val frameHeight = contentFrame?.height ?: 0
                         if (frameHeight > 0) {
                             if (!isVisible) {
@@ -459,7 +472,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
             container.updateLayoutParams { width = ViewGroup.LayoutParams.MATCH_PARENT }
             webView.updateLayoutParams { width = ViewGroup.LayoutParams.MATCH_PARENT }
-
+            applyScrollOffset(v, currentScrollOffset)
             val frameHeight = contentFrame.height
             if (frameHeight > 0) {
                 val bannerH = if (bannerLayout.isVisible) {
@@ -490,6 +503,43 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         viewModel.clearXpertWebView()
         currentWebView = null
         super.onDestroyView()
+    }
+
+    private fun openExternalUrl(url: String) {
+        if (url.isBlank()) return
+        val ctx = context ?: return
+        val act = activity ?: return
+        val formattedUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            "https://$url"
+        } else {
+            url
+        }
+        view?.post {
+            if (isAdded && !isDetached) {
+                try {
+                    ActionDialogFragment.newInstance(
+                        title = ctx.getString(CoreR.string.core_leaving_the_app),
+                        message = ctx.getString(
+                            CoreR.string.core_leaving_the_app_message,
+                            ctx.getString(CoreR.string.platform_name)
+                        ),
+                        url = formattedUrl,
+                        source = DiscoveryAnalyticsScreen.DISCOVERY.screenName
+                    ).show(
+                        act.supportFragmentManager,
+                        ActionDialogFragment::class.simpleName
+                    )
+                } catch (e: Exception) {
+                    try {
+                        val intent = android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse(formattedUrl)
+                        )
+                        ctx.startActivity(intent)
+                    } catch (ignored: Exception) {}
+                }
+            }
+        }
     }
 
     companion object {

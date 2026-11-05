@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+<LinearLayout
     android:id="@+id/root_layout"
     android:tag="root_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@color/background">
 
@@ -62,16 +67,14 @@
         android:id="@+id/content_frame"
         android:tag="content_frame"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipChildren="true"
-        android:clipToPadding="true">
+        android:layout_height="wrap_content"
+        android:layout_weight="1">
 
         <LinearLayout
             android:id="@+id/banner_and_webview_container"
             android:tag="banner_and_webview_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <androidx.compose.ui.platform.ComposeView
@@ -89,7 +92,7 @@
                 android:id="@+id/discovery_webview"
                 android:tag="discovery_webview"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
         <ProgressBar
@@ -139,3 +142,4 @@
         android:visibility="gone" />
 
 </LinearLayout>
+</ScrollView>

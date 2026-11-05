@@ -179,65 +179,78 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
     private var currentScrollOffset = 0
 
     private fun applyScrollOffset(view: View, offset: Int) {
-        val bannerLayout = view.findViewWithTag<View>("subscription_banner_layout") ?: return
-        val container = view.findViewWithTag<LinearLayout>("banner_and_webview_container") ?: return
-        val contentFrame = view.findViewWithTag<FrameLayout>("content_frame") ?: return
-        val webView = view.findViewWithTag<WebView>("discovery_webview") ?: return
+        val bannerLayout =
+            view.findViewWithTag<View>("subscription_banner_layout") ?: return
 
-        val frameHeight = contentFrame.height
-        if (frameHeight <= 0) return
+        val container =
+            view.findViewWithTag<LinearLayout>("banner_and_webview_container") ?: return
 
-        val isBannerVisible = viewModel.isSubscriptionBannerVisible.value && bannerLayout.isVisible
+        val webView =
+            view.findViewWithTag<WebView>("discovery_webview") ?: return
+
+        val isBannerVisible =
+            viewModel.isSubscriptionBannerVisible.value && bannerLayout.isVisible
+
         if (!isBannerVisible) {
-            container.updateLayoutParams {
-                height = frameHeight
-            }
-
-            webView.updateLayoutParams {
-                height = frameHeight
-            }
-
             container.translationY = 0f
             currentScrollOffset = 0
             return
         }
-        val totalBannerHeight = if (isBannerVisible) {
+
+        val totalBannerHeight = run {
             val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
             val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
+
             bannerLayout.height + margins
-        } else {
-            0
         }
 
-        val clampedOffset = if (totalBannerHeight > 0) offset.coerceIn(0, totalBannerHeight) else 0
+        if (totalBannerHeight <= 0) {
+            container.translationY = 0f
+            currentScrollOffset = 0
+            return
+        }
+
+        val clampedOffset = offset.coerceIn(0, totalBannerHeight)
+
         currentScrollOffset = clampedOffset
-
-        val targetContainerHeight = if (isBannerVisible) {
-            frameHeight + totalBannerHeight
-        } else {
-            frameHeight
-        }
-
-        container.updateLayoutParams {
-            height = targetContainerHeight
-        }
-
-        webView.updateLayoutParams {
-            height = frameHeight
-        }
-
-        val targetWebViewHeight = if (isXpertChatOpen) {
-            frameHeight - totalBannerHeight + clampedOffset
-        } else {
-            frameHeight
-        }
-        if (webView.layoutParams.height != targetWebViewHeight) {
-            webView.updateLayoutParams { height = targetWebViewHeight }
-        }
 
         container.translationY = -clampedOffset.toFloat()
     }
 
+    private fun updateWebViewHeight(webView: WebView) {
+
+        webView.evaluateJavascript(
+            """
+        (function() {
+            var body = document.body;
+            var html = document.documentElement;
+
+            return Math.max(
+                body ? body.scrollHeight : 0,
+                body ? body.offsetHeight : 0,
+                html ? html.scrollHeight : 0,
+                html ? html.offsetHeight : 0,
+                html ? html.clientHeight : 0
+            );
+        })();
+        """.trimIndent()
+        ) { result ->
+
+            if (result.isNullOrBlank() || result == "null") return@evaluateJavascript
+
+            val cssHeight = result.toFloatOrNull()
+                ?: return@evaluateJavascript
+
+            val calculatedHeight =
+                (cssHeight * webView.scale).toInt().coerceAtLeast(1)
+
+            if (webView.layoutParams.height != calculatedHeight) {
+                webView.updateLayoutParams {
+                    height = calculatedHeight
+                }
+            }
+        }
+    }
     private fun setupWebView(view: View) {
         val webView = view.findViewWithTag<WebView>("discovery_webview") ?: return
         currentWebView = webView
@@ -256,7 +269,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 view.post {
                     applyScrollOffset(view, currentScrollOffset)
                 }
-
             },
             onWebPageUpdated = { url ->
                 viewModel.updateDiscoveryUrl(url)
@@ -462,36 +474,60 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val v = view ?: return
-        val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
-        if (!isLandscape) {
-            v.updatePadding(left = 0, right = 0)
-        }
-        val btnXpertChat = v.findViewWithTag<ImageButton>("btn_xpert_chat")
-        updateXpertChatIcon(btnXpertChat)
-        v.post {
-            ViewCompat.requestApplyInsets(v)
-            val contentFrame = v.findViewWithTag<FrameLayout>("content_frame") ?: return@post
-            val webView = v.findViewWithTag<WebView>("discovery_webview") ?: return@post
-            val container = v.findViewWithTag<LinearLayout>("banner_and_webview_container") ?: return@post
-            val bannerLayout = v.findViewWithTag<View>("subscription_banner_layout") ?: return@post
 
-            container.updateLayoutParams { width = ViewGroup.LayoutParams.MATCH_PARENT }
-            webView.updateLayoutParams { width = ViewGroup.LayoutParams.MATCH_PARENT }
-            applyScrollOffset(v, currentScrollOffset)
-            val frameHeight = contentFrame.height
-            if (frameHeight > 0) {
-                val bannerH = if (bannerLayout.isVisible) {
-                    val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
-                    val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
-                    bannerLayout.height + margins
-                } else {
-                    0
-                }
-                container.updateLayoutParams { height = frameHeight + bannerH }
-                webView.updateLayoutParams { height = frameHeight }
-                val scrollOffset = if (bannerH > 0) webView.scrollY.coerceIn(0, bannerH) else 0
-                container.translationY = -scrollOffset.toFloat()
+        val rootView = view ?: return
+
+        val isLandscape =
+            newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        if (!isLandscape) {
+            rootView.updatePadding(left = 0, right = 0)
+        }
+
+        val btnXpertChat =
+            rootView.findViewWithTag<ImageButton>("btn_xpert_chat")
+
+        updateXpertChatIcon(btnXpertChat)
+
+        // Wait until the new orientation has been measured.
+        rootView.post {
+            if (!isAdded || view !== rootView) return@post
+
+            ViewCompat.requestApplyInsets(rootView)
+
+            val webView =
+                rootView.findViewWithTag<WebView>("discovery_webview")
+                    ?: return@post
+
+            val container =
+                rootView.findViewWithTag<LinearLayout>(
+                    "banner_and_webview_container"
+                ) ?: return@post
+
+            // Keep the container width updated.
+            container.updateLayoutParams {
+                width = ViewGroup.LayoutParams.MATCH_PARENT
+                height = ViewGroup.LayoutParams.WRAP_CONTENT
+            }
+
+            // Reset the previous orientation's fixed WebView height.
+            webView.updateLayoutParams {
+                width = ViewGroup.LayoutParams.MATCH_PARENT
+                height = ViewGroup.LayoutParams.WRAP_CONTENT
+            }
+
+            container.translationY = 0f
+
+            // Recalculate HTML content height after orientation changes.
+            webView.post {
+                if (!isAdded || view !== rootView) return@post
+
+                webView.requestLayout()
+
+                updateWebViewHeight(webView)
+
+                // Restore banner state.
+                applyScrollOffset(rootView, currentScrollOffset)
             }
         }
     }

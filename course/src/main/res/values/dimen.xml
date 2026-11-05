@@ -33,6 +33,7 @@
     <dimen name="tablet_video_title_portrait_start_margin">170px</dimen>
     <dimen name="tablet_video_title_portrait_end_margin">175px</dimen>
     <dimen name="video_margin_potrait">16px</dimen>
+    <dimen name="video_full_height">450dp</dimen>
 
 
 

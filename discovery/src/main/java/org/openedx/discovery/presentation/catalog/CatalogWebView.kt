@@ -149,6 +149,9 @@ fun configureCatalogWebView(
     setInterval(function() {
         var modal = document.querySelector('[role="dialog"]');
         var isModalOpen = modal !== null && modal.offsetParent !== null;
+                 var isModalOpen = modal !== null &&
+             modal.getClientRects().length > 0 &&
+             window.getComputedStyle(modal).visibility !== 'hidden';
         if (isModalOpen && modal) {
             modal.style.setProperty('width', '100%', 'important');
             modal.style.setProperty('height', '100%', 'important');

@@ -70,7 +70,13 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
         setupToolbar(view)
         setupSubscriptionBanner(view)
-        setupWebView(view)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.cookiesReady.collect { ready ->
+                if (ready && currentWebView == null) {
+                    setupWebView(view)
+                }
+            }
+        }
         setupSubscriptionBannerScrolling(view)
         setupErrorView(view)
         setupAuthButtons(view)
@@ -100,19 +106,16 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 0
             }
 
-            // Apply horizontal insets in landscape so Xpert Chat icon and banner edges are never cut
             view.updatePadding(
                 left = horizontalCutout,
                 right = horizontalCutout
             )
 
-            // Give margin top to toolbar instead of padding top
             val extraTopMargin = (8 * resources.displayMetrics.density).toInt()
             headerToolbar?.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 topMargin = statusBarInset.top + extraTopMargin
             }
 
-            // In prelogin, apply navigation bar bottom padding so register and sign in buttons are never cut
             val authButtonsView = view.findViewWithTag<View>("auth_buttons_compose_view")
             if (viewModel.isPreLogin) {
                 val extraPadding = (12 * resources.displayMetrics.density).toInt()
@@ -414,12 +417,15 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val deltaY = touchStartY - event.rawY
-                    applyScrollOffset(view, initialOffset + deltaY.toInt())
+                    if (!isXpertChatOpen) {
+                        applyScrollOffset(view, initialOffset + deltaY.toInt())
+                    }
                 }
             }
-            false // Return false so webView and banner still receive click, tap, and text input events
+            false
         }
 
+        bannerLayout.setOnTouchListener(touchListener)
         bannerLayout.setOnTouchListener(touchListener)
         webView.setOnTouchListener(touchListener)
     }
@@ -447,6 +453,15 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                             if (uiState is WebViewUIState.Loading && hasInternet) View.VISIBLE else View.GONE
                         errorViewContainer?.visibility =
                             if (uiState is WebViewUIState.Error) View.VISIBLE else View.GONE
+                        if (uiState is WebViewUIState.Error) {
+                            view.findViewWithTag<TextView>("error_message")?.setText(
+                                if (uiState.errorType == org.openedx.core.presentation.global.ErrorType.CONNECTION_ERROR) {
+                                    CoreR.string.core_error_no_connection
+                                } else {
+                                    CoreR.string.core_error_unknown_error
+                                }
+                            )
+                        }
                         webView?.visibility =
                             if (uiState is WebViewUIState.Error || !hasInternet) View.GONE else View.VISIBLE
                     }

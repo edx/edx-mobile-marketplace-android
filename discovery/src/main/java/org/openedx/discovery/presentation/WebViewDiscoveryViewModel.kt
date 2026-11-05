@@ -213,24 +213,34 @@ class WebViewDiscoveryViewModel(
     }
 
     private var _xpertWebView: WebView? = null
+    private var _discoveryWebView: WebView? = null
+
+    fun setDiscoveryWebView(webView: WebView?) {
+        _discoveryWebView = webView
+    }
 
     fun setXpertWebView(webView: WebView?) {
         _xpertWebView = webView
     }
 
     fun triggerXpertChat() {
-        _xpertWebView?.evaluateJavascript(
+        val webView = _xpertWebView ?: return
+
+        webView.evaluateJavascript(
             """
         (function() {
-            if (window.__triggerXpertChatbotAction) {
-                window.__triggerXpertChatbotAction();
+            if (typeof window.__triggerXpertChatbotAction === 'function') {
+                return window.__triggerXpertChatbotAction();
             }
+
+            return false;
         })();
-        """
+        """.trimIndent()
         ) { result ->
-            logger.d({ "Xpert chat triggered: $result" })
+            logger.d { "Xpert chat trigger result: $result" }
         }
     }
+
 
     fun dismissSubscriptionBanner() {
         val telemetry = subscriptionAlertBanner.getTelemetry(SubscriptionAlertBanner.Screen.DISCOVERY)
@@ -260,6 +270,27 @@ class WebViewDiscoveryViewModel(
             }
         )
 }
+
+    fun openXpertChat(fragmentManager: FragmentManager) {
+        val webView = _xpertWebView ?: return
+
+        XpertChatDialogFragment.newInstance("https://www.edx.org/"
+        )
+            .show(fragmentManager, "XpertChatDialogFragment")
+
+        webView.post {
+            webView.evaluateJavascript(
+                """
+            (function() {
+                if (window.__triggerXpertChatbotAction) {
+                    window.__triggerXpertChatbotAction();
+                }
+            })();
+            """.trimIndent(),
+                null
+            )
+        }
+    }
 
     fun clearXpertWebView() {
         _xpertWebView = null

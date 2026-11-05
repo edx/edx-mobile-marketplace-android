@@ -480,9 +480,9 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         val isLandscape =
             newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-        if (!isLandscape) {
-            rootView.updatePadding(left = 0, right = 0)
-        }
+//        if (!isLandscape) {
+//            rootView.updatePadding(left = 0, right = 0)
+//        }
 
         val btnXpertChat =
             rootView.findViewWithTag<ImageButton>("btn_xpert_chat")
@@ -519,16 +519,16 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             container.translationY = 0f
 
             // Recalculate HTML content height after orientation changes.
-            webView.post {
-                if (!isAdded || view !== rootView) return@post
-
-                webView.requestLayout()
-
-                updateWebViewHeight(webView)
-
-                // Restore banner state.
-                applyScrollOffset(rootView, currentScrollOffset)
-            }
+//            webView.post {
+//                if (!isAdded || view !== rootView) return@post
+//
+//                webView.requestLayout()
+//
+//                updateWebViewHeight(webView)
+//
+//                // Restore banner state.
+//                applyScrollOffset(rootView, currentScrollOffset)
+//            }
         }
     }
 

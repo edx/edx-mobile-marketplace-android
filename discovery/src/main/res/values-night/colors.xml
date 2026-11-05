@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="subscription_banner_bg">#0E3639</color>
+    <color name="subscription_banner_stroke">#1C5256</color>
+    <color name="subscription_banner_title">#FFFFFF</color>
+    <color name="subscription_banner_desc">#E5E5EA</color>
+</resources>

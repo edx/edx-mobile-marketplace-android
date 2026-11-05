@@ -136,7 +136,13 @@ class CourseInfoViewModel(
                             enrollmentSuccess = AtomicReference(courseId)
                         )
                     }
-                } else if (iapConfig?.isEnabled == true) {
+                } else {
+                    interactor.enrollInACourse(courseId)
+                    courseEnrollSuccessEvent(courseId)
+                    notifier.send(CourseDashboardUpdate())
+                    _uiMessage.emit(
+                        UIMessage.ToastMessage(resourceManager.getString(R.string.discovery_enrolled_successfully))
+                    )
                     _uiState.update {
                         it.copy(
                             hadEnrollment = AtomicReference(false),

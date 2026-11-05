@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_layout"
+    android:tag="root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <RelativeLayout
+        android:id="@+id/header_toolbar"
+        android:tag="header_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/header_title_size"
+        android:background="@color/background"
+        android:elevation="0dp"
+        app:elevation="0dp">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:tag="btn_back"
+            android:layout_width="@dimen/header_title_size"
+            android:layout_height="@dimen/header_title_size"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/core_ic_back"
+            app:tint="?android:attr/colorControlNormal"
+            android:contentDescription="@string/core_accessibility_btn_back"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:tag="toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/discovery_explore_the_catalog"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:gravity="center" />
+
+        <ImageButton
+            android:id="@+id/btn_xpert_chat"
+            android:tag="btn_xpert_chat"
+            android:layout_width="@dimen/xpert_icon_button_size"
+            android:layout_height="@dimen/header_title_size"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/xpert_logo"
+            android:contentDescription="@string/xpert_chat"
+            android:scaleType="centerInside" />
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/content_frame"
+        android:tag="content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipChildren="true"
+        android:clipToPadding="true">
+
+        <LinearLayout
+            android:id="@+id/banner_and_webview_container"
+            android:tag="banner_and_webview_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/subscription_banner_compose_view"
+                android:tag="subscription_banner_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone" />
+
+            <WebView
+                android:id="@+id/discovery_webview"
+                android:tag="discovery_webview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/loading_indicator"
+            android:tag="loading_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/error_view_container"
+            android:tag="error_view_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:background="@color/background"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/error_message"
+                android:tag="error_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/discovery_no_internet_label"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="16sp"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btn_error_reload"
+                android:tag="btn_error_reload"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/core_reload" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/auth_buttons_compose_view"
+        android:tag="auth_buttons_compose_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+</LinearLayout>

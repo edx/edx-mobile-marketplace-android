@@ -58,6 +58,8 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
     private var currentWebView: WebView? = null
 
+    private var isXpertChatOpen = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(viewModel)
@@ -277,44 +279,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         )
     }
 
-    private var isXpertChatOpen = false
-
-    private fun handleXpertChatStateChanged(view: View, isOpen: Boolean) {
-        isXpertChatOpen = isOpen
-        val bannerLayout = view.findViewWithTag<View>("subscription_banner_layout")
-        val container = view.findViewWithTag<LinearLayout>("banner_and_webview_container")
-        val contentFrame = view.findViewWithTag<FrameLayout>("content_frame")
-        val webView = view.findViewWithTag<WebView>("discovery_webview")
-
-        if (isOpen) {
-            bannerLayout?.visibility = View.GONE
-            container?.translationY = 0f
-            val frameHeight = contentFrame?.height ?: ViewGroup.LayoutParams.MATCH_PARENT
-            container?.updateLayoutParams { height = frameHeight }
-            webView?.updateLayoutParams { height = frameHeight }
-        } else {
-            val isBannerVisible = viewModel.isSubscriptionBannerVisible.value
-            bannerLayout?.visibility = if (isBannerVisible) View.VISIBLE else View.GONE
-            container?.translationY = 0f
-            view.post {
-                val frameHeight = contentFrame?.height ?: 0
-                if (frameHeight > 0) {
-                    val totalBannerHeight = if (isBannerVisible) {
-                        val params = bannerLayout?.layoutParams as? ViewGroup.MarginLayoutParams
-                        val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
-                        (bannerLayout?.height ?: 0) + margins
-                    } else {
-                        0
-                    }
-                    container?.updateLayoutParams { height = frameHeight + totalBannerHeight }
-                    webView?.updateLayoutParams { height = frameHeight }
-                    val scrollOffset = if (totalBannerHeight > 0) webView?.scrollY?.coerceIn(0, totalBannerHeight) ?: 0 else 0
-                    container?.translationY = -scrollOffset.toFloat()
-                }
-            }
-        }
-    }
-
     private fun handleUriClick(param: String, authority: WebViewLink.Authority) {
         when (authority) {
             WebViewLink.Authority.COURSE_INFO -> {
@@ -462,12 +426,9 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
     private fun observeViewModel(view: View) {
         val bannerLayout = view.findViewWithTag<View>("subscription_banner_layout")
-        val container = view.findViewWithTag<LinearLayout>("banner_and_webview_container")
         val loadingIndicator = view.findViewWithTag<ProgressBar>("loading_indicator")
         val errorViewContainer = view.findViewWithTag<View>("error_view_container")
         val webView = view.findViewWithTag<WebView>("discovery_webview")
-        val contentFrame = view.findViewWithTag<FrameLayout>("content_frame")
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -476,20 +437,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                         view.post {
                             applyScrollOffset(view, currentScrollOffset)
                         }
-//                        val frameHeight = contentFrame?.height ?: 0
-//                        if (frameHeight > 0) {
-//                            if (!isVisible) {
-//                                container?.translationY = 0f
-//                                container?.updateLayoutParams { height = frameHeight }
-//                                webView?.updateLayoutParams { height = frameHeight }
-//                            } else {
-//                                val params = bannerLayout?.layoutParams as? ViewGroup.MarginLayoutParams
-//                                val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
-//                                val bannerH = (bannerLayout?.height ?: 0) + margins
-//                                container?.updateLayoutParams { height = frameHeight + bannerH }
-//                                webView?.updateLayoutParams { height = frameHeight }
-//                            }
-//                        }
                     }
                 }
 
@@ -557,43 +504,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         viewModel.clearXpertWebView()
         currentWebView = null
         super.onDestroyView()
-    }
-
-    private fun openExternalUrl(url: String) {
-        if (url.isBlank()) return
-        val ctx = context ?: return
-        val act = activity ?: return
-        val formattedUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            "https://$url"
-        } else {
-            url
-        }
-        view?.post {
-            if (isAdded && !isDetached) {
-                try {
-                    ActionDialogFragment.newInstance(
-                        title = ctx.getString(CoreR.string.core_leaving_the_app),
-                        message = ctx.getString(
-                            CoreR.string.core_leaving_the_app_message,
-                            ctx.getString(CoreR.string.platform_name)
-                        ),
-                        url = formattedUrl,
-                        source = DiscoveryAnalyticsScreen.DISCOVERY.screenName
-                    ).show(
-                        act.supportFragmentManager,
-                        ActionDialogFragment::class.simpleName
-                    )
-                } catch (e: Exception) {
-                    try {
-                        val intent = android.content.Intent(
-                            android.content.Intent.ACTION_VIEW,
-                            android.net.Uri.parse(formattedUrl)
-                        )
-                        ctx.startActivity(intent)
-                    } catch (ignored: Exception) {}
-                }
-            }
-        }
     }
 
     companion object {

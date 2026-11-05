@@ -24,7 +24,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
-import androidx.core.view.marginTop
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.PlaybackException
@@ -80,7 +79,6 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         get() = binding.rootLayout as ConstraintLayout
     private var lastVideoAspectRatio: Rational? = null
 
-    private var savedConstraintState: Bundle? = null
     private var savedCardViewParams: ConstraintLayout.LayoutParams? = null
     private var savedSubtitleParams: ConstraintLayout.LayoutParams? = null
 

@@ -8,7 +8,6 @@
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- Header Toolbar matching other screens with top margin -->
     <RelativeLayout
         android:id="@+id/header_toolbar"
         android:tag="header_toolbar"
@@ -59,7 +58,6 @@
             android:scaleType="centerInside" />
     </RelativeLayout>
 
-    <!-- Content Area: Banner + WebView in container for synchronized scrolling without bottom space -->
     <FrameLayout
         android:id="@+id/content_frame"
         android:tag="content_frame"
@@ -76,7 +74,6 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <!-- Subscription Banner matching Profile screen exactly -->
             <androidx.compose.ui.platform.ComposeView
                 android:id="@+id/subscription_banner_compose_view"
                 android:tag="subscription_banner_layout"
@@ -134,7 +131,6 @@
         </LinearLayout>
     </FrameLayout>
 
-    <!-- Auth Buttons Container (Pre-login only) -->
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/auth_buttons_compose_view"
         android:tag="auth_buttons_compose_view"

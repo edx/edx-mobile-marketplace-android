@@ -105,34 +105,33 @@ fun configureCatalogWebView(
                 view?.evaluateJavascript(
                     """
 (function() {
-
-    // Hide the Xpert floating button and greeting.
+    // Hide the Xpert chatbot floating button
     var style = document.createElement('style');
     style.id = 'xpert-hide-style';
-
     style.textContent = `
-        #xpert_chatbot__floating-action-btn {
-            display: none !important;
-            visibility: hidden !important;
+        #xpert_chatbot__floating-action-btn { 
+            display: none !important; 
+            visibility: hidden !important; 
             opacity: 0 !important;
         }
-
+        /* Hide Xpert greeting message */
         [class*="xpert"][class*="greeting"],
         [class*="xpert"][class*="welcome"],
+        [class*="xpert"][class*="message"],
         .xpert-greeting,
         .xpert-welcome-message,
         #xpert-greeting,
-        #xpert-welcome {
-            display: none !important;
-            visibility: hidden !important;
+        #xpert-welcome { 
+            display: none !important; 
+            visibility: hidden !important; 
             opacity: 0 !important;
         }
-
-        [role="dialog"] {
+        /* Ensure Xpert chat dialog is full screen and input is visible */
+        /* Ensure chatbot dialog adjusts when keyboard opens */
+[role="dialog"] {
     position: fixed !important;
-    width: 100vw !important;
+    width: 100% !important;
     height: 100dvh !important;
-    max-width: 100vw !important;
     max-height: 100dvh !important;
     top: 0 !important;
     left: 0 !important;
@@ -140,148 +139,120 @@ fun configureCatalogWebView(
     bottom: 0 !important;
     border-radius: 0 !important;
     margin: 0 !important;
-    padding-bottom: 0 !important;
-    box-sizing: border-box !important;
-    z-index: 2147483647 !important;
+    z-index: 999999 !important;
+    overflow: hidden !important;
+}
+
+/* Keep chatbot input visible */
+[role="dialog"] textarea,
+[role="dialog"] input,
+[role="dialog"] [contenteditable="true"] {
+    scroll-margin-bottom: 30px;
+}
+
+/* Prevent input from being covered by keyboard */
+[role="dialog"] {
+    display: flex !important;
+    flex-direction: column !important;
 }
     `;
-
     (document.head || document.documentElement).appendChild(style);
-
+    
+    // Monitor for modal open/close and notify native bridge
     var wasModalOpen = false;
-    var hiddenElements = [];
-
-    function hideDiscoveryContent(modal) {
-
-        hiddenElements = [];
-
-        // Hide siblings of the modal and its ancestors,
-        // preserving the modal itself.
-        var current = modal;
-
-        while (current && current !== document.body) {
-
-            var parent = current.parentElement;
-
-            if (!parent) break;
-
-            Array.from(parent.children).forEach(function(element) {
-
-                if (element !== current) {
-
-                    hiddenElements.push({
-                        element: element,
-                        visibility: element.style.visibility
-                    });
-
-                    element.style.setProperty(
-                        'visibility',
-                        'hidden',
-                        'important'
-                    );
-                }
-            });
-
-            current = parent;
-        }
-    }
-
-    function restoreDiscoveryContent() {
-
-        hiddenElements.forEach(function(item) {
-            item.element.style.visibility = item.visibility;
-        });
-
-        hiddenElements = [];
-    }
-
-    function checkModal() {
-
+    setInterval(function() {
         var modal = document.querySelector('[role="dialog"]');
-
-        var isModalOpen =
-            modal !== null &&
-            modal.getClientRects().length > 0 &&
-            window.getComputedStyle(modal).visibility !== 'hidden';
+        var isModalOpen = modal !== null && modal.offsetParent !== null;
+                 var isModalOpen = modal !== null &&
+             modal.getClientRects().length > 0 &&
+             window.getComputedStyle(modal).visibility !== 'hidden';
+             var viewportHeight = window.visualViewport
+    ? window.visualViewport.height
+    : window.innerHeight;
 
         if (isModalOpen && modal) {
-
-            modal.style.setProperty('position', 'fixed', 'important');
-            modal.style.setProperty('width', '100vw', 'important');
-            modal.style.setProperty('height', '100dvh', 'important');
-            modal.style.setProperty('max-height', '100dvh', 'important');
-            modal.style.setProperty('min-height', '0', 'important');
-            modal.style.setProperty('padding-bottom', '0', 'important');
-            modal.style.setProperty('box-sizing', 'border-box', 'important');
-            modal.style.setProperty('max-width', '100vw', 'important');
+            modal.style.setProperty('width', '100%', 'important');
+            modal.style.setProperty('height', viewportHeight + 'px', 'important');
+            modal.style.setProperty('max-width', '100%', 'important');
+            modal.style.setProperty('max-height', '100%', 'important');
             modal.style.setProperty('top', '0', 'important');
             modal.style.setProperty('left', '0', 'important');
             modal.style.setProperty('right', '0', 'important');
             modal.style.setProperty('bottom', '0', 'important');
             modal.style.setProperty('border-radius', '0', 'important');
             modal.style.setProperty('margin', '0', 'important');
-            modal.style.setProperty('z-index', '2147483647', 'important');
         }
-
         if (isModalOpen !== wasModalOpen) {
-
             wasModalOpen = isModalOpen;
-
-            if (isModalOpen) {
-                hideDiscoveryContent(modal);
-
-                if (window.XpertChatBridge) {
+            if (window.XpertChatBridge) {
+                if (isModalOpen) {
                     window.XpertChatBridge.onChatOpen();
-                }
-
-            } else {
-
-                restoreDiscoveryContent();
-
-                if (window.XpertChatBridge) {
+                } else {
                     window.XpertChatBridge.onChatClose();
                 }
             }
         }
-
         if (!isModalOpen) {
-            var btn = document.getElementById(
-                'xpert_chatbot__floating-action-btn'
-            );
-
+            var btn = document.getElementById('xpert_chatbot__floating-action-btn');
             if (btn) {
-                btn.style.cssText =
-                    'display:none !important; visibility:hidden !important;';
+                btn.style.cssText = 'display: none !important; visibility: hidden !important;';
             }
         }
-    }
+    }, 300);
 
-    setInterval(checkModal, 300);
-
+    // Make trigger function available
     window.__triggerXpertChatbotAction = function() {
+        var btn = document.getElementById('xpert_chatbot__floating-action-btn');
+        if (btn) {
+            btn.style.cssText = 'display: block !important; visibility: visible !important;';
+            btn.click();
+        }
+    };
+    
+    // Handle keyboard visibility and input positioning
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+        var modal = document.querySelector('[role="dialog"]');
 
-    var btn = document.getElementById(
-        'xpert_chatbot__floating-action-btn'
-    );
+        if (!modal) return;
 
-    if (!btn) {
-        console.log('Xpert chatbot button not found');
-        return false;
-    }
+        var viewportHeight = window.visualViewport.height;
 
-    btn.style.setProperty('display', 'block', 'important');
-    btn.style.setProperty('visibility', 'visible', 'important');
+        modal.style.setProperty(
+            'height',
+            viewportHeight + 'px',
+            'important'
+        );
 
-    btn.click();
+        modal.style.setProperty(
+            'max-height',
+            viewportHeight + 'px',
+            'important'
+        );
 
-    return true;
-};
+        var activeElement = document.activeElement;
 
+        if (
+            activeElement &&
+            (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.isContentEditable
+            )
+        ) {
+            setTimeout(function() {
+                activeElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 150);
+        }
+    });
+}
+    
+    // Check for 404 page
     const text = document.body.innerText || "";
-
-    return text.includes("Page not found") ||
-           text.includes("404");
-
+    return text.includes("Page not found") || text.includes("404");
 })();
 """
                 ) { result ->
@@ -352,11 +323,14 @@ fun configureCatalogWebView(
             loadsImagesAutomatically = true
             domStorageEnabled = true
             userAgentString = "$userAgentString $userAgent"
+
+            // Important for keyboard interaction
+            setSupportMultipleWindows(false)
         }
         isVerticalScrollBarEnabled = false
         isHorizontalScrollBarEnabled = false
         webViewTrackingAnalytics.enableWebViewTracking(this, url)
-        loadUrl(url)
         applyDarkModeIfEnabled(isDarkTheme)
+        loadUrl(url)
     }
 }

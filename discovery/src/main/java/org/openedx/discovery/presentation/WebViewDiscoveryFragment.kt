@@ -13,7 +13,6 @@
     import android.widget.ImageButton
     import android.widget.LinearLayout
     import android.widget.ProgressBar
-    import android.widget.ScrollView
     import android.widget.TextView
     import androidx.activity.OnBackPressedCallback
     import androidx.compose.foundation.layout.Box
@@ -92,6 +91,8 @@
             val toolbarTitle = view.findViewWithTag<TextView>("toolbar_title")
             val btnBack = view.findViewWithTag<ImageButton>("btn_back")
             val btnXpertChat = view.findViewWithTag<ImageButton>("btn_xpert_chat")
+            val xpertWebView =
+                view.findViewWithTag<WebView>("xpert_webview")
 
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
                 val statusBarInset = insets.getInsets(WindowInsetsCompat.Type.statusBars())
@@ -136,17 +137,45 @@
                 requireActivity().supportFragmentManager.popBackStackImmediate()
             }
 
-            updateXpertChatIcon(btnXpertChat)
+            updateXpertChatIcon(btnXpertChat,xpertWebView)
             btnXpertChat?.setOnClickListener {
                 viewModel.triggerXpertChat()
             }
         }
 
-        private fun updateXpertChatIcon(btnXpertChat: ImageButton?) {
-            val isDarkMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        private fun updateXpertChatIcon(
+            btnXpertChat: ImageButton?,
+            xpertWebView: WebView?
+        ) {
+            val isDarkMode =
+                resources.configuration.uiMode and
+                        Configuration.UI_MODE_NIGHT_MASK ==
+                        Configuration.UI_MODE_NIGHT_YES
+
             btnXpertChat?.setImageResource(
-                if (isDarkMode) R.drawable.xpert_logo else R.drawable.xpert_logo_light
+                if (isDarkMode) R.drawable.xpert_logo
+                else R.drawable.xpert_logo_light
             )
+
+            xpertWebView?.apply {
+                setBackgroundColor(
+                    androidx.core.content.ContextCompat.getColor(
+                        requireContext(),
+                        if (isDarkMode) CoreR.color.primary
+                        else CoreR.color.background
+                    )
+                )
+
+                evaluateJavascript(
+                    """
+            document.documentElement.style.backgroundColor =
+                '${if (isDarkMode) "#000000" else "#FFFFFF"}';
+            document.body.style.backgroundColor =
+                '${if (isDarkMode) "#000000" else "#FFFFFF"}';
+            """.trimIndent(),
+                    null
+                )
+            }
         }
 
         private fun setupSubscriptionBanner(view: View) {
@@ -297,7 +326,6 @@
             xpertWebView.visibility = View.GONE
 
             viewModel.setXpertWebView(xpertWebView)
-
             configureCatalogWebView(
                 webView = xpertWebView,
                 url = viewModel.discoveryUrl,
@@ -322,6 +350,7 @@
                         }
                     }
                 }
+
             )
         }
 
@@ -508,8 +537,27 @@
                                 if (uiState is WebViewUIState.Error || !hasInternet) View.GONE else View.VISIBLE
                         }
                     }
+                    launch {
+                        viewModel.isDarkTheme.collect { isDark ->
+                            val xpertWebView =
+                                view.findViewWithTag<WebView>("xpert_webview")
+
+                            xpertWebView?.apply {
+                                setBackgroundColor(
+                                    androidx.core.content.ContextCompat.getColor(
+                                        requireContext(),
+                                        if (isDark) CoreR.color.primary
+                                        else CoreR.color.background
+                                    )
+                                )
+                            }
+                        }
+                    }
                 }
+
+
             }
+
         }
 
         override fun onConfigurationChanged(newConfig: Configuration) {
@@ -526,8 +574,10 @@
 
             val btnXpertChat =
                 rootView.findViewWithTag<ImageButton>("btn_xpert_chat")
+            val xpertWebView =
+                rootView.findViewWithTag<WebView>("xpert_webview")
 
-            updateXpertChatIcon(btnXpertChat)
+            updateXpertChatIcon(btnXpertChat, xpertWebView)
 
             // Wait until the new orientation has been measured.
             rootView.post {
@@ -577,7 +627,9 @@
             viewModel.updateThemeMode()
             view?.let {
                 val btnXpertChat = it.findViewWithTag<ImageButton>("btn_xpert_chat")
-                updateXpertChatIcon(btnXpertChat)
+                val xpertWebView =
+                    it.findViewWithTag<WebView>("xpert_webview")
+                updateXpertChatIcon(btnXpertChat, xpertWebView)
             }
         }
 

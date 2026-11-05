@@ -271,27 +271,6 @@ class WebViewDiscoveryViewModel(
         )
 }
 
-    fun openXpertChat(fragmentManager: FragmentManager) {
-        val webView = _xpertWebView ?: return
-
-        XpertChatDialogFragment.newInstance("https://www.edx.org/"
-        )
-            .show(fragmentManager, "XpertChatDialogFragment")
-
-        webView.post {
-            webView.evaluateJavascript(
-                """
-            (function() {
-                if (window.__triggerXpertChatbotAction) {
-                    window.__triggerXpertChatbotAction();
-                }
-            })();
-            """.trimIndent(),
-                null
-            )
-        }
-    }
-
     fun clearXpertWebView() {
         _xpertWebView = null
     }

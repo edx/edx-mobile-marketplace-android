@@ -675,7 +675,7 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
             if (isTablet()) {
                 (binding.cardView.layoutParams as ConstraintLayout.LayoutParams).apply {
                     width = ConstraintLayout.LayoutParams.MATCH_PARENT
-                    height =resources.getDimensionPixelSize(R.dimen.video_full_height)
+                    height = 450
                     marginStart = 0
                     marginEnd = 0
                     topMargin = 0

@@ -426,7 +426,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         }
 
         bannerLayout.setOnTouchListener(touchListener)
-        bannerLayout.setOnTouchListener(touchListener)
         webView.setOnTouchListener(touchListener)
     }
 
@@ -453,15 +452,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                             if (uiState is WebViewUIState.Loading && hasInternet) View.VISIBLE else View.GONE
                         errorViewContainer?.visibility =
                             if (uiState is WebViewUIState.Error) View.VISIBLE else View.GONE
-                        if (uiState is WebViewUIState.Error) {
-                            view.findViewWithTag<TextView>("error_message")?.setText(
-                                if (uiState.errorType == org.openedx.core.presentation.global.ErrorType.CONNECTION_ERROR) {
-                                    CoreR.string.core_error_no_connection
-                                } else {
-                                    CoreR.string.core_error_unknown_error
-                                }
-                            )
-                        }
                         webView?.visibility =
                             if (uiState is WebViewUIState.Error || !hasInternet) View.GONE else View.VISIBLE
                     }

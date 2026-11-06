@@ -207,44 +207,91 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
     private var currentScrollOffset = 0
 
+    private var originalBannerHeight = -1
+    private var originalBannerTopMargin = 0
+    private var originalBannerBottomMargin = 0
+
     private fun applyScrollOffset(view: View, offset: Int) {
         val bannerLayout =
             view.findViewWithTag<View>("subscription_banner_layout") ?: return
 
-        val container =
-            view.findViewWithTag<LinearLayout>("banner_and_webview_container") ?: return
-
-        val webView =
-            view.findViewWithTag<WebView>("discovery_webview") ?: return
-
         val isBannerVisible =
-            viewModel.isSubscriptionBannerVisible.value && bannerLayout.isVisible
+            viewModel.isSubscriptionBannerVisible.value &&
+                    bannerLayout.isVisible
+
+        val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
+            ?: return
+
+        // Store original dimensions once.
+        if (originalBannerHeight == -1 && bannerLayout.height > 0) {
+            originalBannerHeight = bannerLayout.height
+            originalBannerTopMargin = params.topMargin
+            originalBannerBottomMargin = params.bottomMargin
+        }
 
         if (!isBannerVisible) {
-            container.translationY = 0f
             currentScrollOffset = 0
             return
         }
 
-        val totalBannerHeight = run {
-            val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
-            val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
+        if (originalBannerHeight <= 0) return
 
-            bannerLayout.height + margins
-        }
+        val totalHeight = originalBannerHeight +
+                originalBannerTopMargin +
+                originalBannerBottomMargin
 
-        if (totalBannerHeight <= 0) {
-            container.translationY = 0f
-            currentScrollOffset = 0
-            return
-        }
-
-        val clampedOffset = offset.coerceIn(0, totalBannerHeight)
+        val clampedOffset = offset.coerceIn(0, totalHeight)
 
         currentScrollOffset = clampedOffset
 
-        container.translationY = -clampedOffset.toFloat()
+        // Calculate remaining visible banner height.
+        val remainingHeight = (totalHeight - clampedOffset)
+            .coerceIn(0, totalHeight)
+
+        // Collapse banner height and margins together.
+        val remainingTopMargin = minOf(
+            originalBannerTopMargin,
+            remainingHeight
+        )
+
+        val remainingBottomMargin = minOf(
+            originalBannerBottomMargin,
+            (remainingHeight - remainingTopMargin).coerceAtLeast(0)
+        )
+
+        val remainingContentHeight = (
+                remainingHeight -
+                        remainingTopMargin -
+                        remainingBottomMargin
+                ).coerceAtLeast(0)
+
+        params.topMargin = remainingTopMargin
+        params.bottomMargin = remainingBottomMargin
+        bannerLayout.layoutParams = params
+
+        bannerLayout.updateLayoutParams<ViewGroup.LayoutParams> {
+            height = remainingContentHeight
+        }
     }
+
+    private fun restoreBannerLayout(bannerLayout: View) {
+        if (originalBannerHeight <= 0) return
+
+        val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
+            ?: return
+
+        params.topMargin = originalBannerTopMargin
+        params.bottomMargin = originalBannerBottomMargin
+
+        bannerLayout.layoutParams = params
+
+        bannerLayout.updateLayoutParams<ViewGroup.LayoutParams> {
+            height = originalBannerHeight
+        }
+
+        currentScrollOffset = 0
+    }
+
     private fun setupWebView(view: View) {
         val webView =
             view.findViewWithTag<WebView>("discovery_webview") ?: return
@@ -467,7 +514,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         }
 
         bannerLayout.setOnTouchListener(touchListener)
-        webView.setOnTouchListener(touchListener)
+       // webView.setOnTouchListener(touchListener)
     }
 
     private fun observeViewModel(view: View) {
@@ -479,15 +526,19 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.isSubscriptionBannerVisible.collect { isVisible ->
-                        bannerLayout?.visibility = if (
-                            isVisible && !isXpertChatOpen
-                        ) {
-                            View.VISIBLE
+                        if (isVisible && !isXpertChatOpen) {
+                            bannerLayout?.visibility = View.VISIBLE
+                            bannerLayout?.post {
+                                if (bannerLayout.isVisible) {
+                                    restoreBannerLayout(bannerLayout)
+                                }
+                            }
                         } else {
-                            View.GONE
+                            bannerLayout?.visibility = View.GONE
+                            currentScrollOffset = 0
                         }
 
-                        view.post {
+                    view.post {
                             if (!isXpertChatOpen) {
                                 applyScrollOffset(view, currentScrollOffset)
                             }
@@ -561,9 +612,10 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 height = ViewGroup.LayoutParams.WRAP_CONTENT
             }
 
-            webView.updateLayoutParams {
+            webView.updateLayoutParams<LinearLayout.LayoutParams> {
                 width = ViewGroup.LayoutParams.MATCH_PARENT
-                height = ViewGroup.LayoutParams.WRAP_CONTENT
+                height = 0
+                weight = 1f
             }
 
             container.translationY = 0f
@@ -597,14 +649,16 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         val bannerLayout =
             view.findViewWithTag<View>("subscription_banner_layout")
 
-
         val xpertWebView =
             view.findViewWithTag<WebView>("xpert_webview")
+
+        val rootLayout =
+            view.findViewWithTag<View>("root_layout")
 
         xpertWebView?.visibility =
             if (isOpen) View.VISIBLE else View.GONE
 
-        view.findViewWithTag<View>("scroll_layout")?.visibility =
+        rootLayout?.visibility =
             if (isOpen) View.GONE else View.VISIBLE
 
         bannerLayout?.visibility =

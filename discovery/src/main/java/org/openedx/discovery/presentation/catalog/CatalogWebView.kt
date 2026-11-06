@@ -212,7 +212,7 @@ fun configureCatalogWebView(
         [role="dialog"] textarea,
         [role="dialog"] input,
         [role="dialog"] [contenteditable="true"] {
-            scroll-margin-bottom: 30px;
+            scroll-margin-bottom: 10px;
         }
 
         /* Hide common cookie popup UI */

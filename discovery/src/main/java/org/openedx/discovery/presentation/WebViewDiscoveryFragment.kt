@@ -297,12 +297,15 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             url = viewModel.discoveryUrl,
             uriScheme = viewModel.uriScheme,
             userAgent = viewModel.appUserAgent,
-            isDarkTheme = viewModel.isDarkTheme.value,
+            isDarkTheme = resources.configuration.uiMode and
+                    Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES,
             webViewTrackingAnalytics = webViewTrackingAnalytics,
             onWebPageLoaded = {
                 Log.d("XpertWebView", "Xpert WebView loaded")
             },
-            onUriClick = { _, _ -> },
+            onUriClick = { param, authority ->
+                handleUriClick(param, authority)
+            },
             onWebPageLoadError = {
                 Log.e("XpertWebView", "Xpert WebView loading failed")
             },
@@ -594,8 +597,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         val bannerLayout =
             view.findViewWithTag<View>("subscription_banner_layout")
 
-        val discoveryWebView =
-            view.findViewWithTag<WebView>("discovery_webview")
 
         val xpertWebView =
             view.findViewWithTag<WebView>("xpert_webview")
@@ -603,7 +604,8 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         xpertWebView?.visibility =
             if (isOpen) View.VISIBLE else View.GONE
 
-        discoveryWebView?.visibility = View.VISIBLE
+        view.findViewWithTag<View>("scroll_layout")?.visibility =
+            if (isOpen) View.GONE else View.VISIBLE
 
         bannerLayout?.visibility =
             if (isOpen) View.GONE
@@ -618,6 +620,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
     }
 
     override fun onDestroyView() {
+        viewModel.clearXpertWebView()
         viewModel.setDiscoveryWebView(null)
         currentWebView = null
         isXpertChatOpen = false

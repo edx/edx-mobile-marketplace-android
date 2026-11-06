@@ -127,20 +127,34 @@ fun configureCatalogWebView(
             opacity: 0 !important;
         }
         /* Ensure Xpert chat dialog is full screen and input is visible */
-        [role="dialog"] {
-            position: fixed !important;
-            width: 100% !important;
-            height: 100% !important;
-            max-width: 100% !important;
-            max-height: 100% !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            border-radius: 0 !important;
-            margin: 0 !important;
-            z-index: 999999 !important;
-        }
+        /* Ensure chatbot dialog adjusts when keyboard opens */
+[role="dialog"] {
+    position: fixed !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    z-index: 999999 !important;
+    overflow: hidden !important;
+}
+
+/* Keep chatbot input visible */
+[role="dialog"] textarea,
+[role="dialog"] input,
+[role="dialog"] [contenteditable="true"] {
+    scroll-margin-bottom: 30px;
+}
+
+/* Prevent input from being covered by keyboard */
+[role="dialog"] {
+    display: flex !important;
+    flex-direction: column !important;
+}
     `;
     (document.head || document.documentElement).appendChild(style);
     
@@ -152,9 +166,13 @@ fun configureCatalogWebView(
                  var isModalOpen = modal !== null &&
              modal.getClientRects().length > 0 &&
              window.getComputedStyle(modal).visibility !== 'hidden';
+             var viewportHeight = window.visualViewport
+    ? window.visualViewport.height
+    : window.innerHeight;
+
         if (isModalOpen && modal) {
             modal.style.setProperty('width', '100%', 'important');
-            modal.style.setProperty('height', '100%', 'important');
+            modal.style.setProperty('height', viewportHeight + 'px', 'important');
             modal.style.setProperty('max-width', '100%', 'important');
             modal.style.setProperty('max-height', '100%', 'important');
             modal.style.setProperty('top', '0', 'important');
@@ -190,6 +208,47 @@ fun configureCatalogWebView(
             btn.click();
         }
     };
+    
+    // Handle keyboard visibility and input positioning
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+        var modal = document.querySelector('[role="dialog"]');
+
+        if (!modal) return;
+
+        var viewportHeight = window.visualViewport.height;
+
+        modal.style.setProperty(
+            'height',
+            viewportHeight + 'px',
+            'important'
+        );
+
+        modal.style.setProperty(
+            'max-height',
+            viewportHeight + 'px',
+            'important'
+        );
+
+        var activeElement = document.activeElement;
+
+        if (
+            activeElement &&
+            (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.isContentEditable
+            )
+        ) {
+            setTimeout(function() {
+                activeElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 150);
+        }
+    });
+}
     
     // Check for 404 page
     const text = document.body.innerText || "";
@@ -264,11 +323,14 @@ fun configureCatalogWebView(
             loadsImagesAutomatically = true
             domStorageEnabled = true
             userAgentString = "$userAgentString $userAgent"
+
+            // Important for keyboard interaction
+            setSupportMultipleWindows(false)
         }
         isVerticalScrollBarEnabled = false
         isHorizontalScrollBarEnabled = false
         webViewTrackingAnalytics.enableWebViewTracking(this, url)
-        loadUrl(url)
         applyDarkModeIfEnabled(isDarkTheme)
+        loadUrl(url)
     }
 }

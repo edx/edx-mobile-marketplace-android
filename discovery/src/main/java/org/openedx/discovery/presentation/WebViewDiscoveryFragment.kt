@@ -61,6 +61,20 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
     private var isXpertChatOpen = false
 
+
+    private val isLandscape: Boolean
+        get() = resources.configuration.orientation ==
+                Configuration.ORIENTATION_LANDSCAPE
+
+    private val bannerHeightRatio = 0.75f
+
+    private val currentBannerHeight: Int
+        get() = if (isLandscape) {
+            (originalBannerHeight * bannerHeightRatio).toInt()
+        } else {
+            originalBannerHeight
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(viewModel)
@@ -215,28 +229,30 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         val bannerLayout =
             view.findViewWithTag<View>("subscription_banner_layout") ?: return
 
-        val isBannerVisible =
-            viewModel.isSubscriptionBannerVisible.value &&
-                    bannerLayout.isVisible
-
         val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
             ?: return
 
-        // Store original dimensions once.
+        // Capture original dimensions once.
         if (originalBannerHeight == -1 && bannerLayout.height > 0) {
             originalBannerHeight = bannerLayout.height
             originalBannerTopMargin = params.topMargin
             originalBannerBottomMargin = params.bottomMargin
         }
 
+        if (originalBannerHeight <= 0) return
+
+        val isBannerVisible =
+            viewModel.isSubscriptionBannerVisible.value && bannerLayout.isVisible
+
         if (!isBannerVisible) {
             currentScrollOffset = 0
             return
         }
 
-        if (originalBannerHeight <= 0) return
+        // Use orientation-specific height.
+        val bannerHeight = currentBannerHeight
 
-        val totalHeight = originalBannerHeight +
+        val totalHeight = bannerHeight +
                 originalBannerTopMargin +
                 originalBannerBottomMargin
 
@@ -244,11 +260,9 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
         currentScrollOffset = clampedOffset
 
-        // Calculate remaining visible banner height.
         val remainingHeight = (totalHeight - clampedOffset)
             .coerceIn(0, totalHeight)
 
-        // Collapse banner height and margins together.
         val remainingTopMargin = minOf(
             originalBannerTopMargin,
             remainingHeight
@@ -267,6 +281,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
         params.topMargin = remainingTopMargin
         params.bottomMargin = remainingBottomMargin
+
         bannerLayout.layoutParams = params
 
         bannerLayout.updateLayoutParams<ViewGroup.LayoutParams> {
@@ -286,7 +301,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         bannerLayout.layoutParams = params
 
         bannerLayout.updateLayoutParams<ViewGroup.LayoutParams> {
-            height = originalBannerHeight
+            height = currentBannerHeight
         }
 
         currentScrollOffset = 0
@@ -588,6 +603,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
         val btnXpertChat =
             rootView.findViewWithTag<ImageButton>("btn_xpert_chat")
+
         val xpertWebView =
             rootView.findViewWithTag<WebView>("xpert_webview")
 
@@ -609,7 +625,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
             container.updateLayoutParams {
                 width = ViewGroup.LayoutParams.MATCH_PARENT
-                height = ViewGroup.LayoutParams.WRAP_CONTENT
+                height = ViewGroup.LayoutParams.MATCH_PARENT
             }
 
             webView.updateLayoutParams<LinearLayout.LayoutParams> {
@@ -619,6 +635,36 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             }
 
             container.translationY = 0f
+
+            updateBannerHeightForOrientation(rootView)
+        }
+        }
+
+    private fun updateBannerHeightForOrientation(view: View) {
+        val bannerLayout =
+            view.findViewWithTag<View>("subscription_banner_layout") ?: return
+
+        bannerLayout.post {
+            if (!isAdded || this.view !== view) return@post
+
+            val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
+                ?: return@post
+
+            // Capture the original portrait dimensions before modifying them.
+            if (originalBannerHeight == -1 && bannerLayout.height > 0) {
+                originalBannerHeight = bannerLayout.height
+                originalBannerTopMargin = params.topMargin
+                originalBannerBottomMargin = params.bottomMargin
+            }
+
+            if (originalBannerHeight <= 0) return@post
+
+            // Reapply orientation-specific banner height.
+            params.height = currentBannerHeight
+            bannerLayout.layoutParams = params
+
+            // Preserve the current collapsed state.
+            applyScrollOffset(view, currentScrollOffset)
         }
     }
 

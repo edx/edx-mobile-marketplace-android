@@ -15,6 +15,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -61,7 +62,12 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
     private var isXpertChatOpen = false
 
+    private var currentBannerMaxHeight = -1
 
+
+    private val isLandscape: Boolean
+        get() = resources.configuration.orientation ==
+                Configuration.ORIENTATION_LANDSCAPE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -170,11 +176,15 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             requireActivity().supportFragmentManager.popBackStackImmediate()
         }
 
+
         updateXpertChatIcon(btnXpertChat, xpertWebView)
 
         btnXpertChat?.setOnClickListener {
-            Log.d("XpertChat", "Xpert toolbar button clicked")
-            triggerXpertChat()
+            if (isXpertChatOpen) {
+                handleXpertChatStateChanged(view, isOpen = false)
+            } else {
+                triggerXpertChat()
+            }
         }
     }
 
@@ -250,63 +260,51 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         val bannerLayout =
             view.findViewWithTag<View>("subscription_banner_layout") ?: return
 
-        val isBannerVisible =
-            viewModel.isSubscriptionBannerVisible.value &&
-                    bannerLayout.isVisible
+        if (!viewModel.isSubscriptionBannerVisible.value) return
 
         val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
             ?: return
 
-        // Store original dimensions once.
-        if (originalBannerHeight == -1 && bannerLayout.height > 0) {
+        // Capture original portrait height only once.
+        if (originalBannerHeight <= 0 && bannerLayout.height > 0) {
             originalBannerHeight = bannerLayout.height
             originalBannerTopMargin = params.topMargin
             originalBannerBottomMargin = params.bottomMargin
         }
 
-        if (!isBannerVisible) {
-            currentScrollOffset = 0
-            return
-        }
-
         if (originalBannerHeight <= 0) return
 
-        val totalHeight = originalBannerHeight +
+        val maxHeight = currentBannerMaxHeight.takeIf { it > 0 }
+            ?: originalBannerHeight
+
+        val totalHeight = maxHeight +
                 originalBannerTopMargin +
                 originalBannerBottomMargin
 
         val clampedOffset = offset.coerceIn(0, totalHeight)
-
         currentScrollOffset = clampedOffset
 
-        // Calculate remaining visible banner height.
         val remainingHeight = (totalHeight - clampedOffset)
             .coerceIn(0, totalHeight)
 
-        // Collapse banner height and margins together.
-        val remainingTopMargin = minOf(
-            originalBannerTopMargin,
-            remainingHeight
-        )
+        val remainingTopMargin =
+            minOf(originalBannerTopMargin, remainingHeight)
 
-        val remainingBottomMargin = minOf(
-            originalBannerBottomMargin,
-            (remainingHeight - remainingTopMargin).coerceAtLeast(0)
-        )
+        val remainingBottomMargin =
+            minOf(
+                originalBannerBottomMargin,
+                (remainingHeight - remainingTopMargin).coerceAtLeast(0)
+            )
 
-        val remainingContentHeight = (
-                remainingHeight -
-                        remainingTopMargin -
-                        remainingBottomMargin
-                ).coerceAtLeast(0)
+        val remainingContentHeight =
+            (remainingHeight - remainingTopMargin - remainingBottomMargin)
+                .coerceAtLeast(0)
 
         params.topMargin = remainingTopMargin
         params.bottomMargin = remainingBottomMargin
-        bannerLayout.layoutParams = params
+        params.height = remainingContentHeight
 
-        bannerLayout.updateLayoutParams<ViewGroup.LayoutParams> {
-            height = remainingContentHeight
-        }
+        bannerLayout.layoutParams = params
     }
 
     private fun restoreBannerLayout(bannerLayout: View) {
@@ -315,14 +313,17 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
             ?: return
 
+        currentBannerMaxHeight = if (isLandscape) {
+            (145 * resources.displayMetrics.density).toInt()
+        } else {
+            originalBannerHeight
+        }
+
         params.topMargin = originalBannerTopMargin
         params.bottomMargin = originalBannerBottomMargin
+        params.height = currentBannerMaxHeight
 
         bannerLayout.layoutParams = params
-
-        bannerLayout.updateLayoutParams<ViewGroup.LayoutParams> {
-            height = originalBannerHeight
-        }
 
         currentScrollOffset = 0
     }
@@ -363,6 +364,9 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 viewModel.refreshSessionCookie()
             }
         )
+        view.findViewWithTag<View>("subscription_banner_layout")?.let { banner ->
+            installDiscoveryScrollListener(webView, view, banner)
+        }
         setupXpertWebView(view)
     }
     private var isXpertWebViewReady = false
@@ -426,11 +430,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             },
 
             onXpertChatStateChanged = { isOpen ->
-                view.post {
-                    if (isAdded && this.view === view) {
-                        updateXpertChatVisibility(view, isOpen)
-                    }
-                }
+                handleXpertChatStateChanged(view, isOpen)
             }
 
 
@@ -477,7 +477,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
                 if (result == "true") {
 
-                    updateXpertChatVisibility(rootView, true)
+                    handleXpertChatStateChanged(rootView, isOpen = true)
 
                     Log.d("XpertChat", "Chat screen opened")
 
@@ -607,11 +607,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             applyScrollOffset(view, currentScrollOffset)
         }
 
-        webView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
-            if (!isXpertChatOpen) {
-                applyScrollOffset(view, scrollY)
-            }
-        }
+        installDiscoveryScrollListener(webView, view, bannerLayout)
 
         bannerLayout.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             applyScrollOffset(view, currentScrollOffset)
@@ -637,7 +633,60 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         }
 
         bannerLayout.setOnTouchListener(touchListener)
-       // webView.setOnTouchListener(touchListener)
+        // webView.setOnTouchListener(touchListener)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun installDiscoveryScrollListener(
+        webView: WebView,
+        view: View,
+        bannerLayout: View
+    ) {
+        webView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+
+            if (!isXpertChatOpen) {
+                applyScrollOffset(view, scrollY)
+            }
+
+            Log.d(
+                "BannerScroll",
+                "scrollY=$scrollY, " +
+                        "chatOpen=$isXpertChatOpen, " +
+                        "bannerHeight=${bannerLayout.height}, " +
+                        "currentOffset=$currentScrollOffset"
+            )
+        }
+
+        var gestureStartY = 0f
+        var gestureStartOffset = 0
+
+        webView.setOnTouchListener { touchedView, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    gestureStartY = event.rawY
+                    gestureStartOffset = currentScrollOffset
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    if (!isXpertChatOpen) {
+                        val delta = gestureStartY - event.rawY
+                        applyScrollOffset(
+                            view,
+                            gestureStartOffset + delta.toInt()
+                        )
+                    }
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    if (event.actionMasked == MotionEvent.ACTION_UP) {
+                        touchedView.performClick()
+                    }
+                }
+            }
+            false
+        }
+
     }
 
     private fun observeViewModel(view: View) {
@@ -649,19 +698,17 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.isSubscriptionBannerVisible.collect { isVisible ->
-                        if (isVisible && !isXpertChatOpen) {
+                        if (isVisible) {
                             bannerLayout?.visibility = View.VISIBLE
                             bannerLayout?.post {
-                                if (bannerLayout.isVisible) {
-                                    restoreBannerLayout(bannerLayout)
-                                }
+                                if (bannerLayout.isVisible) restoreBannerLayout(bannerLayout)
                             }
                         } else {
                             bannerLayout?.visibility = View.GONE
                             currentScrollOffset = 0
                         }
 
-                    view.post {
+                        view.post {
                             if (!isXpertChatOpen) {
                                 applyScrollOffset(view, currentScrollOffset)
                             }
@@ -729,41 +776,31 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
         val rootView = view ?: return
 
-        val btnXpertChat =
-            rootView.findViewWithTag<ImageButton>("btn_xpert_chat")
-        val xpertWebView =
-            rootView.findViewWithTag<WebView>("xpert_webview")
-
-        updateXpertChatIcon(btnXpertChat, xpertWebView)
-
         rootView.post {
             if (!isAdded || view !== rootView) return@post
 
             ViewCompat.requestApplyInsets(rootView)
 
-            val webView =
-                rootView.findViewWithTag<WebView>("discovery_webview")
-                    ?: return@post
+            val btnXpertChat =
+                rootView.findViewWithTag<ImageButton>("btn_xpert_chat")
 
-            val container =
-                rootView.findViewWithTag<LinearLayout>(
-                    "banner_and_webview_container"
-                ) ?: return@post
+            val xpertWebView =
+                rootView.findViewWithTag<WebView>("xpert_webview")
 
-            container.updateLayoutParams {
-                width = ViewGroup.LayoutParams.MATCH_PARENT
-                height = ViewGroup.LayoutParams.WRAP_CONTENT
-            }
+            updateXpertChatIcon(btnXpertChat, xpertWebView)
 
-            webView.updateLayoutParams<LinearLayout.LayoutParams> {
-                width = ViewGroup.LayoutParams.MATCH_PARENT
-                height = 0
-                weight = 1f
-            }
+            updateBannerForOrientation(rootView)
 
-            container.translationY = 0f
+            rootView.requestLayout()
+
+            rootView.findViewWithTag<WebView>("discovery_webview")
+                ?.requestLayout()
+
+            xpertWebView?.requestLayout()
         }
     }
+
+
 
     override fun onResume() {
         super.onResume()
@@ -803,25 +840,102 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             view.findViewWithTag<View>("subscription_banner_layout")
 
         if (isOpen) {
-
-            rootLayout?.visibility = View.GONE
-            xpertWebView?.visibility = View.VISIBLE
+            rootLayout?.visibility = View.VISIBLE
             loadingIndicator?.visibility = View.GONE
 
-        } else {
+            // Hide subscription banner while Xpert Chat is open.
+            bannerLayout?.visibility = View.GONE
 
+            // Open Xpert Chat directly below the toolbar.
+            xpertWebView?.let { webView ->
+                val params = webView.layoutParams
+
+                if (params is ViewGroup.MarginLayoutParams) {
+                    params.topMargin = 0
+                    params.bottomMargin = 0
+                    webView.layoutParams = params
+                }
+            }
+
+            xpertWebView?.visibility = View.VISIBLE
+
+        } else {
+            xpertWebView?.clearFocus()
             xpertWebView?.visibility = View.GONE
+
+            xpertWebView?.updateLayoutParams<FrameLayout.LayoutParams> {
+                topMargin = 0
+                bottomMargin = 0
+            }
+
             rootLayout?.visibility = View.VISIBLE
 
+            val discoveryWebView =
+                view.findViewWithTag<WebView>("discovery_webview")
+
+            val showBanner = viewModel.isSubscriptionBannerVisible.value
+
             bannerLayout?.visibility =
-                if (viewModel.isSubscriptionBannerVisible.value) {
-                    View.VISIBLE
-                } else {
-                    View.GONE
+                if (showBanner) View.VISIBLE else View.GONE
+
+            if (showBanner) {
+                bannerLayout?.let { banner ->
+                    restoreBannerLayout(banner)
+                }
+            }
+
+            discoveryWebView?.visibility = if (
+                viewModel.uiState.value is WebViewUIState.Error ||
+                !viewModel.hasInternetConnection
+            ) View.GONE else View.VISIBLE
+
+            discoveryWebView?.bringToFront()
+            discoveryWebView?.isFocusableInTouchMode = true
+            discoveryWebView?.requestFocus()
+
+            discoveryWebView?.post {
+                if (!isAdded || this.view !== view || isXpertChatOpen) {
+                    return@post
                 }
 
-            currentScrollOffset = 0
+                applyScrollOffset(view, discoveryWebView.scrollY)
+            }
         }
+
+    }
+
+    private fun handleXpertChatStateChanged(
+        root: View,
+        isOpen: Boolean
+    ) {
+        root.post {
+            if (!isAdded || view !== root) return@post
+
+            updateXpertChatVisibility(root, isOpen)
+            if (!isOpen) {
+                restoreDiscoveryAfterXpertClose(root)
+            }
+        }
+    }
+
+    private fun restoreDiscoveryAfterXpertClose(root: View) {
+        root.postDelayed({
+
+            if (!isAdded || view !== root || isXpertChatOpen) {
+                return@postDelayed
+            }
+
+            val discoveryWebView =
+                root.findViewWithTag<WebView>("discovery_webview")
+                    ?: return@postDelayed
+
+            discoveryWebView.visibility = View.VISIBLE
+            discoveryWebView.bringToFront()
+
+            discoveryWebView.isFocusableInTouchMode = true
+            discoveryWebView.requestFocus()
+
+        }, XPERT_CLOSE_RESTORE_DELAY_MS)
     }
 
 
@@ -838,9 +952,52 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         super.onDestroyView()
     }
 
+
+    private fun updateBannerForOrientation(view: View) {
+        val bannerLayout =
+            view.findViewWithTag<View>("subscription_banner_layout")
+                ?: return
+
+        bannerLayout.post {
+            if (!isAdded || this.view !== view) return@post
+
+            val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
+                ?: return@post
+
+            // Capture original height before applying landscape dimensions.
+            if (originalBannerHeight <= 0) {
+                val measuredHeight = bannerLayout.height
+                if (measuredHeight <= 0) return@post
+
+                originalBannerHeight = measuredHeight
+                originalBannerTopMargin = params.topMargin
+                originalBannerBottomMargin = params.bottomMargin
+            }
+
+            currentBannerMaxHeight = if (isLandscape) {
+                (145 * resources.displayMetrics.density).toInt()
+            } else {
+                originalBannerHeight
+            }
+
+            // Restore original margins before applying the new height.
+            params.topMargin = originalBannerTopMargin
+            params.bottomMargin = originalBannerBottomMargin
+            params.height = currentBannerMaxHeight
+
+            bannerLayout.layoutParams = params
+
+            // Reset offset to avoid carrying portrait scroll into landscape.
+            currentScrollOffset = 0
+
+            bannerLayout.requestLayout()
+        }
+    }
+
     companion object {
 
         private const val ARG_SEARCH_QUERY = "query_search"
+        private const val XPERT_CLOSE_RESTORE_DELAY_MS = 100L
 
         fun newInstance(querySearch: String = ""): WebViewDiscoveryFragment {
             val fragment = WebViewDiscoveryFragment()
@@ -849,9 +1006,3 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         }
     }
 }
-
-
-
-
-
-

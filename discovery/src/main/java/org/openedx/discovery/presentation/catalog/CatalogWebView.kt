@@ -1,9 +1,11 @@
 package org.openedx.discovery.presentation.catalog
 
 import android.annotation.SuppressLint
+import android.webkit.JavascriptInterface
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -52,7 +54,6 @@ fun CatalogWebViewScreen(
     return webView
 }
 
-
 @SuppressLint("SetJavaScriptEnabled")
 fun configureCatalogWebView(
     webView: WebView,
@@ -61,7 +62,7 @@ fun configureCatalogWebView(
     userAgent: String,
     isDarkTheme: Boolean,
     webViewTrackingAnalytics: WebViewTrackingAnalytics,
-     enableXpertChat: Boolean = false,
+    enableXpertChat: Boolean = false,
     isAllLinksExternal: Boolean = false,
     onWebPageLoaded: () -> Unit,
     refreshSessionCookie: () -> Unit = {},
@@ -72,57 +73,57 @@ fun configureCatalogWebView(
     onXpertChatStateChanged: ((Boolean) -> Unit)? = null,
 ) {
     val context = webView.context
-     val XPERT_CHAT_INITIALIZATION_SCRIPT = """
+
+    val XPERT_FLOATING_UI_HIDE_SCRIPT = """
 (function() {
-    if (window.__xpertInitializationStarted) {
-        return;
-    }
-
-    window.__xpertInitializationStarted = true;
-
-    window.__triggerXpertChatbotAction = function() {
-        var button = document.getElementById(
-            'xpert_chatbot__floating-action-btn'
-        );
-
-        if (!button) {
-            return false;
-        }
-
-        button.click();
-        return true;
-    };
-
-    var attempts = 0;
-    var maxAttempts = 200;
-
-    var interval = setInterval(function() {
-
-        attempts++;
-
-        var button = document.getElementById(
-            'xpert_chatbot__floating-action-btn'
-        );
-
+    function apply() {
+        var button = document.getElementById('xpert_chatbot__floating-action-btn');
         if (button) {
-
-            clearInterval(interval);
-
-            if (window.XpertChatBridge &&
-                window.XpertChatBridge.onChatReady) {
-
-                window.XpertChatBridge.onChatReady();
-            }
+            if (button.style.display !== 'none') button.style.setProperty('display', 'none', 'important');
+            if (button.style.visibility !== 'hidden') button.style.setProperty('visibility', 'hidden', 'important');
         }
-
-        if (attempts >= maxAttempts) {
-            clearInterval(interval);
-        }
-
-    }, 300);
-
+        document.querySelectorAll('.xpert_chatbot__proactive-message').forEach(function(message) {
+            if (message.style.display !== 'none') message.style.setProperty('display', 'none', 'important');
+            if (message.style.visibility !== 'hidden') message.style.setProperty('visibility', 'hidden', 'important');
+        });
+    }
+    apply();
+    if (!window.__xpertFloatingUiObserver) {
+        window.__xpertFloatingUiObserver = new MutationObserver(apply);
+        window.__xpertFloatingUiObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+    }
 })();
 """.trimIndent()
+
+    val XPERT_CHAT_INITIALIZATION_SCRIPT = """
+(function() {
+    if (window.__xpertInitializationStarted) return;
+    window.__xpertInitializationStarted = true;
+    window.__triggerXpertChatbotAction = function() {
+        var button = document.getElementById('xpert_chatbot__floating-action-btn');
+        if (!button) return false;
+        button.click();
+        if (window.XpertChatBridge && window.XpertChatBridge.onChatOpen) {
+            window.XpertChatBridge.onChatOpen();
+        }
+        return true;
+    };
+    var attempts = 0;
+    var interval = setInterval(function() {
+        attempts++;
+        var button = document.getElementById('xpert_chatbot__floating-action-btn');
+        if (button && window.XpertChatBridge && window.XpertChatBridge.onChatReady) {
+            clearInterval(interval);
+            window.XpertChatBridge.onChatReady();
+        }
+        if (attempts >= 200) clearInterval(interval);
+    }, 300);
+})();
+""".trimIndent()
+
     class XpertChatBridge {
 
         @android.webkit.JavascriptInterface
@@ -139,12 +140,19 @@ fun configureCatalogWebView(
             }
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         fun onChatClose() {
             webView.post {
                 onXpertChatStateChanged?.invoke(false)
+
+                Toast.makeText(
+                    webView.context,
+                    "Xpert chat closed",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
+
     }
 
     webView.apply {
@@ -167,30 +175,37 @@ fun configureCatalogWebView(
 
                 onWebPageLoaded()
 
+                // The discovery page also contains the Xpert widget. Hide
+                // its floating entry points in every catalog WebView.
+                view?.evaluateJavascript(
+                    XPERT_FLOATING_UI_HIDE_SCRIPT,
+                    null
+                )
+
                 if (enableXpertChat) {
                     view?.evaluateJavascript(
                         XPERT_CHAT_INITIALIZATION_SCRIPT,
                         null
                     )
                 }
+
             }
 
             override fun onPageCommitVisible(view: WebView?, url: String?) {
                 super.onPageCommitVisible(view, url)
-
                 view ?: return
 
-                // Inject Xpert-specific JavaScript only for the Xpert WebView.
-                view.evaluateJavascript(
-                    """
+                if (enableXpertChat) {
+                    // Inject Xpert-specific JavaScript only for the Xpert WebView.
+                    view.evaluateJavascript(
+                        """
         (function() {
+                    var styleId = 'xpert-floating-elements-hidden';
+                    if (document.getElementById(styleId)) return;
             var style = document.createElement('style');
+                    style.id = styleId;
 
             style.textContent = `
-                #xpert_chatbot__floating-action-btn {
-                    display: none !important;
-                }
-
                 .xpert_chatbot__proactive-message {
                     display: none !important;
                 }
@@ -198,6 +213,29 @@ fun configureCatalogWebView(
 
             (document.head || document.documentElement)
                 .appendChild(style);
+                
+                if (!window.__xpertCloseListenerInstalled) {
+                    window.__xpertCloseListenerInstalled = true;
+
+                    document.addEventListener('click', function(event) {
+
+                        var closeButton = event.target.closest(
+                            'button[aria-label="Close Xpert dialog"]'
+                        );
+
+                        if (closeButton) {
+
+                            console.log("Xpert close icon clicked");
+
+                            if (window.XpertChatBridge &&
+                                window.XpertChatBridge.onChatClose) {
+
+                                window.XpertChatBridge.onChatClose();
+                            }
+                        }
+
+                    }, true);
+                }
 
             window.__triggerXpertChatbotAction = function() {
                 var btn = document.getElementById(
@@ -209,12 +247,32 @@ fun configureCatalogWebView(
                     return true;
                 }
 
+                            if (!window.__xpertCloseListenerInstalled) {
+                                window.__xpertCloseListenerInstalled = true;
+                                document.addEventListener('click', function(event) {
+                                    var target = event.target;
+                                    var closeControl = target && target.closest && target.closest(
+                                        '[aria-label*="close" i], ' +
+                                        '[title*="close" i], ' +
+                                        'button[class*="close" i], ' +
+                                        '[role="button"][class*="close" i]'
+                                    );
+
+                                    if (closeControl && window.XpertChatBridge &&
+                                        window.XpertChatBridge.onChatClose) {
+                                        window.XpertChatBridge.onChatClose();
+                                    }
+                                }, true);
+                            }
+
                 return false;
             };
         })();
-        """.trimIndent(),
-                    null
-                )
+        
+                        """.trimIndent(),
+                        null
+                    )
+                }
             }
 
             override fun shouldOverrideUrlLoading(

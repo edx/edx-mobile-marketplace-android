@@ -30,7 +30,6 @@ fun CatalogWebViewScreen(
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
     val webViewTrackingAnalytics = koinInject<WebViewTrackingAnalytics>()
-
     val webView = remember {
         WebView(context).apply {
             configureCatalogWebView(
@@ -50,9 +49,9 @@ fun CatalogWebViewScreen(
             )
         }
     }
-
     return webView
 }
+
 
 @SuppressLint("SetJavaScriptEnabled")
 fun configureCatalogWebView(
@@ -62,6 +61,7 @@ fun configureCatalogWebView(
     userAgent: String,
     isDarkTheme: Boolean,
     webViewTrackingAnalytics: WebViewTrackingAnalytics,
+     enableXpertChat: Boolean = false,
     isAllLinksExternal: Boolean = false,
     onWebPageLoaded: () -> Unit,
     refreshSessionCookie: () -> Unit = {},
@@ -72,23 +72,86 @@ fun configureCatalogWebView(
     onXpertChatStateChanged: ((Boolean) -> Unit)? = null,
 ) {
     val context = webView.context
+     val XPERT_CHAT_INITIALIZATION_SCRIPT = """
+(function() {
+    if (window.__xpertInitializationStarted) {
+        return;
+    }
 
-    @Suppress("unused")
+    window.__xpertInitializationStarted = true;
+
+    window.__triggerXpertChatbotAction = function() {
+        var button = document.getElementById(
+            'xpert_chatbot__floating-action-btn'
+        );
+
+        if (!button) {
+            return false;
+        }
+
+        button.click();
+        return true;
+    };
+
+    var attempts = 0;
+    var maxAttempts = 200;
+
+    var interval = setInterval(function() {
+
+        attempts++;
+
+        var button = document.getElementById(
+            'xpert_chatbot__floating-action-btn'
+        );
+
+        if (button) {
+
+            clearInterval(interval);
+
+            if (window.XpertChatBridge &&
+                window.XpertChatBridge.onChatReady) {
+
+                window.XpertChatBridge.onChatReady();
+            }
+        }
+
+        if (attempts >= maxAttempts) {
+            clearInterval(interval);
+        }
+
+    }, 300);
+
+})();
+""".trimIndent()
     class XpertChatBridge {
+
+        @android.webkit.JavascriptInterface
+        fun onChatReady() {
+            webView.post {
+                onXpertChatReady?.invoke(webView)
+            }
+        }
+
         @android.webkit.JavascriptInterface
         fun onChatOpen() {
-            webView.post { onXpertChatStateChanged?.invoke(true) }
+            webView.post {
+                onXpertChatStateChanged?.invoke(true)
+            }
         }
 
         @android.webkit.JavascriptInterface
         fun onChatClose() {
-            webView.post { onXpertChatStateChanged?.invoke(false) }
+            webView.post {
+                onXpertChatStateChanged?.invoke(false)
+            }
         }
     }
 
-    webView.addJavascriptInterface(XpertChatBridge(), "XpertChatBridge")
-
     webView.apply {
+
+        // Register Android bridge before loading the page.
+        addJavascriptInterface(XpertChatBridge(), "XpertChatBridge")
+
         webViewClient = object : DefaultWebViewClient(
             context = context,
             webView = this@apply,
@@ -98,305 +161,66 @@ fun configureCatalogWebView(
         ) {
 
             override fun onPageFinished(view: WebView?, url: String?) {
-                url?.let { onWebPageUpdated(it) }
                 super.onPageFinished(view, url)
+
+                url?.let { onWebPageUpdated(it) }
+
+                onWebPageLoaded()
+
+                if (enableXpertChat) {
+                    view?.evaluateJavascript(
+                        XPERT_CHAT_INITIALIZATION_SCRIPT,
+                        null
+                    )
+                }
             }
 
             override fun onPageCommitVisible(view: WebView?, url: String?) {
                 super.onPageCommitVisible(view, url)
 
-                view?.evaluateJavascript(
+                view ?: return
+
+                // Inject Xpert-specific JavaScript only for the Xpert WebView.
+                view.evaluateJavascript(
                     """
-(function() {
+        (function() {
+            var style = document.createElement('style');
 
-    // ==========================================
-    // HIDE COOKIE CONSENT POPUP UI
-    // ==========================================
-
-    const cookieSelectors = [
-        '#onetrust-banner-sdk',
-        '#onetrust-consent-sdk',
-        '#CybotCookiebotDialog',
-        '.cky-consent-container',
-        '.osano-cm-window',
-        '.qc-cmp2-container',
-        '#cookie-banner',
-        '#cookie-consent',
-        '.cookie-banner',
-        '.cookie-consent',
-        '.cookie-popup',
-        '.cookie-notice',
-        '.cc-window',
-        '.cc-banner',
-        '[class*="cookie-banner"]',
-        '[class*="cookie-consent"]',
-        '[id*="cookie-banner"]',
-        '[id*="cookie-consent"]',
-        '[id*="consent-banner"]',
-        '[class*="CookieConsent"]',
-        '[id*="CookieConsent"]'
-    ];
-
-    function hideCookiePopup() {
-        cookieSelectors.forEach(function(selector) {
-            document.querySelectorAll(selector).forEach(function(element) {
-                element.style.setProperty('display', 'none', 'important');
-                element.style.setProperty('visibility', 'hidden', 'important');
-                element.style.setProperty('opacity', '0', 'important');
-                element.style.setProperty('pointer-events', 'none', 'important');
-            });
-        });
-    }
-
-    // Hide existing cookie popups
-    hideCookiePopup();
-
-    // Observe dynamically added cookie popups
-    const cookieObserver = new MutationObserver(function() {
-        hideCookiePopup();
-    });
-
-    cookieObserver.observe(document.documentElement, {
-        childList: true,
-        subtree: true
-    });
-
-
-    // ==========================================
-    // XPERT CHATBOT CUSTOMIZATION
-    // ==========================================
-
-    var style = document.createElement('style');
-    style.id = 'xpert-hide-style';
-
-    style.textContent = `
-        /* Hide Xpert floating button */
-        #xpert_chatbot__floating-action-btn {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-        }
-
-        /* Hide Xpert greeting messages */
-        [class*="xpert"][class*="greeting"],
-        [class*="xpert"][class*="welcome"],
-        [class*="xpert"][class*="message"],
-        .xpert-greeting,
-        .xpert-welcome-message,
-        #xpert-greeting,
-        #xpert-welcome {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-        }
-
-        /* Full-screen chatbot dialog */
-        [role="dialog"] {
-            position: fixed !important;
-            width: 100% !important;
-            height: 100dvh !important;
-            max-height: 100dvh !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            border-radius: 0 !important;
-            margin: 0 !important;
-            z-index: 999999 !important;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
-        }
-
-        /* Keep chatbot input visible */
-        [role="dialog"] textarea,
-        [role="dialog"] input,
-        [role="dialog"] [contenteditable="true"] {
-            scroll-margin-bottom: 10px;
-        }
-
-        /* Hide common cookie popup UI */
-        #onetrust-banner-sdk,
-        #onetrust-consent-sdk,
-        #CybotCookiebotDialog,
-        .cky-consent-container,
-        .osano-cm-window,
-        .qc-cmp2-container,
-        #cookie-banner,
-        #cookie-consent,
-        .cookie-banner,
-        .cookie-consent,
-        .cookie-popup,
-        .cookie-notice,
-        .cc-window,
-        .cc-banner,
-        [class*="cookie-banner"],
-        [class*="cookie-consent"],
-        [id*="cookie-banner"],
-        [id*="cookie-consent"],
-        [id*="consent-banner"],
-        [class*="CookieConsent"],
-        [id*="CookieConsent"] {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-        }
-    `;
-
-    (document.head || document.documentElement).appendChild(style);
-
-
-    // ==========================================
-    // MONITOR XPERT CHAT MODAL
-    // ==========================================
-
-    var wasModalOpen = false;
-
-    setInterval(function() {
-
-        var modal = document.querySelector('[role="dialog"]');
-
-        var isModalOpen = modal !== null &&
-            modal.getClientRects().length > 0 &&
-            window.getComputedStyle(modal).visibility !== 'hidden';
-
-        var viewportHeight = window.visualViewport
-            ? window.visualViewport.height
-            : window.innerHeight;
-
-        if (isModalOpen && modal) {
-            modal.style.setProperty('width', '100%', 'important');
-            modal.style.setProperty('height', viewportHeight + 'px', 'important');
-            modal.style.setProperty('max-width', '100%', 'important');
-            modal.style.setProperty('max-height', '100%', 'important');
-            modal.style.setProperty('top', '0', 'important');
-            modal.style.setProperty('left', '0', 'important');
-            modal.style.setProperty('right', '0', 'important');
-            modal.style.setProperty('bottom', '0', 'important');
-            modal.style.setProperty('border-radius', '0', 'important');
-            modal.style.setProperty('margin', '0', 'important');
-        }
-
-        if (isModalOpen !== wasModalOpen) {
-            wasModalOpen = isModalOpen;
-
-            if (window.XpertChatBridge) {
-                if (isModalOpen) {
-                    window.XpertChatBridge.onChatOpen();
-                } else {
-                    window.XpertChatBridge.onChatClose();
+            style.textContent = `
+                #xpert_chatbot__floating-action-btn {
+                    display: none !important;
                 }
-            }
-        }
 
-        if (!isModalOpen) {
-            var btn = document.getElementById(
-                'xpert_chatbot__floating-action-btn'
-            );
+                .xpert_chatbot__proactive-message {
+                    display: none !important;
+                }
+            `;
 
-            if (btn) {
-                btn.style.cssText =
-                    'display: none !important; visibility: hidden !important;';
-            }
-        }
+            (document.head || document.documentElement)
+                .appendChild(style);
 
-    }, 300);
+            window.__triggerXpertChatbotAction = function() {
+                var btn = document.getElementById(
+                    'xpert_chatbot__floating-action-btn'
+                );
 
+                if (btn) {
+                    btn.click();
+                    return true;
+                }
 
-    // ==========================================
-    // XPERT CHATBOT TRIGGER
-    // ==========================================
-
-    window.__triggerXpertChatbotAction = function() {
-
-        var btn = document.getElementById(
-            'xpert_chatbot__floating-action-btn'
-        );
-
-        if (btn) {
-            btn.style.cssText =
-                'display: block !important; visibility: visible !important;';
-
-            btn.click();
-        }
-    };
-
-
-    // ==========================================
-    // KEYBOARD VISIBILITY HANDLING
-    // ==========================================
-
-    if (window.visualViewport) {
-
-        window.visualViewport.addEventListener('resize', function() {
-
-            var modal = document.querySelector('[role="dialog"]');
-
-            if (!modal) return;
-
-            var viewportHeight = window.visualViewport.height;
-
-            modal.style.setProperty(
-                'height',
-                viewportHeight + 'px',
-                'important'
-            );
-
-            modal.style.setProperty(
-                'max-height',
-                viewportHeight + 'px',
-                'important'
-            );
-
-            var activeElement = document.activeElement;
-
-            if (
-                activeElement &&
-                (
-                    activeElement.tagName === 'INPUT' ||
-                    activeElement.tagName === 'TEXTAREA' ||
-                    activeElement.isContentEditable
+                return false;
+            };
+        })();
+        """.trimIndent(),
+                    null
                 )
-            ) {
-                setTimeout(function() {
-                    activeElement.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                }, 150);
-            }
-        });
-    }
-
-
-    // ==========================================
-    // CHECK FOR 404 PAGE
-    // ==========================================
-
-    const text = document.body.innerText || "";
-
-    return text.includes("Page not found") ||
-           text.includes("404");
-
-})();
-"""
-                ) { result ->
-
-                    if (result == "true") {
-                        onWebPageLoadError()
-                    } else {
-                        onWebPageLoaded()
-                        onXpertChatReady?.invoke(view)
-                    }
-                }
             }
 
             override fun shouldOverrideUrlLoading(
                 view: WebView?,
                 request: WebResourceRequest?
             ): Boolean {
-
                 val clickUrl = request?.url?.toString() ?: ""
 
                 if (handleRecognizedLink(clickUrl)) {
@@ -406,8 +230,8 @@ fun configureCatalogWebView(
                 return super.shouldOverrideUrlLoading(view, request)
             }
 
-            private fun handleRecognizedLink(clickUrl: String): Boolean {
 
+            private fun handleRecognizedLink(clickUrl: String): Boolean {
                 val link = WebViewLink.parse(clickUrl, uriScheme)
                     ?: return false
 
@@ -448,7 +272,6 @@ fun configureCatalogWebView(
                 request: WebResourceRequest,
                 error: WebResourceError
             ) {
-
                 if (request.url.toString() == view.url) {
                     onWebPageLoadError()
                 }
@@ -457,7 +280,7 @@ fun configureCatalogWebView(
             }
         }
 
-        with(settings) {
+        settings.apply {
             javaScriptEnabled = true
             loadWithOverviewMode = false
             useWideViewPort = true
@@ -466,6 +289,8 @@ fun configureCatalogWebView(
             loadsImagesAutomatically = true
             domStorageEnabled = true
             userAgentString = "$userAgentString $userAgent"
+
+            // Important for keyboard interaction.
             setSupportMultipleWindows(false)
         }
 
@@ -479,3 +304,4 @@ fun configureCatalogWebView(
         loadUrl(url)
     }
 }
+	

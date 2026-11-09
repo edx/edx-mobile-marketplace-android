@@ -642,20 +642,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         view: View,
         bannerLayout: View
     ) {
-        webView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
-
-            if (!isXpertChatOpen) {
-                applyScrollOffset(view, scrollY)
-            }
-
-            Log.d(
-                "BannerScroll",
-                "scrollY=$scrollY, " +
-                        "chatOpen=$isXpertChatOpen, " +
-                        "bannerHeight=${bannerLayout.height}, " +
-                        "currentOffset=$currentScrollOffset"
-            )
-        }
 
         var gestureStartY = 0f
         var gestureStartOffset = 0
@@ -1006,3 +992,4 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         }
     }
 }
+

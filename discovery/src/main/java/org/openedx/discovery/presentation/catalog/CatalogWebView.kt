@@ -5,7 +5,6 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
-import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -98,19 +97,63 @@ fun configureCatalogWebView(
 })();
 """.trimIndent()
 
-    val XPERT_CHAT_INITIALIZATION_SCRIPT = """
+     val XPERT_CHAT_INITIALIZATION_SCRIPT = """
 (function() {
     if (window.__xpertInitializationStarted) return;
     window.__xpertInitializationStarted = true;
+
+    window.__expandXpertDialog = function() {
+        function apply() {
+            var closeButton = document.querySelector(
+                'button[aria-label="Close Xpert dialog"]'
+            );
+            var dialog = closeButton && closeButton.closest('[role="dialog"]');
+            if (!dialog) return;
+
+            [
+                ['position', 'fixed'],
+                ['inset', '0'],
+                ['width', '100vw'],
+                ['height', '100vh'],
+                ['max-width', 'none'],
+                ['max-height', 'none'],
+                ['margin', '0'],
+                ['border-radius', '0'],
+                ['transform', 'none']
+            ].forEach(function(entry) {
+                if (dialog.style.getPropertyValue(entry[0]) !== entry[1] ||
+                    dialog.style.getPropertyPriority(entry[0]) !== 'important') {
+                    dialog.style.setProperty(entry[0], entry[1], 'important');
+                }
+            });
+        }
+
+        apply();
+
+        if (!window.__xpertDialogObserver) {
+            window.__xpertDialogObserver = new MutationObserver(apply);
+            window.__xpertDialogObserver.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+        }
+    };
+
     window.__triggerXpertChatbotAction = function() {
         var button = document.getElementById('xpert_chatbot__floating-action-btn');
         if (!button) return false;
+
+    if (typeof window.__expandXpertDialog === 'function') {
+        window.__expandXpertDialog();
+    }
         button.click();
+
         if (window.XpertChatBridge && window.XpertChatBridge.onChatOpen) {
             window.XpertChatBridge.onChatOpen();
         }
         return true;
     };
+
     var attempts = 0;
     var interval = setInterval(function() {
         attempts++;
@@ -120,7 +163,7 @@ fun configureCatalogWebView(
             window.XpertChatBridge.onChatReady();
         }
         if (attempts >= 200) clearInterval(interval);
-    }, 300);
+    });
 })();
 """.trimIndent()
 
@@ -151,7 +194,6 @@ fun configureCatalogWebView(
 
     webView.apply {
 
-        // Register Android bridge before loading the page.
         addJavascriptInterface(XpertChatBridge(), "XpertChatBridge")
 
         webViewClient = object : DefaultWebViewClient(
@@ -169,8 +211,6 @@ fun configureCatalogWebView(
 
                 onWebPageLoaded()
 
-                // The discovery page also contains the Xpert widget. Hide
-                // its floating entry points in every catalog WebView.
                 view?.evaluateJavascript(
                     XPERT_FLOATING_UI_HIDE_SCRIPT,
                     null
@@ -190,7 +230,6 @@ fun configureCatalogWebView(
                 view ?: return
 
                 if (enableXpertChat) {
-                    // Inject Xpert-specific JavaScript only for the Xpert WebView.
                     view.evaluateJavascript(
                         """
         (function() {
@@ -342,7 +381,6 @@ fun configureCatalogWebView(
             domStorageEnabled = true
             userAgentString = "$userAgentString $userAgent"
 
-            // Important for keyboard interaction.
             setSupportMultipleWindows(false)
         }
 

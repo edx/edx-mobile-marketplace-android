@@ -12,7 +12,6 @@ import android.webkit.WebView
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -265,7 +264,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
             ?: return
 
-        // Capture original portrait height only once.
         if (originalBannerHeight <= 0 && bannerLayout.height > 0) {
             originalBannerHeight = bannerLayout.height
             originalBannerTopMargin = params.topMargin
@@ -633,7 +631,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         }
 
         bannerLayout.setOnTouchListener(touchListener)
-        // webView.setOnTouchListener(touchListener)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -829,10 +826,8 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             rootLayout?.visibility = View.VISIBLE
             loadingIndicator?.visibility = View.GONE
 
-            // Hide subscription banner while Xpert Chat is open.
             bannerLayout?.visibility = View.GONE
 
-            // Open Xpert Chat directly below the toolbar.
             xpertWebView?.let { webView ->
                 val params = webView.layoutParams
 
@@ -898,11 +893,69 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             if (!isAdded || view !== root) return@post
 
             updateXpertChatVisibility(root, isOpen)
-            if (!isOpen) {
+            if (isOpen) {
+                val rootLayout =
+                    view?.findViewWithTag<View>("root_layout")
+                val loadingIndicator =
+                    view?.findViewWithTag<ProgressBar>("loading_indicator")
+
+                val bannerLayout =
+                    view?.findViewWithTag<View>("subscription_banner_layout")
+
+
+                rootLayout?.visibility = View.GONE
+                loadingIndicator?.visibility = View.GONE
+                bannerLayout?.visibility = View.GONE
+                val xpertWebView =
+                    root.findViewWithTag<WebView>("xpert_webview")
+
+                xpertWebView?.postDelayed({
+                    if (isAdded && view === root && isXpertChatOpen) {
+                        expandXpertDialog(xpertWebView)
+                    }
+                }, 300L)
+            } else {
                 restoreDiscoveryAfterXpertClose(root)
             }
         }
+        }
+
+
+    private fun expandXpertDialog(webView: WebView) {
+        webView.evaluateJavascript(
+            """
+        (function() {
+            var closeButton = document.querySelector(
+                'button[aria-label="Close Xpert dialog"]'
+            );
+            var dialog = closeButton && closeButton.closest('[role="dialog"]');
+            if (!dialog) return;
+
+            ['position', 'inset', 'width', 'height', 'max-width',
+             'max-height', 'margin', 'border-radius', 'transform'].forEach(
+                function(property) {
+                    dialog.style.removeProperty(property);
+                }
+            );
+
+            dialog.style.setProperty('position', 'fixed', 'important');
+            dialog.style.setProperty('inset', '0', 'important');
+            dialog.style.setProperty('width', '100vw', 'important');
+            dialog.style.setProperty('height', '100vh', 'important');
+            dialog.style.setProperty('max-width', 'none', 'important');
+            dialog.style.setProperty('max-height', 'none', 'important');
+            dialog.style.setProperty('margin', '0', 'important');
+            dialog.style.setProperty('border-radius', '0', 'important');
+            dialog.style.setProperty('transform', 'none', 'important');
+            dialog.style.setProperty('background-color', '#FFFFFF', 'important');
+            dialog.style.setProperty('opacity', '1', 'important');
+            dialog.style.setProperty('z-index', '2147483647', 'important');
+        })();
+        """.trimIndent(),
+            null
+        )
     }
+
 
     private fun restoreDiscoveryAfterXpertClose(root: View) {
         root.postDelayed({
@@ -950,7 +1003,6 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
                 ?: return@post
 
-            // Capture original height before applying landscape dimensions.
             if (originalBannerHeight <= 0) {
                 val measuredHeight = bannerLayout.height
                 if (measuredHeight <= 0) return@post
@@ -966,14 +1018,12 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 originalBannerHeight
             }
 
-            // Restore original margins before applying the new height.
             params.topMargin = originalBannerTopMargin
             params.bottomMargin = originalBannerBottomMargin
             params.height = currentBannerMaxHeight
 
             bannerLayout.layoutParams = params
 
-            // Reset offset to avoid carrying portrait scroll into landscape.
             currentScrollOffset = 0
 
             bannerLayout.requestLayout()

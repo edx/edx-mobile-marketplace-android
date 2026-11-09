@@ -144,12 +144,6 @@ fun configureCatalogWebView(
         fun onChatClose() {
             webView.post {
                 onXpertChatStateChanged?.invoke(false)
-
-                Toast.makeText(
-                    webView.context,
-                    "Xpert chat closed",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
         }
 
@@ -362,4 +356,3 @@ fun configureCatalogWebView(
         loadUrl(url)
     }
 }
-	

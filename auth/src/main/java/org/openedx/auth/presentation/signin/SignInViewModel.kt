@@ -122,11 +122,6 @@ class SignInViewModel(
                 } else {
                     _uiMessage.value =
                         UIMessage.SnackBarMessage(resourceManager.getString(CoreR.string.core_error_unknown_error))
-                    _uiState.update { it.copy(loginSuccess = true) }
-                    setMetadata(AuthType.PASSWORD)
-                    logSignInSuccessEvent(AuthType.PASSWORD)
-                    refreshSessionCookieIfNeeded()
-                    appNotifier.send(SignInEvent())
                 }
             }
             _uiState.update { it.copy(showProgress = false) }

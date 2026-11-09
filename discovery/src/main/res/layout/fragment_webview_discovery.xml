@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- Header Toolbar -->
+    <!-- Toolbar -->
     <RelativeLayout
         android:id="@+id/header_toolbar"
         android:tag="header_toolbar"
@@ -57,31 +57,19 @@
 
     </RelativeLayout>
 
-    <!-- Xpert WebView: Below Toolbar -->
-    <WebView
-        android:id="@+id/xpert_webview"
-        android:tag="xpert_webview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="@color/primary"
-        android:layout_marginBottom="35dp"
-        android:visibility="gone" />
-
-    <!-- Scrollable Content -->
-    <ScrollView
+    <!-- Shared content area -->
+    <FrameLayout
+        android:id="@+id/main_content_frame"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:fillViewport="true"
-        android:layout_weight="1"
-        android:id="@+id/scroll_layout"
-        android:tag="scroll_layout">
+        android:layout_weight="1">
 
+        <!-- Discovery screen -->
         <LinearLayout
             android:id="@+id/root_layout"
             android:tag="root_layout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical"
             android:background="@color/background">
 
@@ -89,14 +77,14 @@
                 android:id="@+id/content_frame"
                 android:tag="content_frame"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_weight="1">
 
                 <LinearLayout
                     android:id="@+id/banner_and_webview_container"
                     android:tag="banner_and_webview_container"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical">
 
                     <androidx.compose.ui.platform.ComposeView
@@ -114,7 +102,8 @@
                         android:id="@+id/discovery_webview"
                         android:tag="discovery_webview"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
 
                 </LinearLayout>
 
@@ -159,16 +148,25 @@
 
             </FrameLayout>
 
-
         </LinearLayout>
 
-    </ScrollView>
+        <!-- Xpert chatbot WebView -->
+        <WebView
+            android:id="@+id/xpert_webview"
+            android:tag="xpert_webview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/primary"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <!-- Authentication buttons -->
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/auth_buttons_compose_view"
         android:tag="auth_buttons_compose_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone" />
-
 
 </LinearLayout>

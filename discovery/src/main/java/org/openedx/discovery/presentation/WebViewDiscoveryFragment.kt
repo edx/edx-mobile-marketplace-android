@@ -12,9 +12,9 @@ import android.webkit.WebView
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -61,6 +61,13 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
     private var isXpertChatOpen = false
 
+    private var currentBannerMaxHeight = -1
+
+
+    private val isLandscape: Boolean
+        get() = resources.configuration.orientation ==
+                Configuration.ORIENTATION_LANDSCAPE
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(viewModel)
@@ -87,24 +94,43 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         viewModel.refreshSubscriptionBannerVisibility()
     }
 
+
     private fun setupToolbar(view: View) {
         val headerToolbar = view.findViewWithTag<View>("header_toolbar")
         val toolbarTitle = view.findViewWithTag<TextView>("toolbar_title")
         val btnBack = view.findViewWithTag<ImageButton>("btn_back")
         val btnXpertChat = view.findViewWithTag<ImageButton>("btn_xpert_chat")
-        val xpertWebView =
-            view.findViewWithTag<WebView>("xpert_webview")
+        val xpertWebView = view.findViewWithTag<WebView>("xpert_webview")
 
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
-            val statusBarInset = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            val navBarInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            val cutoutInset = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            val systemBarsInset = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-            val holderCutout = (activity as? InsetHolder)?.cutoutInset ?: 0
+            val statusBarInset =
+                insets.getInsets(WindowInsetsCompat.Type.statusBars())
+
+            val navBarInset =
+                insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+
+            val cutoutInset =
+                insets.getInsets(WindowInsetsCompat.Type.displayCutout())
+
+            val systemBarsInset =
+                insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            val isLandscape =
+                resources.configuration.orientation ==
+                        Configuration.ORIENTATION_LANDSCAPE
+
+            val holderCutout =
+                (activity as? InsetHolder)?.cutoutInset ?: 0
+
             val horizontalCutout = if (isLandscape) {
-                maxOf(cutoutInset.left, cutoutInset.right, systemBarsInset.left, systemBarsInset.right, holderCutout)
+                maxOf(
+                    cutoutInset.left,
+                    cutoutInset.right,
+                    systemBarsInset.left,
+                    systemBarsInset.right,
+                    holderCutout
+                )
             } else {
                 0
             }
@@ -114,15 +140,23 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 right = horizontalCutout
             )
 
-            val extraTopMargin = (8 * resources.displayMetrics.density).toInt()
+            val extraTopMargin =
+                (8 * resources.displayMetrics.density).toInt()
+
             headerToolbar?.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 topMargin = statusBarInset.top + extraTopMargin
             }
 
-            val authButtonsView = view.findViewWithTag<View>("auth_buttons_compose_view")
+            val authButtonsView =
+                view.findViewWithTag<View>("auth_buttons_compose_view")
+
             if (viewModel.isPreLogin) {
-                val extraPadding = (12 * resources.displayMetrics.density).toInt()
-                val bottomInset = maxOf(0, navBarInset.bottom - extraPadding)
+                val extraPadding =
+                    (12 * resources.displayMetrics.density).toInt()
+
+                val bottomInset =
+                    maxOf(0, navBarInset.bottom - extraPadding)
+
                 authButtonsView?.updatePadding(bottom = bottomInset)
             } else {
                 authButtonsView?.updatePadding(bottom = 0)
@@ -131,18 +165,28 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             WindowInsetsCompat.CONSUMED
         }
 
-        toolbarTitle?.text = getString(R.string.discovery_explore_the_catalog)
+        toolbarTitle?.text =
+            getString(R.string.discovery_explore_the_catalog)
 
-        btnBack?.visibility = if (viewModel.isPreLogin) View.VISIBLE else View.GONE
+        btnBack?.visibility =
+            if (viewModel.isPreLogin) View.VISIBLE else View.GONE
+
         btnBack?.setOnClickListener {
             requireActivity().supportFragmentManager.popBackStackImmediate()
         }
 
-        updateXpertChatIcon(btnXpertChat,xpertWebView)
+
+        updateXpertChatIcon(btnXpertChat, xpertWebView)
+
         btnXpertChat?.setOnClickListener {
-            viewModel.triggerXpertChat()
+            if (isXpertChatOpen) {
+                handleXpertChatStateChanged(view, isOpen = false)
+            } else {
+                triggerXpertChat()
+            }
         }
     }
+
 
     private fun updateXpertChatIcon(
         btnXpertChat: ImageButton?,
@@ -207,44 +251,81 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
     private var currentScrollOffset = 0
 
+    private var originalBannerHeight = -1
+    private var originalBannerTopMargin = 0
+    private var originalBannerBottomMargin = 0
+
     private fun applyScrollOffset(view: View, offset: Int) {
         val bannerLayout =
             view.findViewWithTag<View>("subscription_banner_layout") ?: return
 
-        val container =
-            view.findViewWithTag<LinearLayout>("banner_and_webview_container") ?: return
+        if (!viewModel.isSubscriptionBannerVisible.value) return
 
-        val webView =
-            view.findViewWithTag<WebView>("discovery_webview") ?: return
+        val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
+            ?: return
 
-        val isBannerVisible =
-            viewModel.isSubscriptionBannerVisible.value && bannerLayout.isVisible
-
-        if (!isBannerVisible) {
-            container.translationY = 0f
-            currentScrollOffset = 0
-            return
+        if (originalBannerHeight <= 0 && bannerLayout.height > 0) {
+            originalBannerHeight = bannerLayout.height
+            originalBannerTopMargin = params.topMargin
+            originalBannerBottomMargin = params.bottomMargin
         }
 
-        val totalBannerHeight = run {
-            val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
-            val margins = (params?.topMargin ?: 0) + (params?.bottomMargin ?: 0)
+        if (originalBannerHeight <= 0) return
 
-            bannerLayout.height + margins
-        }
+        val maxHeight = currentBannerMaxHeight.takeIf { it > 0 }
+            ?: originalBannerHeight
 
-        if (totalBannerHeight <= 0) {
-            container.translationY = 0f
-            currentScrollOffset = 0
-            return
-        }
+        val totalHeight = maxHeight +
+                originalBannerTopMargin +
+                originalBannerBottomMargin
 
-        val clampedOffset = offset.coerceIn(0, totalBannerHeight)
-
+        val clampedOffset = offset.coerceIn(0, totalHeight)
         currentScrollOffset = clampedOffset
 
-        container.translationY = -clampedOffset.toFloat()
+        val remainingHeight = (totalHeight - clampedOffset)
+            .coerceIn(0, totalHeight)
+
+        val remainingTopMargin =
+            minOf(originalBannerTopMargin, remainingHeight)
+
+        val remainingBottomMargin =
+            minOf(
+                originalBannerBottomMargin,
+                (remainingHeight - remainingTopMargin).coerceAtLeast(0)
+            )
+
+        val remainingContentHeight =
+            (remainingHeight - remainingTopMargin - remainingBottomMargin)
+                .coerceAtLeast(0)
+
+        params.topMargin = remainingTopMargin
+        params.bottomMargin = remainingBottomMargin
+        params.height = remainingContentHeight
+
+        bannerLayout.layoutParams = params
     }
+
+    private fun restoreBannerLayout(bannerLayout: View) {
+        if (originalBannerHeight <= 0) return
+
+        val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
+            ?: return
+
+        currentBannerMaxHeight = if (isLandscape) {
+            (145 * resources.displayMetrics.density).toInt()
+        } else {
+            originalBannerHeight
+        }
+
+        params.topMargin = originalBannerTopMargin
+        params.bottomMargin = originalBannerBottomMargin
+        params.height = currentBannerMaxHeight
+
+        bannerLayout.layoutParams = params
+
+        currentScrollOffset = 0
+    }
+
     private fun setupWebView(view: View) {
         val webView =
             view.findViewWithTag<WebView>("discovery_webview") ?: return
@@ -281,48 +362,135 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
                 viewModel.refreshSessionCookie()
             }
         )
+        view.findViewWithTag<View>("subscription_banner_layout")?.let { banner ->
+            installDiscoveryScrollListener(webView, view, banner)
+        }
         setupXpertWebView(view)
     }
+    private var isXpertWebViewReady = false
+    private var isXpertChatPending = false
+
+
+    private var isXpertPageLoaded = false
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupXpertWebView(view: View) {
+
         val xpertWebView =
             view.findViewWithTag<WebView>("xpert_webview") ?: return
+
+        isXpertWebViewReady = false
+        isXpertPageLoaded = false
+        isXpertChatPending = false
 
         xpertWebView.visibility = View.GONE
 
         viewModel.setXpertWebView(xpertWebView)
+        Log.d("XpertChat", "Initializing Xpert WebView")
+        Log.d("XpertChat", "URL: ${viewModel.discoveryUrl}")
         configureCatalogWebView(
             webView = xpertWebView,
             url = viewModel.discoveryUrl,
             uriScheme = viewModel.uriScheme,
             userAgent = viewModel.appUserAgent,
-            isDarkTheme = resources.configuration.uiMode and
-                    Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES,
+
+            isDarkTheme =
+                resources.configuration.uiMode and
+                        Configuration.UI_MODE_NIGHT_MASK ==
+                        Configuration.UI_MODE_NIGHT_YES,
+
             webViewTrackingAnalytics = webViewTrackingAnalytics,
+
+            enableXpertChat = true,
+
             onWebPageLoaded = {
-                Log.d("XpertWebView", "Xpert WebView loaded")
+                isXpertPageLoaded = true
+                Log.d("XpertChat", "Xpert page loaded")
             },
+
             onUriClick = { param, authority ->
                 handleUriClick(param, authority)
             },
+
             onWebPageLoadError = {
-                Log.e("XpertWebView", "Xpert WebView loading failed")
+                isXpertPageLoaded = false
+                Log.e("XpertChat", "Xpert page loading failed")
             },
+
             onXpertChatReady = {
-                Log.d("XpertWebView", "Xpert chatbot initialized")
-            },
-            onXpertChatStateChanged = { isOpen ->
-                view?.post {
-                    if (isAdded) {
-                        updateXpertChatVisibility(view, isOpen)
-                    }
+                isXpertWebViewReady = true
+
+                Log.d("XpertChat", "Xpert chatbot ready callback received")
+                if (isXpertChatPending) {
+                    isXpertChatPending = false
+                    triggerXpertChat()
                 }
+            },
+
+            onXpertChatStateChanged = { isOpen ->
+                handleXpertChatStateChanged(view, isOpen)
             }
+
 
         )
     }
 
+
+    private fun triggerXpertChat() {
+
+        val rootView = view ?: return
+
+        val xpertWebView =
+            rootView.findViewWithTag<WebView>("xpert_webview")
+        Log.d("XpertChat", "Ready: $isXpertWebViewReady")
+        Log.d("XpertChat", "Pending: $isXpertChatPending")
+        if (xpertWebView == null) {
+            Log.e("XpertChat", "Xpert WebView not found")
+            return
+        }
+
+        if (!isXpertWebViewReady) {
+            Log.d("XpertChat", "Chatbot is not ready. Queuing request.")
+
+            isXpertChatPending = true
+            return
+        }
+
+        xpertWebView.evaluateJavascript(
+            """
+        (function() {
+            if (typeof window.__triggerXpertChatbotAction === 'function') {
+                return window.__triggerXpertChatbotAction();
+            }
+            return false;
+        })();
+        """.trimIndent()
+        ) { result ->
+
+            Log.d("XpertChat", "Chat trigger result: $result")
+
+            rootView.post {
+
+                if (!isAdded || view !== rootView) return@post
+
+                if (result == "true") {
+
+                    handleXpertChatStateChanged(rootView, isOpen = true)
+
+                    Log.d("XpertChat", "Chat screen opened")
+
+                } else {
+
+                    Log.e(
+                        "XpertChat",
+                        "Unable to find chatbot button on webpage"
+                    )
+
+                    isXpertChatPending = false
+                }
+            }
+        }
+    }
     private fun handleUriClick(param: String, authority: WebViewLink.Authority) {
         when (authority) {
             WebViewLink.Authority.COURSE_INFO -> {
@@ -437,11 +605,7 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             applyScrollOffset(view, currentScrollOffset)
         }
 
-        webView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
-            if (!isXpertChatOpen) {
-                applyScrollOffset(view, scrollY)
-            }
-        }
+        installDiscoveryScrollListener(webView, view, bannerLayout)
 
         bannerLayout.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             applyScrollOffset(view, currentScrollOffset)
@@ -467,7 +631,45 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         }
 
         bannerLayout.setOnTouchListener(touchListener)
-        webView.setOnTouchListener(touchListener)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun installDiscoveryScrollListener(
+        webView: WebView,
+        view: View,
+        bannerLayout: View
+    ) {
+
+        var gestureStartY = 0f
+        var gestureStartOffset = 0
+
+        webView.setOnTouchListener { touchedView, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    gestureStartY = event.rawY
+                    gestureStartOffset = currentScrollOffset
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    if (!isXpertChatOpen) {
+                        val delta = gestureStartY - event.rawY
+                        applyScrollOffset(
+                            view,
+                            gestureStartOffset + delta.toInt()
+                        )
+                    }
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    if (event.actionMasked == MotionEvent.ACTION_UP) {
+                        touchedView.performClick()
+                    }
+                }
+            }
+            false
+        }
+
     }
 
     private fun observeViewModel(view: View) {
@@ -479,12 +681,14 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.isSubscriptionBannerVisible.collect { isVisible ->
-                        bannerLayout?.visibility = if (
-                            isVisible && !isXpertChatOpen
-                        ) {
-                            View.VISIBLE
+                        if (isVisible) {
+                            bannerLayout?.visibility = View.VISIBLE
+                            bannerLayout?.post {
+                                if (bannerLayout.isVisible) restoreBannerLayout(bannerLayout)
+                            }
                         } else {
-                            View.GONE
+                            bannerLayout?.visibility = View.GONE
+                            currentScrollOffset = 0
                         }
 
                         view.post {
@@ -497,13 +701,33 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
                 launch {
                     viewModel.uiState.collect { uiState ->
-                        val hasInternet = viewModel.hasInternetConnection
+
+                        val isLoading =
+                            uiState is WebViewUIState.Loading &&
+                                    viewModel.hasInternetConnection
+
                         loadingIndicator?.visibility =
-                            if (uiState is WebViewUIState.Loading && hasInternet) View.VISIBLE else View.GONE
+                            if (isLoading && !isXpertChatOpen) {
+                                View.VISIBLE
+                            } else {
+                                View.GONE
+                            }
+
                         errorViewContainer?.visibility =
-                            if (uiState is WebViewUIState.Error) View.VISIBLE else View.GONE
+                            if (uiState is WebViewUIState.Error) {
+                                View.VISIBLE
+                            } else {
+                                View.GONE
+                            }
+
                         webView?.visibility =
-                            if (uiState is WebViewUIState.Error || !hasInternet) View.GONE else View.VISIBLE
+                            if (uiState is WebViewUIState.Error ||
+                                !viewModel.hasInternetConnection
+                            ) {
+                                View.GONE
+                            } else {
+                                View.VISIBLE
+                            }
                     }
                 }
                 launch {
@@ -535,40 +759,31 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
 
         val rootView = view ?: return
 
-        val btnXpertChat =
-            rootView.findViewWithTag<ImageButton>("btn_xpert_chat")
-        val xpertWebView =
-            rootView.findViewWithTag<WebView>("xpert_webview")
-
-        updateXpertChatIcon(btnXpertChat, xpertWebView)
-
         rootView.post {
             if (!isAdded || view !== rootView) return@post
 
             ViewCompat.requestApplyInsets(rootView)
 
-            val webView =
-                rootView.findViewWithTag<WebView>("discovery_webview")
-                    ?: return@post
+            val btnXpertChat =
+                rootView.findViewWithTag<ImageButton>("btn_xpert_chat")
 
-            val container =
-                rootView.findViewWithTag<LinearLayout>(
-                    "banner_and_webview_container"
-                ) ?: return@post
+            val xpertWebView =
+                rootView.findViewWithTag<WebView>("xpert_webview")
 
-            container.updateLayoutParams {
-                width = ViewGroup.LayoutParams.MATCH_PARENT
-                height = ViewGroup.LayoutParams.WRAP_CONTENT
-            }
+            updateXpertChatIcon(btnXpertChat, xpertWebView)
 
-            webView.updateLayoutParams {
-                width = ViewGroup.LayoutParams.MATCH_PARENT
-                height = ViewGroup.LayoutParams.WRAP_CONTENT
-            }
+            updateBannerForOrientation(rootView)
 
-            container.translationY = 0f
+            rootView.requestLayout()
+
+            rootView.findViewWithTag<WebView>("discovery_webview")
+                ?.requestLayout()
+
+            xpertWebView?.requestLayout()
         }
     }
+
+
 
     override fun onResume() {
         super.onResume()
@@ -588,48 +803,237 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         }
     }
 
+
     private fun updateXpertChatVisibility(
         view: View,
         isOpen: Boolean
     ) {
         isXpertChatOpen = isOpen
 
-        val bannerLayout =
-            view.findViewWithTag<View>("subscription_banner_layout")
-
+        val rootLayout =
+            view.findViewWithTag<View>("root_layout")
 
         val xpertWebView =
             view.findViewWithTag<WebView>("xpert_webview")
 
-        xpertWebView?.visibility =
-            if (isOpen) View.VISIBLE else View.GONE
+        val loadingIndicator =
+            view.findViewWithTag<ProgressBar>("loading_indicator")
 
-        view.findViewWithTag<View>("scroll_layout")?.visibility =
-            if (isOpen) View.GONE else View.VISIBLE
+        val bannerLayout =
+            view.findViewWithTag<View>("subscription_banner_layout")
 
-        bannerLayout?.visibility =
-            if (isOpen) View.GONE
-            else if (viewModel.isSubscriptionBannerVisible.value) View.VISIBLE
-            else View.GONE
+        if (isOpen) {
+            rootLayout?.visibility = View.VISIBLE
+            loadingIndicator?.visibility = View.GONE
 
-        if (!isOpen) {
-            view.post {
-                applyScrollOffset(view, currentScrollOffset)
+            bannerLayout?.visibility = View.GONE
+
+            xpertWebView?.let { webView ->
+                val params = webView.layoutParams
+
+                if (params is ViewGroup.MarginLayoutParams) {
+                    params.topMargin = 0
+                    params.bottomMargin = 0
+                    webView.layoutParams = params
+                }
+            }
+
+            xpertWebView?.visibility = View.VISIBLE
+
+        } else {
+            xpertWebView?.clearFocus()
+            xpertWebView?.visibility = View.GONE
+
+            xpertWebView?.updateLayoutParams<FrameLayout.LayoutParams> {
+                topMargin = 0
+                bottomMargin = 0
+            }
+
+            rootLayout?.visibility = View.VISIBLE
+
+            val discoveryWebView =
+                view.findViewWithTag<WebView>("discovery_webview")
+
+            val showBanner = viewModel.isSubscriptionBannerVisible.value
+
+            bannerLayout?.visibility =
+                if (showBanner) View.VISIBLE else View.GONE
+
+            if (showBanner) {
+                bannerLayout?.let { banner ->
+                    restoreBannerLayout(banner)
+                }
+            }
+
+            discoveryWebView?.visibility = if (
+                viewModel.uiState.value is WebViewUIState.Error ||
+                !viewModel.hasInternetConnection
+            ) View.GONE else View.VISIBLE
+
+            discoveryWebView?.bringToFront()
+            discoveryWebView?.isFocusableInTouchMode = true
+            discoveryWebView?.requestFocus()
+
+            discoveryWebView?.post {
+                if (!isAdded || this.view !== view || isXpertChatOpen) {
+                    return@post
+                }
+
+                applyScrollOffset(view, discoveryWebView.scrollY)
             }
         }
+
     }
+
+    private fun handleXpertChatStateChanged(
+        root: View,
+        isOpen: Boolean
+    ) {
+        root.post {
+            if (!isAdded || view !== root) return@post
+
+            updateXpertChatVisibility(root, isOpen)
+            if (isOpen) {
+                val rootLayout =
+                    view?.findViewWithTag<View>("root_layout")
+                val loadingIndicator =
+                    view?.findViewWithTag<ProgressBar>("loading_indicator")
+
+                val bannerLayout =
+                    view?.findViewWithTag<View>("subscription_banner_layout")
+
+
+                rootLayout?.visibility = View.GONE
+                loadingIndicator?.visibility = View.GONE
+                bannerLayout?.visibility = View.GONE
+                val xpertWebView =
+                    root.findViewWithTag<WebView>("xpert_webview")
+
+                xpertWebView?.postDelayed({
+                    if (isAdded && view === root && isXpertChatOpen) {
+                        expandXpertDialog(xpertWebView)
+                    }
+                }, 300L)
+            } else {
+                restoreDiscoveryAfterXpertClose(root)
+            }
+        }
+        }
+
+
+    private fun expandXpertDialog(webView: WebView) {
+        webView.evaluateJavascript(
+            """
+        (function() {
+            var closeButton = document.querySelector(
+                'button[aria-label="Close Xpert dialog"]'
+            );
+            var dialog = closeButton && closeButton.closest('[role="dialog"]');
+            if (!dialog) return;
+
+            ['position', 'inset', 'width', 'height', 'max-width',
+             'max-height', 'margin', 'border-radius', 'transform'].forEach(
+                function(property) {
+                    dialog.style.removeProperty(property);
+                }
+            );
+
+            dialog.style.setProperty('position', 'fixed', 'important');
+            dialog.style.setProperty('inset', '0', 'important');
+            dialog.style.setProperty('width', '100vw', 'important');
+            dialog.style.setProperty('height', '100vh', 'important');
+            dialog.style.setProperty('max-width', 'none', 'important');
+            dialog.style.setProperty('max-height', 'none', 'important');
+            dialog.style.setProperty('margin', '0', 'important');
+            dialog.style.setProperty('border-radius', '0', 'important');
+            dialog.style.setProperty('transform', 'none', 'important');
+            dialog.style.setProperty('background-color', '#FFFFFF', 'important');
+            dialog.style.setProperty('opacity', '1', 'important');
+            dialog.style.setProperty('z-index', '2147483647', 'important');
+        })();
+        """.trimIndent(),
+            null
+        )
+    }
+
+
+    private fun restoreDiscoveryAfterXpertClose(root: View) {
+        root.postDelayed({
+
+            if (!isAdded || view !== root || isXpertChatOpen) {
+                return@postDelayed
+            }
+
+            val discoveryWebView =
+                root.findViewWithTag<WebView>("discovery_webview")
+                    ?: return@postDelayed
+
+            discoveryWebView.visibility = View.VISIBLE
+            discoveryWebView.bringToFront()
+
+            discoveryWebView.isFocusableInTouchMode = true
+            discoveryWebView.requestFocus()
+
+        }, XPERT_CLOSE_RESTORE_DELAY_MS)
+    }
+
 
     override fun onDestroyView() {
         viewModel.clearXpertWebView()
         viewModel.setDiscoveryWebView(null)
+
         currentWebView = null
+
+        isXpertWebViewReady = false
+        isXpertChatPending = false
         isXpertChatOpen = false
+
         super.onDestroyView()
+    }
+
+
+    private fun updateBannerForOrientation(view: View) {
+        val bannerLayout =
+            view.findViewWithTag<View>("subscription_banner_layout")
+                ?: return
+
+        bannerLayout.post {
+            if (!isAdded || this.view !== view) return@post
+
+            val params = bannerLayout.layoutParams as? ViewGroup.MarginLayoutParams
+                ?: return@post
+
+            if (originalBannerHeight <= 0) {
+                val measuredHeight = bannerLayout.height
+                if (measuredHeight <= 0) return@post
+
+                originalBannerHeight = measuredHeight
+                originalBannerTopMargin = params.topMargin
+                originalBannerBottomMargin = params.bottomMargin
+            }
+
+            currentBannerMaxHeight = if (isLandscape) {
+                (145 * resources.displayMetrics.density).toInt()
+            } else {
+                originalBannerHeight
+            }
+
+            params.topMargin = originalBannerTopMargin
+            params.bottomMargin = originalBannerBottomMargin
+            params.height = currentBannerMaxHeight
+
+            bannerLayout.layoutParams = params
+
+            currentScrollOffset = 0
+
+            bannerLayout.requestLayout()
+        }
     }
 
     companion object {
 
         private const val ARG_SEARCH_QUERY = "query_search"
+        private const val XPERT_CLOSE_RESTORE_DELAY_MS = 100L
 
         fun newInstance(querySearch: String = ""): WebViewDiscoveryFragment {
             val fragment = WebViewDiscoveryFragment()
@@ -638,9 +1042,4 @@ class WebViewDiscoveryFragment : Fragment(R.layout.fragment_webview_discovery) {
         }
     }
 }
-
-
-
-
-
 

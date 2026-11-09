@@ -1,6 +1,7 @@
 package org.openedx.discovery.presentation.catalog
 
 import android.annotation.SuppressLint
+import android.webkit.JavascriptInterface
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -60,6 +61,7 @@ fun configureCatalogWebView(
     userAgent: String,
     isDarkTheme: Boolean,
     webViewTrackingAnalytics: WebViewTrackingAnalytics,
+    enableXpertChat: Boolean = false,
     isAllLinksExternal: Boolean = false,
     onWebPageLoaded: () -> Unit,
     refreshSessionCookie: () -> Unit = {},
@@ -71,22 +73,129 @@ fun configureCatalogWebView(
 ) {
     val context = webView.context
 
-    @Suppress("unused")
+    val XPERT_FLOATING_UI_HIDE_SCRIPT = """
+(function() {
+    function apply() {
+        var button = document.getElementById('xpert_chatbot__floating-action-btn');
+        if (button) {
+            if (button.style.display !== 'none') button.style.setProperty('display', 'none', 'important');
+            if (button.style.visibility !== 'hidden') button.style.setProperty('visibility', 'hidden', 'important');
+        }
+        document.querySelectorAll('.xpert_chatbot__proactive-message').forEach(function(message) {
+            if (message.style.display !== 'none') message.style.setProperty('display', 'none', 'important');
+            if (message.style.visibility !== 'hidden') message.style.setProperty('visibility', 'hidden', 'important');
+        });
+    }
+    apply();
+    if (!window.__xpertFloatingUiObserver) {
+        window.__xpertFloatingUiObserver = new MutationObserver(apply);
+        window.__xpertFloatingUiObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+    }
+})();
+""".trimIndent()
+
+     val XPERT_CHAT_INITIALIZATION_SCRIPT = """
+(function() {
+    if (window.__xpertInitializationStarted) return;
+    window.__xpertInitializationStarted = true;
+
+    window.__expandXpertDialog = function() {
+        function apply() {
+            var closeButton = document.querySelector(
+                'button[aria-label="Close Xpert dialog"]'
+            );
+            var dialog = closeButton && closeButton.closest('[role="dialog"]');
+            if (!dialog) return;
+
+            [
+                ['position', 'fixed'],
+                ['inset', '0'],
+                ['width', '100vw'],
+                ['height', '100vh'],
+                ['max-width', 'none'],
+                ['max-height', 'none'],
+                ['margin', '0'],
+                ['border-radius', '0'],
+                ['transform', 'none']
+            ].forEach(function(entry) {
+                if (dialog.style.getPropertyValue(entry[0]) !== entry[1] ||
+                    dialog.style.getPropertyPriority(entry[0]) !== 'important') {
+                    dialog.style.setProperty(entry[0], entry[1], 'important');
+                }
+            });
+        }
+
+        apply();
+
+        if (!window.__xpertDialogObserver) {
+            window.__xpertDialogObserver = new MutationObserver(apply);
+            window.__xpertDialogObserver.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+        }
+    };
+
+    window.__triggerXpertChatbotAction = function() {
+        var button = document.getElementById('xpert_chatbot__floating-action-btn');
+        if (!button) return false;
+
+    if (typeof window.__expandXpertDialog === 'function') {
+        window.__expandXpertDialog();
+    }
+        button.click();
+
+        if (window.XpertChatBridge && window.XpertChatBridge.onChatOpen) {
+            window.XpertChatBridge.onChatOpen();
+        }
+        return true;
+    };
+
+    var attempts = 0;
+    var interval = setInterval(function() {
+        attempts++;
+        var button = document.getElementById('xpert_chatbot__floating-action-btn');
+        if (button && window.XpertChatBridge && window.XpertChatBridge.onChatReady) {
+            clearInterval(interval);
+            window.XpertChatBridge.onChatReady();
+        }
+        if (attempts >= 200) clearInterval(interval);
+    });
+})();
+""".trimIndent()
+
     class XpertChatBridge {
+
+        @android.webkit.JavascriptInterface
+        fun onChatReady() {
+            webView.post {
+                onXpertChatReady?.invoke(webView)
+            }
+        }
+
         @android.webkit.JavascriptInterface
         fun onChatOpen() {
-            webView.post { onXpertChatStateChanged?.invoke(true) }
+            webView.post {
+                onXpertChatStateChanged?.invoke(true)
+            }
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         fun onChatClose() {
-            webView.post { onXpertChatStateChanged?.invoke(false) }
+            webView.post {
+                onXpertChatStateChanged?.invoke(false)
+            }
         }
+
     }
 
-    webView.addJavascriptInterface(XpertChatBridge(), "XpertChatBridge")
-
     webView.apply {
+
+        addJavascriptInterface(XpertChatBridge(), "XpertChatBridge")
+
         webViewClient = object : DefaultWebViewClient(
             context = context,
             webView = this@apply,
@@ -94,181 +203,117 @@ fun configureCatalogWebView(
             onUriClick = onUriClick,
             refreshSessionCookie = refreshSessionCookie,
         ) {
+
             override fun onPageFinished(view: WebView?, url: String?) {
-                url?.let { onWebPageUpdated(it) }
                 super.onPageFinished(view, url)
+
+                url?.let { onWebPageUpdated(it) }
+
+                onWebPageLoaded()
+
+                view?.evaluateJavascript(
+                    XPERT_FLOATING_UI_HIDE_SCRIPT,
+                    null
+                )
+
+                if (enableXpertChat) {
+                    view?.evaluateJavascript(
+                        XPERT_CHAT_INITIALIZATION_SCRIPT,
+                        null
+                    )
+                }
+
             }
 
             override fun onPageCommitVisible(view: WebView?, url: String?) {
                 super.onPageCommitVisible(view, url)
+                view ?: return
 
-                view?.evaluateJavascript(
-                    """
-(function() {
-    // Hide the Xpert chatbot floating button
-    var style = document.createElement('style');
-    style.id = 'xpert-hide-style';
-    style.textContent = `
-        #xpert_chatbot__floating-action-btn { 
-            display: none !important; 
-            visibility: hidden !important; 
-            opacity: 0 !important;
-        }
-        /* Hide Xpert greeting message */
-        [class*="xpert"][class*="greeting"],
-        [class*="xpert"][class*="welcome"],
-        [class*="xpert"][class*="message"],
-        .xpert-greeting,
-        .xpert-welcome-message,
-        #xpert-greeting,
-        #xpert-welcome { 
-            display: none !important; 
-            visibility: hidden !important; 
-            opacity: 0 !important;
-        }
-        /* Ensure Xpert chat dialog is full screen and input is visible */
-        /* Ensure chatbot dialog adjusts when keyboard opens */
-[role="dialog"] {
-    position: fixed !important;
-    width: 100% !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-    z-index: 999999 !important;
-    overflow: hidden !important;
-}
+                if (enableXpertChat) {
+                    view.evaluateJavascript(
+                        """
+        (function() {
+                    var styleId = 'xpert-floating-elements-hidden';
+                    if (document.getElementById(styleId)) return;
+            var style = document.createElement('style');
+                    style.id = styleId;
 
-/* Keep chatbot input visible */
-[role="dialog"] textarea,
-[role="dialog"] input,
-[role="dialog"] [contenteditable="true"] {
-    scroll-margin-bottom: 30px;
-}
-
-/* Prevent input from being covered by keyboard */
-[role="dialog"] {
-    display: flex !important;
-    flex-direction: column !important;
-}
-    `;
-    (document.head || document.documentElement).appendChild(style);
-    
-    // Monitor for modal open/close and notify native bridge
-    var wasModalOpen = false;
-    setInterval(function() {
-        var modal = document.querySelector('[role="dialog"]');
-        var isModalOpen = modal !== null && modal.offsetParent !== null;
-                 var isModalOpen = modal !== null &&
-             modal.getClientRects().length > 0 &&
-             window.getComputedStyle(modal).visibility !== 'hidden';
-             var viewportHeight = window.visualViewport
-    ? window.visualViewport.height
-    : window.innerHeight;
-
-        if (isModalOpen && modal) {
-            modal.style.setProperty('width', '100%', 'important');
-            modal.style.setProperty('height', viewportHeight + 'px', 'important');
-            modal.style.setProperty('max-width', '100%', 'important');
-            modal.style.setProperty('max-height', '100%', 'important');
-            modal.style.setProperty('top', '0', 'important');
-            modal.style.setProperty('left', '0', 'important');
-            modal.style.setProperty('right', '0', 'important');
-            modal.style.setProperty('bottom', '0', 'important');
-            modal.style.setProperty('border-radius', '0', 'important');
-            modal.style.setProperty('margin', '0', 'important');
-        }
-        if (isModalOpen !== wasModalOpen) {
-            wasModalOpen = isModalOpen;
-            if (window.XpertChatBridge) {
-                if (isModalOpen) {
-                    window.XpertChatBridge.onChatOpen();
-                } else {
-                    window.XpertChatBridge.onChatClose();
+            style.textContent = `
+                .xpert_chatbot__proactive-message {
+                    display: none !important;
                 }
-            }
-        }
-        if (!isModalOpen) {
-            var btn = document.getElementById('xpert_chatbot__floating-action-btn');
-            if (btn) {
-                btn.style.cssText = 'display: none !important; visibility: hidden !important;';
-            }
-        }
-    }, 300);
+            `;
 
-    // Make trigger function available
-    window.__triggerXpertChatbotAction = function() {
-        var btn = document.getElementById('xpert_chatbot__floating-action-btn');
-        if (btn) {
-            btn.style.cssText = 'display: block !important; visibility: visible !important;';
-            btn.click();
-        }
-    };
-    
-    // Handle keyboard visibility and input positioning
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', function() {
-        var modal = document.querySelector('[role="dialog"]');
+            (document.head || document.documentElement)
+                .appendChild(style);
+                
+                if (!window.__xpertCloseListenerInstalled) {
+                    window.__xpertCloseListenerInstalled = true;
 
-        if (!modal) return;
+                    document.addEventListener('click', function(event) {
 
-        var viewportHeight = window.visualViewport.height;
+                        var closeButton = event.target.closest(
+                            'button[aria-label="Close Xpert dialog"]'
+                        );
 
-        modal.style.setProperty(
-            'height',
-            viewportHeight + 'px',
-            'important'
-        );
+                        if (closeButton) {
 
-        modal.style.setProperty(
-            'max-height',
-            viewportHeight + 'px',
-            'important'
-        );
+                            console.log("Xpert close icon clicked");
 
-        var activeElement = document.activeElement;
+                            if (window.XpertChatBridge &&
+                                window.XpertChatBridge.onChatClose) {
 
-        if (
-            activeElement &&
-            (
-                activeElement.tagName === 'INPUT' ||
-                activeElement.tagName === 'TEXTAREA' ||
-                activeElement.isContentEditable
-            )
-        ) {
-            setTimeout(function() {
-                activeElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-            }, 150);
-        }
-    });
-}
-    
-    // Check for 404 page
-    const text = document.body.innerText || "";
-    return text.includes("Page not found") || text.includes("404");
-})();
-"""
-                ) { result ->
-                    if (result == "true") {
-                        onWebPageLoadError()
-                    } else {
-                        onWebPageLoaded()
-                        onXpertChatReady?.invoke(view)
-                    }
+                                window.XpertChatBridge.onChatClose();
+                            }
+                        }
+
+                    }, true);
+                }
+
+            window.__triggerXpertChatbotAction = function() {
+                var btn = document.getElementById(
+                    'xpert_chatbot__floating-action-btn'
+                );
+
+                if (btn) {
+                    btn.click();
+                    return true;
+                }
+
+                            if (!window.__xpertCloseListenerInstalled) {
+                                window.__xpertCloseListenerInstalled = true;
+                                document.addEventListener('click', function(event) {
+                                    var target = event.target;
+                                    var closeControl = target && target.closest && target.closest(
+                                        '[aria-label*="close" i], ' +
+                                        '[title*="close" i], ' +
+                                        'button[class*="close" i], ' +
+                                        '[role="button"][class*="close" i]'
+                                    );
+
+                                    if (closeControl && window.XpertChatBridge &&
+                                        window.XpertChatBridge.onChatClose) {
+                                        window.XpertChatBridge.onChatClose();
+                                    }
+                                }, true);
+                            }
+
+                return false;
+            };
+        })();
+        
+                        """.trimIndent(),
+                        null
+                    )
                 }
             }
 
             override fun shouldOverrideUrlLoading(
-                view: WebView?, request: WebResourceRequest?
+                view: WebView?,
+                request: WebResourceRequest?
             ): Boolean {
                 val clickUrl = request?.url?.toString() ?: ""
+
                 if (handleRecognizedLink(clickUrl)) {
                     return true
                 }
@@ -276,21 +321,30 @@ if (window.visualViewport) {
                 return super.shouldOverrideUrlLoading(view, request)
             }
 
+
             private fun handleRecognizedLink(clickUrl: String): Boolean {
-                val link = WebViewLink.parse(clickUrl, uriScheme) ?: return false
+                val link = WebViewLink.parse(clickUrl, uriScheme)
+                    ?: return false
 
                 return when (link.authority) {
+
                     linkAuthority.COURSE_INFO,
                     linkAuthority.PROGRAM_INFO,
                     linkAuthority.ENROLLED_PROGRAM_INFO -> {
-                        val pathId = link.params[WebViewLink.Param.PATH_ID] ?: ""
+
+                        val pathId =
+                            link.params[WebViewLink.Param.PATH_ID] ?: ""
+
                         onUriClick(pathId, link.authority)
                         true
                     }
 
                     linkAuthority.ENROLL,
                     linkAuthority.ENROLLED_COURSE_INFO -> {
-                        val courseId = link.params[WebViewLink.Param.COURSE_ID] ?: ""
+
+                        val courseId =
+                            link.params[WebViewLink.Param.COURSE_ID] ?: ""
+
                         onUriClick(courseId, link.authority)
                         true
                     }
@@ -305,16 +359,19 @@ if (window.visualViewport) {
             }
 
             override fun onReceivedError(
-                view: WebView, request: WebResourceRequest, error: WebResourceError
+                view: WebView,
+                request: WebResourceRequest,
+                error: WebResourceError
             ) {
                 if (request.url.toString() == view.url) {
                     onWebPageLoadError()
                 }
+
                 super.onReceivedError(view, request, error)
             }
         }
 
-        with(settings) {
+        settings.apply {
             javaScriptEnabled = true
             loadWithOverviewMode = false
             useWideViewPort = true
@@ -324,13 +381,16 @@ if (window.visualViewport) {
             domStorageEnabled = true
             userAgentString = "$userAgentString $userAgent"
 
-            // Important for keyboard interaction
             setSupportMultipleWindows(false)
         }
+
         isVerticalScrollBarEnabled = false
         isHorizontalScrollBarEnabled = false
+
         webViewTrackingAnalytics.enableWebViewTracking(this, url)
+
         applyDarkModeIfEnabled(isDarkTheme)
+
         loadUrl(url)
     }
 }

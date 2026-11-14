@@ -395,9 +395,18 @@ private fun SecondaryCourses(
     onViewAllClick: (isCardClicked: Boolean) -> Unit
 ) {
     val windowSize = rememberWindowSize()
-    val itemsCount = if (windowSize.isTablet) 7 else 5
-    val rows = if (windowSize.isTablet) 2 else 1
-    val height = if (windowSize.isTablet) 322.dp else 152.dp
+    val isLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val itemsCount = when {
+        windowSize.isTablet && !isLandscape -> 9
+        else -> 5
+    }
+    val rows = if (windowSize.isTablet&& !isLandscape) 3 else 1
+    val height = when {
+        windowSize.isTablet && !isLandscape -> 550.dp
+        windowSize.isTablet && isLandscape -> 240.dp
+        else -> 152.dp
+    }
     val items = courses.take(itemsCount)
     Column(
         modifier = Modifier
@@ -446,9 +455,10 @@ private fun SecondaryCourses(
 private fun ViewAllItem(
     onViewAllClick: (isCardClicked: Boolean) -> Unit
 ) {
+    val cardWidth = if (rememberWindowSize().isTablet) 255.dp else 140.dp
     Card(
         modifier = Modifier
-            .width(140.dp)
+            .width(cardWidth)
             .height(152.dp)
             .padding(4.dp)
             .clickable(
@@ -488,9 +498,13 @@ private fun CourseListItem(
     apiHostUrl: String,
     onCourseClick: (EnrolledCourse) -> Unit,
 ) {
+    val isTablet = rememberWindowSize().isTablet
+    val cardWidth = if (isTablet) 255.dp else 140.dp
+    val isLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     Card(
         modifier = Modifier
-            .width(140.dp)
+            .width(cardWidth)
             .height(152.dp)
             .padding(4.dp)
             .clickable {
@@ -512,7 +526,7 @@ private fun CourseListItem(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(90.dp)
+                        .height(if (isTablet&&isLandscape) 120.dp else 90.dp)
                 )
                 Text(
                     modifier = Modifier

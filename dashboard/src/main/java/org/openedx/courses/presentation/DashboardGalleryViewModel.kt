@@ -490,7 +490,7 @@ class DashboardGalleryViewModel(
 
     companion object {
         private const val TAG = "DashboardGalleryViewModel"
-        private const val PAGE_SIZE_TABLET = 7
+        private const val PAGE_SIZE_TABLET = 8
         private const val PAGE_SIZE_PHONE = 5
     }
 }

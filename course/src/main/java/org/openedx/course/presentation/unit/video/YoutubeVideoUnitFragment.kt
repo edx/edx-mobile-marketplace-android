@@ -900,8 +900,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
                 constraintSet.setDimensionRatio(binding.cardView.id, null) // Remove ratio constraint for fixed dimensions
 
                 constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, binding.cardView.id, ConstraintSet.BOTTOM, subtitleMarginTop)
-                constraintSet.connect(binding.subtitles.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, subtitleMarginH)
-                constraintSet.connect(binding.subtitles.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, subtitleMarginH)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.START, binding.cardView.id, ConstraintSet.START, 0)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.END, binding.cardView.id, ConstraintSet.END, 0)
                 constraintSet.connect(binding.subtitles.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, subtitleMarginBottom)
 
 
@@ -932,6 +932,10 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
                 constraintSet.connect(binding.cvVideoTitle.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, resources.getDimensionPixelSize(R.dimen.tablet_video_title_start_margin))
                 constraintSet.connect(binding.cvVideoTitle.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, resources.getDimensionPixelSize(R.dimen.tablet_video_title_end_margin))
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, binding.cardView.id, ConstraintSet.BOTTOM, subtitleMarginTop)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.START, binding.cardView.id, ConstraintSet.START, 0)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.END, binding.cardView.id, ConstraintSet.END, 0)
+                constraintSet.connect(binding.subtitles.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, subtitleMarginBottom)
             } else {
                 // For mobile: keep original behavior (constraint width and height based on playerHeight)
                 constraintSet.constrainWidth(binding.cardView.id, 0)
@@ -940,8 +944,8 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
             }
 
             constraintSet.connect(binding.subtitles.id, ConstraintSet.TOP, binding.cardView.id, ConstraintSet.BOTTOM, subtitleMarginTop)
-            constraintSet.connect(binding.subtitles.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, subtitleMarginH)
-            constraintSet.connect(binding.subtitles.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, subtitleMarginH)
+            constraintSet.connect(binding.subtitles.id, ConstraintSet.START, binding.cardView.id, ConstraintSet.START, 0)
+            constraintSet.connect(binding.subtitles.id, ConstraintSet.END, binding.cardView.id, ConstraintSet.END, 0)
             constraintSet.connect(binding.subtitles.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, subtitleMarginBottom)
 
             constraintSet.constrainWidth(binding.subtitles.id, 0)

@@ -148,11 +148,17 @@ class YoutubeVideoUnitFragment : Fragment(R.layout.fragment_youtube_video_unit) 
 
         pipViewModel.pipState
             .onEach {
+                val host = activity ?: return@onEach
+                val currentBinding = _binding ?: return@onEach
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireActivity().isInPictureInPictureMode
+                    host.isInPictureInPictureMode
                 ) {
-                    // Always update PIP actions when state changes
-                    binding.rootLayout.post {
+                    currentBinding.rootLayout.post {
+                        // The fragment/view may detach before this posted callback runs.
+                        if (!isAdded || _binding !== currentBinding || activity !== host) {
+                            return@post
+                        }
                         updatePipActions()
                     }
                 }

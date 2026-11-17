@@ -118,8 +118,9 @@ class VideoUnitFragment : Fragment(R.layout.fragment_video_unit) {
         }
         pipViewModel.pipState
             .onEach {
+                val host = activity ?: return@onEach
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    requireActivity().isInPictureInPictureMode
+                    host.isInPictureInPictureMode
                 ) {
                     updatePipActions()
                 }

@@ -4,7 +4,6 @@
     import android.content.res.Configuration
     import android.os.Bundle
     import android.util.Log
-    import android.view.MotionEvent
     import android.view.View
     import android.view.ViewGroup
     import android.view.WindowManager
@@ -14,11 +13,12 @@
     import android.widget.ImageButton
     import android.widget.ProgressBar
     import android.widget.TextView
-    import android.widget.Toast
     import androidx.activity.OnBackPressedCallback
     import androidx.compose.foundation.layout.Box
     import androidx.compose.foundation.layout.fillMaxWidth
     import androidx.compose.foundation.layout.padding
+    import androidx.compose.runtime.collectAsState
+    import androidx.compose.runtime.getValue
     import androidx.compose.ui.Modifier
     import androidx.compose.ui.platform.ComposeView
     import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -227,27 +227,24 @@
             val bannerComposeView = view.findViewWithTag<ComposeView>("subscription_banner_layout") ?: return
             bannerComposeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
-            val rawBannerUrl = viewModel.subscriptionBannerUrl.ifBlank { "https://www.edx.org" }
-            val bannerUrl = if (!rawBannerUrl.startsWith("http://") && !rawBannerUrl.startsWith("https://")) {
-                "https://$rawBannerUrl"
-            } else {
-                rawBannerUrl
+        bannerComposeView.setContent {
+            val rawBannerUrl by viewModel.subscriptionBannerUrl.collectAsState()
+            val bannerUrl = rawBannerUrl.ifBlank { "https://www.edx.org" }.let {
+                if (it.startsWith("http://") || it.startsWith("https://")) it else "https://$it"
             }
-
-            bannerComposeView.setContent {
-                OpenEdXTheme {
-                    SubscriptionBanner(
-                        visible = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        url = bannerUrl,
-                        onDismiss = { viewModel.dismissSubscriptionBanner() },
-                        onCtaClick = { ctaUrl ->
-                            viewModel.onSubscriptionBannerCtaClicked(ctaUrl)
-                        }
-                    )
-                }
+            OpenEdXTheme {
+                SubscriptionBanner(
+                    visible = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    url = bannerUrl,
+                    onDismiss = { viewModel.dismissSubscriptionBanner() },
+                    onCtaClick = { ctaUrl ->
+                        viewModel.onSubscriptionBannerCtaClicked(ctaUrl)
+                    }
+                )
             }
         }
+    }
 
         private var currentScrollOffset = 0
 

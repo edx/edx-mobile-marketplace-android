@@ -4,6 +4,7 @@ import android.webkit.WebView
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,8 +45,8 @@ class WebViewDiscoveryViewModel(
     private val _isSubscriptionBannerVisible = MutableStateFlow(false)
     val isSubscriptionBannerVisible: StateFlow<Boolean> = _isSubscriptionBannerVisible.asStateFlow()
 
-    val subscriptionBannerUrl: String
-        get() = subscriptionAlertBanner.getBannerUrl()
+    private val _subscriptionBannerUrl = MutableStateFlow("")
+    val subscriptionBannerUrl: StateFlow<String> = _subscriptionBannerUrl.asStateFlow()
 
     val uriScheme: String get() = config.getUriScheme()
 
@@ -75,6 +76,11 @@ class WebViewDiscoveryViewModel(
         get() = networkConnection.isOnline()
 
     init {
+        viewModelScope.launch {
+            corePreferences.appConfigFlow.collect {
+                _subscriptionBannerUrl.value = subscriptionAlertBanner.getBannerUrl()
+            }
+        }
         refreshSubscriptionBannerVisibility()
         checkAndRefreshCookies()
         observeThemePreference()

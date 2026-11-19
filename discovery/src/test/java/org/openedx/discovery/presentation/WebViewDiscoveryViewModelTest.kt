@@ -8,12 +8,14 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -21,7 +23,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.openedx.core.config.Config
+import org.openedx.core.config.SubscriptionBannerConfig
 import org.openedx.core.data.storage.CorePreferences
+import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.module.subscriptionBanner.SubscriptionAlertBanner
 import org.openedx.core.presentation.global.AppData
 import org.openedx.core.system.AppCookieManager
@@ -44,11 +48,13 @@ class WebViewDiscoveryViewModelTest {
     private val analytics = mockk<DiscoveryAnalytics>(relaxed = true)
     private val appCookieManager = mockk<AppCookieManager>(relaxed = true)
     private val subscriptionAlertBanner = mockk<SubscriptionAlertBanner>(relaxed = true)
+    private val appConfigFlow = MutableStateFlow(AppConfig())
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         every { networkConnection.isOnline() } returns true
+        every { corePreferences.appConfigFlow } returns appConfigFlow
         mockkConstructor(Logger::class)
         every { anyConstructed<Logger>().e(any(), any()) } returns Unit
     }
@@ -198,5 +204,34 @@ class WebViewDiscoveryViewModelTest {
         viewModel.dismissSubscriptionBanner()
 
         assertFalse(viewModel.isSubscriptionBannerVisible.value)
+    }
+
+    @Test
+    fun `subscriptionBannerUrl publishes initial and updated config urls from same viewModel`() = runTest {
+        every { appCookieManager.isSessionCookieMissingOrExpired() } returns false
+        every { subscriptionAlertBanner.getBannerUrl() } returns "https://initial.example.com"
+
+        val viewModel = WebViewDiscoveryViewModel(
+            querySearch = "",
+            appData = appData,
+            config = config,
+            networkConnection = networkConnection,
+            corePreferences = corePreferences,
+            router = router,
+            analytics = analytics,
+            appCookieManager = appCookieManager,
+            subscriptionAlertBanner = subscriptionAlertBanner,
+        )
+        advanceUntilIdle()
+
+        assertEquals("https://initial.example.com", viewModel.subscriptionBannerUrl.value)
+
+        every { subscriptionAlertBanner.getBannerUrl() } returns "https://updated.example.com"
+        appConfigFlow.value = AppConfig(
+            subscriptionBannerConfig = SubscriptionBannerConfig(url = "https://updated.example.com")
+        )
+        advanceUntilIdle()
+
+        assertEquals("https://updated.example.com", viewModel.subscriptionBannerUrl.value)
     }
 }

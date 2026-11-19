@@ -2,6 +2,9 @@ package org.openedx.app.data.storage
 
 import android.content.Context
 import com.google.gson.Gson
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.openedx.app.BuildConfig
 import org.openedx.auth.data.model.AuthType
 import org.openedx.core.data.model.User
@@ -154,15 +157,21 @@ class PreferencesManager(context: Context) : CorePreferences, ProfilePreferences
             return AppThemeMode.valueOf(mode)
         }
 
+    private val _appConfigFlow = MutableStateFlow(readAppConfig())
+    override val appConfigFlow: StateFlow<AppConfig> = _appConfigFlow.asStateFlow()
+
     override var appConfig: AppConfig
         set(value) {
             val appConfigJson = Gson().toJson(value)
             saveString(APP_CONFIG, appConfigJson)
+            _appConfigFlow.value = value
         }
-        get() {
-            val appConfigString = getString(APP_CONFIG, getDefaultAppConfig())
-            return Gson().fromJson(appConfigString, AppConfig::class.java)
-        }
+        get() = readAppConfig()
+
+    private fun readAppConfig(): AppConfig {
+        val appConfigString = getString(APP_CONFIG, getDefaultAppConfig())
+        return Gson().fromJson(appConfigString, AppConfig::class.java)
+    }
 
     private fun getDefaultAppConfig() = Gson().toJson(AppConfig())
 

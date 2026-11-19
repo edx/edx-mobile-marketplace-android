@@ -1,5 +1,6 @@
 package org.openedx.core.data.storage
 
+import kotlinx.coroutines.flow.StateFlow
 import org.openedx.core.data.model.User
 import org.openedx.core.domain.model.AppConfig
 import org.openedx.core.domain.model.AppThemeMode
@@ -14,6 +15,7 @@ interface CorePreferences {
     var videoSettings: VideoSettings
     var appThemeMode: AppThemeMode
     var appConfig: AppConfig
+    val appConfigFlow: StateFlow<AppConfig>
     var canResetAppDirectory: Boolean
     var lastSignInType: String
     var isDatadogEnabled: Boolean

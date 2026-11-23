@@ -23,6 +23,8 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -133,11 +135,15 @@ internal fun ProfileView(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(24.dp)
                                 ) {
+
+                                    val bannerUrl = subscriptionBannerUrl.ifBlank { "https://www.google.com" }.let {
+                                        if (it.startsWith("http://") || it.startsWith("https://")) it else "https://$it"
+                                    }
                                     if (isSubscriptionBannerVisible) {
                                         SubscriptionBanner(
                                             visible = true,
                                             modifier = Modifier.fillMaxWidth(),
-                                            url = subscriptionBannerUrl,
+                                            url = bannerUrl,
                                             onDismiss = { onAction(ProfileViewAction.DismissSubscriptionBanner) },
                                             onCtaClick = { onAction(ProfileViewAction.SubscriptionBannerCtaClick(it)) },
                                         )

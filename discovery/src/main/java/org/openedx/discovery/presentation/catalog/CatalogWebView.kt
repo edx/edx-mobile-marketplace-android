@@ -97,7 +97,7 @@ fun configureCatalogWebView(
 })();
 """.trimIndent()
 
-     val XPERT_CHAT_INITIALIZATION_SCRIPT = """
+    val XPERT_CHAT_INITIALIZATION_SCRIPT = """
 (function() {
     if (window.__xpertInitializationStarted) return;
     window.__xpertInitializationStarted = true;
@@ -140,33 +140,58 @@ fun configureCatalogWebView(
     };
 
     window.__triggerXpertChatbotAction = function() {
-        var button = document.getElementById('xpert_chatbot__floating-action-btn');
+        var button = document.getElementById(
+            'xpert_chatbot__floating-action-btn'
+        );
         if (!button) return false;
 
-    if (typeof window.__expandXpertDialog === 'function') {
-        window.__expandXpertDialog();
-    }
+        if (typeof window.__expandXpertDialog === 'function') {
+            window.__expandXpertDialog();
+        }
+
         button.click();
 
-        if (window.XpertChatBridge && window.XpertChatBridge.onChatOpen) {
+        if (window.XpertChatBridge &&
+            window.XpertChatBridge.onChatOpen) {
             window.XpertChatBridge.onChatOpen();
         }
+
         return true;
     };
 
-    var attempts = 0;
-    var interval = setInterval(function() {
-        attempts++;
-        var button = document.getElementById('xpert_chatbot__floating-action-btn');
-        if (button && window.XpertChatBridge && window.XpertChatBridge.onChatReady) {
-            clearInterval(interval);
-            window.XpertChatBridge.onChatReady();
+    function notifyXpertReady() {
+        var button = document.getElementById(
+            'xpert_chatbot__floating-action-btn'
+        );
+        var bridge = window.XpertChatBridge;
+
+        if (!button ||
+            !bridge ||
+            typeof bridge.onChatReady !== 'function') {
+            return false;
         }
-        if (attempts >= 200) clearInterval(interval);
-    });
+
+        if (window.__xpertChatReadyNotified) return true;
+
+        window.__xpertChatReadyNotified = true;
+        bridge.onChatReady();
+        return true;
+    }
+
+    if (!notifyXpertReady()) {
+        var observer = new MutationObserver(function() {
+            if (notifyXpertReady()) {
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+    }
 })();
 """.trimIndent()
-
     class XpertChatBridge {
 
         @android.webkit.JavascriptInterface
